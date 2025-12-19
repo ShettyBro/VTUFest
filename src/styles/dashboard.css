@@ -1,0 +1,86 @@
+.calendar-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.view-buttons button {
+  margin-left: 8px;
+  padding: 6px 14px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.view-buttons button:hover {
+  background: #2563eb;
+  color: white;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.event {
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: white;
+}
+
+.event.blue {
+  background: #2563eb;
+}
+
+.event.green {
+  background: #16a34a;
+}
+
+.event.red {
+  background: #dc2626;
+}
+.event.yellow {
+  background: #eab308;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.info-card {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.info-card h4 {
+  margin-bottom: 10px;
+}
+
+.info-card ul {
+  padding-left: 18px;
+}
+
+.info-card li {
+  margin-bottom: 6px;
+}

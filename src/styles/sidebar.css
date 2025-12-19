@@ -1,0 +1,50 @@
+.sidebar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  height: calc(100vh - 60px);
+  width: 60px;
+  background: #1e3a8a;
+  color: white;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  z-index: 100;
+  cursor: pointer;
+}
+
+/* Expanded state */
+.sidebar.open {
+  width: 220px;
+}
+
+/* Sidebar items */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  font-size: 14px;
+}
+
+/* ICON always visible */
+.sidebar-item svg,
+.sidebar-item span:first-child {
+  font-size: 20px;
+}
+
+/* LABEL hidden by default */
+.sidebar .label {
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+/* LABEL visible only when expanded */
+.sidebar.open .label {
+  opacity: 1;
+}
+
+/* Hover effect */
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

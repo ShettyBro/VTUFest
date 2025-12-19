@@ -1,0 +1,52 @@
+.rejected-container {
+  padding: 30px;
+}
+
+.rejected-container h2 {
+  font-size: 22px;
+  margin-bottom: 5px;
+  color: #991b1b; /* red */
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 25px;
+}
+
+/* TABLE */
+.rejected-table {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.table-header,
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 2.5fr 2fr;
+  padding: 14px 18px;
+  align-items: center;
+}
+
+.table-header {
+  background: #fef2f2;
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px solid #fecaca;
+}
+
+.table-row {
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.reason {
+  color: #b91c1c;
+  font-weight: 500;
+}

@@ -1,0 +1,114 @@
+/* =========================================================
+   ROOT LAYOUT
+========================================================= */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+/* =========================================================
+   NAVBAR OFFSET HANDLING
+========================================================= */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* =========================================================
+   SIDEBAR (LEFT)
+========================================================= */
+.sidebar {
+  position: fixed;
+  top: 60px; /* navbar height */
+  left: 0;
+  width: 64px;
+  height: calc(100vh - 60px);
+  background: #1e3a8a; /* VTU blue */
+  z-index: 100;
+  transition: width 0.25s ease;
+}
+
+.sidebar.open {
+  width: 220px;
+}
+
+/* =========================================================
+   MAIN CONTENT AREA
+========================================================= */
+.content {
+  flex: 1;
+  margin-left: 64px; /* collapsed sidebar width */
+  margin-top: 60px;  /* navbar height */
+  padding: 28px;
+  background: #f9fafb;
+  position: relative;
+  overflow: hidden;
+}
+
+/* =========================================================
+   SAFRON DECORATIVE BACKGROUND (CONTENT ONLY)
+========================================================= */
+.content::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  left: -120px;
+  width: 320px;
+  height: 320px;
+  background: rgba(251, 191, 36, 0.15); /* saffron */
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.content::after {
+  content: "";
+  position: absolute;
+  bottom: -140px;
+  right: -140px;
+  width: 360px;
+  height: 360px;
+  background: rgba(251, 191, 36, 0.12); /* saffron */
+  border-radius: 50%;
+  z-index: 0;
+}
+
+/* =========================================================
+   ENSURE CONTENT ABOVE DECORATION
+========================================================= */
+.content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================================
+   CARD BASE STYLE (USED ACROSS DASHBOARDS)
+========================================================= */
+.card,
+.calendar-card,
+.info-card,
+.stat-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 56px;
+  }
+
+  .sidebar.open {
+    width: 200px;
+  }
+
+  .content {
+    margin-left: 56px;
+    padding: 20px;
+  }
+}

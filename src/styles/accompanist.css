@@ -1,0 +1,88 @@
+.accompanist-container {
+  padding: 90px 40px 40px 40px;
+  min-height: 100vh;
+}
+
+.accompanist-card {
+  max-width: 900px;
+  margin: auto;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 30px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+}
+
+.accompanist-card h2 {
+  text-align: center;
+  color: #1e3a8a;
+}
+
+.subtitle {
+  text-align: center;
+  color: #b45309;
+  margin-bottom: 25px;
+  font-weight: 500;
+}
+
+/* GRID */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 6px;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  outline: none;
+}
+
+input:focus,
+select:focus {
+  border-color: #f59e0b;
+}
+
+/* DOCUMENTS */
+.documents {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* BUTTON */
+.submit-btn {
+  width: 100%;
+  margin-top: 30px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+.success-message {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #d1fae5;
+  color: #065f46;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+}
