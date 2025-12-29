@@ -4,8 +4,8 @@ import "../styles/accompanist.css";
 
 const MAX_CAPACITY = 45;
 
-// This should come from backend/admin approval later
-const APPROVED_STUDENTS = 32; // demo value
+// This should come from backend later
+const APPROVED_STUDENTS = 32;
 
 const emptyAccompanist = {
   name: "",
@@ -14,56 +14,60 @@ const emptyAccompanist = {
   college: "",
   department: "",
   event: "",
-  idProof: null,
-  photo: null,
 };
 
 export default function AccompanistForm() {
   const [current, setCurrent] = useState(emptyAccompanist);
   const [accompanists, setAccompanists] = useState([]);
+  const [files, setFiles] = useState({});
 
   const remainingSlots =
     MAX_CAPACITY - APPROVED_STUDENTS - accompanists.length;
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setCurrent({
-      ...current,
-      [name]: files ? files[0] : value,
-    });
+    const { name, value } = e.target;
+    setCurrent((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    setFiles((prev) => ({ ...prev, [name]: files[0] }));
   };
 
   const addAccompanist = () => {
     if (remainingSlots <= 0) {
-      alert(
-        `Maximum limit reached. Total participants cannot exceed ${MAX_CAPACITY}.`
-      );
+      alert(`Maximum limit of ${MAX_CAPACITY} reached.`);
       return;
     }
 
-    setAccompanists([...accompanists, current]);
+    setAccompanists((prev) => [...prev, current]);
     setCurrent(emptyAccompanist);
+    setFiles({});
   };
 
   const handleFinalSubmit = (e) => {
     e.preventDefault();
 
-    if (remainingSlots < 0) {
-      alert("Participant limit exceeded. Submission blocked.");
+    if (remainingSlots <= 0) {
+      alert("No slots remaining. Submission blocked.");
       return;
     }
 
-    const finalList = [...accompanists, current];
+    const finalList = [...accompanists];
 
     console.log("Final Accompanist List:", finalList);
+    console.log("Uploaded Files:", files);
+
     alert(
-      `Submitted successfully.\nApproved Students: ${APPROVED_STUDENTS}\nAccompanists: ${finalList.length}\nTotal: ${
-        APPROVED_STUDENTS + finalList.length
-      } / ${MAX_CAPACITY}`
+      `Submitted Successfully!
+Approved Students: ${APPROVED_STUDENTS}
+Accompanists: ${finalList.length}
+Total: ${APPROVED_STUDENTS + finalList.length}/${MAX_CAPACITY}`
     );
 
     setAccompanists([]);
     setCurrent(emptyAccompanist);
+    setFiles({});
   };
 
   return (
@@ -71,7 +75,9 @@ export default function AccompanistForm() {
       <div className="accompanist-container">
         <div className="accompanist-card">
           <h2>Add Accompanist</h2>
-          <p className="subtitle">VTU HABBA 2025 – Accompanist Registration</p>
+          <p className="subtitle">
+            VTU HABBA 2025 – Accompanist Registration
+          </p>
 
           {/* CAPACITY INFO */}
           <div className="capacity-info">
@@ -79,8 +85,7 @@ export default function AccompanistForm() {
               Approved Students: <strong>{APPROVED_STUDENTS}</strong>
             </p>
             <p>
-              Remaining Slots for Accompanists:{" "}
-              <strong>{remainingSlots}</strong>
+              Remaining Slots: <strong>{remainingSlots}</strong>
             </p>
           </div>
 
@@ -144,9 +149,9 @@ export default function AccompanistForm() {
                   disabled={remainingSlots <= 0}
                 >
                   <option value="">Select Event</option>
-                  <option>Dance</option>
-                  <option>Music</option>
-                  <option>Drama</option>
+                  <option value="Dance">Dance</option>
+                  <option value="Music">Music</option>
+                  <option value="Drama">Drama</option>
                 </select>
               </div>
             </div>
@@ -158,7 +163,7 @@ export default function AccompanistForm() {
                 <input
                   type="file"
                   name="idProof"
-                  onChange={handleChange}
+                  onChange={handleFileChange}
                   required
                   disabled={remainingSlots <= 0}
                 />
@@ -169,7 +174,7 @@ export default function AccompanistForm() {
                 <input
                   type="file"
                   name="photo"
-                  onChange={handleChange}
+                  onChange={handleFileChange}
                   required
                   disabled={remainingSlots <= 0}
                 />
@@ -190,9 +195,9 @@ export default function AccompanistForm() {
               <button
                 type="submit"
                 className="submit-btn"
-                disabled={remainingSlots < 0}
+                disabled={remainingSlots <= 0}
               >
-                Submit ({APPROVED_STUDENTS + accompanists.length + 1}/
+                Submit ({APPROVED_STUDENTS + accompanists.length}/
                 {MAX_CAPACITY})
               </button>
             </div>
