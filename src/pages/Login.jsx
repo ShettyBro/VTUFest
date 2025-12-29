@@ -50,25 +50,27 @@ export default function Login() {
       <nav className="login-navbar">
         {/* LEFT BRAND */}
         <div className="login-brand">
-          <img src="/vtu.png" alt="VTU Logo" />
-          <span className="logo-separator">|</span>
           <img src="/acharya.png" alt="Acharya Logo" />
-
+          <span className="logo-separator">|</span>
+          <img src="/vtu.png" alt="VTU Logo" />
+          
           <div className="brand-text">
-            <h3>VTU HABBA 2025</h3>
+            <h3>VTU HABBA 2026</h3>
             <span>Visvesvaraya Technological University</span>
           </div>
         </div>
 
         {/* RIGHT CONTACT */}
         <div className="login-contact">
-          Contact: <strong>ait@acharya.ac.in</strong>
+          Contact: <strong>adsa@acharya.ac.in</strong>
+          <br></br>
+                   <strong>           1234567890</strong>
         </div>
       </nav>
 
       {/* ================= CENTER LOGIN CARD ================= */}
       <div className="login-center">
-        <div className="login-card">
+        <div className={`login-card ${role}`}>
           {/* ROLE TABS */}
           <div className="role-tabs">
             <button
@@ -147,7 +149,7 @@ export default function Login() {
 
       {/* ================= BOTTOM FOOTER ================= */}
       <footer className="login-bottom">
-        © 2025 VTU | Government of Karnataka
+        © 2026 ACHARYA INSTITUTE | VTU
       </footer>
     </div>
   );

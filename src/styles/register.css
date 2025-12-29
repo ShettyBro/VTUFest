@@ -1,18 +1,31 @@
-.register-page {
-  min-height: 100vh;
+/* ===== RESET ROOT ===== */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* ⬅️ prevents bottom line */
   background: linear-gradient(to right, #fff7ed, #f0f9ff);
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== REGISTER PAGE ===== */
+.register-page {
+  height: 100vh; /* ⬅️ fixed height */
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 40px;
-  font-family: "Segoe UI", sans-serif;
+  background: transparent; /* inherits body bg */
 }
 
+/* ===== TITLE ===== */
 .register-page h2 {
   color: #0b3c5d;
   margin-bottom: 20px;
 }
 
+/* ===== CARD ===== */
 .register-card {
   background: #0b3c5d;
   color: white;
@@ -22,6 +35,7 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
 }
 
+/* ===== FORM ELEMENTS ===== */
 .register-card label {
   display: block;
   margin-top: 12px;
@@ -34,13 +48,15 @@
   margin-top: 5px;
   border-radius: 4px;
   border: none;
+  outline: none;
 }
 
+/* ===== BUTTON ===== */
 .register-card button {
   width: 100%;
   margin-top: 20px;
   padding: 12px;
-  background: #f59e0b; /* Saffron */
+  background: #f59e0b;
   border: none;
   font-size: 16px;
   font-weight: bold;
@@ -53,6 +69,7 @@
   background: #d97706;
 }
 
+/* ===== BACK LINK ===== */
 .back-link {
   margin-top: 15px;
   text-align: center;

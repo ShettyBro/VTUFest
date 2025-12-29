@@ -1,10 +1,17 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "../../styles/sidebar.css";
 
 export default function Sidebar({ role }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
+
+  const isActive = (path) => location.pathname === path;
+
+  const Icon = ({ children }) => (
+    <span className="sidebar-icon">{children}</span>
+  );
 
   return (
     <aside
@@ -12,47 +19,143 @@ export default function Sidebar({ role }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      {/* STUDENT */}
+      {/* ================= STUDENT ================= */}
       {role === "student" && (
         <div
-          className="sidebar-item"
+          className={`sidebar-item ${
+            isActive("/student-register") ? "active" : ""
+          }`}
           onClick={() => navigate("/student-register")}
         >
-          📝 <span className="label">Register</span>
+          <Icon>
+            <svg viewBox="0 0 24 24">
+              <path d="M3 3h18v18H3zM7 7h10M7 11h10M7 15h6" />
+            </svg>
+          </Icon>
+          <span className="label">Register</span>
         </div>
       )}
 
-      {/* PRINCIPAL / MANAGER */}
+      {/* ================= PRINCIPAL / MANAGER ================= */}
       {(role === "principal" || role === "manager") && (
         <>
           <div
-            className="sidebar-item"
+            className={`sidebar-item ${
+              isActive("/principal-dashboard") ? "active" : ""
+            }`}
             onClick={() => navigate("/principal-dashboard")}
           >
-            📊 <span className="label">Dashboard</span>
+            <Icon>
+              <svg viewBox="0 0 24 24">
+                <path d="M3 3h18v18H3zM7 14h3v4H7zM11 10h3v8h-3zM15 6h3v12h-3z" />
+              </svg>
+            </Icon>
+            <span className="label">Dashboard</span>
+          </div>
+
+         <div
+          className={`sidebar-item ${
+            isActive("/approvals") ? "active" : ""
+          }`}
+          onClick={() => navigate("/approvals")}
+        >
+          <Icon>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          </Icon>
+          <span className="label">Approve / Reject</span>
+        </div>
+
+
+          <div
+            className={`sidebar-item ${
+              isActive("/approved-students") ? "active" : ""
+            }`}
+            onClick={() => navigate("/approved-students")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            </Icon>
+            <span className="label">Approved Students</span>
           </div>
 
           <div
-           className="sidebar-item"
-            onClick={() => navigate("/approvals")}
+            className={`sidebar-item ${
+              isActive("/rejected-students") ? "active" : ""
+            }`}
+            onClick={() => navigate("/rejected-students")}
           >
-            ✅ <span className="label">Approve / Reject</span>
-          </div>  
-
-          <div className="sidebar-item" onClick={() => navigate("/approved-students")}>
-            ✔️ <span className="label">Approved Students</span>
+            <Icon>
+              <svg viewBox="0 0 24 24">
+                <path d="M6 6l12 12M6 18L18 6" />
+              </svg>
+            </Icon>
+            <span className="label">Rejected Students</span>
           </div>
 
-          <div className="sidebar-item" onClick={() => navigate("/rejected-students")}>
-            ❌ <span className="label">Rejected Students</span>
+          <div
+            className={`sidebar-item ${
+              isActive("/add-accompanist") ? "active" : ""
+            }`}
+            onClick={() => navigate("/add-accompanist")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2a3 3 0 013 3v6a3 3 0 11-6 0V5a3 3 0 013-3zM5 10v2a7 7 0 0014 0v-2" />
+              </svg>
+            </Icon>
+            <span className="label">Add Accompanist</span>
           </div>
 
-          <div className="sidebar-item" onClick={() => navigate("/add-accompanist")}>
-            🎤 <span className="label">Add Accompanist</span>
+          <div
+            className={`sidebar-item ${
+              isActive("/accommodation") ? "active" : ""
+            }`}
+            onClick={() => navigate("/accommodation")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24">
+                <path d="M3 11h18M5 11V5h14v6M7 11v8M17 11v8" />
+              </svg>
+            </Icon>
+            <span className="label">Accommodation</span>
           </div>
-
         </>
       )}
+
+      {/* ================= RULES & REGULATIONS – ALL ROLES ================= */}
+      <div
+        className={`sidebar-item ${isActive("/rules") ? "active" : ""}`}
+        onClick={() => navigate("/rules")}
+      >
+        <Icon>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+            <path d="M14 2v6h6" />
+            <path d="M8 13h8" />
+            <path d="M8 17h6" />
+          </svg>
+        </Icon>
+
+        <span className="label">Rules & Regulations</span>
+      </div>
     </aside>
   );
 }

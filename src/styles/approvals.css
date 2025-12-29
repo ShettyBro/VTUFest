@@ -1,53 +1,42 @@
 .approval-container {
-  padding: 90px 40px 40px;
+  max-width: 900px;
+  margin: auto;
 }
 
-.approval-container h2 {
-  color: #1e3a8a;
-}
-
-.subtitle {
-  color: #b45309;
-  margin-bottom: 20px;
-}
-
-/* TABLE */
-.approval-table {
-  background: white;
-  border-radius: 14px;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+.student-card {
+  background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
-.table-header,
-.table-row {
-  display: grid;
-  grid-template-columns: 1.5fr 1.2fr 1fr 1fr 1.5fr;
-  padding: 14px 20px;
+/* ================= MAIN ROW ================= */
+.student-row {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  cursor: pointer;
 }
 
-.table-header {
-  background: #f8fafc;
-  font-weight: 600;
-  border-bottom: 1px solid #e5e7eb;
+.student-row:hover {
+  background: #fff7ed;
 }
 
-.table-row {
-  border-bottom: 1px solid #f1f5f9;
+.sub-text {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 2px;
 }
 
-.table-row:last-child {
-  border-bottom: none;
-}
-
-/* STATUS */
+/* ================= STATUS ================= */
 .status {
   font-weight: 600;
 }
 
 .status.pending {
-  color: #d97706;
+  color: #f59e0b;
 }
 
 .status.approved {
@@ -58,46 +47,208 @@
   color: #dc2626;
 }
 
-/* ACTIONS */
+/* ================= ACTIONS ================= */
 .actions {
   display: flex;
   gap: 10px;
 }
 
-button {
+.actions button {
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: none;
+  font-weight: 600;
   cursor: pointer;
+}
+
+.actions .approve {
+  background: #86efac;
+  color: #065f46;
+}
+
+.actions .reject {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================= EVENT PANEL ================= */
+.event-panel {
+  padding: 18px 22px;
+  background: #fffaf3;
+  border-top: 1px solid #fde68a;
+}
+
+/* Title */
+.assign-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #92400e;
+}
+
+/* ================= EVENT CATEGORY ================= */
+.event-category {
+  margin-bottom: 10px;
+}
+
+.category-title {
+  font-size: 11.5px;              /* smaller than before */
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #92400e;
+  margin-bottom: 4px;             /* reduced space below heading */
+  margin-top: 12px;               /* compact spacing between categories */
+  border-left: 3px solid #f59e0b;
+  padding-left: 6px;
+  letter-spacing: 0.4px;
+}
+
+/* EVENT GRID – tighter vertical spacing */
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 14px;   /* reduced row gap */
+}
+
+/* EVENT OPTION CARD – compact height */
+.event-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;      /* reduced padding */
+  border-radius: 8px;
+  border: 1px solid #fde68a;
+  background: #ffffff;
+  font-size: 13px;        /* slightly smaller text */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* ================= EVENT OPTION CARD ================= */
+.event-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #fde68a;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.event-option:hover {
+  background: #fff7ed;
+  border-color: #f59e0b;
+}
+
+/* Checkbox */
+.event-option input {
+  accent-color: #f59e0b;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Checked state */
+.event-option input:checked + .event-name {
+  color: #92400e;
   font-weight: 600;
 }
 
-button.approve {
-  background: #16a34a;
-  color: white;
+.event-option .event-name {
+  transition: color 0.2s ease;
 }
 
-button.reject {
-  background: #dc2626;
-  color: white;
+.event-option input:checked {
+  transform: scale(1.1);
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* ================= IMPORTANT OVERRIDE ================= */
+/* Disable hover-based reveal completely */
+.event-category:hover .event-grid {
+  display: grid;
 }
-select {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
+/* ================= WARNING MODAL ================= */
+
+.warning-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.warning-modal {
+  width: 420px;
+  background: #fff7ed;
+  border-radius: 14px;
+  padding: 26px 28px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  text-align: center;
+  animation: fadeInScale 0.25s ease;
+}
+
+.warning-modal h3 {
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.warning-modal ul {
+  text-align: left;
+  margin: 0 0 18px;
+  padding-left: 18px;
   font-size: 14px;
+  color: #7c2d12;
 }
 
-select:disabled {
-  background: #f3f4f6;
-  cursor: not-allowed;
+.warning-modal li {
+  margin-bottom: 8px;
 }
-select:focus {
-  border-color: #2563eb;
+
+.warning-btn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.warning-btn:hover {
+  opacity: 0.95;
+}
+
+/* Animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile safety */
+@media (max-width: 480px) {
+  .warning-modal {
+    width: 90%;
+    padding: 22px;
+  }
 }

@@ -1,30 +1,28 @@
 import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+
 import Login from "../pages/Login";
-import RegisterStudent from "../pages/RegisterStudent";
 import Dashboard from "../pages/Dashboard";
-import ChangePassword from "../pages/ChangePassword";
-import StudentRegister from "../pages/StudentRegister";
-import ForgotPassword from "../pages/ForgotPassword";
 import PrincipalDashboard from "../pages/PrincipalDashboard";
-import AccompanistForm from "../pages/AccompanistForm";
+import SubAdminDashboard from "../pages/SubAdminDashboard";
 import Approvals from "../pages/Approvals";
 import ApprovedStudents from "../pages/ApprovedStudents";
 import RejectedStudents from "../pages/RejectedStudents";
+import Accommodation from "../pages/Accommodation";
+import Rules from "../pages/Rules";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route path="/register" element={<RegisterStudent />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/principal-dashboard" element={<PrincipalDashboard />} />
-      <Route path="/change-password" element={<ChangePassword />} />
-      <Route path="/student-register" element={<StudentRegister />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/add-accompanist" element={<AccompanistForm />} />
-      <Route path="/approvals" element={<Approvals />} />
-      <Route path="/approved-students" element={<ApprovedStudents />} />
-      <Route path="/rejected-students" element={<RejectedStudents />} />
+      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["student"]}><Dashboard /></ProtectedRoute>} />
+      <Route path="/principal-dashboard" element={<ProtectedRoute allowedRoles={["principal"]}><PrincipalDashboard /></ProtectedRoute>} />
+      <Route path="/subadmin-dashboard" element={<ProtectedRoute allowedRoles={["subadmin"]}><SubAdminDashboard /></ProtectedRoute>} />
+      <Route path="/approvals" element={<ProtectedRoute allowedRoles={["principal"]}><Approvals /></ProtectedRoute>} />
+      <Route path="/approved-students" element={<ProtectedRoute allowedRoles={["principal"]}><ApprovedStudents /></ProtectedRoute>} />
+      <Route path="/rejected-students" element={<ProtectedRoute allowedRoles={["principal"]}><RejectedStudents /></ProtectedRoute>} />
+      <Route path="/accommodation" element={<ProtectedRoute allowedRoles={["principal"]}><Accommodation /></ProtectedRoute>} />
+      <Route path="/rules" element={<ProtectedRoute allowedRoles={["student", "principal", "subadmin"]}><Rules /></ProtectedRoute>} />
     </Routes>
   );
 }

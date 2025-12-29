@@ -13,10 +13,23 @@ export default function RegisterStudent() {
     mobile: "",
     password: "",
     confirmPassword: "",
+    photo: "",
   });
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  /* ===== HANDLE PHOTO UPLOAD ===== */
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm((prev) => ({ ...prev, photo: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e) => {
@@ -27,7 +40,16 @@ export default function RegisterStudent() {
       return;
     }
 
-    // TEMP: Backend integration later
+    // TEMP STORAGE (backend later)
+    localStorage.setItem(
+      "userProfile",
+      JSON.stringify({
+        name: form.name,
+        photo: form.photo,
+        role: "student",
+      })
+    );
+
     alert("Registration Successful!");
     navigate("/");
   };
@@ -51,6 +73,15 @@ export default function RegisterStudent() {
 
         <label>Mobile Number</label>
         <input name="mobile" maxLength="10" onChange={handleChange} required />
+
+        {/* PASSPORT PHOTO */}
+        <label>Passport Size Photo</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoUpload}
+          required
+        />
 
         <label>Create Password</label>
         <input
@@ -77,3 +108,4 @@ export default function RegisterStudent() {
     </div>
   );
 }
+// ========================= EDITED SNIPPET FROM frontend/src/pages/Approvals.jsx =========================
