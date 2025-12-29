@@ -47,17 +47,19 @@
 }
 
 /* =========================================================
-   TOP NAVBAR (VTU HABBA)
+   TOP NAVBAR (VTU HABBA) – FINAL FIX
 ========================================================= */
+
 .login-navbar {
   height: 72px;
   padding: 0 40px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
   z-index: 2;
 }
 
+/* LEFT: logos only */
 .login-brand {
   display: flex;
   align-items: center;
@@ -65,8 +67,9 @@
   color: #ffffff;
 }
 
+/* Logos */
 .login-brand img {
-  height: 42px;
+  height: 56px;
   object-fit: contain;
 }
 
@@ -77,30 +80,40 @@
   margin: 0 6px;
 }
 
+/* 🚨 DETACH brand-text from logo flow */
+.login-brand .brand-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none; /* prevents overlap click issues */
+}
+
+/* CENTER TITLE */
 .brand-text h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.3px;
+  color: #ffffff;
 }
 
 .brand-text span {
+  display: block;
   font-size: 12px;
   opacity: 0.9;
+  color: #ffffff;
 }
+
+/* RIGHT: contact */
 .login-contact {
   font-size: 14px;
   font-weight: 600;
   color: #ffffff;
   opacity: 0.95;
+  justify-self: end;
 }
-.login-center {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
+
 
 
 /* =========================================================
@@ -251,3 +264,256 @@
     font-size: 16px;
   }
 }
+@media (max-width: 400px) {
+  .role-tabs button {
+    font-size: 12px;
+    padding: 8px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE RESPONSIVE (LOGIN PAGE)
+========================================================= */
+@media (max-width: 768px) {
+  /* NAVBAR STACKING */
+  .login-navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 16px 20px;
+    gap: 10px;
+  }
+
+  .login-brand {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .login-brand img {
+    height: 36px;
+  }
+
+  .brand-text h3 {
+    font-size: 16px;
+  }
+
+  .brand-text span {
+    font-size: 11px;
+  }
+
+  /* CONTACT MOVES BELOW */
+  .login-contact {
+    font-size: 13px;
+    align-self: flex-start;
+    opacity: 0.95;
+  }
+
+  /* CENTER CARD */
+  .login-center {
+    padding: 20px;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 26px 22px;
+  }
+
+  /* ROLE TABS */
+  .role-tabs button {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  /* FOOTER */
+  .login-bottom {
+    font-size: 12px;
+    padding: 12px;
+  }
+}
+
+/* EXTRA SMALL DEVICES */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 22px 18px;
+  }
+
+  .login-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .login-link {
+    font-size: 13px;
+  }
+}
+/* =========================================================
+   ROLE BASED LOGIN CARD COLORS
+========================================================= */
+
+/* ---------- STUDENT (ORANGE - DEFAULT) ---------- */
+.login-card.student {
+  border-top: 6px solid #f59e0b;
+}
+
+.login-card.student .login-btn,
+.login-card.student .role-tabs button.active {
+  background: linear-gradient(to right, #f59e0b, #d97706);
+}
+.login-card.student {
+  background: linear-gradient(
+    135deg,
+    #fff7ed 0%,
+    #ffedd5 50%,
+    #fed7aa 100%
+  );
+  border-top: 6px solid #f59e0b;
+}
+
+.login-card.student .role-tabs button.active {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.login-card.student .login-btn {
+  background: linear-gradient(to right, #f59e0b, #d97706);
+}
+
+/* ---------- TEAM MANAGER (BLUE) ---------- */
+.login-card.manager {
+  border-top: 6px solid #2563eb;
+}
+
+.login-card.manager .login-btn,
+.login-card.manager .role-tabs button.active {
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+}
+
+.login-card.manager label,
+.login-card.manager .login-link {
+  color: #1e40af;
+}
+.login-card.manager {
+  background: linear-gradient(
+    135deg,
+    #eff6ff 0%,
+    #dbeafe 50%,
+    #bfdbfe 100%
+  );
+  border-top: 6px solid #2563eb;
+}
+
+.login-card.manager .role-tabs button.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.login-card.manager .login-btn {
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+}
+
+/* ---------- PRINCIPAL (GREEN) ---------- */
+.login-card.principal {
+  border-top: 6px solid #16a34a;
+}
+
+.login-card.principal .login-btn,
+.login-card.principal .role-tabs button.active {
+  background: linear-gradient(to right, #16a34a, #15803d);
+}
+
+.login-card.principal label,
+.login-card.principal .login-link {
+  color: #166534;
+}
+.login-card.principal {
+  background: linear-gradient(
+    135deg,
+    #f0fdf4 0%,
+    #dcfce7 50%,
+    #bbf7d0 100%
+  );
+  border-top: 6px solid #16a34a;
+}
+
+.login-card.principal .role-tabs button.active {
+  background: #16a34a;
+  color: #fff;
+}
+
+.login-card.principal .login-btn {
+  background: linear-gradient(to right, #16a34a, #15803d);
+}
+
+
+.login-card,
+.login-card * {
+  transition: background 0.35s ease, color 0.25s ease;
+}
+
+/* ---------- ADMIN (RED) ---------- */
+/* =========================================================
+   LOGO SIZE INCREASE (SAFE OVERRIDE)
+========================================================= */
+
+/* Desktop */
+.login-brand img {
+  height: 56px;      /* was 42px */
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .login-brand img {
+    height: 48px;    /* was 36px */
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .login-brand img {
+    height: 44px;
+  }
+}
+/* =========================================================
+   PERFECT CENTERING OF VTU HABBA TEXT
+========================================================= */
+
+/* Navbar as 3-column grid */
+.login-navbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+}
+
+/* Left logos */
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* EXACT CENTER */
+.brand-text {
+  justify-self: center;
+  text-align: center;
+}
+
+/* Right contact */
+.login-contact {
+  justify-self: end;
+}
+
+/* Mobile fallback */
+@media (max-width: 768px) {
+  .login-navbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .brand-text {
+    margin-top: 6px;
+  }
+}
+

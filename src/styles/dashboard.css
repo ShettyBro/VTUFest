@@ -1,5 +1,6 @@
+/* ================= EVENT CALENDAR ================= */
 .calendar-card {
-  background: #ffffff;
+  background: rgb(228, 248, 117);
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -15,8 +16,8 @@
 .view-buttons button {
   margin-left: 8px;
   padding: 6px 14px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
+  border: 1px solid blue;
+  background: rgb(119, 119, 253);
   cursor: pointer;
   border-radius: 6px;
 }
@@ -39,26 +40,12 @@
   color: white;
 }
 
-.event.blue {
-  background: #2563eb;
-}
+.event.blue { background: #2563eb; }
+.event.green { background: #16a34a; }
+.event.red { background: #dc2626; }
+.event.yellow { background: #eab308; }
 
-.event.green {
-  background: #16a34a;
-}
-
-.event.red {
-  background: #dc2626;
-}
-.event.yellow {
-  background: #eab308;
-}
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-}
-
+/* ================= INFO CARDS ================= */
 .dashboard-sections {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -83,4 +70,106 @@
 
 .info-card li {
   margin-bottom: 6px;
+}
+
+/* ================= CAMPUS MAP + BLOCK EVENTS ================= */
+/* ============================
+   BIGGER MAP + SIDE PANELS
+============================ */
+
+/* Wider layout */
+.dashboard-map-wrapper {
+  display: grid;
+  grid-template-columns: 1.6fr 4.2fr 1.6fr; /* ⬅ BIGGER sides + map */
+  gap: 40px;
+  margin: 50px auto;
+  max-width: 1600px;
+  align-items: flex-start;
+}
+
+/* Center map slightly larger */
+.map-center {
+  transform: scale(1.08);
+}
+
+/* Side panels spacing */
+.map-side {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* ============================
+   BIGGER BLOCK CARDS
+============================ */
+.block-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px 26px;          /* ⬅ MORE PADDING */
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+  border-left: 8px solid #2563eb;
+}
+
+/* Block titles */
+.block-card h4 {
+  font-size: 18px;             /* ⬅ BIGGER TITLE */
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #1e40af;
+}
+
+/* Event text */
+.block-card p {
+  font-size: 15px;             /* ⬅ BIGGER TEXT */
+  line-height: 1.7;
+  margin: 6px 0;
+  color: #374151;
+}
+
+/* Color differentiation */
+.map-side.left .block-card {
+  border-left-color: #16a34a;  /* green */
+}
+
+.map-side.right .block-card {
+  border-left-color: #f59e0b;  /* saffron */
+}
+
+/* ============================
+   TITLES ABOVE MAP
+============================ */
+.section-title {
+  font-size: 20px;             /* ⬅ BIGGER */
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  margin-bottom: 18px;
+  color: #6b7280;
+}
+
+/* ============================
+   RESPONSIVE (TABLET / MOBILE)
+============================ */
+@media (max-width: 1200px) {
+  .dashboard-map-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .map-center {
+    transform: scale(1);
+  }
+
+  .map-side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .block-card {
+    width: 100%;
+    max-width: 520px; /* ⬅ STILL BIG ON MOBILE */
+  }
 }

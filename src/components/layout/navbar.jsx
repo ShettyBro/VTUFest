@@ -11,10 +11,13 @@ export default function Navbar() {
 
   const navigate = useNavigate();
 
-  // Role from login
+  /* ================= USER DATA ================= */
   const role = localStorage.getItem("role") || "student";
+  const userProfile = JSON.parse(localStorage.getItem("userProfile")) || {};
 
-  // TEMP: Secret college code (later from backend)
+  const userName = userProfile.name || "User";
+  const userPhoto = userProfile.photo || "/user.png";
+
   const collegeCode = "ACH-VTU-2025";
 
   /* -------- CLOSE DROPDOWNS ON OUTSIDE CLICK -------- */
@@ -37,13 +40,13 @@ export default function Navbar() {
     <header className="navbar">
       {/* LEFT LOGOS */}
       <div className="navbar-left">
-        <img src="/vtu.png" alt="VTU" className="logo" />
+        <img src="/acharya.png" alt="Acharya" className="logo big-logo" />
         <span className="logo-divider">|</span>
-        <img src="/acharya.png" alt="Acharya" className="logo" />
+        <img src="/vtu.png" alt="VTU" className="logo big-logo" />
       </div>
 
-      {/* CENTER – COLLEGE CODE (ADMIN ONLY) */}
-      {(role === "principal" || role === "manager") && (
+      {/* CENTER – COLLEGE CODE */}
+      {(role === "principal" || role === "manager" || role === "admin") && (
         <div className="navbar-center">
           <span className="college-code">
             College Code: <strong>{collegeCode}</strong>
@@ -59,7 +62,21 @@ export default function Navbar() {
             className="notif-icon"
             onClick={() => setNotifOpen(!notifOpen)}
           >
-            🔔
+            {/* BLUE BELL SVG */}
+            <svg
+              className="bell-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+
             <span className="notif-badge">3</span>
           </div>
 
@@ -78,8 +95,12 @@ export default function Navbar() {
             className="profile-trigger"
             onClick={() => setProfileOpen(!profileOpen)}
           >
-            <img src="/user.png" alt="User" />
-            <span className="username">Rohith</span>
+            <img
+              src={userPhoto}
+              alt="User"
+              className="profile-avatar"
+            />
+            <span className="username">{userName}</span>
           </div>
 
           {profileOpen && (
@@ -90,6 +111,7 @@ export default function Navbar() {
               >
                 Change Password
               </div>
+
               <div
                 className="menu-item logout"
                 onClick={() => {

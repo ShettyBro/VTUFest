@@ -166,3 +166,91 @@
   background: #ffedd5;
   cursor: pointer;
 }
+.profile-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.profile-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f59e0b;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.profile-name:hover {
+  color: #92400e;
+}
+.profile-box:hover .profile-img {
+  border-color: #d97706;
+}
+.profile-box:hover .profile-name {
+  color: #b45309;
+}
+/* Dropdown Menu */
+.profile-dropdown {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 200px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1500;
+}
+.profile-dropdown-item {
+  padding: 12px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.profile-dropdown-item:hover {
+  background: #f3f4f6;
+}
+.profile-dropdown-item.logout {
+  color: #dc2626;
+  font-weight: 600;
+}
+.profile-dropdown-item.logout:hover {
+  background: #fef2f2;
+}
+/* -------- ADDITIONAL STYLES -------- */
+.navbar-spacer {
+  height: 60px; /* same as navbar height */
+}
+.navbar-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+/* Bigger logos */
+.big-logo {
+  height: 48px;       /* increase from default */
+  width: auto;
+}
+
+/* Bell icon styling */
+.bell-icon {
+  width: 22px;
+  height: 22px;
+  color: #2563eb;     /* BLUE */
+}
+
+/* Keep badge position intact */
+.notif-icon {
+  position: relative;
+  cursor: pointer;
+}
+

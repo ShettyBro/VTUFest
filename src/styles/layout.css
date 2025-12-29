@@ -4,7 +4,7 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  background: #f9fafb;
+  background: #a6c8e9;
 }
 
 /* =========================================================
@@ -111,4 +111,24 @@ body {
     margin-left: 56px;
     padding: 20px;
   }
+}
+/* =========================================================
+   LAYOUT SCROLLING (ALL PAGES)
+========================================================= */
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar is fixed width */
+.layout-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-left: 60px; /* sidebar width */
+}
+
+/* If navbar is fixed at top */
+.layout-content {
+  padding-top: 60px; /* navbar height */
 }

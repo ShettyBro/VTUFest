@@ -1,0 +1,55 @@
+.rules-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.rules-container h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 6px;
+}
+
+.rules-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+/* RULE CARD */
+.rules-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 26px 30px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  border-left: 6px solid #f59e0b; /* cultural saffron */
+}
+
+/* LIST */
+.rules-card ol {
+  padding-left: 20px;
+}
+
+.rules-card li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #374151;
+  margin-bottom: 14px;
+}
+
+/* STRONG HIGHLIGHT */
+.rules-card strong {
+  color: #92400e;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .rules-card {
+    padding: 20px;
+  }
+
+  .rules-container h2 {
+    font-size: 22px;
+  }
+}

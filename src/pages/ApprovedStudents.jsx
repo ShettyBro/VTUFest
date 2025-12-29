@@ -1,3 +1,5 @@
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import Layout from "../components/layout/layout";
 import "../styles/approvedStudents.css";
 
@@ -27,14 +29,49 @@ export default function ApprovedStudents() {
     },
   ];
 
+  /* ================= DOWNLOAD PDF ================= */
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(14);
+    doc.text("VTU HABBA 2025", 14, 15);
+    doc.setFontSize(12);
+    doc.text("Approved Participants List", 14, 25);
+
+    doc.autoTable({
+      startY: 32,
+      head: [["Name", "USN", "College", "Assigned Event"]],
+      body: approvedStudents.map((s) => [
+        s.name,
+        s.usn,
+        s.college,
+        s.assignedEvent,
+      ]),
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [37, 99, 235] }, // blue header
+    });
+
+    doc.save("approved_students_vtu_habba_2025.pdf");
+  };
+
   return (
     <Layout>
       <div className="approved-container">
-        <h2>Approved Participants</h2>
-        <p className="subtitle">
-          VTU HABBA 2025 – Final Approved Student List
-        </p>
+        {/* HEADER */}
+        <div className="approved-header">
+          <div>
+            <h2>Approved Participants</h2>
+            <p className="subtitle">
+              VTU HABBA 2025 – Final Approved Student List
+            </p>
+          </div>
 
+          <button className="pdf-btn" onClick={downloadPDF}>
+            Download PDF
+          </button>
+        </div>
+
+        {/* TABLE */}
         <div className="approved-table">
           <div className="table-header">
             <span>Name</span>

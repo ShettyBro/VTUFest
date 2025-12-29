@@ -54,3 +54,37 @@
   font-size: 13px;
   width: fit-content;
 }
+.approved-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.pdf-btn {
+  padding: 8px 14px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pdf-btn:hover {
+  background: #1e40af;
+}
+.loading {
+  text-align: center;
+  font-size: 16px;
+  color: #6b7280;
+}
+.no-data {
+  text-align: center;
+  font-size: 16px;
+  color: #6b7280;
+}
+.no-data img {
+  width: 150px;
+  margin-top: 20px;
+}
