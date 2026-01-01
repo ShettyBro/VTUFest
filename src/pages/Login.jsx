@@ -53,7 +53,7 @@ export default function Login() {
           <img src="/acharya.png" alt="Acharya Logo" />
           <span className="logo-separator">|</span>
           <img src="/vtu.png" alt="VTU Logo" />
-          
+
           <div className="brand-text">
             <h3>VTU HABBA 2026</h3>
             <span>Visvesvaraya Technological University</span>
@@ -63,8 +63,8 @@ export default function Login() {
         {/* RIGHT CONTACT */}
         <div className="login-contact">
           Contact: <strong>adsa@acharya.ac.in</strong>
-          <br></br>
-                   <strong>           1234567890</strong>
+          <br />
+          <strong>1234567890</strong>
         </div>
       </nav>
 
@@ -129,7 +129,7 @@ export default function Login() {
               <>
                 <span
                   className="login-link"
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/register-student")}
                 >
                   New Candidate Registration
                 </span>
@@ -149,7 +149,7 @@ export default function Login() {
 
       {/* ================= BOTTOM FOOTER ================= */}
       <footer className="login-bottom">
-        © 2026 ACHARYA INSTITUTE | VTU
+        © 2026 ACHARYA | VTU
       </footer>
     </div>
   );
