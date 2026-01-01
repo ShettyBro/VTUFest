@@ -9,7 +9,7 @@ export default function Layout({ children }) {
     <div className="layout">
       <Navbar role={role} />
       <Sidebar role={role} />
-      <main className="layout-content">
+      <main className="content">
         {children}
       </main>
     </div>

@@ -8,9 +8,14 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/" replace />;
   }
 
-  // Logged in but not allowed
+  // Logged in but not allowed — redirect by role
   if (!allowedRoles.includes(role)) {
-    return <Navigate to="/dashboard" replace />;
+    if (role === "student") return <Navigate to="/dashboard" replace />;
+    if (role === "principal") return <Navigate to="/principal-dashboard" replace />;
+    if (role === "subadmin") return <Navigate to="/subadmin-dashboard" replace />;
+
+    // fallback
+    return <Navigate to="/" replace />;
   }
 
   return children;

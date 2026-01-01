@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/StudentRegister.css";
+import "../styles/studentRegister.css";
 
 export default function StudentRegister() {
   const navigate = useNavigate();
@@ -13,6 +13,9 @@ export default function StudentRegister() {
     usn: "",
     mobile: "",
     email: "",
+    gender: "",
+    bloodGroup: "",
+    address: "",
     college: "",
     year: "",
     semester: "",
@@ -21,14 +24,30 @@ export default function StudentRegister() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleNext = () => {
+    // minimal validation for step 1
+    if (
+      !form.name ||
+      !form.usn ||
+      !form.mobile ||
+      !form.email ||
+      !form.gender ||
+      !form.bloodGroup ||
+      !form.address
+    ) {
+      alert("Please fill all required fields");
+      return;
+    }
+    setStep(2);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submitted Data:", form);
 
-    // Show success popup
+    console.log("Submitted Data:", form);
     setShowPopup(true);
   };
 
@@ -47,24 +66,71 @@ export default function StudentRegister() {
         <span className={step === 2 ? "active" : ""}>Documents</span>
       </div>
 
-      <form onSubmit={handleSubmit} className="reg-card">
+      <form className="reg-card" onSubmit={handleSubmit}>
         {/* STEP 1 */}
         {step === 1 && (
           <>
             <label>Name</label>
-            <input name="name" onChange={handleChange} required />
+            <input name="name" value={form.name} onChange={handleChange} />
 
             <label>USN</label>
-            <input name="usn" onChange={handleChange} required />
+            <input name="usn" value={form.usn} onChange={handleChange} />
 
             <label>Mobile</label>
-            <input name="mobile" maxLength="10" onChange={handleChange} required />
+            <input
+              name="mobile"
+              maxLength="10"
+              value={form.mobile}
+              onChange={handleChange}
+            />
 
             <label>Email</label>
-            <input type="email" name="email" onChange={handleChange} required />
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+            />
+
+            <label>Gender</label>
+            <select name="gender" value={form.gender} onChange={handleChange}>
+              <option value="">Select Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+
+            <label>Blood Group</label>
+            <select
+              name="bloodGroup"
+              value={form.bloodGroup}
+              onChange={handleChange}
+            >
+              <option value="">Select Blood Group</option>
+              <option>A+</option>
+              <option>A-</option>
+              <option>B+</option>
+              <option>B-</option>
+              <option>AB+</option>
+              <option>AB-</option>
+              <option>O+</option>
+              <option>O-</option>
+            </select>
+
+            <label>Permanent (Residential) Address</label>
+            <textarea
+              name="address"
+              rows="3"
+              value={form.address}
+              onChange={handleChange}
+            />
 
             <label>College</label>
-            <select name="college" onChange={handleChange} required>
+            <select
+              name="college"
+              value={form.college}
+              onChange={handleChange}
+            >
               <option value="">Select College</option>
               <option>Acharya Institute of Technology</option>
               <option>XYZ Engineering College</option>
@@ -72,7 +138,7 @@ export default function StudentRegister() {
             </select>
 
             <label>Year</label>
-            <select name="year" onChange={handleChange} required>
+            <select name="year" value={form.year} onChange={handleChange}>
               <option value="">Select Year</option>
               {[1, 2, 3, 4].map((y) => (
                 <option key={y}>{y}</option>
@@ -80,15 +146,23 @@ export default function StudentRegister() {
             </select>
 
             <label>Semester</label>
-            <select name="semester" onChange={handleChange} required>
+            <select
+              name="semester"
+              value={form.semester}
+              onChange={handleChange}
+            >
               <option value="">Select Semester</option>
-              {[1,2,3,4,5,6,7,8].map((s) => (
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
 
             <label>Department</label>
-            <select name="department" onChange={handleChange} required>
+            <select
+              name="department"
+              value={form.department}
+              onChange={handleChange}
+            >
               <option value="">Select Department</option>
               <option>AI&ML</option>
               <option>CSE</option>
@@ -99,7 +173,7 @@ export default function StudentRegister() {
               <option>Civil</option>
             </select>
 
-            <button type="button" onClick={() => setStep(2)}>
+            <button type="button" onClick={handleNext}>
               Next
             </button>
           </>
@@ -109,16 +183,13 @@ export default function StudentRegister() {
         {step === 2 && (
           <>
             <label>Aadhaar Card</label>
-            <input type="file" required />
+            <input type="file" />
 
             <label>10th Marks Card</label>
-            <input type="file" required />
+            <input type="file" />
 
             <label>College ID Card</label>
-            <input type="file" required />
-
-            <label>Passport Size Photo</label>
-            <input type="file" accept="image/*" required />
+            <input type="file" />
 
             <div className="btn-row">
               <button type="submit">Submit</button>

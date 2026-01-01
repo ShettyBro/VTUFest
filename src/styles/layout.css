@@ -3,18 +3,27 @@
 ========================================================= */
 .layout {
   display: flex;
-  min-height: 100vh;
+  flex-direction: column;
+  min-height: calc(100vh - 60px); /* navbar safe */
   background: #a6c8e9;
 }
 
 /* =========================================================
-   NAVBAR OFFSET HANDLING
+   GLOBAL BODY RESET
 ========================================================= */
 body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   font-family: "Segoe UI", sans-serif;
+}
+
+/* =========================================================
+   LAYOUT BODY (SIDEBAR + CONTENT)
+========================================================= */
+.layout-body {
+  display: flex;
+  flex: 1;
 }
 
 /* =========================================================
@@ -26,7 +35,7 @@ body {
   left: 0;
   width: 64px;
   height: calc(100vh - 60px);
-  background: #1e3a8a; /* VTU blue */
+  background: #1e3a8a;
   z-index: 100;
   transition: width 0.25s ease;
 }
@@ -40,12 +49,12 @@ body {
 ========================================================= */
 .content {
   flex: 1;
-  margin-left: 64px; /* collapsed sidebar width */
-  margin-top: 60px;  /* navbar height */
+  margin-left: 64px;
+  margin-top: 60px;
   padding: 28px;
   background: #f9fafb;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* =========================================================
@@ -58,7 +67,7 @@ body {
   left: -120px;
   width: 320px;
   height: 320px;
-  background: rgba(251, 191, 36, 0.15); /* saffron */
+  background: rgba(251, 191, 36, 0.15);
   border-radius: 50%;
   z-index: 0;
 }
@@ -70,7 +79,7 @@ body {
   right: -140px;
   width: 360px;
   height: 360px;
-  background: rgba(251, 191, 36, 0.12); /* saffron */
+  background: rgba(251, 191, 36, 0.12);
   border-radius: 50%;
   z-index: 0;
 }
@@ -84,7 +93,7 @@ body {
 }
 
 /* =========================================================
-   CARD BASE STYLE (USED ACROSS DASHBOARDS)
+   CARD BASE STYLE
 ========================================================= */
 .card,
 .calendar-card,
@@ -111,24 +120,4 @@ body {
     margin-left: 56px;
     padding: 20px;
   }
-}
-/* =========================================================
-   LAYOUT SCROLLING (ALL PAGES)
-========================================================= */
-
-.layout {
-  display: flex;
-  height: 100vh;
-}
-
-/* Sidebar is fixed width */
-.layout-content {
-  flex: 1;
-  overflow-y: auto;
-  padding-left: 60px; /* sidebar width */
-}
-
-/* If navbar is fixed at top */
-.layout-content {
-  padding-top: 60px; /* navbar height */
 }
