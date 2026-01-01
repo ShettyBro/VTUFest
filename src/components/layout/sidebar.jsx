@@ -105,9 +105,9 @@ export default function Sidebar({ role }) {
 
           <div
             className={`sidebar-item ${
-              isActive("/accompanist-form") ? "active" : ""
+              isActive("/Accompanist-Form") ? "active" : ""
             }`}
-            onClick={() => navigate("/accompanist-form")}
+            onClick={() => navigate("/Accompanist-Form")}
           >
             <Icon>
               <svg viewBox="0 0 24 24">
