@@ -1,23 +1,47 @@
+/* =========================================================
+   GLOBAL SCROLL FIX (CRITICAL)
+========================================================= */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* removes horizontal scroll */
+}
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
 .approval-container {
   max-width: 900px;
   margin: auto;
+  overflow-x: hidden; /* extra safety */
+  box-sizing: border-box;
 }
 
+/* =========================================================
+   STUDENT CARD
+========================================================= */
 .student-card {
   background: #ffffff;
   border-radius: 12px;
   margin-bottom: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* ================= MAIN ROW ================= */
+/* =========================================================
+   STUDENT ROW
+========================================================= */
 .student-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px 20px;
   cursor: pointer;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .student-row:hover {
@@ -30,7 +54,9 @@
   margin-top: 2px;
 }
 
-/* ================= STATUS ================= */
+/* =========================================================
+   STATUS
+========================================================= */
 .status {
   font-weight: 600;
 }
@@ -47,10 +73,13 @@
   color: #dc2626;
 }
 
-/* ================= ACTIONS ================= */
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
 .actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap; /* prevents overflow */
 }
 
 .actions button {
@@ -59,6 +88,7 @@
   border: none;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .actions .approve {
@@ -71,19 +101,35 @@
   color: #7f1d1d;
 }
 
+.actions .edit {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.actions .view {
+  background: #e5e7eb;
+  color: #111827;
+}
+
 .actions button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ================= EVENT PANEL ================= */
+/* =========================================================
+   EVENT PANEL
+========================================================= */
 .event-panel {
   padding: 18px 22px;
   background: #fffaf3;
   border-top: 1px solid #fde68a;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* Title */
+/* =========================================================
+   SECTION TITLES
+========================================================= */
 .assign-title {
   font-size: 15px;
   font-weight: 700;
@@ -91,46 +137,41 @@
   color: #92400e;
 }
 
-/* ================= EVENT CATEGORY ================= */
+/* =========================================================
+   EVENT CATEGORY
+========================================================= */
 .event-category {
   margin-bottom: 10px;
+  max-width: 100%;
 }
 
 .category-title {
-  font-size: 11.5px;              /* smaller than before */
+  font-size: 11.5px;
   font-weight: 600;
   text-transform: uppercase;
   color: #92400e;
-  margin-bottom: 4px;             /* reduced space below heading */
-  margin-top: 12px;               /* compact spacing between categories */
+  margin-bottom: 4px;
+  margin-top: 12px;
   border-left: 3px solid #f59e0b;
   padding-left: 6px;
   letter-spacing: 0.4px;
 }
 
-/* EVENT GRID – tighter vertical spacing */
+/* =========================================================
+   EVENT GRID (NO OVERFLOW)
+========================================================= */
 .event-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 8px 14px;   /* reduced row gap */
+  gap: 8px 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* EVENT OPTION CARD – compact height */
-.event-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;      /* reduced padding */
-  border-radius: 8px;
-  border: 1px solid #fde68a;
-  background: #ffffff;
-  font-size: 13px;        /* slightly smaller text */
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-/* ================= EVENT OPTION CARD ================= */
+/* =========================================================
+   EVENT OPTION
+========================================================= */
 .event-option {
   display: flex;
   align-items: center;
@@ -143,6 +184,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .event-option:hover {
@@ -150,7 +193,6 @@
   border-color: #f59e0b;
 }
 
-/* Checkbox */
 .event-option input {
   accent-color: #f59e0b;
   width: 16px;
@@ -158,97 +200,55 @@
   cursor: pointer;
 }
 
-/* Checked state */
 .event-option input:checked + .event-name {
   color: #92400e;
   font-weight: 600;
-}
-
-.event-option .event-name {
-  transition: color 0.2s ease;
 }
 
 .event-option input:checked {
   transform: scale(1.1);
 }
 
-/* ================= IMPORTANT OVERRIDE ================= */
-/* Disable hover-based reveal completely */
-.event-category:hover .event-grid {
-  display: grid;
-}
-/* ================= WARNING MODAL ================= */
-
-.warning-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+.event-option .event-name {
+  transition: color 0.2s ease;
+  word-break: break-word;
 }
 
-.warning-modal {
-  width: 420px;
-  background: #fff7ed;
-  border-radius: 14px;
-  padding: 26px 28px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
-  text-align: center;
-  animation: fadeInScale 0.25s ease;
-}
-
-.warning-modal h3 {
-  margin-bottom: 14px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #92400e;
-}
-
-.warning-modal ul {
-  text-align: left;
-  margin: 0 0 18px;
-  padding-left: 18px;
+/* =========================================================
+   VIEW MODE
+========================================================= */
+.view-only p {
   font-size: 14px;
-  color: #7c2d12;
+  margin-bottom: 6px;
+  color: #374151;
 }
 
-.warning-modal li {
-  margin-bottom: 8px;
-}
-
-.warning-btn {
-  padding: 10px 22px;
+/* =========================================================
+   FINAL SUBMIT BUTTON
+========================================================= */
+.final-submit {
+  margin-bottom: 18px;
+  padding: 10px 18px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(to right, #f59e0b, #d97706);
+  background: linear-gradient(to right, #2563eb, #1e40af);
   color: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.warning-btn:hover {
-  opacity: 0.95;
-}
-
-/* Animation */
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
+/* =========================================================
+   MOBILE SAFETY
+========================================================= */
+@media (max-width: 768px) {
+  .student-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 
-/* Mobile safety */
-@media (max-width: 480px) {
-  .warning-modal {
-    width: 90%;
-    padding: 22px;
+  .actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }

@@ -47,14 +47,14 @@ const ACCOMPANYING_EVENT_CATEGORIES = {
 
 export default function Approvals() {
   /* ================= ROLE ================= */
-  const isPrincipal = true; // later connect to auth
+  const isPrincipal = true; // connect later to auth
 
   /* ================= GLOBAL STATES ================= */
   const [isLocked, setIsLocked] = useState(false);
-  const [viewOnlyId, setViewOnlyId] = useState(null);
-  const [activeId, setActiveId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [viewId, setViewId] = useState(null);
 
-  /* ================= STUDENT DATA ================= */
+  /* ================= STUDENTS ================= */
   const [students, setStudents] = useState([
     {
       id: 1,
@@ -74,7 +74,7 @@ export default function Approvals() {
     },
   ]);
 
-  /* ================= TOGGLE EVENTS ================= */
+  /* ================= EVENT TOGGLES ================= */
   const toggleEvent = (id, event) => {
     if (isLocked) return;
     setStudents((prev) =>
@@ -115,7 +115,7 @@ export default function Approvals() {
         s.id === id ? { ...s, status: "Approved" } : s
       )
     );
-    setActiveId(null);
+    setEditingId(null);
   };
 
   const rejectStudent = (id) => {
@@ -132,19 +132,27 @@ export default function Approvals() {
           : s
       )
     );
-    setActiveId(null);
+    setEditingId(null);
   };
 
-  /* ================= CONTINGENT FINAL APPROVAL ================= */
+  /* ================= FINAL CONTINGENT APPROVAL ================= */
   const handleContingentApproval = () => {
-    const confirm = window.confirm(
+    const confirmLock = window.confirm(
       "Once this is done you cannot edit, add or remove anything"
     );
-    if (confirm) {
-      setIsLocked(true);
-      setActiveId(null);
-      setViewOnlyId(null);
-    }
+
+    if (!confirmLock) return;
+
+    setStudents((prev) =>
+      prev.map((s) => ({
+        ...s,
+        status: s.status === "Pending" ? "Rejected" : s.status,
+      }))
+    );
+
+    setIsLocked(true);
+    setEditingId(null);
+    setViewId(null);
   };
 
   return (
@@ -165,14 +173,7 @@ export default function Approvals() {
         {students.map((s) => (
           <div key={s.id} className="student-card">
             {/* ===== STUDENT ROW ===== */}
-            <div
-              className="student-row"
-              onClick={() =>
-                !isLocked &&
-                s.status === "Pending" &&
-                setActiveId(activeId === s.id ? null : s.id)
-              }
-            >
+            <div className="student-row">
               <div>
                 <strong>{s.name}</strong>
                 <div className="sub-text">{s.usn}</div>
@@ -185,16 +186,26 @@ export default function Approvals() {
               <div className="actions">
                 {!isLocked && (
                   <>
+                    {s.status === "Pending" && (
+                      <button
+                        className="edit"
+                        onClick={() =>
+                          setEditingId(
+                            editingId === s.id ? null : s.id
+                          )
+                        }
+                      >
+                        Edit
+                      </button>
+                    )}
+
                     <button
                       className="approve"
                       disabled={
                         s.status !== "Pending" ||
                         s.assignedEvents.length === 0
                       }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        approveStudent(s.id);
-                      }}
+                      onClick={() => approveStudent(s.id)}
                     >
                       Approve
                     </button>
@@ -202,10 +213,7 @@ export default function Approvals() {
                     <button
                       className="reject"
                       disabled={s.status !== "Pending"}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        rejectStudent(s.id);
-                      }}
+                      onClick={() => rejectStudent(s.id)}
                     >
                       Reject
                     </button>
@@ -215,12 +223,9 @@ export default function Approvals() {
                 {isLocked && (
                   <button
                     className="view"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewOnlyId(
-                        viewOnlyId === s.id ? null : s.id
-                      );
-                    }}
+                    onClick={() =>
+                      setViewId(viewId === s.id ? null : s.id)
+                    }
                   >
                     View
                   </button>
@@ -230,7 +235,7 @@ export default function Approvals() {
 
             {/* ===== EDIT PANEL ===== */}
             {!isLocked &&
-              activeId === s.id &&
+              editingId === s.id &&
               s.status === "Pending" && (
                 <div className="event-panel">
                   <p className="assign-title">
@@ -314,8 +319,11 @@ export default function Approvals() {
               )}
 
             {/* ===== VIEW MODE ===== */}
-            {isLocked && viewOnlyId === s.id && (
+            {isLocked && viewId === s.id && (
               <div className="event-panel view-only">
+                <p>
+                  <strong>Status:</strong> {s.status}
+                </p>
                 <p>
                   <strong>Participating Events:</strong>{" "}
                   {s.assignedEvents.join(", ") || "None"}

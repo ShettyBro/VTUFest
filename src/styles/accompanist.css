@@ -1,12 +1,18 @@
+/* =========================================================
+   PAGE CONTAINER
+   IMPORTANT: NO HEIGHT / MIN-HEIGHT HERE
+========================================================= */
 .accompanist-container {
   padding: 24px;
-  min-height: calc(100vh - 60px); /* navbar safe */
   box-sizing: border-box;
 }
 
+/* =========================================================
+   CARD
+========================================================= */
 .accompanist-card {
   max-width: 900px;
-  margin: 0 auto;
+  margin: 0 auto 40px;
   background: #ffffff;
   border-radius: 14px;
   padding: 30px;
@@ -25,7 +31,9 @@
   font-weight: 500;
 }
 
-/* Capacity Info */
+/* =========================================================
+   CAPACITY INFO
+========================================================= */
 .capacity-info {
   display: flex;
   justify-content: space-between;
@@ -37,7 +45,9 @@
   font-size: 14px;
 }
 
-/* GRID */
+/* =========================================================
+   FORM GRID
+========================================================= */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -66,7 +76,9 @@ select:focus {
   border-color: #f59e0b;
 }
 
-/* DOCUMENTS */
+/* =========================================================
+   DOCUMENT UPLOADS
+========================================================= */
 .documents {
   margin-top: 20px;
   display: grid;
@@ -74,7 +86,15 @@ select:focus {
   gap: 20px;
 }
 
-/* BUTTONS */
+/* =========================================================
+   BUTTONS
+========================================================= */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
 .submit-btn {
   flex: 1;
   padding: 12px;
@@ -95,17 +115,9 @@ select:focus {
   opacity: 0.92;
 }
 
-.success-message {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #d1fae5;
-  color: #065f46;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: 500;
-}
-
-/* PREVIEW */
+/* =========================================================
+   PREVIEW
+========================================================= */
 .preview {
   margin-top: 25px;
   background: #f9fafb;
@@ -120,4 +132,18 @@ select:focus {
 
 .preview ul {
   padding-left: 18px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 768px) {
+  .form-grid,
+  .documents {
+    grid-template-columns: 1fr;
+  }
+
+  .btn-row {
+    flex-direction: column;
+  }
 }

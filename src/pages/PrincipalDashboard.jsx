@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/principalDashboard.css";
+import "../styles/PrincipalDashboard.css";
 import CampusMap from "../components/CampusMap";
 
 export default function PrincipalDashboard() {
@@ -124,7 +124,7 @@ export default function PrincipalDashboard() {
 
           <div
             className="stat-card warning clickable"
-            onClick={() => navigate("/add-accompanist")}
+            onClick={() => navigate("/accompanist-form")}
           >
             <h4>Accompanists</h4>
             <p>0</p>
