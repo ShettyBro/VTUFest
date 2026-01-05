@@ -3,6 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "authors": [
+    "Rohith Reddy B",
+    "SudeepBro "
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
