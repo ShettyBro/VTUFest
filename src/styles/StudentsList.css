@@ -1,0 +1,80 @@
+.list-container {
+  background: #ffffff;                /* WHITE */
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(30, 64, 175, 0.12); /* BLUE SHADOW */
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.list-header button {
+  padding: 8px 14px;
+  background: #2563eb;                /* BLUE */
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.list-header button:hover {
+  background: #1e40af;                /* DARKER BLUE */
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  border-bottom: 1px solid #ffedd5;   /* SAFFRON TINT */
+}
+
+/* TABLE HEADER */
+th {
+  text-align: left;
+  background: #eff6ff;                /* LIGHT BLUE */
+  color: #1e40af;                     /* BLUE */
+  font-weight: 600;
+}
+
+/* TABLE DATA */
+td {
+  background: #ffffff;                /* WHITE */
+  color: #1e40af;                     /* BLUE TEXT */
+}
+
+/* ACTION BUTTON IN TABLE */
+td button {
+  padding: 6px 10px;
+  background: #f59e0b;                /* SAFFRON */
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+td button:hover {
+  background: #d97706;                /* DARKER SAFFRON */
+}
+
+/* =========================================================
+   SIDEBAR ICON SIZE (UNCHANGED)
+========================================================= */
+.sidebar-item span:first-child {
+  font-size: 18px;
+}

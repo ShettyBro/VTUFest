@@ -1,0 +1,187 @@
+/* ================= GLOBAL ================= */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #ffffff;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ================= EVENT CALENDAR ================= */
+.calendar-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.view-buttons button {
+  margin-left: 8px;
+  padding: 6px 14px;
+  border: 1px solid #1e40af;
+  background: #1e40af;
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.view-buttons button:hover {
+  background: #ff9933;
+  color: #ffffff;
+}
+
+/* ================= CALENDAR GRID ================= */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(40px, 1fr));
+  gap: 10px;
+}
+
+.event {
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.event.blue { background: #1e40af; }
+.event.green { background: #ff9933; }
+.event.red { background: #1e40af; }
+.event.yellow { background: #ff9933; }
+
+/* ================= INFO CARDS ================= */
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.info-card {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.info-card h4 {
+  margin-bottom: 10px;
+  color: #1e40af;
+}
+
+.info-card ul {
+  padding-left: 18px;
+}
+
+.info-card li {
+  margin-bottom: 6px;
+}
+
+/* ================= MAP + SIDE PANELS ================= */
+.dashboard-map-wrapper {
+  display: grid;
+  grid-template-columns: 1.6fr 4.2fr 1.6fr;
+  gap: 60px;               /* ✅ CLEAR GAP BETWEEN MAP & BLOCKS */
+  margin: 50px auto;
+  max-width: 1600px;
+  align-items: flex-start;
+}
+
+/* Center map */
+.map-center {
+  transform: scale(1.08);
+  padding: 20px;           /* ✅ extra breathing space around map */
+}
+
+/* Side panels */
+.map-side {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* ================= BLOCK CARDS ================= */
+.block-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px 26px;
+  border-left: 8px solid #1e40af;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
+.map-side.right .block-card {
+  border-left-color: #ff9933;
+}
+
+.block-card h4 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #1e40af;
+}
+
+.block-card p {
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 6px 0;
+  color: #1e40af;
+}
+
+/* ================= TITLES ================= */
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #1e40af;
+}
+
+.section-subtitle {
+  font-size: 14px;
+  margin-bottom: 18px;
+  color: #ff9933;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1200px) {
+  .dashboard-map-wrapper {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .map-center {
+    transform: scale(1);
+    padding: 0;
+  }
+
+  .map-side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .block-card {
+    width: 100%;
+    max-width: 520px;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

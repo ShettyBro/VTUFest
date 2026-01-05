@@ -1,0 +1,256 @@
+/* -------- NAVBAR -------- */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 60px;
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1000;
+}
+
+/* -------- LEFT LOGOS -------- */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  height: 36px;
+  object-fit: contain;
+}
+
+.logo-divider {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+
+/* -------- RIGHT ACTIONS (BELL + PROFILE) -------- */
+.navbar-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px; /* spacing between bell and profile */
+}
+
+/* -------- NOTIFICATION BELL -------- */
+.notif-wrapper {
+  position: relative;
+}
+
+.notif-icon {
+  position: relative;
+  font-size: 20px;
+  cursor: pointer;
+  color: #1e3a8a;
+}
+
+.notif-icon:hover {
+  color: #1d4ed8;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+/* -------- NOTIFICATION DROPDOWN -------- */
+.notif-dropdown {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 240px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1500;
+}
+
+.notif-item {
+  padding: 12px 14px;
+  font-size: 14px;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item:hover {
+  background: #f3f4f6;
+}
+
+/* -------- PROFILE -------- */
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.profile-trigger img {
+  height: 34px;
+  width: 34px;
+  border-radius: 50%;
+}
+
+.username {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* -------- PROFILE DROPDOWN -------- */
+.profile-menu {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 180px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1500;
+}
+
+.menu-item {
+  padding: 12px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: #f3f4f6;
+}
+
+.menu-item.logout {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.menu-item.logout:hover {
+  background: #fef2f2;
+}
+/* -------- CENTER CODE -------- */
+.navbar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.college-code {
+  font-size: 15px;
+  font-weight: 600;
+  color: #92400e; /* saffron-brown */
+  background: #fff7ed;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #fbbf24;
+}
+.college-code:hover {
+  background: #ffedd5;
+  cursor: pointer;
+}
+.profile-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.profile-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f59e0b;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+.profile-name:hover {
+  color: #92400e;
+}
+.profile-box:hover .profile-img {
+  border-color: #d97706;
+}
+.profile-box:hover .profile-name {
+  color: #b45309;
+}
+/* Dropdown Menu */
+.profile-dropdown {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 200px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 1500;
+}
+.profile-dropdown-item {
+  padding: 12px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.profile-dropdown-item:hover {
+  background: #f3f4f6;
+}
+.profile-dropdown-item.logout {
+  color: #dc2626;
+  font-weight: 600;
+}
+.profile-dropdown-item.logout:hover {
+  background: #fef2f2;
+}
+/* -------- ADDITIONAL STYLES -------- */
+.navbar-spacer {
+  height: 60px; /* same as navbar height */
+}
+.navbar-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+/* Bigger logos */
+.big-logo {
+  height: 48px;       /* increase from default */
+  width: auto;
+}
+
+/* Bell icon styling */
+.bell-icon {
+  width: 22px;
+  height: 22px;
+  color: #2563eb;     /* BLUE */
+}
+
+/* Keep badge position intact */
+.notif-icon {
+  position: relative;
+  cursor: pointer;
+}
+

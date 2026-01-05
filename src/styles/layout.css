@@ -1,0 +1,160 @@
+/* =========================================================
+   HARD RESET — SINGLE SCROLL OWNER
+========================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* NEVER SCROLL */
+  overflow-y:auto;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* NEVER SCROLL */
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* =========================================================
+   ROOT LAYOUT
+========================================================= */
+.layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #a6c8e9;
+  overflow: hidden;
+}
+
+/* =========================================================
+   LAYOUT BODY (NO SCROLL)
+========================================================= */
+.layout-body {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+.sidebar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 64px;
+  height: calc(100% - 60px);
+  background: #1e3a8a;
+  z-index: 100;
+  transition: width 0.25s ease;
+  overflow: hidden;
+}
+
+.sidebar.open {
+  width: 220px;
+}
+
+/* =========================================================
+   MAIN CONTENT — ONLY SCROLL AREA
+========================================================= */
+.content {
+  position: relative;
+  margin-left: 64px;
+  margin-top: 60px;
+
+  width: calc(100% - 64px);
+  height: calc(100% - 60px);
+
+  padding: 28px;
+  background: #f9fafb;
+
+  overflow-y: auto;     /* ONLY SCROLL HERE */
+  overflow-x: hidden;
+
+  /* HIDE SCROLLBAR VISUALLY */
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* Edge */
+}
+
+.content::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* =========================================================
+   DECORATIVE BACKGROUND (CLIPPED)
+========================================================= */
+.content::before,
+.content::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.12);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.content::before {
+  top: -120px;
+  left: -120px;
+  width: 320px;
+  height: 320px;
+}
+
+.content::after {
+  bottom: -120px;
+  right: -120px;
+  width: 320px;
+  height: 320px;
+}
+
+/* =========================================================
+   CONTENT ABOVE DECORATION
+========================================================= */
+.content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================================
+   CARD BASE
+========================================================= */
+.card,
+.calendar-card,
+.info-card,
+.stat-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  max-width: 100%;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 56px;
+  }
+
+  .sidebar.open {
+    width: 200px;
+  }
+
+  .content {
+    margin-left: 56px;
+    width: calc(100% - 56px);
+    padding: 20px;
+  }
+}
