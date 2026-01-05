@@ -6,29 +6,39 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [role, setRole] = useState("student");
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   /* ---------- RESET FIELDS WHEN ROLE CHANGES ---------- */
   const handleRoleChange = (newRole) => {
     setRole(newRole);
-    setUsername("");
+    setEmail("");
     setPassword("");
+  };
+
+  /* ---------- EMAIL VALIDATION ---------- */
+  const isValidEmail = (value) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
   /* ---------- LOGIN HANDLER ---------- */
   const handleLogin = (e) => {
     e.preventDefault();
 
-    if (!username || !password) {
-      alert("Please enter username and password");
+    if (!email || !password) {
+      alert("Please enter email ID and password");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      alert("Please enter a valid email ID");
       return;
     }
 
     // TEMP: Hardcoded Principal / Team Manager login
     if (role === "principal" || role === "manager") {
-      if (username !== "ait@acharya.ac.in" || password !== "123") {
-        alert("Invalid credentials for Principal / Team Manager");
+      if (email !== "ait@acharya.ac.in" || password !== "123") {
+        alert("Invalid email or password for Principal / Team Manager");
         return;
       }
 
@@ -48,7 +58,6 @@ export default function Login() {
     <div className="login-page">
       {/* ================= TOP NAVBAR ================= */}
       <nav className="login-navbar">
-        {/* LEFT BRAND */}
         <div className="login-brand">
           <img src="/acharya.png" alt="Acharya Logo" />
           <span className="logo-separator">|</span>
@@ -60,7 +69,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* RIGHT CONTACT */}
         <div className="login-contact">
           Contact: <strong>adsa@acharya.ac.in</strong>
           <br />
@@ -100,12 +108,12 @@ export default function Login() {
 
           {/* FORM */}
           <form onSubmit={handleLogin}>
-            <label>Username</label>
+            <label>Email ID</label>
             <input
-              type="text"
-              placeholder={`Enter ${role} username`}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder={`Enter ${role} email ID`}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
 

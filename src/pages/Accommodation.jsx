@@ -7,13 +7,13 @@ export default function Accommodation() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    college: "",
+    collegeName: "",
+    place: "",
     girls: "",
     boys: "",
-    girlsName: "",
-    girlsPhone: "",
-    boysName: "",
-    boysPhone: "",
+    contactName: "",
+    contactPhone: "",
+    contactEmail: "",
   });
 
   const handleChange = (e) => {
@@ -28,11 +28,17 @@ export default function Accommodation() {
       "accommodation",
       JSON.stringify({
         status: "assigned",
-        ...form,
+        collegeName: form.collegeName,
+        place: form.place,
+        girls: Number(form.girls),
+        boys: Number(form.boys),
+        contactName: form.contactName,
+        contactPhone: form.contactPhone,
+        contactEmail: form.contactEmail,
       })
     );
 
-    alert("Accommodation details submitted");
+    alert("Accommodation details submitted successfully");
     navigate("/principal-dashboard");
   };
 
@@ -42,14 +48,25 @@ export default function Accommodation() {
         <h2>Accommodation Details</h2>
 
         <form onSubmit={handleSubmit}>
+          {/* COLLEGE NAME */}
           <label>College Name</label>
           <input
-            name="college"
-            value={form.college}
+            name="collegeName"
+            value={form.collegeName}
             onChange={handleChange}
             required
           />
 
+          {/* PLACE */}
+          <label>Place</label>
+          <input
+            name="place"
+            value={form.place}
+            onChange={handleChange}
+            required
+          />
+
+          {/* GIRLS */}
           <label>No. of Girls</label>
           <input
             type="number"
@@ -59,22 +76,7 @@ export default function Accommodation() {
             required
           />
 
-          <label>Girls Contact Person</label>
-          <input
-            name="girlsName"
-            placeholder="Name"
-            value={form.girlsName}
-            onChange={handleChange}
-            required
-          />
-          <input
-            name="girlsPhone"
-            placeholder="Phone"
-            value={form.girlsPhone}
-            onChange={handleChange}
-            required
-          />
-
+          {/* BOYS */}
           <label>No. of Boys</label>
           <input
             type="number"
@@ -84,18 +86,32 @@ export default function Accommodation() {
             required
           />
 
-          <label>Boys Contact Person</label>
+          {/* CONTACT PERSON */}
+          <label>Contact Person Name</label>
           <input
-            name="boysName"
-            placeholder="Name"
-            value={form.boysName}
+            name="contactName"
+            placeholder="Full Name"
+            value={form.contactName}
             onChange={handleChange}
             required
           />
+
+          <label>Contact Mobile Number</label>
           <input
-            name="boysPhone"
-            placeholder="Phone"
-            value={form.boysPhone}
+            type="tel"
+            name="contactPhone"
+            placeholder="10-digit mobile number"
+            value={form.contactPhone}
+            onChange={handleChange}
+            required
+          />
+
+          <label>Contact Email ID</label>
+          <input
+            type="email"
+            name="contactEmail"
+            placeholder="example@college.edu"
+            value={form.contactEmail}
             onChange={handleChange}
             required
           />

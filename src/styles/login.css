@@ -382,7 +382,7 @@
 
 /* ---------- TEAM MANAGER (BLUE) ---------- */
 .login-card.manager {
-  border-top: 6px solid #2563eb;
+  border-top: 6px solid #ffffff;
 }
 
 .login-card.manager .login-btn,
@@ -406,7 +406,7 @@
 
 .login-card.manager .role-tabs button.active {
   background: #2563eb;
-  color: #fff;
+  color: #ffffff;
 }
 
 .login-card.manager .login-btn {

@@ -18,7 +18,7 @@ export default function Navbar() {
   const userName = userProfile.name || "User";
   const userPhoto = userProfile.photo || "/user.png";
 
-  const collegeCode = "ACH-VTU-2025";
+  const collegeCode = "ACH-VTU-2026";
 
   /* -------- CLOSE DROPDOWNS ON OUTSIDE CLICK -------- */
   useEffect(() => {

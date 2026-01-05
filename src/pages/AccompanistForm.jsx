@@ -61,7 +61,7 @@ export default function AccompanistForm() {
         <div className="accompanist-card">
           <h2>Add Accompanist</h2>
           <p className="subtitle">
-            VTU HABBA 2025 – Accompanist Registration
+            VTU HABBA 2026 – Accompanist Registration
           </p>
 
           <div className="capacity-info">

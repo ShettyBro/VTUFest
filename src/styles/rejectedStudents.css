@@ -1,24 +1,30 @@
 .rejected-container {
   padding: 30px;
+  background: transparent;
 }
 
+/* =========================================================
+   PAGE TITLE
+========================================================= */
 .rejected-container h2 {
   font-size: 22px;
   margin-bottom: 5px;
-  color: #991b1b; /* red */
+  color: #1e40af; /* BLUE */
 }
 
 .subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #2563eb; /* BLUE */
   margin-bottom: 25px;
 }
 
-/* TABLE */
+/* =========================================================
+   TABLE
+========================================================= */
 .rejected-table {
-  background: white;
+  background: #ffffff; /* WHITE */
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(30, 64, 175, 0.12); /* BLUE SHADOW */
   overflow: hidden;
 }
 
@@ -30,23 +36,30 @@
   align-items: center;
 }
 
+/* HEADER */
 .table-header {
-  background: #fef2f2;
+  background: #eff6ff; /* LIGHT BLUE */
   font-weight: 600;
   font-size: 14px;
-  border-bottom: 1px solid #fecaca;
+  border-bottom: 1px solid #bfdbfe; /* BLUE BORDER */
+  color: #1e40af; /* BLUE TEXT */
 }
 
+/* ROWS */
 .table-row {
   font-size: 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #ffedd5; /* SAFFRON TINT */
+  color: #1e40af; /* BLUE TEXT */
 }
 
 .table-row:last-child {
   border-bottom: none;
 }
 
+/* =========================================================
+   REJECTION REASON
+========================================================= */
 .reason {
-  color: #b91c1c;
-  font-weight: 500;
+  color: #f59e0b; /* SAFFRON */
+  font-weight: 600;
 }

@@ -53,27 +53,43 @@ export default function Sidebar({ role }) {
             <span className="label">Dashboard</span>
           </div>
 
-         <div
-          className={`sidebar-item ${
-            isActive("/approvals") ? "active" : ""
-          }`}
-          onClick={() => navigate("/approvals")}
-        >
-          <Icon>
+          {/* ================= APPROVE / REJECT (STAMP SVG) ================= */}
+          <div
+            className={`sidebar-item ${
+              isActive("/approvals") ? "active" : ""
+            }`}
+            onClick={() => navigate("/approvals")}
+          >
+           <Icon>
             <svg
               viewBox="0 0 24 24"
               fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+              stroke="white"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M5 13l4 4L19 7" />
+              {/* Paper */}
+              <path d="M3 16h18l-2 5H5l-2-5z" />
+
+              {/* Paper lines */}
+              <path d="M8 18h8" />
+              <path d="M8 20h6" />
+
+              {/* Stamp handle */}
+              <path d="M14 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+              <path d="M10 6h4" />
+
+              {/* Stamp neck */}
+              <path d="M9 6l-1 3h8l-1-3" />
+
+              {/* Stamp base */}
+              <rect x="7" y="9" width="10" height="3" rx="1" />
             </svg>
           </Icon>
-          <span className="label">Approve / Reject</span>
-        </div>
 
+            <span className="label">Approve / Reject</span>
+          </div>
 
           <div
             className={`sidebar-item ${
@@ -105,9 +121,9 @@ export default function Sidebar({ role }) {
 
           <div
             className={`sidebar-item ${
-              isActive("/Accompanist-Form") ? "active" : ""
+              isActive("/accompanist-form") ? "active" : ""
             }`}
-            onClick={() => navigate("/Accompanist-Form")}
+            onClick={() => navigate("/accompanist-form")}
           >
             <Icon>
               <svg viewBox="0 0 24 24">
@@ -133,7 +149,7 @@ export default function Sidebar({ role }) {
         </>
       )}
 
-      {/* ================= RULES & REGULATIONS – ALL ROLES ================= */}
+      {/* ================= RULES ================= */}
       <div
         className={`sidebar-item ${isActive("/rules") ? "active" : ""}`}
         onClick={() => navigate("/rules")}
@@ -153,7 +169,6 @@ export default function Sidebar({ role }) {
             <path d="M8 17h6" />
           </svg>
         </Icon>
-
         <span className="label">Rules & Regulations</span>
       </div>
     </aside>

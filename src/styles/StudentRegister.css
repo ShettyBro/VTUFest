@@ -1,9 +1,34 @@
 /* =========================================================
-   PAGE BACKGROUND (SCOPED – SAFE)
+   ROOT — SINGLE SCROLL OWNER (SCROLL ENABLED)
+========================================================= */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;              /* ✅ SCROLL ENABLED */
+  font-family: "Segoe UI", sans-serif;
+  scroll-behavior: smooth;
+
+  /* HIDE SCROLLBAR VISUALLY */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* =========================================================
+   PAGE CONTAINER
 ========================================================= */
 .reg-container {
   max-width: 600px;
-  margin: 40px auto;
+  margin: 40px auto 80px;        /* ✅ bottom space ensures full scroll */
   padding: 0 16px;
   font-family: "Segoe UI", sans-serif;
   position: relative;
@@ -27,7 +52,7 @@
 }
 
 /* =========================================================
-   ABSTRACT DECORATION (SAFE)
+   ABSTRACT DECORATION
 ========================================================= */
 .reg-container::after {
   content: "";
@@ -123,13 +148,11 @@ textarea {
   box-sizing: border-box;
 }
 
-/* ADDRESS — SAME STYLE, JUST TALLER */
 textarea {
-  height: 90px;   /* more space */
-  resize: none;   /* no big/small handle */
+  height: 90px;
+  resize: none;
 }
 
-/* FOCUS STATE */
 input:focus,
 select:focus,
 textarea:focus {

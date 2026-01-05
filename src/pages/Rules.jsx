@@ -14,11 +14,11 @@ export default function Rules() {
           <ol>
             <li>
               The 24th VTU Youth Festival is scheduled to take place from March
-              24 to March 27, 2025.
+              24 to March 27, 2026.
             </li>
             <li>
-              Team registrations will open on February 20, 2025, and close on
-              March 10, 2025.
+              Team registrations will open on February 20, 2026, and close on
+              March 10, 2026.
             </li>
             <li>
               Late registrations and requests for modifications after submission

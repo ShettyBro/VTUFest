@@ -16,19 +16,21 @@
   background: #ffffff;
   border-radius: 14px;
   padding: 30px;
+  border-top: 6px solid #ff9933;   /* saffron accent */
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
 }
 
 .accompanist-card h2 {
   text-align: center;
-  color: #1e3a8a;
+  color: #1e40af;                 /* blue */
 }
 
+/* Subtitle */
 .subtitle {
   text-align: center;
-  color: #b45309;
+  color: #ff9933;                 /* saffron */
   margin-bottom: 25px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* =========================================================
@@ -37,12 +39,13 @@
 .capacity-info {
   display: flex;
   justify-content: space-between;
-  background: #fff7ed;
-  border: 1px solid #fde68a;
+  background: #fff7ed;            /* light saffron tint */
+  border: 1px solid #ff9933;
   padding: 12px 16px;
   border-radius: 10px;
   margin-bottom: 20px;
   font-size: 14px;
+  color: #1e40af;
 }
 
 /* =========================================================
@@ -56,9 +59,10 @@
 
 label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   display: block;
   margin-bottom: 6px;
+  color: #1e40af;
 }
 
 input,
@@ -69,11 +73,13 @@ select {
   border: 1px solid #d1d5db;
   outline: none;
   box-sizing: border-box;
+  font-size: 14px;
 }
 
 input:focus,
 select:focus {
-  border-color: #f59e0b;
+  border-color: #ff9933;          /* saffron focus */
+  box-shadow: 0 0 0 2px rgba(255, 153, 51, 0.25);
 }
 
 /* =========================================================
@@ -98,21 +104,24 @@ select:focus {
 .submit-btn {
   flex: 1;
   padding: 12px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
+  background: #1e40af;            /* blue primary */
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .submit-btn.secondary {
-  background: #1e3a8a;
+  background: #ff9933;            /* saffron secondary */
+  color: #ffffff;
 }
 
 .submit-btn:hover {
-  opacity: 0.92;
+  transform: translateY(-1px);
+  opacity: 0.95;
 }
 
 /* =========================================================
@@ -120,18 +129,25 @@ select:focus {
 ========================================================= */
 .preview {
   margin-top: 25px;
-  background: #f9fafb;
+  background: #ffffff;
+  border-left: 5px solid #1e40af;
   border-radius: 10px;
   padding: 16px;
 }
 
 .preview h4 {
   margin-bottom: 10px;
-  color: #1f2937;
+  color: #1e40af;
+  font-weight: 700;
 }
 
 .preview ul {
   padding-left: 18px;
+}
+
+.preview li {
+  font-size: 14px;
+  color: #1e40af;
 }
 
 /* =========================================================
@@ -145,5 +161,9 @@ select:focus {
 
   .btn-row {
     flex-direction: column;
+  }
+
+  .accompanist-card {
+    padding: 22px;
   }
 }

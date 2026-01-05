@@ -1,28 +1,33 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
+/* PUBLIC */
 import Login from "../pages/Login";
+import RegisterStudent from "../pages/RegisterStudent";
+import ForgotPassword from "../pages/ForgotPassword";
+
+/* STUDENT */
 import Dashboard from "../pages/Dashboard";
+import StudentRegister from "../pages/StudentRegister";
+
+/* ADMIN / MANAGER */
 import PrincipalDashboard from "../pages/PrincipalDashboard";
 import Approvals from "../pages/Approvals";
 import ApprovedStudents from "../pages/ApprovedStudents";
 import RejectedStudents from "../pages/RejectedStudents";
 import Accommodation from "../pages/Accommodation";
-import Rules from "../pages/Rules";
-import StudentRegister from "../pages/StudentRegister";
-import RegisterStudent from "../pages/RegisterStudent";
 import AccompanistForm from "../pages/AccompanistForm";
-import ForgotPassword from "../pages/ForgotPassword";
+import Rules from "../pages/Rules";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* PUBLIC ROUTES */}
+      {/* ================= PUBLIC ================= */}
       <Route path="/" element={<Login />} />
       <Route path="/register-student" element={<RegisterStudent />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* PROTECTED ROUTES */}
+      {/* ================= STUDENT ================= */}
       <Route
         path="/dashboard"
         element={
@@ -33,6 +38,16 @@ export default function AppRoutes() {
       />
 
       <Route
+        path="/student-register"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentRegister />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ================= PRINCIPAL + MANAGER ================= */}
+      <Route
         path="/principal-dashboard"
         element={
           <ProtectedRoute allowedRoles={["principal", "manager"]}>
@@ -41,19 +56,21 @@ export default function AppRoutes() {
         }
       />
 
+      {/* ❌ CONTINGENT APPROVAL — PRINCIPAL ONLY */}
       <Route
         path="/approvals"
         element={
-          <ProtectedRoute allowedRoles={["principal"]}>
+          <ProtectedRoute allowedRoles={["principal", "manager"]}>
             <Approvals />
           </ProtectedRoute>
         }
       />
 
+      {/* VIEW LISTS — BOTH */}
       <Route
         path="/approved-students"
         element={
-          <ProtectedRoute allowedRoles={["principal"]}>
+          <ProtectedRoute allowedRoles={["principal", "manager"]}>
             <ApprovedStudents />
           </ProtectedRoute>
         }
@@ -62,35 +79,38 @@ export default function AppRoutes() {
       <Route
         path="/rejected-students"
         element={
-          <ProtectedRoute allowedRoles={["principal"]}>
+          <ProtectedRoute allowedRoles={["principal", "manager"]}>
             <RejectedStudents />
           </ProtectedRoute>
         }
       />
 
+      {/* ACCOMMODATION — BOTH */}
       <Route
         path="/accommodation"
         element={
-          <ProtectedRoute allowedRoles={["principal"]}>
+          <ProtectedRoute allowedRoles={["principal", "manager"]}>
             <Accommodation />
           </ProtectedRoute>
         }
       />
 
+      {/* ACCOMPANIST — STUDENT + ADMIN */}
       <Route
-        path="/rules"
+        path="/accompanist-form"
         element={
-          <ProtectedRoute allowedRoles={["student", "principal"]}>
-            <Rules />
+          <ProtectedRoute allowedRoles={["student", "principal", "manager"]}>
+            <AccompanistForm />
           </ProtectedRoute>
         }
       />
 
+      {/* RULES — ALL */}
       <Route
-        path="/accompanist-form"
+        path="/rules"
         element={
-          <ProtectedRoute allowedRoles={["student", "principal"]}>
-            <AccompanistForm />
+          <ProtectedRoute allowedRoles={["student", "principal", "manager"]}>
+            <Rules />
           </ProtectedRoute>
         }
       />

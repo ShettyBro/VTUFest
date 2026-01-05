@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/forgotPassword.css";
+import "../styles/ForgotPassword.css";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();

@@ -2,11 +2,11 @@ import { useState } from "react";
 import Layout from "../components/layout/layout";
 import "../styles/approvals.css";
 
-/* ================= PARTICIPATING EVENTS ================= */
+/* ================= EVENTS ================= */
 const EVENT_CATEGORIES = {
   Theatre: ["Mime", "Mimicry", "One-Act Play", "Skits"],
   Literary: ["Debate", "Elocution", "Quiz"],
-  "Fine Arts": [
+  Fine_Arts: [
     "Cartooning",
     "Clay Modelling",
     "Collage Making",
@@ -29,10 +29,9 @@ const EVENT_CATEGORIES = {
   Dance: ["Folk / Tribal Dance", "Classical Dance Solo"],
 };
 
-/* ================= ACCOMPANYING EVENTS ================= */
 const ACCOMPANYING_EVENT_CATEGORIES = {
-  Theatre: ["One-Act Play", "Skits", "Classical Dance Solo"],
-  Dance: ["Folk / Tribal Dance"],
+  Theatre: ["One-Act Play", "Skits"],
+  Dance: ["Folk / Tribal Dance", "Classical Dance Solo"],
   Music: [
     "Classical Vocal Solo (Hindustani/Carnatic)",
     "Classical Instrumental Solo (Percussion Tala Vadya)",
@@ -46,15 +45,13 @@ const ACCOMPANYING_EVENT_CATEGORIES = {
 };
 
 export default function Approvals() {
-  /* ================= ROLE ================= */
-  const isPrincipal = true; // connect later to auth
+  const role = localStorage.getItem("role") || "manager";
+  const isPrincipal = role === "principal";
 
-  /* ================= GLOBAL STATES ================= */
   const [isLocked, setIsLocked] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [viewId, setViewId] = useState(null);
+  const [openId, setOpenId] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  /* ================= STUDENTS ================= */
   const [students, setStudents] = useState([
     {
       id: 1,
@@ -74,74 +71,77 @@ export default function Approvals() {
     },
   ]);
 
-  /* ================= EVENT TOGGLES ================= */
-  const toggleEvent = (id, event) => {
+  /* ================= EVENT TOGGLE ================= */
+  const toggleEvent = (id, event, key) => {
     if (isLocked) return;
+
     setStudents((prev) =>
       prev.map((s) =>
         s.id === id
           ? {
               ...s,
-              assignedEvents: s.assignedEvents.includes(event)
-                ? s.assignedEvents.filter((e) => e !== event)
-                : [...s.assignedEvents, event],
+              [key]: s[key].includes(event)
+                ? s[key].filter((e) => e !== event)
+                : [...s[key], event],
             }
           : s
       )
     );
   };
 
-  const toggleAccompanyingEvent = (id, event) => {
+  /* ================= ACTION HANDLERS ================= */
+  const handleApprove = (s) => {
     if (isLocked) return;
+
+    if (s.status !== "Pending" && editId !== s.id) return;
+
+    if (openId !== s.id) {
+      setOpenId(s.id);
+      return;
+    }
+
+    const hasEvents =
+      s.assignedEvents.length > 0 || s.accompanyingEvents.length > 0;
+
+    if (!hasEvents) {
+      alert("Please select at least one event before approving.");
+      return;
+    }
+
     setStudents((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              accompanyingEvents: s.accompanyingEvents.includes(event)
-                ? s.accompanyingEvents.filter((e) => e !== event)
-                : [...s.accompanyingEvents, event],
-            }
-          : s
+      prev.map((st) =>
+        st.id === s.id ? { ...st, status: "Approved" } : st
       )
     );
+
+    setOpenId(null);
+    setEditId(null);
   };
 
-  /* ================= APPROVE / REJECT ================= */
-  const approveStudent = (id) => {
+  const handleReject = (s) => {
     if (isLocked) return;
+    if (s.status !== "Pending" && editId !== s.id) return;
+
     setStudents((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, status: "Approved" } : s
+      prev.map((st) =>
+        st.id === s.id ? { ...st, status: "Rejected" } : st
       )
     );
-    setEditingId(null);
+
+    setOpenId(null);
+    setEditId(null);
   };
 
-  const rejectStudent = (id) => {
+  const handleEdit = (s) => {
     if (isLocked) return;
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              status: "Rejected",
-              assignedEvents: [],
-              accompanyingEvents: [],
-            }
-          : s
-      )
-    );
-    setEditingId(null);
+    setEditId(s.id);
+    setOpenId(s.id);
   };
 
-  /* ================= FINAL CONTINGENT APPROVAL ================= */
+  /* ================= FINAL CONTINGENT LOCK ================= */
   const handleContingentApproval = () => {
-    const confirmLock = window.confirm(
-      "Once this is done you cannot edit, add or remove anything"
-    );
-
-    if (!confirmLock) return;
+    if (!isPrincipal) return;
+    if (!window.confirm("Once submitted, no edits are allowed")) return;
 
     setStudents((prev) =>
       prev.map((s) => ({
@@ -151,21 +151,20 @@ export default function Approvals() {
     );
 
     setIsLocked(true);
-    setEditingId(null);
-    setViewId(null);
+    setOpenId(null);
+    setEditId(null);
   };
 
   return (
     <Layout>
       <div className="approval-container">
         <h2>Approve Participants</h2>
+        <p className="subtitle">
+          VTU HABBA 2026 – {isPrincipal ? "Principal" : "Team Manager"} Panel
+        </p>
 
-        {/* PRINCIPAL FINAL SUBMIT */}
         {isPrincipal && !isLocked && (
-          <button
-            className="final-submit"
-            onClick={handleContingentApproval}
-          >
+          <button className="final-submit" onClick={handleContingentApproval}>
             Contingent Approval
           </button>
         )}
@@ -173,7 +172,14 @@ export default function Approvals() {
         {students.map((s) => (
           <div key={s.id} className="student-card">
             {/* ===== STUDENT ROW ===== */}
-            <div className="student-row">
+            <div
+              className="student-row"
+              onClick={() => {
+                if (isLocked) return;
+                if (s.status !== "Pending" && editId !== s.id) return;
+                setOpenId(s.id);
+              }}
+            >
               <div>
                 <strong>{s.name}</strong>
                 <div className="sub-text">{s.usn}</div>
@@ -183,153 +189,93 @@ export default function Approvals() {
                 {s.status}
               </div>
 
-              <div className="actions">
-                {!isLocked && (
-                  <>
-                    {s.status === "Pending" && (
-                      <button
-                        className="edit"
-                        onClick={() =>
-                          setEditingId(
-                            editingId === s.id ? null : s.id
-                          )
-                        }
-                      >
-                        Edit
-                      </button>
-                    )}
-
-                    <button
-                      className="approve"
-                      disabled={
-                        s.status !== "Pending" ||
-                        s.assignedEvents.length === 0
-                      }
-                      onClick={() => approveStudent(s.id)}
-                    >
-                      Approve
-                    </button>
-
-                    <button
-                      className="reject"
-                      disabled={s.status !== "Pending"}
-                      onClick={() => rejectStudent(s.id)}
-                    >
-                      Reject
-                    </button>
-                  </>
-                )}
-
-                {isLocked && (
-                  <button
-                    className="view"
-                    onClick={() =>
-                      setViewId(viewId === s.id ? null : s.id)
-                    }
-                  >
-                    View
+              {/* ===== ACTION BUTTONS ===== */}
+              {!isLocked && (
+                <div
+                  className="actions"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button className="approve" onClick={() => handleApprove(s)}>
+                    Approve
                   </button>
-                )}
-              </div>
+
+                  <button className="reject" onClick={() => handleReject(s)}>
+                    Reject
+                  </button>
+
+                  {s.status !== "Pending" && (
+                    <button className="edit" onClick={() => handleEdit(s)}>
+                      Edit
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* ===== EDIT PANEL ===== */}
-            {!isLocked &&
-              editingId === s.id &&
-              s.status === "Pending" && (
-                <div className="event-panel">
-                  <p className="assign-title">
-                    Assign Participating Events
-                  </p>
+            {/* ===== EVENT PANEL ===== */}
+            {!isLocked && openId === s.id && (
+              <div className="event-panel">
+                <p className="assign-title">Participating Events</p>
 
-                  {Object.entries(EVENT_CATEGORIES).map(
-                    ([category, events]) => (
-                      <div
-                        key={category}
-                        className="event-category"
-                      >
-                        <h4 className="category-title">
-                          {category}
-                        </h4>
-                        <div className="event-grid">
-                          {events.map((ev) => (
-                            <label
-                              key={ev}
-                              className="event-option"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={s.assignedEvents.includes(
-                                  ev
-                                )}
-                                onChange={() =>
-                                  toggleEvent(s.id, ev)
-                                }
-                              />
-                              <span>{ev}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  )}
+                {Object.entries(EVENT_CATEGORIES).map(([cat, events]) => (
+                  <div key={cat} className="event-category">
+                    <h4>{cat}</h4>
+                    <div className="event-grid">
+                      {events.map((ev) => (
+                        <label key={ev} className="event-option">
+                          <input
+                            type="checkbox"
+                            checked={s.assignedEvents.includes(ev)}
+                            onChange={() =>
+                              toggleEvent(s.id, ev, "assignedEvents")
+                            }
+                          />
+                          {ev}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
 
-                  <p
-                    className="assign-title"
-                    style={{ marginTop: 20 }}
-                  >
-                    Assign Accompanying Events
-                  </p>
+                <p className="assign-title">Accompanying Events</p>
 
-                  {Object.entries(
-                    ACCOMPANYING_EVENT_CATEGORIES
-                  ).map(([category, events]) => (
-                    <div
-                      key={category}
-                      className="event-category"
-                    >
-                      <h4 className="category-title">
-                        {category}
-                      </h4>
+                {Object.entries(ACCOMPANYING_EVENT_CATEGORIES).map(
+                  ([cat, events]) => (
+                    <div key={cat} className="event-category">
+                      <h4>{cat}</h4>
                       <div className="event-grid">
                         {events.map((ev) => (
-                          <label
-                            key={ev}
-                            className="event-option"
-                          >
+                          <label key={ev} className="event-option">
                             <input
                               type="checkbox"
-                              checked={s.accompanyingEvents.includes(
-                                ev
-                              )}
+                              checked={s.accompanyingEvents.includes(ev)}
                               onChange={() =>
-                                toggleAccompanyingEvent(
+                                toggleEvent(
                                   s.id,
-                                  ev
+                                  ev,
+                                  "accompanyingEvents"
                                 )
                               }
                             />
-                            <span>{ev}</span>
+                            {ev}
                           </label>
                         ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  )
+                )}
+              </div>
+            )}
 
-            {/* ===== VIEW MODE ===== */}
-            {isLocked && viewId === s.id && (
+            {/* ===== VIEW ONLY AFTER LOCK ===== */}
+            {isLocked && (
               <div className="event-panel view-only">
                 <p>
-                  <strong>Status:</strong> {s.status}
-                </p>
-                <p>
-                  <strong>Participating Events:</strong>{" "}
+                  <strong>Participating:</strong>{" "}
                   {s.assignedEvents.join(", ") || "None"}
                 </p>
                 <p>
-                  <strong>Accompanying Events:</strong>{" "}
+                  <strong>Accompanying:</strong>{" "}
                   {s.accompanyingEvents.join(", ") || "None"}
                 </p>
               </div>

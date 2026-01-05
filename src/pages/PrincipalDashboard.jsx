@@ -6,6 +6,8 @@ import CampusMap from "../components/CampusMap";
 
 export default function PrincipalDashboard() {
   const navigate = useNavigate();
+
+  // role can be "principal" OR "manager"
   const role = localStorage.getItem("role") || "manager";
 
   /* ================= ACCOMMODATION STATE ================= */
@@ -15,18 +17,49 @@ export default function PrincipalDashboard() {
     boys: 0,
   });
 
-  /* ================= LOAD ACCOMMODATION DATA ================= */
+  /* ================= ASSIGN MANAGER STATE ================= */
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [managerName, setManagerName] = useState("");
+  const [managerEmail, setManagerEmail] = useState("");
+  const [managerMobile, setManagerMobile] = useState("");
+  const [isManagerAssigned, setIsManagerAssigned] = useState(false);
+
+  /* ================= LOAD ACCOMMODATION ================= */
   useEffect(() => {
     const saved = localStorage.getItem("accommodation");
     if (saved) {
       const data = JSON.parse(saved);
       setAccommodation({
-        status: data.status || "applied",
+        status: data.status || "none",
         girls: data.girls || 0,
         boys: data.boys || 0,
       });
     }
   }, []);
+
+  /* ================= ASSIGN MANAGER HANDLER ================= */
+  const handleAssignManager = () => {
+    if (!managerName || !managerEmail || !managerMobile) {
+      alert("Please enter name, email and mobile number");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(managerEmail)) {
+      alert("Enter a valid email ID");
+      return;
+    }
+
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(managerMobile)) {
+      alert("Enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setIsManagerAssigned(true);
+    setShowAssignModal(false);
+    alert("Manager assigned successfully");
+  };
 
   /* ================= EVENT DATA ================= */
   const blockEvents = {
@@ -52,9 +85,7 @@ export default function PrincipalDashboard() {
       {
         blockNo: 4,
         blockName: "AIGS Block",
-        events: [
-          { name: "Paper Presentation", room: "AIGS-02", day: "Day 2" },
-        ],
+        events: [{ name: "Paper Presentation", room: "AIGS-02", day: "Day 2" }],
       },
     ],
     right: [
@@ -86,24 +117,11 @@ export default function PrincipalDashboard() {
         blockName: "Central Library",
         events: [{ name: "Debate", room: "L-01", day: "Day 1" }],
       },
-      {
-        blockNo: 10,
-        blockName: "Basketball Court",
-        events: [
-          { name: "Inter-College Match", room: "Court", day: "Day 2" },
-        ],
-      },
-      {
-        blockNo: 11,
-        blockName: "Student Activity Office",
-        events: [{ name: "Help Desk", room: "SAO", day: "All Days" }],
-      },
     ],
   };
 
   return (
     <Layout>
-      {/* ================= SCROLLABLE DASHBOARD ================= */}
       <div className="dashboard-container">
         {/* ================= HEADER ================= */}
         <div className="dashboard-header">
@@ -112,7 +130,19 @@ export default function PrincipalDashboard() {
               ? "Principal Dashboard"
               : "Team Manager Dashboard"}
           </h2>
-          <p>VTU HABBA 2025 – Administration Panel</p>
+          <p>VTU HABBA 6 – Administration Panel</p>
+
+          {role === "principal" && (
+            <button
+              className={`assign-manager-btn ${
+                isManagerAssigned ? "disabled" : ""
+              }`}
+              disabled={isManagerAssigned}
+              onClick={() => !isManagerAssigned && setShowAssignModal(true)}
+            >
+              {isManagerAssigned ? "Manager Assigned" : "Assign Manager"}
+            </button>
+          )}
         </div>
 
         {/* ================= STATS GRID ================= */}
@@ -152,53 +182,18 @@ export default function PrincipalDashboard() {
           >
             <h4>Accommodation</h4>
 
-            {accommodation.status === "none" && (
-              <p className="apply-text">Apply Now</p>
-            )}
-            {accommodation.status === "applied" && (
-              <p className="applied-text">Applied</p>
-            )}
+            {accommodation.status === "none" && <p>Apply Now</p>}
+            {accommodation.status === "applied" && <p>Applied</p>}
             {accommodation.status === "assigned" && (
-              <div className="accommodation-summary">
+              <>
                 <p>Girls: {accommodation.girls}</p>
                 <p>Boys: {accommodation.boys}</p>
-              </div>
+              </>
             )}
           </div>
         </div>
 
-        {/* ================= INFO SECTIONS ================= */}
-        <div className="dashboard-sections">
-          <div className="info-card">
-            <h4>Instructions</h4>
-            <ul>
-              <li>Carry College ID during events</li>
-              <li>Report 30 minutes before event time</li>
-              <li>Follow VTU HABBA guidelines strictly</li>
-            </ul>
-          </div>
-
-          <div className="info-card">
-            <h4>Event Overview</h4>
-            <ul>
-              <li>Total Events: 18</li>
-              <li>Cultural Events Ongoing</li>
-              <li>Event-wise limits enforced</li>
-              <li>Schedule published</li>
-            </ul>
-          </div>
-
-          <div className="info-card">
-            <h4>System Alerts</h4>
-            <ul>
-              <li>48 students awaiting approval</li>
-              <li>College code active</li>
-              <li>Registration closes on 25 Jan</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* ================= CAMPUS MAP + EVENTS ================= */}
+        {/* ================= MAP + EVENTS ================= */}
         <div className="dashboard-map-wrapper">
           {/* LEFT BLOCKS */}
           <div className="map-side left">
@@ -216,12 +211,9 @@ export default function PrincipalDashboard() {
             ))}
           </div>
 
-          {/* MAP */}
+          {/* CENTER MAP */}
           <div className="map-center">
             <h3 className="section-title">Campus Map & Event Locations</h3>
-            <p className="section-subtitle">
-              Click on any numbered pin to open the exact location in Google Maps
-            </p>
             <CampusMap />
           </div>
 
@@ -242,6 +234,40 @@ export default function PrincipalDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ================= ASSIGN MANAGER MODAL ================= */}
+      {role === "principal" && showAssignModal && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h3>Assign Team Manager</h3>
+
+            <label>Manager Name</label>
+            <input
+              value={managerName}
+              onChange={(e) => setManagerName(e.target.value)}
+            />
+
+            <label>Manager Email</label>
+            <input
+              value={managerEmail}
+              onChange={(e) => setManagerEmail(e.target.value)}
+            />
+
+            <label>Manager Mobile</label>
+            <input
+              value={managerMobile}
+              onChange={(e) => setManagerMobile(e.target.value)}
+            />
+
+            <div className="modal-actions">
+              <button onClick={handleAssignManager}>Submit</button>
+              <button onClick={() => setShowAssignModal(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

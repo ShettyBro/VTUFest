@@ -1,6 +1,17 @@
+/* ================= GLOBAL ================= */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  background: #ffffff;
+  font-family: "Segoe UI", sans-serif;
+}
+
 /* ================= EVENT CALENDAR ================= */
 .calendar-card {
-  background: rgb(228, 248, 117);
+  background: #ffffff;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -16,20 +27,22 @@
 .view-buttons button {
   margin-left: 8px;
   padding: 6px 14px;
-  border: 1px solid blue;
-  background: rgb(119, 119, 253);
+  border: 1px solid #1e40af;
+  background: #1e40af;
+  color: #ffffff;
   cursor: pointer;
   border-radius: 6px;
 }
 
 .view-buttons button:hover {
-  background: #2563eb;
-  color: white;
+  background: #ff9933;
+  color: #ffffff;
 }
 
+/* ================= CALENDAR GRID ================= */
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(40px, 1fr));
   gap: 10px;
 }
 
@@ -37,18 +50,18 @@
   padding: 8px;
   border-radius: 6px;
   font-size: 13px;
-  color: white;
+  color: #ffffff;
 }
 
-.event.blue { background: #2563eb; }
-.event.green { background: #16a34a; }
-.event.red { background: #dc2626; }
-.event.yellow { background: #eab308; }
+.event.blue { background: #1e40af; }
+.event.green { background: #ff9933; }
+.event.red { background: #1e40af; }
+.event.yellow { background: #ff9933; }
 
 /* ================= INFO CARDS ================= */
 .dashboard-sections {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
   margin-top: 24px;
 }
@@ -57,11 +70,12 @@
   background: #ffffff;
   padding: 18px;
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .info-card h4 {
   margin-bottom: 10px;
+  color: #1e40af;
 }
 
 .info-card ul {
@@ -72,94 +86,80 @@
   margin-bottom: 6px;
 }
 
-/* ================= CAMPUS MAP + BLOCK EVENTS ================= */
-/* ============================
-   BIGGER MAP + SIDE PANELS
-============================ */
-
-/* Wider layout */
+/* ================= MAP + SIDE PANELS ================= */
 .dashboard-map-wrapper {
   display: grid;
-  grid-template-columns: 1.6fr 4.2fr 1.6fr; /* ⬅ BIGGER sides + map */
-  gap: 40px;
+  grid-template-columns: 1.6fr 4.2fr 1.6fr;
+  gap: 60px;               /* ✅ CLEAR GAP BETWEEN MAP & BLOCKS */
   margin: 50px auto;
   max-width: 1600px;
   align-items: flex-start;
 }
 
-/* Center map slightly larger */
+/* Center map */
 .map-center {
   transform: scale(1.08);
+  padding: 20px;           /* ✅ extra breathing space around map */
 }
 
-/* Side panels spacing */
+/* Side panels */
 .map-side {
   display: flex;
   flex-direction: column;
   gap: 26px;
 }
 
-/* ============================
-   BIGGER BLOCK CARDS
-============================ */
+/* ================= BLOCK CARDS ================= */
 .block-card {
   background: #ffffff;
   border-radius: 16px;
-  padding: 22px 26px;          /* ⬅ MORE PADDING */
+  padding: 22px 26px;
+  border-left: 8px solid #1e40af;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
-  border-left: 8px solid #2563eb;
 }
 
-/* Block titles */
+.map-side.right .block-card {
+  border-left-color: #ff9933;
+}
+
 .block-card h4 {
-  font-size: 18px;             /* ⬅ BIGGER TITLE */
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 12px;
   color: #1e40af;
 }
 
-/* Event text */
 .block-card p {
-  font-size: 15px;             /* ⬅ BIGGER TEXT */
+  font-size: 15px;
   line-height: 1.7;
   margin: 6px 0;
-  color: #374151;
+  color: #1e40af;
 }
 
-/* Color differentiation */
-.map-side.left .block-card {
-  border-left-color: #16a34a;  /* green */
-}
-
-.map-side.right .block-card {
-  border-left-color: #f59e0b;  /* saffron */
-}
-
-/* ============================
-   TITLES ABOVE MAP
-============================ */
+/* ================= TITLES ================= */
 .section-title {
-  font-size: 20px;             /* ⬅ BIGGER */
+  font-size: 20px;
   font-weight: 700;
   margin-bottom: 6px;
+  color: #1e40af;
 }
 
 .section-subtitle {
   font-size: 14px;
   margin-bottom: 18px;
-  color: #6b7280;
+  color: #ff9933;
 }
 
-/* ============================
-   RESPONSIVE (TABLET / MOBILE)
-============================ */
+/* ================= RESPONSIVE ================= */
 @media (max-width: 1200px) {
   .dashboard-map-wrapper {
     grid-template-columns: 1fr;
+    gap: 40px;
   }
 
   .map-center {
     transform: scale(1);
+    padding: 0;
   }
 
   .map-side {
@@ -170,6 +170,18 @@
 
   .block-card {
     width: 100%;
-    max-width: 520px; /* ⬅ STILL BIG ON MOBILE */
+    max-width: 520px;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

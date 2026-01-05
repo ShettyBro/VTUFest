@@ -1,34 +1,69 @@
 /* =========================================================
-   GLOBAL SCROLL FIX (CRITICAL)
+   GLOBAL SCROLL FIX
 ========================================================= */
 html,
 body {
   width: 100%;
+  height: 100%;
+  margin: 0;
   max-width: 100%;
-  overflow-x: hidden; /* removes horizontal scroll */
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 /* =========================================================
    MAIN CONTAINER
 ========================================================= */
 .approval-container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: auto;
-  overflow-x: hidden; /* extra safety */
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 16px 30px;
   box-sizing: border-box;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.approval-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================================
+   CONTINGENT APPROVAL HEADER
+========================================================= */
+.contingent-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+
+  margin-bottom: 30px;
+  padding: 12px 22px;
+
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  background: #1e40af;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 /* =========================================================
    STUDENT CARD
 ========================================================= */
 .student-card {
-  background: #ffffff;
+  background: #fff7ed;
   border-radius: 12px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
 /* =========================================================
@@ -38,19 +73,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
+  padding: 18px 22px;
+  gap: 20px;
   cursor: pointer;
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
 .student-row:hover {
-  background: #fff7ed;
+  background: #fff1dd;
+}
+
+/* =========================================================
+   STUDENT INFO
+========================================================= */
+.student-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-info strong {
+  font-size: 15px;
+  color: #1e40af;
 }
 
 .sub-text {
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #1e40af;
+  opacity: 0.75;
   margin-top: 2px;
 }
 
@@ -58,15 +106,16 @@ body {
    STATUS
 ========================================================= */
 .status {
-  font-weight: 600;
+  font-weight: 800;
+  font-size: 14px;
 }
 
 .status.pending {
-  color: #f59e0b;
+  color: #ff9933;
 }
 
 .status.approved {
-  color: #16a34a;
+  color: #1e40af;
 }
 
 .status.rejected {
@@ -78,163 +127,140 @@ body {
 ========================================================= */
 .actions {
   display: flex;
+  align-items: center;
   gap: 10px;
-  flex-wrap: wrap; /* prevents overflow */
 }
 
 .actions button {
-  padding: 8px 14px;
+  min-width: 80px;
+  padding: 8px 16px;
   border-radius: 6px;
   border: none;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
-  white-space: nowrap;
 }
 
 .actions .approve {
-  background: #86efac;
-  color: #065f46;
-}
-
-.actions .reject {
-  background: #fecaca;
-  color: #7f1d1d;
-}
-
-.actions .edit {
-  background: #2563eb;
+  background: #ff9933;
   color: #ffffff;
 }
 
-.actions .view {
-  background: #e5e7eb;
-  color: #111827;
+.actions .reject {
+  background: #dc2626;
+  color: #ffffff;
 }
 
-.actions button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.actions .edit {
+  background: #1e40af;
+  color: #ffffff;
 }
 
 /* =========================================================
    EVENT PANEL
 ========================================================= */
 .event-panel {
-  padding: 18px 22px;
+  padding: 20px 22px;
   background: #fffaf3;
-  border-top: 1px solid #fde68a;
-  max-width: 100%;
-  box-sizing: border-box;
+  border-top: 1px solid #ff9933;
 }
 
-/* =========================================================
-   SECTION TITLES
-========================================================= */
 .assign-title {
-  font-size: 15px;
-  font-weight: 700;
-  margin-bottom: 14px;
-  color: #92400e;
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: #1e40af;
 }
 
 /* =========================================================
    EVENT CATEGORY
 ========================================================= */
 .event-category {
-  margin-bottom: 10px;
-  max-width: 100%;
+  margin-bottom: 15px;
 }
 
 .category-title {
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  color: #92400e;
-  margin-bottom: 4px;
-  margin-top: 12px;
-  border-left: 3px solid #f59e0b;
-  padding-left: 6px;
-  letter-spacing: 0.4px;
+  color: #ff9933;
+  margin-bottom: 8px;
+  border-left: 3px solid #ff9933;
+  padding-left: 8px;
 }
 
 /* =========================================================
-   EVENT GRID (NO OVERFLOW)
+   EVENT GRID
 ========================================================= */
 .event-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 8px 14px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px 14px;
 }
 
 /* =========================================================
-   EVENT OPTION
+   EVENT OPTION  ✅ FIXED
+   TEXT LEFT — CHECKBOX RIGHT
 ========================================================= */
 .event-option {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;   /* ✅ KEY FIX */
+  gap: 12px;
+
   padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #fde68a;
+  border-radius: 8px;
+  border: 1px solid #ff9933;
   background: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
-.event-option:hover {
-  background: #fff7ed;
-  border-color: #f59e0b;
+/* Text stays on the left */
+.event-option .event-name {
+  order: 1;
+  flex: 1;
+  text-align: left;
+  color: #1e40af;
 }
 
+/* Checkbox stays on the right */
 .event-option input {
-  accent-color: #f59e0b;
+  accent-color: #ff9933;
   width: 16px;
   height: 16px;
-  cursor: pointer;
+  order: 2;
+  margin-left: auto;              /* ✅ PUSH TO RIGHT */
 }
 
-.event-option input:checked + .event-name {
-  color: #92400e;
-  font-weight: 600;
-}
-
-.event-option input:checked {
-  transform: scale(1.1);
-}
-
-.event-option .event-name {
-  transition: color 0.2s ease;
-  word-break: break-word;
-}
-
-/* =========================================================
-   VIEW MODE
-========================================================= */
-.view-only p {
-  font-size: 14px;
-  margin-bottom: 6px;
-  color: #374151;
+/* Hover */
+.event-option:hover {
+  background: #fff7ed;
 }
 
 /* =========================================================
    FINAL SUBMIT BUTTON
 ========================================================= */
 .final-submit {
-  margin-bottom: 18px;
-  padding: 10px 18px;
+  margin-top: 10px;
+  width: 20%;
+  padding: 10px 10px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(to right, #2563eb, #1e40af);
+  background: #1e40af;
   color: #ffffff;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* =========================================================
+   STATE FIX
+========================================================= */
+.approved-state .contingent-header,
+.approved-state .actions,
+.approved-state .event-panel {
+  display: none;
 }
 
 /* =========================================================
@@ -244,11 +270,18 @@ body {
   .student-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
   }
 
   .actions {
     width: 100%;
-    justify-content: flex-start;
+    flex-direction: column;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .final-submit {
+    width: 100%;
   }
 }

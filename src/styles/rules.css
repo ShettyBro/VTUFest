@@ -1,32 +1,70 @@
+/* =========================================================
+   ROOT – SINGLE SCROLL OWNER (SCROLL ENABLED)
+========================================================= */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;          /* ✅ scrolling works */
+  font-family: "Segoe UI", sans-serif;
+  scroll-behavior: smooth;
+
+  /* 🔒 HIDE SCROLLBAR VISUALLY (ALL BROWSERS) */
+  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;  /* IE / Edge */
+}
+
+/* Chrome / Safari / Edge */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* =========================================================
+   RULES PAGE CONTAINER
+========================================================= */
 .rules-container {
   max-width: 900px;
   margin: 30px auto;
-  padding: 0 20px;
+  padding: 0 20px 60px;
+  box-sizing: border-box;
 }
 
+/* =========================================================
+   TITLE
+========================================================= */
 .rules-container h2 {
   font-size: 26px;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e40af;
   margin-bottom: 6px;
 }
 
 .rules-subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #2563eb;
   margin-bottom: 20px;
 }
 
-/* RULE CARD */
+/* =========================================================
+   RULE CARD
+========================================================= */
 .rules-card {
   background: #ffffff;
   border-radius: 14px;
   padding: 26px 30px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-  border-left: 6px solid #f59e0b; /* cultural saffron */
+  box-shadow: 0 12px 32px rgba(30, 64, 175, 0.12);
+  border-left: 6px solid #f59e0b;
+  overflow: visible;
 }
 
-/* LIST */
+/* =========================================================
+   LIST
+========================================================= */
 .rules-card ol {
   padding-left: 20px;
 }
@@ -34,16 +72,21 @@
 .rules-card li {
   font-size: 15px;
   line-height: 1.7;
-  color: #374151;
+  color: #1e40af;
   margin-bottom: 14px;
 }
 
-/* STRONG HIGHLIGHT */
+/* =========================================================
+   STRONG HIGHLIGHT
+========================================================= */
 .rules-card strong {
-  color: #92400e;
+  color: #f59e0b;
+  font-weight: 700;
 }
 
-/* MOBILE */
+/* =========================================================
+   MOBILE SAFETY
+========================================================= */
 @media (max-width: 768px) {
   .rules-card {
     padding: 20px;

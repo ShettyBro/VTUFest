@@ -1,27 +1,54 @@
-.approved-container {
-  padding: 30px;
+/* =========================================================
+   FULL PAGE BACKGROUND
+========================================================= */
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #eff6ff 55%,
+    #ffedd5 100%
+  ); /* WHITE → BLUE → SAFFRON */
 }
 
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+.approved-container {
+  padding: 30px;
+  background: transparent; /* allow full page background */
+}
+
+/* =========================================================
+   HEADINGS
+========================================================= */
 .approved-container h2 {
   font-size: 22px;
   margin-bottom: 5px;
-  color: #1e3a8a;
+  color: #1e40af; /* BLUE */
 }
 
 .subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: #2563eb; /* BLUE */
   margin-bottom: 25px;
 }
 
-/* TABLE */
+/* =========================================================
+   TABLE CARD
+========================================================= */
 .approved-table {
-  background: white;
+  background: #ffffff; /* WHITE CARD */
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(30, 64, 175, 0.12);
   overflow: hidden;
 }
 
+/* =========================================================
+   TABLE ROWS
+========================================================= */
 .table-header,
 .table-row {
   display: grid;
@@ -31,29 +58,38 @@
 }
 
 .table-header {
-  background: #f9fafb;
+  background: #eff6ff; /* LIGHT BLUE */
   font-weight: 600;
   font-size: 14px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #bfdbfe;
+  color: #1e40af;
 }
 
 .table-row {
   font-size: 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #ffedd5; /* SAFFRON TINT */
+  color: #1e40af;
 }
 
 .table-row:last-child {
   border-bottom: none;
 }
 
+/* =========================================================
+   EVENT BADGE
+========================================================= */
 .event-badge {
-  background: #f59e0b;
-  color: white;
+  background: #ff9933; /* SAFFRON */
+  color: #ffffff;
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 13px;
   width: fit-content;
 }
+
+/* =========================================================
+   HEADER ROW
+========================================================= */
 .approved-header {
   display: flex;
   justify-content: space-between;
@@ -61,10 +97,14 @@
   margin-bottom: 20px;
 }
 
+/* =========================================================
+   PDF BUTTON
+========================================================= */
 .pdf-btn {
   padding: 8px 14px;
-  background: #2563eb;
-  color: white;
+  width: 20%;
+  background: #1e40af; /* BLUE */
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   font-weight: 600;
@@ -72,18 +112,19 @@
 }
 
 .pdf-btn:hover {
-  background: #1e40af;
+  background: #ff9933; /* SAFFRON */
 }
-.loading {
-  text-align: center;
-  font-size: 16px;
-  color: #6b7280;
-}
+
+/* =========================================================
+   STATES
+========================================================= */
+.loading,
 .no-data {
   text-align: center;
   font-size: 16px;
-  color: #6b7280;
+  color: #1e40af;
 }
+
 .no-data img {
   width: 150px;
   margin-top: 20px;

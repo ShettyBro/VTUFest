@@ -32,7 +32,7 @@ export default function RejectedStudents() {
       <div className="rejected-container">
         <h2>Rejected Participants</h2>
         <p className="subtitle">
-          VTU HABBA 2025 – Rejected Student List
+          VTU HABBA 2026 – Rejected Student List
         </p>
 
         <div className="rejected-table">

@@ -34,7 +34,7 @@ export default function ApprovedStudents() {
     const doc = new jsPDF();
 
     doc.setFontSize(14);
-    doc.text("VTU HABBA 2025", 14, 15);
+    doc.text("VTU HABBA 2026", 14, 15);
     doc.setFontSize(12);
     doc.text("Approved Participants List", 14, 25);
 
@@ -51,7 +51,7 @@ export default function ApprovedStudents() {
       headStyles: { fillColor: [37, 99, 235] }, // blue header
     });
 
-    doc.save("approved_students_vtu_habba_2025.pdf");
+    doc.save("approved_students_vtu_habba_2026.pdf");
   };
 
   return (
@@ -62,7 +62,7 @@ export default function ApprovedStudents() {
           <div>
             <h2>Approved Participants</h2>
             <p className="subtitle">
-              VTU HABBA 2025 – Final Approved Student List
+              VTU HABBA 2026 – Final Approved Student List
             </p>
           </div>
 
