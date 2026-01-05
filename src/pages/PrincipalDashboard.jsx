@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/PrincipalDashboard.css";
+import "../styles/principalDashboard.css";
 import CampusMap from "../components/CampusMap";
 
 export default function PrincipalDashboard() {
