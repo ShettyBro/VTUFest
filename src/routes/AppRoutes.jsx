@@ -1,16 +1,16 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
-/* PUBLIC */
+/* ================= PUBLIC ================= */
 import Login from "../pages/Login";
 import RegisterStudent from "../pages/RegisterStudent";
 import ForgotPassword from "../pages/ForgotPassword";
 
-/* STUDENT */
+/* ================= STUDENT ================= */
 import Dashboard from "../pages/Dashboard";
 import StudentRegister from "../pages/StudentRegister";
 
-/* ADMIN / MANAGER */
+/* ================= ADMIN / MANAGER ================= */
 import PrincipalDashboard from "../pages/PrincipalDashboard";
 import Approvals from "../pages/Approvals";
 import ApprovedStudents from "../pages/ApprovedStudents";
@@ -28,92 +28,37 @@ export default function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* ================= STUDENT ================= */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/student-register"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <StudentRegister />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/student-register" element={<StudentRegister />} />
+      </Route>
 
       {/* ================= PRINCIPAL + MANAGER ================= */}
-      <Route
-        path="/principal-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <PrincipalDashboard />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedRoute allowedRoles={["principal", "manager"]} />}>
+        <Route path="/principal-dashboard" element={<PrincipalDashboard />} />
+        <Route path="/approvals" element={<Approvals />} />
+        <Route path="/approved-students" element={<ApprovedStudents />} />
+        <Route path="/rejected-students" element={<RejectedStudents />} />
+        <Route path="/accommodation" element={<Accommodation />} />
+      </Route>
 
-      {/* ❌ CONTINGENT APPROVAL — PRINCIPAL ONLY */}
+      {/* ================= ACCOMPANIST — STUDENT + ADMIN ================= */}
       <Route
-        path="/approvals"
         element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <Approvals />
-          </ProtectedRoute>
+          <ProtectedRoute allowedRoles={["student", "principal", "manager"]} />
         }
-      />
+      >
+        <Route path="/accompanist-form" element={<AccompanistForm />} />
+      </Route>
 
-      {/* VIEW LISTS — BOTH */}
+      {/* ================= RULES — ALL ================= */}
       <Route
-        path="/approved-students"
         element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <ApprovedStudents />
-          </ProtectedRoute>
+          <ProtectedRoute allowedRoles={["student", "principal", "manager"]} />
         }
-      />
-
-      <Route
-        path="/rejected-students"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <RejectedStudents />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ACCOMMODATION — BOTH */}
-      <Route
-        path="/accommodation"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <Accommodation />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ACCOMPANIST — STUDENT + ADMIN */}
-      <Route
-        path="/accompanist-form"
-        element={
-          <ProtectedRoute allowedRoles={["student", "principal", "manager"]}>
-            <AccompanistForm />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* RULES — ALL */}
-      <Route
-        path="/rules"
-        element={
-          <ProtectedRoute allowedRoles={["student", "principal", "manager"]}>
-            <Rules />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route path="/rules" element={<Rules />} />
+      </Route>
     </Routes>
   );
 }
