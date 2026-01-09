@@ -8,12 +8,15 @@ export default function Login() {
   const [role, setRole] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   /* ---------- RESET FIELDS WHEN ROLE CHANGES ---------- */
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     setEmail("");
     setPassword("");
+    setErrorMsg("");
   };
 
   /* ---------- EMAIL VALIDATION ---------- */
@@ -25,17 +28,18 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    setErrorMsg("");
+
     if (!email || !password) {
-      alert("Please enter email ID and password");
+      setErrorMsg("Please enter email ID and password");
       return;
     }
 
     if (!isValidEmail(email)) {
-      alert("Please enter a valid email ID");
+      setErrorMsg("Please enter a valid email ID");
       return;
     }
 
-    // 🔗 ROLE-BASED API ENDPOINTS
     let loginApi = "";
 
     if (role === "student") {
@@ -48,11 +52,13 @@ export default function Login() {
       loginApi =
         "https://vtubackend2026.netlify.app/.netlify/functions/team-manager-login";
     } else {
-      alert("Invalid role selected");
+      setErrorMsg("Invalid role selected");
       return;
     }
 
     try {
+      setLoading(true);
+
       const response = await fetch(loginApi, {
         method: "POST",
         headers: {
@@ -67,7 +73,8 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || "Login failed");
+        setErrorMsg(data.message || "Login failed. Retry.");
+        setLoading(false);
         return;
       }
 
@@ -75,7 +82,7 @@ export default function Login() {
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
 
-      // ✅ ROLE-BASED REDIRECT
+      // ✅ REDIRECT
       if (role === "student") {
         navigate("/dashboard");
       } else if (role === "principal") {
@@ -84,7 +91,9 @@ export default function Login() {
         navigate("/dashboard");
       }
     } catch (error) {
-      alert("Server not reachable. Try again.");
+      setErrorMsg("Server not reachable. Retry.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,6 +128,7 @@ export default function Login() {
               type="button"
               className={role === "principal" ? "active" : ""}
               onClick={() => handleRoleChange("principal")}
+              disabled={loading}
             >
               Principal
             </button>
@@ -127,6 +137,7 @@ export default function Login() {
               type="button"
               className={role === "manager" ? "active" : ""}
               onClick={() => handleRoleChange("manager")}
+              disabled={loading}
             >
               Team Manager
             </button>
@@ -135,6 +146,7 @@ export default function Login() {
               type="button"
               className={role === "student" ? "active" : ""}
               onClick={() => handleRoleChange("student")}
+              disabled={loading}
             >
               Student
             </button>
@@ -148,6 +160,7 @@ export default function Login() {
               placeholder={`Enter ${role} email ID`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
               required
             />
 
@@ -157,11 +170,18 @@ export default function Login() {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
               required
             />
 
-            <button type="submit" className="login-btn">
-              Log In
+            {errorMsg && (
+              <div style={{ color: "red", marginTop: "8px" }}>
+                {errorMsg}
+              </div>
+            )}
+
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
 
