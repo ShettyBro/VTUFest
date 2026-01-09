@@ -1,25 +1,65 @@
-import { useState } from "react";
+// ForgotPassword.jsx
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ForgotPassword.css";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const role = localStorage.getItem("role");
+    if (!role) {
+      window.location.href = "https://vtufest2026.acharyahabba.com/";
+    }
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
 
     if (!email) {
-      alert("Please enter your registered email");
+      setErrorMsg("Please enter your registered email");
       return;
     }
 
-    // TEMP: frontend simulation
-    alert(
-      "If this email is registered, a password reset link will be sent."
-    );
+    const role = localStorage.getItem("role");
+    if (!role) {
+      window.location.href = "https://vtufest2026.acharyahabba.com/";
+      return;
+    }
 
-    navigate("/");
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `https://vtubackend2026.netlify.app/.netlify/functions/forgot-password/${role}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMsg(data.error || data.message || "Request failed. Retry.");
+        setLoading(false);
+        return;
+      }
+
+      setSuccessMsg(data.message);
+      setEmail("");
+    } catch {
+      setErrorMsg("Server not reachable. Retry.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,8 +67,8 @@ export default function ForgotPassword() {
       <div className="forgot-card">
         <h2>Forgot Password</h2>
         <p>
-          Enter your registered email address.  
-          We will send you a password reset link.
+          Enter your registered email address. We will send you a password
+          reset link.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -38,16 +78,27 @@ export default function ForgotPassword() {
             placeholder="Enter your registered email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
             required
           />
 
-          <button type="submit">Send Reset Link</button>
+          {errorMsg && (
+            <div style={{ color: "red", marginTop: "8px" }}>{errorMsg}</div>
+          )}
+
+          {successMsg && (
+            <div style={{ color: "green", marginTop: "8px" }}>
+              {successMsg}
+            </div>
+          )}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Sending reset link..." : "Send Reset Link"}
+          </button>
         </form>
 
         <div className="forgot-footer">
-          <span onClick={() => navigate("/")}>
-            ← Back to Login
-          </span>
+          <span onClick={() => navigate("/")}>← Back to Login</span>
         </div>
       </div>
     </div>
