@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 
-const API_BASE = "https://uploade-vtu01.netlify.app/.netlify/functions";
+const API_BASE = {
+  collegeAndUsn: "https://uploade-vtu01.netlify.app/.netlify/functions/college-and-usn",
+  registration: "https://vtubackend2026.netlify.app/.netlify/functions/register"
+};
 
 export default function RegisterStudent() {
   const navigate = useNavigate();
@@ -94,7 +97,7 @@ export default function RegisterStudent() {
   // Fetch colleges
   const fetchColleges = async () => {
     try {
-      const response = await fetch(`${API_BASE}/college-and-usn?action=get_colleges`);
+      const response = await fetch(`${API_BASE.collegeAndUsn}?action=get_colleges`);
       const data = await response.json();
       if (data.colleges) {
         setColleges(data.colleges);
@@ -113,7 +116,7 @@ export default function RegisterStudent() {
 
     try {
       setUsnChecking(true);
-      const response = await fetch(`${API_BASE}/college-and-usn`, {
+      const response = await fetch(`${API_BASE.collegeAndUsn}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "check_usn", usn: usn.trim().toUpperCase() }),
@@ -224,8 +227,7 @@ export default function RegisterStudent() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE}/student-registration`, {
-        method: "POST",
+      const response = await fetch(`${API_BASE.registration}`, {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "init",
@@ -371,7 +373,7 @@ export default function RegisterStudent() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE}/student-registration`, {
+      const response = await fetch(`${API_BASE.registration}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
