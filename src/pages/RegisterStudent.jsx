@@ -370,64 +370,88 @@ export default function RegisterStudent() {
   };
 
   // Handle final registration
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  // Handle final registration
+const handleRegister = async (e) => {
+  e.preventDefault();
 
-    if (isUploadBlocked()) {
-      alert("Upload failed multiple times. Please wait 30 minutes before retrying.");
+  console.log("=== Register button clicked ===");
+  console.log("Upload status:", uploadStatus);
+  console.log("Session data:", sessionData);
+  console.log("Password length:", form.password.length);
+  console.log("Passwords match:", form.password === form.confirmPassword);
+
+  if (isUploadBlocked()) {
+    alert("Upload failed multiple times. Please wait 30 minutes before retrying.");
+    return;
+  }
+
+  if (uploadStatus !== "success") {
+    alert("Please upload passport photo first");
+    return;
+  }
+
+  if (form.password.length < 8) {
+    alert("Password must be at least 8 characters");
+    return;
+  }
+
+  if (form.password !== form.confirmPassword) {
+    alert("Passwords do not match");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    console.log("Sending finalize request...");
+    console.log("Request payload:", {
+      action: "finalize",
+      session_id: sessionData.session_id,
+      password_length: form.password.length
+    });
+
+    const response = await fetch(`${API_BASE.registration}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "finalize",
+        session_id: sessionData.session_id,
+        password: form.password,
+      }),
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+
+    const data = await response.json();
+    console.log("Response data:", data);
+
+    if (!response.ok) {
+      console.error("Registration failed:", data.error);
+      alert(data.error || "Registration failed");
       return;
     }
 
-    if (uploadStatus !== "success") {
-      alert("Please upload passport photo first");
-      return;
-    }
+    // Clear session
+    localStorage.removeItem("registration_session");
+    localStorage.removeItem("upload_blocked_until");
 
-    if (form.password.length < 8) {
-      alert("Password must be at least 8 characters");
-      return;
-    }
-
-    if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const response = await fetch(`${API_BASE.registration}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "finalize",
-          session_id: sessionData.session_id,
-          password: form.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Registration failed");
-        return;
-      }
-
-      // Clear session
-      localStorage.removeItem("registration_session");
-      localStorage.removeItem("upload_blocked_until");
-
-      alert("Registration successful! Redirecting to login...");
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
-    } catch (error) {
-      console.error("Error finalizing registration:", error);
-      alert("Something went wrong. Please refresh the page.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log("Registration successful!");
+    alert("Registration successful! Redirecting to login...");
+    
+    setTimeout(() => {
+      navigate("/");
+    }, 2000);
+  } catch (error) {
+    console.error("Error finalizing registration:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack
+    });
+    alert("Something went wrong. Please check the console and try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="register-page">
