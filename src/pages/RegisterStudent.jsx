@@ -160,13 +160,11 @@ export default function RegisterStudent() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
       alert("Only PNG or JPG images allowed");
       return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("Photo must be less than 5MB");
       return;
@@ -174,7 +172,6 @@ export default function RegisterStudent() {
 
     setPhotoFile(file);
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPhotoPreview(reader.result);
@@ -193,7 +190,6 @@ export default function RegisterStudent() {
   const handleNext = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!form.usn.trim()) {
       alert("USN is required");
       return;
@@ -224,23 +220,8 @@ export default function RegisterStudent() {
       return;
     }
 
-
-
     try {
       setLoading(true);
-
-      console.log("About to call API:", API_BASE.registration);
-      console.log("Request body:", {
-        action: "init",
-        usn: form.usn.trim().toUpperCase(),
-        full_name: form.fullName.trim(),
-        email: form.email.trim().toLowerCase(),
-        mobile: form.mobile.trim(),
-        gender: form.gender,
-        college_id: parseInt(form.collegeId),
-      });
-
-
 
       const response = await fetch(`${API_BASE.registration}`, {
         method: "POST",
@@ -263,7 +244,6 @@ export default function RegisterStudent() {
         return;
       }
 
-      // Store session data
       const sessionInfo = {
         session_id: data.session_id,
         upload_urls: data.upload_urls,
@@ -274,7 +254,6 @@ export default function RegisterStudent() {
       setSessionData(sessionInfo);
       saveSessionToStorage(sessionInfo);
 
-      // Calculate timer
       const expiresAt = new Date(data.expires_at).getTime();
       const now = Date.now();
       const remainingSeconds = Math.floor((expiresAt - now) / 1000);
@@ -291,69 +270,66 @@ export default function RegisterStudent() {
 
   // Upload photo to Azure Blob
   const uploadPhoto = async () => {
-  if (!photoFile) {
-    alert("Please select a photo");
-    return;
-  }
-
-  if (!sessionData?.upload_urls?.passport_photo) {
-    alert("Session expired. Please restart registration.");
-    return;
-  }
-
-  const maxRetries = 3;
-
-  const attemptUpload = async (retryCount) => {
-    try {
-      setUploadStatus("uploading");
-      setUploadProgress(0);
-
-      const sasUrl = sessionData.upload_urls.passport_photo;
-
-      console.log("Uploading to:", sasUrl.split('?')[0]); // Log URL without SAS token
-
-      const response = await fetch(sasUrl, {
-        method: "PUT",
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-          // Remove Content-Length - browser adds it automatically
-        },
-        body: photoFile,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Upload failed:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        });
-        throw new Error(`Upload failed: ${response.status}`);
-      }
-
-      setUploadStatus("success");
-      setUploadProgress(100);
-      setUploadRetries(0);
-    } catch (error) {
-      console.error("Upload error:", error);
-
-      if (retryCount < maxRetries) {
-        setUploadRetries(retryCount + 1);
-        alert(`Upload failed. Retrying (${retryCount + 1}/${maxRetries})...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        await attemptUpload(retryCount + 1);
-      } else {
-        setUploadStatus("failed");
-        alert("Upload failed after 3 attempts. Please try again after 30 minutes.");
-
-        const blockUntil = Date.now() + 30 * 60 * 1000;
-        localStorage.setItem("upload_blocked_until", blockUntil);
-      }
+    if (!photoFile) {
+      alert("Please select a photo");
+      return;
     }
-  };
 
-  await attemptUpload(0);
-};
+    if (!sessionData?.upload_urls?.passport_photo) {
+      alert("Session expired. Please restart registration.");
+      return;
+    }
+
+    const maxRetries = 3;
+
+    const attemptUpload = async (retryCount) => {
+      try {
+        setUploadStatus("uploading");
+        setUploadProgress(0);
+
+        const sasUrl = sessionData.upload_urls.passport_photo;
+
+        const response = await fetch(sasUrl, {
+          method: "PUT",
+          headers: {
+            "x-ms-blob-type": "BlockBlob",
+          },
+          body: photoFile,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Upload failed:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
+          });
+          throw new Error(`Upload failed: ${response.status}`);
+        }
+
+        setUploadStatus("success");
+        setUploadProgress(100);
+        setUploadRetries(0);
+      } catch (error) {
+        console.error("Upload error:", error);
+
+        if (retryCount < maxRetries) {
+          setUploadRetries(retryCount + 1);
+          alert(`Upload failed. Retrying (${retryCount + 1}/${maxRetries})...`);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await attemptUpload(retryCount + 1);
+        } else {
+          setUploadStatus("failed");
+          alert("Upload failed after 3 attempts. Please try again after 30 minutes.");
+
+          const blockUntil = Date.now() + 30 * 60 * 1000;
+          localStorage.setItem("upload_blocked_until", blockUntil);
+        }
+      }
+    };
+
+    await attemptUpload(0);
+  };
 
   // Check if upload is blocked
   const isUploadBlocked = () => {
@@ -370,88 +346,98 @@ export default function RegisterStudent() {
   };
 
   // Handle final registration
-  // Handle final registration
-const handleRegister = async (e) => {
-  e.preventDefault();
+  const handleRegister = async (e) => {
+    e.preventDefault();
 
-  console.log("=== Register button clicked ===");
-  console.log("Upload status:", uploadStatus);
-  console.log("Session data:", sessionData);
-  console.log("Password length:", form.password.length);
-  console.log("Passwords match:", form.password === form.confirmPassword);
+    console.log("=== REGISTER BUTTON CLICKED ===");
+    console.log("Current state:");
+    console.log("- uploadStatus:", uploadStatus);
+    console.log("- timerExpired:", timerExpired);
+    console.log("- loading:", loading);
+    console.log("- isUploadBlocked:", isUploadBlocked());
+    console.log("- sessionData:", sessionData);
+    console.log("- password length:", form.password.length);
+    console.log("- passwords match:", form.password === form.confirmPassword);
 
-  if (isUploadBlocked()) {
-    alert("Upload failed multiple times. Please wait 30 minutes before retrying.");
-    return;
-  }
-
-  if (uploadStatus !== "success") {
-    alert("Please upload passport photo first");
-    return;
-  }
-
-  if (form.password.length < 8) {
-    alert("Password must be at least 8 characters");
-    return;
-  }
-
-  if (form.password !== form.confirmPassword) {
-    alert("Passwords do not match");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    console.log("Sending finalize request...");
-    console.log("Request payload:", {
-      action: "finalize",
-      session_id: sessionData.session_id,
-      password_length: form.password.length
-    });
-
-    const response = await fetch(`${API_BASE.registration}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "finalize",
-        session_id: sessionData.session_id,
-        password: form.password,
-      }),
-    });
-
-    console.log("Response status:", response.status);
-    console.log("Response ok:", response.ok);
-
-    const data = await response.json();
-    console.log("Response data:", data);
-
-    if (!response.ok) {
-      console.error("Registration failed:", data.error);
-      alert(data.error || "Registration failed");
+    // Validation checks
+    if (isUploadBlocked()) {
+      console.error("BLOCKED: Upload blocked");
+      alert("Upload failed multiple times. Please wait 30 minutes before retrying.");
       return;
     }
 
-    // Clear session
-    localStorage.removeItem("registration_session");
-    localStorage.removeItem("upload_blocked_until");
+    if (uploadStatus !== "success") {
+      console.error("BLOCKED: Photo not uploaded. uploadStatus =", uploadStatus);
+      alert("Please upload passport photo first");
+      return;
+    }
 
-    console.log("Registration successful!");
-    alert("Registration successful! Redirecting to login...");
-    
-    setTimeout(() => {
-      navigate("/");
-    }, 2000);
-  } catch (error) {
-    console.error("Error finalizing registration:", error);
-    console.error("Error details:", {
-      message: error.message,
-      stack: error.stack
-    });
-    alert("Something went wrong. Please check the console and try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+    if (form.password.length < 8) {
+      console.error("BLOCKED: Password too short");
+      alert("Password must be at least 8 characters");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      console.error("BLOCKED: Passwords don't match");
+      alert("Passwords do not match");
+      return;
+    }
+
+    console.log("All validations passed! Proceeding with registration...");
+
+    try {
+      setLoading(true);
+      console.log("Sending finalize request to:", API_BASE.registration);
+      console.log("Request payload:", {
+        action: "finalize",
+        session_id: sessionData.session_id,
+        password: "***" + form.password.substring(form.password.length - 3)
+      });
+
+      const response = await fetch(`${API_BASE.registration}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "finalize",
+          session_id: sessionData.session_id,
+          password: form.password,
+        }),
+      });
+
+      console.log("Response received:");
+      console.log("- status:", response.status);
+      console.log("- ok:", response.ok);
+
+      const data = await response.json();
+      console.log("- data:", data);
+
+      if (!response.ok) {
+        console.error("Registration failed:", data.error);
+        alert(data.error || "Registration failed");
+        return;
+      }
+
+      // Success!
+      localStorage.removeItem("registration_session");
+      localStorage.removeItem("upload_blocked_until");
+
+      console.log("✅ Registration successful!");
+      alert("Registration successful! Redirecting to login...");
+      
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    } catch (error) {
+      console.error("❌ Error finalizing registration:");
+      console.error("- message:", error.message);
+      console.error("- stack:", error.stack);
+      alert("Something went wrong. Please check the console and try again.");
+    } finally {
+      setLoading(false);
+      console.log("Loading state reset");
+    }
+  };
 
   return (
     <div className="register-page">
@@ -637,6 +623,23 @@ const handleRegister = async (e) => {
             required
           />
 
+          {/* Debug info - remove after testing */}
+          <div style={{ 
+            fontSize: "10px", 
+            color: "#666", 
+            marginTop: "10px",
+            padding: "5px",
+            border: "1px solid #ddd",
+            borderRadius: "4px"
+          }}>
+            <strong>Debug Info:</strong><br/>
+            Upload Status: {uploadStatus}<br/>
+            Timer Expired: {timerExpired ? "Yes" : "No"}<br/>
+            Loading: {loading ? "Yes" : "No"}<br/>
+            Blocked: {isUploadBlocked() ? "Yes" : "No"}<br/>
+            Button Disabled: {(timerExpired || loading || uploadStatus !== "success" || isUploadBlocked()) ? "Yes" : "No"}
+          </div>
+
           <button
             type="submit"
             disabled={
@@ -645,6 +648,16 @@ const handleRegister = async (e) => {
               uploadStatus !== "success" ||
               isUploadBlocked()
             }
+            style={{
+              marginTop: "15px",
+              padding: "12px",
+              backgroundColor: (timerExpired || loading || uploadStatus !== "success" || isUploadBlocked()) 
+                ? "#ccc" 
+                : "#ff9800",
+              cursor: (timerExpired || loading || uploadStatus !== "success" || isUploadBlocked())
+                ? "not-allowed"
+                : "pointer"
+            }}
           >
             {loading ? "Registering..." : "Register"}
           </button>
