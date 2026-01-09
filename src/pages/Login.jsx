@@ -35,23 +35,45 @@ export default function Login() {
       return;
     }
 
-    // TEMP: Hardcoded Principal / Team Manager login
-    if (role === "principal" || role === "manager") {
-      if (email !== "ait@acharya.ac.in" || password !== "123") {
-        alert("Invalid email or password for Principal / Team Manager");
-        return;
-      }
-
-      localStorage.setItem("role", role);
-      navigate("/principal-dashboard");
-      return;
-    }
-
-    // Student login (temporary)
+    // Student login
     if (role === "student") {
-      localStorage.setItem("role", "student");
-      navigate("/dashboard");
+      const handleLogin = async (e) => {
+        e.preventDefault();
+        try {
+          const response = await fetch(
+            "https://vtubackend2026.netlify.app/.netlify/functions/login",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: email.trim().toLowerCase(),
+                password,
+              }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            alert(data.message || "Login failed");
+            return;
+          }
+
+          // ✅ STORE TOKEN
+          localStorage.setItem("vtufest_token", data.token);
+
+          // ✅ REDIRECT
+          navigate("/dashboard");
+        } catch (error) {
+          alert("Server not reachable. Try again.");
+        }
+
+      };
     }
+
+
   };
 
   return (
