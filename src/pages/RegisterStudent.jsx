@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 
-const API_BASE = "https://vtubackend2026.netlify.app/.netlify/functions";
+const API_BASE = "https://uploade-vtu01.netlify.app/.netlify/functions";
 
 export default function RegisterStudent() {
   const navigate = useNavigate();
