@@ -1,15 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
+
+/* ---------- JWT DECODE (NO LIB REQUIRED) ---------- */
+const decodeJwt = (token) => {
+  try {
+    const payload = token.split(".")[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+};
 
 export default function Login() {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState("student"); // ALWAYS default
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  /* ---------- AUTO REDIRECT ON PAGE LOAD ---------- */
+  useEffect(() => {
+    const token = localStorage.getItem("vtufest_token");
+    const storedRole = localStorage.getItem("vtufest_role");
+
+    if (!token || !storedRole) {
+      localStorage.removeItem("vtufest_token");
+      localStorage.removeItem("vtufest_role");
+      setRole("student");
+      return;
+    }
+
+    const decoded = decodeJwt(token);
+
+    if (!decoded || !decoded.exp) {
+      localStorage.removeItem("vtufest_token");
+      localStorage.removeItem("vtufest_role");
+      setRole("student");
+      return;
+    }
+
+    const isExpired = decoded.exp * 1000 < Date.now();
+
+    if (isExpired) {
+      localStorage.removeItem("vtufest_token");
+      localStorage.removeItem("vtufest_role");
+      setRole("student");
+      return;
+    }
+
+    // ✅ TOKEN VALID → REDIRECT
+    if (storedRole === "principal") {
+      navigate("/principal-dashboard");
+    } else {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   /* ---------- RESET FIELDS WHEN ROLE CHANGES ---------- */
   const handleRoleChange = (newRole) => {
@@ -20,14 +68,12 @@ export default function Login() {
   };
 
   /* ---------- EMAIL VALIDATION ---------- */
-  const isValidEmail = (value) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
+  const isValidEmail = (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   /* ---------- LOGIN HANDLER ---------- */
   const handleLogin = async (e) => {
     e.preventDefault();
-
     setErrorMsg("");
 
     if (!email || !password) {
@@ -61,9 +107,7 @@ export default function Login() {
 
       const response = await fetch(loginApi, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           password,
@@ -78,19 +122,17 @@ export default function Login() {
         return;
       }
 
-      // ✅ STORE TOKEN
+      // ✅ STORE SESSION
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
 
       // ✅ REDIRECT
-      if (role === "student") {
-        navigate("/dashboard");
-      } else if (role === "principal") {
+      if (role === "principal") {
         navigate("/principal-dashboard");
-      } else if (role === "manager") {
+      } else {
         navigate("/dashboard");
       }
-    } catch (error) {
+    } catch {
       setErrorMsg("Server not reachable. Retry.");
     } finally {
       setLoading(false);
