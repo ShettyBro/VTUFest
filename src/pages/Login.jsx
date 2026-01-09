@@ -15,21 +15,29 @@ const decodeJwt = (token) => {
 export default function Login() {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState("student"); // ALWAYS default
+  const [role, setRole] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  /* ---------- AUTO REDIRECT ON PAGE LOAD ---------- */
+  /* ---------- INITIALIZE ROLE & AUTO REDIRECT ON PAGE LOAD ---------- */
   useEffect(() => {
+    // Initialize role in localStorage if missing
+    let currentRole = localStorage.getItem("role");
+    if (!currentRole) {
+      localStorage.setItem("role", "student");
+      currentRole = "student";
+    }
+    setRole(currentRole);
+
+    // Check authentication
     const token = localStorage.getItem("vtufest_token");
     const storedRole = localStorage.getItem("vtufest_role");
 
     if (!token || !storedRole) {
       localStorage.removeItem("vtufest_token");
       localStorage.removeItem("vtufest_role");
-      setRole("student");
       return;
     }
 
@@ -38,7 +46,6 @@ export default function Login() {
     if (!decoded || !decoded.exp) {
       localStorage.removeItem("vtufest_token");
       localStorage.removeItem("vtufest_role");
-      setRole("student");
       return;
     }
 
@@ -47,21 +54,23 @@ export default function Login() {
     if (isExpired) {
       localStorage.removeItem("vtufest_token");
       localStorage.removeItem("vtufest_role");
-      setRole("student");
       return;
     }
 
     // ✅ TOKEN VALID → REDIRECT
     if (storedRole === "principal") {
       navigate("/principal-dashboard");
+    } else if (storedRole === "manager") {
+      navigate("/manager-dashboard");
     } else {
       navigate("/dashboard");
     }
   }, [navigate]);
 
-  /* ---------- RESET FIELDS WHEN ROLE CHANGES ---------- */
+  /* ---------- HANDLE ROLE CHANGE ---------- */
   const handleRoleChange = (newRole) => {
     setRole(newRole);
+    localStorage.setItem("role", newRole);
     setEmail("");
     setPassword("");
     setErrorMsg("");
@@ -129,6 +138,8 @@ export default function Login() {
       // ✅ REDIRECT
       if (role === "principal") {
         navigate("/principal-dashboard");
+      } else if (role === "manager") {
+        navigate("/manager-dashboard");
       } else {
         navigate("/dashboard");
       }
