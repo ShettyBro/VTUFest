@@ -6,6 +6,8 @@ import Login from "../pages/Login";
 import RegisterStudent from "../pages/RegisterStudent";
 import ForgotPassword from "../pages/ForgotPassword";
 
+import ResetPassword from "../pages/ChangePassword";
+
 /* STUDENT */
 import Dashboard from "../pages/Dashboard";
 import StudentRegister from "../pages/StudentRegister";
@@ -26,6 +28,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Login />} />
       <Route path="/register-student" element={<RegisterStudent />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* ================= STUDENT ================= */}
       <Route
