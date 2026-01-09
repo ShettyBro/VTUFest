@@ -22,7 +22,7 @@ export default function Login() {
   };
 
   /* ---------- LOGIN HANDLER ---------- */
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -35,45 +35,57 @@ export default function Login() {
       return;
     }
 
-    // Student login
+    // 🔗 ROLE-BASED API ENDPOINTS
+    let loginApi = "";
+
     if (role === "student") {
-      const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-          const response = await fetch(
-            "https://vtubackend2026.netlify.app/.netlify/functions/login",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: email.trim().toLowerCase(),
-                password,
-              }),
-            }
-          );
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            alert(data.message || "Login failed");
-            return;
-          }
-
-          // ✅ STORE TOKEN
-          localStorage.setItem("vtufest_token", data.token);
-
-          // ✅ REDIRECT
-          navigate("/dashboard");
-        } catch (error) {
-          alert("Server not reachable. Try again.");
-        }
-
-      };
+      loginApi =
+        "https://vtubackend2026.netlify.app/.netlify/functions/login";
+    } else if (role === "principal") {
+      loginApi =
+        "https://vtubackend2026.netlify.app/.netlify/functions/principal-login";
+    } else if (role === "manager") {
+      loginApi =
+        "https://vtubackend2026.netlify.app/.netlify/functions/team-manager-login";
+    } else {
+      alert("Invalid role selected");
+      return;
     }
 
+    try {
+      const response = await fetch(loginApi, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
+      });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // ✅ STORE TOKEN
+      localStorage.setItem("vtufest_token", data.token);
+      localStorage.setItem("vtufest_role", role);
+
+      // ✅ ROLE-BASED REDIRECT
+      if (role === "student") {
+        navigate("/dashboard");
+      } else if (role === "principal") {
+        navigate("/principal-dashboard");
+      } else if (role === "manager") {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      alert("Server not reachable. Try again.");
+    }
   };
 
   return (
