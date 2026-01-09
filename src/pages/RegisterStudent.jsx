@@ -144,7 +144,7 @@ export default function RegisterStudent() {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === "usn") {
       setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
     } else if (name === "mobile") {
@@ -224,8 +224,23 @@ export default function RegisterStudent() {
       return;
     }
 
+
+
     try {
       setLoading(true);
+
+      console.log("About to call API:", API_BASE.registration);
+      console.log("Request body:", {
+        action: "init",
+        usn: form.usn.trim().toUpperCase(),
+        full_name: form.fullName.trim(),
+        email: form.email.trim().toLowerCase(),
+        mobile: form.mobile.trim(),
+        gender: form.gender,
+        college_id: parseInt(form.collegeId),
+      });
+
+
 
       const response = await fetch(`${API_BASE.registration}`, {
         method: "POST",
@@ -322,7 +337,7 @@ export default function RegisterStudent() {
         } else {
           setUploadStatus("failed");
           alert("Upload failed after 3 attempts. Please try again after 30 minutes.");
-          
+
           // Block submit for 30 minutes
           const blockUntil = Date.now() + 30 * 60 * 1000;
           localStorage.setItem("upload_blocked_until", blockUntil);
@@ -505,8 +520,8 @@ export default function RegisterStudent() {
         // STEP 2: Document Upload & Password
         <form className="register-card" onSubmit={handleRegister}>
           {timer !== null && !timerExpired && (
-            <div style={{ 
-              textAlign: "center", 
+            <div style={{
+              textAlign: "center",
               color: timer < 300 ? "red" : "green",
               fontWeight: "bold",
               marginBottom: "15px",
@@ -516,8 +531,8 @@ export default function RegisterStudent() {
           )}
 
           {timerExpired && (
-            <div style={{ 
-              textAlign: "center", 
+            <div style={{
+              textAlign: "center",
               color: "red",
               fontWeight: "bold",
               marginBottom: "15px",
