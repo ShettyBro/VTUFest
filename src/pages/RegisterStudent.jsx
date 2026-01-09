@@ -349,51 +349,28 @@ export default function RegisterStudent() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    console.log("=== REGISTER BUTTON CLICKED ===");
-    console.log("Current state:");
-    console.log("- uploadStatus:", uploadStatus);
-    console.log("- timerExpired:", timerExpired);
-    console.log("- loading:", loading);
-    console.log("- isUploadBlocked:", isUploadBlocked());
-    console.log("- sessionData:", sessionData);
-    console.log("- password length:", form.password.length);
-    console.log("- passwords match:", form.password === form.confirmPassword);
-
-    // Validation checks
     if (isUploadBlocked()) {
-      console.error("BLOCKED: Upload blocked");
       alert("Upload failed multiple times. Please wait 30 minutes before retrying.");
       return;
     }
 
     if (uploadStatus !== "success") {
-      console.error("BLOCKED: Photo not uploaded. uploadStatus =", uploadStatus);
       alert("Please upload passport photo first");
       return;
     }
 
     if (form.password.length < 8) {
-      console.error("BLOCKED: Password too short");
       alert("Password must be at least 8 characters");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      console.error("BLOCKED: Passwords don't match");
       alert("Passwords do not match");
       return;
     }
 
-    console.log("All validations passed! Proceeding with registration...");
-
     try {
       setLoading(true);
-      console.log("Sending finalize request to:", API_BASE.registration);
-      console.log("Request payload:", {
-        action: "finalize",
-        session_id: sessionData.session_id,
-        password: "***" + form.password.substring(form.password.length - 3)
-      });
 
       const response = await fetch(`${API_BASE.registration}`, {
         method: "POST",
@@ -405,37 +382,27 @@ export default function RegisterStudent() {
         }),
       });
 
-      console.log("Response received:");
-      console.log("- status:", response.status);
-      console.log("- ok:", response.ok);
-
       const data = await response.json();
-      console.log("- data:", data);
 
       if (!response.ok) {
-        console.error("Registration failed:", data.error);
         alert(data.error || "Registration failed");
         return;
       }
 
-      // Success!
+      // Clear session
       localStorage.removeItem("registration_session");
       localStorage.removeItem("upload_blocked_until");
 
-      console.log("✅ Registration successful!");
       alert("Registration successful! Redirecting to login...");
       
       setTimeout(() => {
         navigate("/");
       }, 2000);
     } catch (error) {
-      console.error("❌ Error finalizing registration:");
-      console.error("- message:", error.message);
-      console.error("- stack:", error.stack);
-      alert("Something went wrong. Please check the console and try again.");
+      console.error("Error finalizing registration:", error);
+      alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
-      console.log("Loading state reset");
     }
   };
 
@@ -623,23 +590,6 @@ export default function RegisterStudent() {
             required
           />
 
-          {/* Debug info - remove after testing */}
-          <div style={{ 
-            fontSize: "10px", 
-            color: "#666", 
-            marginTop: "10px",
-            padding: "5px",
-            border: "1px solid #ddd",
-            borderRadius: "4px"
-          }}>
-            <strong>Debug Info:</strong><br/>
-            Upload Status: {uploadStatus}<br/>
-            Timer Expired: {timerExpired ? "Yes" : "No"}<br/>
-            Loading: {loading ? "Yes" : "No"}<br/>
-            Blocked: {isUploadBlocked() ? "Yes" : "No"}<br/>
-            Button Disabled: {(timerExpired || loading || uploadStatus !== "success" || isUploadBlocked()) ? "Yes" : "No"}
-          </div>
-
           <button
             type="submit"
             disabled={
@@ -648,16 +598,6 @@ export default function RegisterStudent() {
               uploadStatus !== "success" ||
               isUploadBlocked()
             }
-            style={{
-              marginTop: "15px",
-              padding: "12px",
-              backgroundColor: (timerExpired || loading || uploadStatus !== "success" || isUploadBlocked()) 
-                ? "#ccc" 
-                : "#ff9800",
-              cursor: (timerExpired || loading || uploadStatus !== "success" || isUploadBlocked())
-                ? "not-allowed"
-                : "pointer"
-            }}
           >
             {loading ? "Registering..." : "Register"}
           </button>
