@@ -310,19 +310,24 @@ export default function RegisterStudent() {
 
       const sasUrl = sessionData.upload_urls.passport_photo;
 
-      // ← UPDATED: Added Content-Length and removed extra headers
+      console.log("Uploading to:", sasUrl.split('?')[0]); // Log URL without SAS token
+
       const response = await fetch(sasUrl, {
         method: "PUT",
         headers: {
           "x-ms-blob-type": "BlockBlob",
-          "Content-Length": photoFile.size.toString(),
+          // Remove Content-Length - browser adds it automatically
         },
         body: photoFile,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Upload failed:", errorText);
+        console.error("Upload failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
         throw new Error(`Upload failed: ${response.status}`);
       }
 
