@@ -228,6 +228,7 @@ export default function RegisterStudent() {
       setLoading(true);
 
       const response = await fetch(`${API_BASE.registration}`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "init",
