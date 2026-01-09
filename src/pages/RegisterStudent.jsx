@@ -291,62 +291,64 @@ export default function RegisterStudent() {
 
   // Upload photo to Azure Blob
   const uploadPhoto = async () => {
-    if (!photoFile) {
-      alert("Please select a photo");
-      return;
-    }
+  if (!photoFile) {
+    alert("Please select a photo");
+    return;
+  }
 
-    if (!sessionData?.upload_urls?.passport_photo) {
-      alert("Session expired. Please restart registration.");
-      return;
-    }
+  if (!sessionData?.upload_urls?.passport_photo) {
+    alert("Session expired. Please restart registration.");
+    return;
+  }
 
-    const maxRetries = 3;
+  const maxRetries = 3;
 
-    const attemptUpload = async (retryCount) => {
-      try {
-        setUploadStatus("uploading");
-        setUploadProgress(0);
+  const attemptUpload = async (retryCount) => {
+    try {
+      setUploadStatus("uploading");
+      setUploadProgress(0);
 
-        const sasUrl = sessionData.upload_urls.passport_photo;
+      const sasUrl = sessionData.upload_urls.passport_photo;
 
-        const response = await fetch(sasUrl, {
-          method: "PUT",
-          headers: {
-            "x-ms-blob-type": "BlockBlob",
-            "Content-Type": photoFile.type,
-          },
-          body: photoFile,
-        });
+      // ← UPDATED: Added Content-Length and removed extra headers
+      const response = await fetch(sasUrl, {
+        method: "PUT",
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Length": photoFile.size.toString(),
+        },
+        body: photoFile,
+      });
 
-        if (!response.ok) {
-          throw new Error("Upload failed");
-        }
-
-        setUploadStatus("success");
-        setUploadProgress(100);
-        setUploadRetries(0);
-      } catch (error) {
-        console.error("Upload error:", error);
-
-        if (retryCount < maxRetries) {
-          setUploadRetries(retryCount + 1);
-          alert(`Upload failed. Retrying (${retryCount + 1}/${maxRetries})...`);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          await attemptUpload(retryCount + 1);
-        } else {
-          setUploadStatus("failed");
-          alert("Upload failed after 3 attempts. Please try again after 30 minutes.");
-
-          // Block submit for 30 minutes
-          const blockUntil = Date.now() + 30 * 60 * 1000;
-          localStorage.setItem("upload_blocked_until", blockUntil);
-        }
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Upload failed:", errorText);
+        throw new Error(`Upload failed: ${response.status}`);
       }
-    };
 
-    await attemptUpload(0);
+      setUploadStatus("success");
+      setUploadProgress(100);
+      setUploadRetries(0);
+    } catch (error) {
+      console.error("Upload error:", error);
+
+      if (retryCount < maxRetries) {
+        setUploadRetries(retryCount + 1);
+        alert(`Upload failed. Retrying (${retryCount + 1}/${maxRetries})...`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await attemptUpload(retryCount + 1);
+      } else {
+        setUploadStatus("failed");
+        alert("Upload failed after 3 attempts. Please try again after 30 minutes.");
+
+        const blockUntil = Date.now() + 30 * 60 * 1000;
+        localStorage.setItem("upload_blocked_until", blockUntil);
+      }
+    }
   };
+
+  await attemptUpload(0);
+};
 
   // Check if upload is blocked
   const isUploadBlocked = () => {
