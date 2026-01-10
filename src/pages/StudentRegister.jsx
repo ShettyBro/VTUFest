@@ -58,7 +58,7 @@ export default function SubmitApplication() {
   const [token, setToken] = useState("");
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken = localStorage.getItem("vtufest_token");
     if (!storedToken) {
       alert("Please login first");
       navigate("/");
