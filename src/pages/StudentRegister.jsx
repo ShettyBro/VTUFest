@@ -1,219 +1,684 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/StudentRegister.css";
+import "../styles/register.css";
 
-/* ================= COLLEGE MASTER ================= */
-export const COLLEGES = [
-  // ===== BENGALURU REGION =====
-  { code: "AIT-BLR", name: "Acharya Institute of Technology", place: "Bengaluru" },
-  { code: "APS-BLR", name: "A.P.S. College of Engineering", place: "Bengaluru" },
-  { code: "AMC-BLR", name: "AMC Engineering College", place: "Bengaluru" },
-  { code: "AIMS-BLR", name: "Amrutha Institute of Engineering and Management Sciences", place: "Bengaluru" },
-  { code: "ATRIA-BLR", name: "Atria Institute of Technology", place: "Bengaluru" },
-  { code: "BCET-BLR", name: "Bengaluru College of Engineering and Technology", place: "Bengaluru" },
-  { code: "BIT-BLR", name: "Bengaluru Institute of Technology", place: "Bengaluru" },
-  { code: "BRIND-BLR", name: "Brindavan College of Engineering", place: "Bengaluru" },
-  { code: "CMR-BLR", name: "C.M.R. Institute of Technology", place: "Bengaluru" },
-  { code: "CIT-BLR", name: "Cambridge Institute of Technology", place: "Bengaluru" },
-  { code: "CEC-BLR", name: "City Engineering College", place: "Bengaluru" },
-  { code: "DBIT-BLR", name: "Don Bosco Institute of Technology", place: "Bengaluru" },
-  { code: "EPIT-BLR", name: "East Point College of Engineering and Technology", place: "Bengaluru" },
-  { code: "EWIT-BLR", name: "East West Institute of Technology", place: "Bengaluru" },
-  { code: "HKBK-BLR", name: "HKBK College of Engineering", place: "Bengaluru" },
-  { code: "IMPACT-BLR", name: "Impact College of Engineering", place: "Bengaluru" },
-  { code: "JVIT-BLR", name: "Jnana Vikas Institute of Technology", place: "Bengaluru" },
-  { code: "JSSATE-BLR", name: "JSS Academy of Technical Education", place: "Bengaluru" },
-  { code: "KSIT-BLR", name: "K.S. Institute of Technology", place: "Bengaluru" },
-  { code: "KNS-BLR", name: "KNS Institute of Technology", place: "Bengaluru" },
-  { code: "MSENG-BLR", name: "M.S. Engineering College", place: "Bengaluru" },
-  { code: "OXF-BLR", name: "Oxford College of Engineering", place: "Bengaluru" },
-  { code: "RRIT-BLR", name: "R R Institute of Technology", place: "Bengaluru" },
-  { code: "RRCE-BLR", name: "Rajarajeswari College of Engineering", place: "Bengaluru" },
-  { code: "RGIT-BLR", name: "Rajiv Gandhi Institute of Technology", place: "Bengaluru" },
-  { code: "RNSIT-BLR", name: "RNS Institute of Technology", place: "Bengaluru" },
-  { code: "SVIT-BLR", name: "Sai Vidya Institute of Technology", place: "Bengaluru" },
-  { code: "SAPTH-BLR", name: "Sapthagiri College of Engineering", place: "Bengaluru" },
-  { code: "SEA-BLR", name: "SEA College of Engineering and Technology", place: "Bengaluru" },
-  { code: "SMVIT-BLR", name: "Sir M. Visvesvaraya Institute of Technology", place: "Bengaluru" },
-  { code: "TJOHN-BLR", name: "T. John Institute of Technology", place: "Bengaluru" },
-  { code: "VEMANA-BLR", name: "Vemana Institute of Technology", place: "Bengaluru" },
-  { code: "VIT-BLR", name: "Vivekananda Institute of Technology", place: "Bengaluru" },
+const API_BASE = {
+  collegeAndUsn: "https://uploade-vtu01.netlify.app/.netlify/functions/college-and-usn",
+  submitApplication: "https://uploade-vtu01.netlify.app/.netlify/functions/student-submit-application"
+};
 
-  // ===== MYSURU REGION =====
-  { code: "NIE-MYS", name: "The National Institute of Engineering", place: "Mysuru" },
-  { code: "SJCE-MYS", name: "Sri Jayachamarajendra College of Engineering", place: "Mysuru" },
-  { code: "VVCE-MYS", name: "Vidya Vardhaka College of Engineering", place: "Mysuru" },
-  { code: "ATME-MYS", name: "ATME College of Engineering", place: "Mysuru" },
-  { code: "GSSSIETW-MYS", name: "GSSS Institute of Engineering & Technology for Women", place: "Mysuru" },
-  { code: "MIT-MYS", name: "Maharaja Institute of Technology", place: "Mysuru" },
-
-  // ===== BELAGAVI REGION =====
-  { code: "KLSGIT-BLG", name: "KLS Gogte Institute of Technology", place: "Belagavi" },
-  { code: "SDMCET-DWD", name: "SDM College of Engineering and Technology", place: "Dharwad" },
-  { code: "AITM-BLG", name: "Angadi Institute of Technology and Management", place: "Belagavi" },
-  { code: "JCE-BLG", name: "Jain College of Engineering", place: "Belagavi" },
-  { code: "GEC-BLG", name: "Government Engineering College", place: "Belagavi" },
-
-  // ===== KALABURAGI REGION =====
-  { code: "PDA-GUL", name: "PDA College of Engineering", place: "Kalaburagi" },
-  { code: "NDRK-GUL", name: "NDRK Institute of Technology", place: "Kalaburagi" },
-  { code: "SLN-RCR", name: "SLN College of Engineering", place: "Raichur" },
-  { code: "GEC-RCR", name: "Government Engineering College", place: "Raichur" }
-];
-
-
-/* ================= COMPONENT ================= */
-export default function StudentRegister() {
+export default function SubmitApplication() {
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1);
-  const [showPopup, setShowPopup] = useState(false);
-
+  // Form state
   const [form, setForm] = useState({
-    name: "",
     usn: "",
-    mobile: "",
-    email: "",
-    gender: "",
     bloodGroup: "",
     address: "",
-    college: "",
-    year: "",
-    semester: "",
     department: "",
+    yearOfStudy: "",
+    semester: "",
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  // College state
+  const [collegeInfo, setCollegeInfo] = useState(null);
+  const [usnValidated, setUsnValidated] = useState(false);
+  const [usnError, setUsnError] = useState("");
+  const [usnChecking, setUsnChecking] = useState(false);
+
+  // UI state
+  const [showUploadSection, setShowUploadSection] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [timer, setTimer] = useState(null);
+  const [timerExpired, setTimerExpired] = useState(false);
+
+  // Document upload state
+  const [documents, setDocuments] = useState({
+    aadhaar: null,
+    collegeId: null,
+    marksCard: null,
+  });
+
+  const [documentPreviews, setDocumentPreviews] = useState({
+    aadhaar: "",
+    collegeId: "",
+    marksCard: "",
+  });
+
+  const [uploadStatus, setUploadStatus] = useState({
+    aadhaar: "",
+    collegeId: "",
+    marksCard: "",
+  });
+
+  // Session state
+  const [sessionData, setSessionData] = useState(null);
+
+  // JWT token
+  const [token, setToken] = useState("");
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (!storedToken) {
+      alert("Please login first");
+      navigate("/");
+      return;
+    }
+    setToken(storedToken);
+    loadSessionFromStorage();
+  }, [navigate]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (timer && timer > 0 && !timerExpired) {
+      const interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setTimerExpired(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timer, timerExpired]);
+
+  // Save session to localStorage
+  const saveSessionToStorage = (data) => {
+    localStorage.setItem("application_session", JSON.stringify({
+      ...data,
+      savedAt: Date.now(),
+    }));
   };
 
-  const handleNext = () => {
-    for (const key of ["name", "usn", "mobile", "email", "gender", "bloodGroup", "address", "college"]) {
-      if (!form[key]) {
-        alert("Please fill all required fields");
+  // Load session from localStorage
+  const loadSessionFromStorage = () => {
+    try {
+      const saved = localStorage.getItem("application_session");
+      if (!saved) return;
+
+      const data = JSON.parse(saved);
+      const expiresAt = new Date(data.expires_at).getTime();
+      const now = Date.now();
+
+      if (now < expiresAt) {
+        setSessionData(data);
+        setShowUploadSection(true);
+        const remainingSeconds = Math.floor((expiresAt - now) / 1000);
+        setTimer(remainingSeconds);
+        setForm((prev) => ({ ...prev, ...data.formData }));
+        setCollegeInfo(data.collegeInfo);
+        setUsnValidated(true);
+      } else {
+        localStorage.removeItem("application_session");
+      }
+    } catch (error) {
+      console.error("Error loading session:", error);
+    }
+  };
+
+  // Validate USN and fetch college
+  const validateUSN = async () => {
+    if (!form.usn.trim()) {
+      setUsnError("USN is required");
+      return;
+    }
+
+    try {
+      setUsnChecking(true);
+      setUsnError("");
+
+      const response = await fetch(API_BASE.collegeAndUsn, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "validate_and_fetch_college",
+          usn: form.usn.trim().toUpperCase(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.exists) {
+        setUsnError(data.error || "Invalid USN. Please check and try again.");
+        setUsnValidated(false);
+        setCollegeInfo(null);
         return;
       }
+
+      setCollegeInfo({
+        college_id: data.college_id,
+        college_code: data.college_code,
+        college_name: data.college_name,
+        place: data.place,
+      });
+      setUsnValidated(true);
+      setUsnError("");
+    } catch (error) {
+      console.error("Error validating USN:", error);
+      setUsnError("Error validating USN. Please try again.");
+      setUsnValidated(false);
+    } finally {
+      setUsnChecking(false);
     }
-    setStep(2);
   };
 
-  const handleSubmit = (e) => {
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "usn") {
+      setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
+      setUsnValidated(false);
+      setCollegeInfo(null);
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // Handle document selection
+  const handleDocumentChange = (docType) => (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+      alert("Only PNG, JPG, or PDF files allowed");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File must be less than 5MB");
+      return;
+    }
+
+    setDocuments((prev) => ({ ...prev, [docType]: file }));
+
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDocumentPreviews((prev) => ({ ...prev, [docType]: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setDocumentPreviews((prev) => ({ ...prev, [docType]: "PDF" }));
+    }
+  };
+
+  // Format timer display
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
+  };
+
+  // Handle Next button (save details)
+  const handleNext = async (e) => {
     e.preventDefault();
-    console.log("Submitted Data:", form);
-    setShowPopup(true);
+
+    if (!usnValidated) {
+      alert("Please validate your USN first");
+      return;
+    }
+
+    if (!form.bloodGroup) {
+      alert("Blood group is required");
+      return;
+    }
+
+    if (!form.address.trim()) {
+      alert("Address is required");
+      return;
+    }
+
+    if (!form.department) {
+      alert("Department is required");
+      return;
+    }
+
+    if (!form.yearOfStudy) {
+      alert("Year of study is required");
+      return;
+    }
+
+    if (!form.semester) {
+      alert("Semester is required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(API_BASE.submitApplication, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "save_details",
+          blood_group: form.bloodGroup,
+          address: form.address.trim(),
+          department: form.department,
+          year_of_study: parseInt(form.yearOfStudy),
+          semester: parseInt(form.semester),
+          college_id: collegeInfo.college_id,
+          college_code: collegeInfo.college_code,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Failed to save details");
+        return;
+      }
+
+      // Generate upload URLs
+      const urlResponse = await fetch(API_BASE.submitApplication, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "generate_upload_urls",
+        }),
+      });
+
+      const urlData = await urlResponse.json();
+
+      if (!urlResponse.ok) {
+        alert(urlData.error || "Failed to generate upload URLs");
+        return;
+      }
+
+      const sessionInfo = {
+        session_id: urlData.session_id,
+        upload_urls: urlData.upload_urls,
+        expires_at: urlData.expires_at,
+        formData: form,
+        collegeInfo: collegeInfo,
+      };
+
+      setSessionData(sessionInfo);
+      saveSessionToStorage(sessionInfo);
+
+      const expiresAt = new Date(urlData.expires_at).getTime();
+      const now = Date.now();
+      const remainingSeconds = Math.floor((expiresAt - now) / 1000);
+      setTimer(remainingSeconds);
+
+      setShowUploadSection(true);
+    } catch (error) {
+      console.error("Error saving details:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleOk = () => {
-    setShowPopup(false);
-    navigate("/dashboard");
+  // Upload single document
+  const uploadDocument = async (docType, urlKey) => {
+    const file = documents[docType];
+    if (!file) {
+      alert(`Please select ${docType} file`);
+      return;
+    }
+
+    if (!sessionData?.upload_urls?.[urlKey]) {
+      alert("Session expired. Please restart.");
+      return;
+    }
+
+    try {
+      setUploadStatus((prev) => ({ ...prev, [docType]: "uploading" }));
+
+      const sasUrl = sessionData.upload_urls[urlKey];
+
+      const response = await fetch(sasUrl, {
+        method: "PUT",
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+        },
+        body: file,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+
+      setUploadStatus((prev) => ({ ...prev, [docType]: "success" }));
+    } catch (error) {
+      console.error(`Error uploading ${docType}:`, error);
+      setUploadStatus((prev) => ({ ...prev, [docType]: "failed" }));
+      alert(`Failed to upload ${docType}. Please try again.`);
+    }
+  };
+
+  // Handle final submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const allUploaded =
+      uploadStatus.aadhaar === "success" &&
+      uploadStatus.collegeId === "success" &&
+      uploadStatus.marksCard === "success";
+
+    if (!allUploaded) {
+      alert("Please upload all 3 required documents");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(API_BASE.submitApplication, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "finalize_submission",
+          session_id: sessionData.session_id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Submission failed");
+        return;
+      }
+
+      localStorage.removeItem("application_session");
+
+      alert("Application submitted successfully! Redirecting to dashboard...");
+
+      setTimeout(() => {
+        navigate("/student-dashboard");
+      }, 2000);
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="reg-container">
-      <h2>Student Registration – VTU HABBA</h2>
+    <div className="register-page">
+      <h2>Submit Application</h2>
 
-      <div className="steps">
-        <span className={step === 1 ? "active" : ""}>Details</span>
-        <span className={step === 2 ? "active" : ""}>Documents</span>
-      </div>
+      {!showUploadSection ? (
+        // STEP 1: Application Details Form
+        <form className="register-card" onSubmit={handleNext}>
+          <label>USN / Registration Number *</label>
+          <input
+            name="usn"
+            value={form.usn}
+            onChange={handleChange}
+            placeholder="e.g., VTU2026CS001"
+            disabled={loading || usnValidated}
+            required
+          />
+          {!usnValidated && (
+            <button
+              type="button"
+              onClick={validateUSN}
+              disabled={usnChecking || !form.usn.trim()}
+              style={{ marginTop: "10px" }}
+            >
+              {usnChecking ? "Validating..." : "Validate USN"}
+            </button>
+          )}
+          {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
+          {usnError && <p style={{ color: "red", fontSize: "12px" }}>{usnError}</p>}
 
-      <form className="reg-card" onSubmit={handleSubmit}>
-        {step === 1 && (
-          <>
-            <label>Name</label>
-            <input name="name" value={form.name} onChange={handleChange} />
+          {collegeInfo && (
+            <>
+              <label>College (Auto-detected)</label>
+              <input
+                value={`${collegeInfo.college_code} - ${collegeInfo.college_name}, ${collegeInfo.place}`}
+                disabled
+                style={{ backgroundColor: "#f0f0f0" }}
+              />
+            </>
+          )}
 
-            <label>USN</label>
-            <input name="usn" value={form.usn} onChange={handleChange} />
+          <label>Blood Group *</label>
+          <select
+            name="bloodGroup"
+            value={form.bloodGroup}
+            onChange={handleChange}
+            disabled={!usnValidated || loading}
+            required
+          >
+            <option value="">Select Blood Group</option>
+            <option>A+</option>
+            <option>A-</option>
+            <option>B+</option>
+            <option>B-</option>
+            <option>AB+</option>
+            <option>AB-</option>
+            <option>O+</option>
+            <option>O-</option>
+          </select>
 
-            <label>Mobile</label>
-            <input name="mobile" maxLength="10" value={form.mobile} onChange={handleChange} />
+          <label>Permanent Address *</label>
+          <textarea
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="Enter your permanent address"
+            rows="3"
+            disabled={!usnValidated || loading}
+            required
+          />
 
-            <label>Email</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} />
+          <label>Department *</label>
+          <select
+            name="department"
+            value={form.department}
+            onChange={handleChange}
+            disabled={!usnValidated || loading}
+            required
+          >
+            <option value="">Select Department</option>
+            <option>AI & ML</option>
+            <option>CSE</option>
+            <option>ISE</option>
+            <option>ECE</option>
+            <option>EEE</option>
+            <option>Mechanical</option>
+            <option>Civil</option>
+          </select>
 
-            <label>Gender</label>
-            <select name="gender" value={form.gender} onChange={handleChange}>
-              <option value="">Select Gender</option>
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </select>
+          <label>Year of Study *</label>
+          <select
+            name="yearOfStudy"
+            value={form.yearOfStudy}
+            onChange={handleChange}
+            disabled={!usnValidated || loading}
+            required
+          >
+            <option value="">Select Year</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
 
-            <label>Blood Group</label>
-            <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange}>
-              <option value="">Select Blood Group</option>
-              <option>A+</option><option>A-</option>
-              <option>B+</option><option>B-</option>
-              <option>AB+</option><option>AB-</option>
-              <option>O+</option><option>O-</option>
-            </select>
+          <label>Semester *</label>
+          <select
+            name="semester"
+            value={form.semester}
+            onChange={handleChange}
+            disabled={!usnValidated || loading}
+            required
+          >
+            <option value="">Select Semester</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+              <option key={s} value={s}>
+                Semester {s}
+              </option>
+            ))}
+          </select>
 
-            <label>Permanent Address</label>
-            <textarea name="address" rows="3" value={form.address} onChange={handleChange} />
+          <button type="submit" disabled={!usnValidated || loading}>
+            {loading ? "Processing..." : "Next"}
+          </button>
 
-            <label>College</label>
-            <select name="college" value={form.college} onChange={handleChange}>
-              <option value="">Select College</option>
-              {COLLEGES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name} – {c.place}
-                </option>
-              ))}
-            </select>
+          <p className="back-link" onClick={() => navigate("/student-dashboard")}>
+            ← Back to Dashboard
+          </p>
+        </form>
+      ) : (
+        // STEP 2: Document Upload
+        <form className="register-card" onSubmit={handleSubmit}>
+          {timer !== null && !timerExpired && (
+            <div
+              style={{
+                textAlign: "center",
+                color: timer < 300 ? "red" : "green",
+                fontWeight: "bold",
+                marginBottom: "15px",
+              }}
+            >
+              Session expires in: {formatTimer(timer)}
+            </div>
+          )}
 
-            <label>Year</label>
-            <select name="year" value={form.year} onChange={handleChange}>
-              <option value="">Select Year</option>
-              {[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}
-            </select>
+          {timerExpired && (
+            <div
+              style={{
+                textAlign: "center",
+                color: "red",
+                fontWeight: "bold",
+                marginBottom: "15px",
+              }}
+            >
+              Session expired. Please restart.
+            </div>
+          )}
 
-            <label>Semester</label>
-            <select name="semester" value={form.semester} onChange={handleChange}>
-              <option value="">Select Semester</option>
-              {[1,2,3,4,5,6,7,8].map((s) => <option key={s}>{s}</option>)}
-            </select>
+          {/* Aadhaar Card */}
+          <label>Aadhaar Card * (PNG/JPG/PDF, max 5MB)</label>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,application/pdf"
+            onChange={handleDocumentChange("aadhaar")}
+            disabled={timerExpired || uploadStatus.aadhaar === "success"}
+          />
+          {documentPreviews.aadhaar && documentPreviews.aadhaar !== "PDF" && (
+            <div style={{ textAlign: "center", margin: "10px 0" }}>
+              <img
+                src={documentPreviews.aadhaar}
+                alt="Aadhaar Preview"
+                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
+              />
+            </div>
+          )}
+          {documents.aadhaar && uploadStatus.aadhaar !== "success" && (
+            <button
+              type="button"
+              onClick={() => uploadDocument("aadhaar", "aadhaar")}
+              disabled={timerExpired || loading}
+              style={{ marginTop: "10px" }}
+            >
+              {uploadStatus.aadhaar === "uploading" ? "Uploading..." : "Upload Aadhaar"}
+            </button>
+          )}
+          {uploadStatus.aadhaar === "success" && (
+            <p style={{ color: "green", fontSize: "14px" }}>✓ Aadhaar uploaded</p>
+          )}
 
-            <label>Department</label>
-            <select name="department" value={form.department} onChange={handleChange}>
-              <option value="">Select Department</option>
-              <option>AI & ML</option>
-              <option>CSE</option>
-              <option>ISE</option>
-              <option>ECE</option>
-              <option>EEE</option>
-              <option>Mechanical</option>
-              <option>Civil</option>
-            </select>
+          {/* College ID Card */}
+          <label>College ID Card * (PNG/JPG/PDF, max 5MB)</label>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,application/pdf"
+            onChange={handleDocumentChange("collegeId")}
+            disabled={timerExpired || uploadStatus.collegeId === "success"}
+          />
+          {documentPreviews.collegeId && documentPreviews.collegeId !== "PDF" && (
+            <div style={{ textAlign: "center", margin: "10px 0" }}>
+              <img
+                src={documentPreviews.collegeId}
+                alt="College ID Preview"
+                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
+              />
+            </div>
+          )}
+          {documents.collegeId && uploadStatus.collegeId !== "success" && (
+            <button
+              type="button"
+              onClick={() => uploadDocument("collegeId", "college_id_card")}
+              disabled={timerExpired || loading}
+              style={{ marginTop: "10px" }}
+            >
+              {uploadStatus.collegeId === "uploading" ? "Uploading..." : "Upload College ID"}
+            </button>
+          )}
+          {uploadStatus.collegeId === "success" && (
+            <p style={{ color: "green", fontSize: "14px" }}>✓ College ID uploaded</p>
+          )}
 
-            <button type="button" onClick={handleNext}>Next</button>
-          </>
-        )}
+          {/* 10th Marks Card */}
+          <label>10th Marks Card * (PNG/JPG/PDF, max 5MB)</label>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,application/pdf"
+            onChange={handleDocumentChange("marksCard")}
+            disabled={timerExpired || uploadStatus.marksCard === "success"}
+          />
+          {documentPreviews.marksCard && documentPreviews.marksCard !== "PDF" && (
+            <div style={{ textAlign: "center", margin: "10px 0" }}>
+              <img
+                src={documentPreviews.marksCard}
+                alt="Marks Card Preview"
+                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
+              />
+            </div>
+          )}
+          {documents.marksCard && uploadStatus.marksCard !== "success" && (
+            <button
+              type="button"
+              onClick={() => uploadDocument("marksCard", "marks_card_10th")}
+              disabled={timerExpired || loading}
+              style={{ marginTop: "10px" }}
+            >
+              {uploadStatus.marksCard === "uploading" ? "Uploading..." : "Upload Marks Card"}
+            </button>
+          )}
+          {uploadStatus.marksCard === "success" && (
+            <p style={{ color: "green", fontSize: "14px" }}>✓ Marks Card uploaded</p>
+          )}
 
-        {step === 2 && (
-          <>
-            <label>Aadhaar Card</label>
-            <input type="file" />
+          <button
+            type="submit"
+            disabled={
+              timerExpired ||
+              loading ||
+              uploadStatus.aadhaar !== "success" ||
+              uploadStatus.collegeId !== "success" ||
+              uploadStatus.marksCard !== "success"
+            }
+          >
+            {loading ? "Submitting..." : "Submit Application"}
+          </button>
 
-            <label>10th Marks Card</label>
-            <input type="file" />
-
-            <label>College ID Card</label>
-            <input type="file" />
-
-            <button type="submit">Submit</button>
-          </>
-        )}
-      </form>
-
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h3>Registration Successful</h3>
-            <button onClick={handleOk}>OK</button>
-          </div>
-        </div>
+          <p
+            className="back-link"
+            onClick={() => {
+              setShowUploadSection(false);
+              localStorage.removeItem("application_session");
+            }}
+          >
+            ← Back to Form
+          </p>
+        </form>
       )}
     </div>
   );

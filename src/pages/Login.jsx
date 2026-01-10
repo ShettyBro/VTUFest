@@ -134,6 +134,8 @@ export default function Login() {
       // ✅ STORE SESSION
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
+      localStorage.setItem("college_id", data.college_id);
+      localStorage.setItem("usn", data.usn);
 
       // ✅ REDIRECT
       if (role === "principal") {
