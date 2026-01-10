@@ -25,6 +25,7 @@ export default function SubmitApplication() {
   const [usnValidated, setUsnValidated] = useState(false);
   const [usnError, setUsnError] = useState("");
   const [usnChecking, setUsnChecking] = useState(false);
+  const [formDisabled, setFormDisabled] = useState(false);
 
   // UI state
   const [showUploadSection, setShowUploadSection] = useState(false);
@@ -58,7 +59,7 @@ export default function SubmitApplication() {
   const [token, setToken] = useState("");
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("vtufest_token");
+    const storedToken = localStorage.getItem("token");
     if (!storedToken) {
       alert("Please login first");
       navigate("/");
@@ -118,32 +119,37 @@ export default function SubmitApplication() {
     }
   };
 
-  // Validate USN and fetch college
-  const validateUSN = async () => {
-    if (!form.usn.trim()) {
-      setUsnError("USN is required");
+  // Auto-validate USN when user leaves the input (onBlur)
+  const validateUSN = async (usn) => {
+    if (!usn.trim()) {
+      setUsnError("");
+      setCollegeInfo(null);
+      setUsnValidated(false);
       return;
     }
 
     try {
       setUsnChecking(true);
       setUsnError("");
+      setCollegeInfo(null);
+      setUsnValidated(false);
 
       const response = await fetch(API_BASE.collegeAndUsn, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "validate_and_fetch_college",
-          usn: form.usn.trim().toUpperCase(),
+          usn: usn.trim().toUpperCase(),
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.exists) {
-        setUsnError(data.error || "Invalid USN. Please check and try again.");
+        setUsnError(data.error || "Invalid USN. Please check and try again or register first.");
         setUsnValidated(false);
         setCollegeInfo(null);
+        setFormDisabled(true);
         return;
       }
 
@@ -155,10 +161,12 @@ export default function SubmitApplication() {
       });
       setUsnValidated(true);
       setUsnError("");
+      setFormDisabled(false);
     } catch (error) {
       console.error("Error validating USN:", error);
       setUsnError("Error validating USN. Please try again.");
       setUsnValidated(false);
+      setFormDisabled(true);
     } finally {
       setUsnChecking(false);
     }
@@ -172,6 +180,8 @@ export default function SubmitApplication() {
       setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
       setUsnValidated(false);
       setCollegeInfo(null);
+      setUsnError("");
+      setFormDisabled(false);
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -217,7 +227,7 @@ export default function SubmitApplication() {
     e.preventDefault();
 
     if (!usnValidated) {
-      alert("Please validate your USN first");
+      alert("Please enter a valid USN first");
       return;
     }
 
@@ -349,6 +359,9 @@ export default function SubmitApplication() {
       }
 
       setUploadStatus((prev) => ({ ...prev, [docType]: "success" }));
+      
+      // Clear upload block on success
+      localStorage.removeItem(`upload_blocked_until_${docType}`);
     } catch (error) {
       console.error(`Error uploading ${docType}:`, error);
       setUploadStatus((prev) => ({ ...prev, [docType]: "failed" }));
@@ -419,22 +432,17 @@ export default function SubmitApplication() {
             name="usn"
             value={form.usn}
             onChange={handleChange}
+            onBlur={(e) => validateUSN(e.target.value)}
             placeholder="e.g., VTU2026CS001"
-            disabled={loading || usnValidated}
+            disabled={formDisabled || loading}
             required
           />
-          {!usnValidated && (
-            <button
-              type="button"
-              onClick={validateUSN}
-              disabled={usnChecking || !form.usn.trim()}
-              style={{ marginTop: "10px" }}
-            >
-              {usnChecking ? "Validating..." : "Validate USN"}
-            </button>
-          )}
           {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
-          {usnError && <p style={{ color: "red", fontSize: "12px" }}>{usnError}</p>}
+          {usnError && (
+            <p style={{ color: "red", fontSize: "12px" }}>
+              {usnError}
+            </p>
+          )}
 
           {collegeInfo && (
             <>
@@ -452,7 +460,7 @@ export default function SubmitApplication() {
             name="bloodGroup"
             value={form.bloodGroup}
             onChange={handleChange}
-            disabled={!usnValidated || loading}
+            disabled={formDisabled || loading}
             required
           >
             <option value="">Select Blood Group</option>
@@ -473,7 +481,7 @@ export default function SubmitApplication() {
             onChange={handleChange}
             placeholder="Enter your permanent address"
             rows="3"
-            disabled={!usnValidated || loading}
+            disabled={formDisabled || loading}
             required
           />
 
@@ -482,7 +490,7 @@ export default function SubmitApplication() {
             name="department"
             value={form.department}
             onChange={handleChange}
-            disabled={!usnValidated || loading}
+            disabled={formDisabled || loading}
             required
           >
             <option value="">Select Department</option>
@@ -500,7 +508,7 @@ export default function SubmitApplication() {
             name="yearOfStudy"
             value={form.yearOfStudy}
             onChange={handleChange}
-            disabled={!usnValidated || loading}
+            disabled={formDisabled || loading}
             required
           >
             <option value="">Select Year</option>
@@ -515,7 +523,7 @@ export default function SubmitApplication() {
             name="semester"
             value={form.semester}
             onChange={handleChange}
-            disabled={!usnValidated || loading}
+            disabled={formDisabled || loading}
             required
           >
             <option value="">Select Semester</option>
@@ -526,7 +534,7 @@ export default function SubmitApplication() {
             ))}
           </select>
 
-          <button type="submit" disabled={!usnValidated || loading}>
+          <button type="submit" disabled={formDisabled || loading || !usnValidated}>
             {loading ? "Processing..." : "Next"}
           </button>
 
