@@ -119,7 +119,7 @@ export default function SubmitApplication() {
     }
   };
 
-  // Auto-validate USN when user leaves the input (onBlur)
+  // Validate USN and fetch college info
   const validateUSN = async (usn) => {
     if (!usn.trim()) {
       setUsnError("");
@@ -178,6 +178,7 @@ export default function SubmitApplication() {
 
     if (name === "usn") {
       setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
+      // Reset validation when USN changes
       setUsnValidated(false);
       setCollegeInfo(null);
       setUsnError("");
@@ -434,7 +435,7 @@ export default function SubmitApplication() {
             onChange={handleChange}
             onBlur={(e) => validateUSN(e.target.value)}
             placeholder="e.g., VTU2026CS001"
-            disabled={formDisabled || loading}
+            disabled={loading}
             required
           />
           {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
@@ -448,7 +449,7 @@ export default function SubmitApplication() {
             <>
               <label>College (Auto-detected)</label>
               <input
-                value={`${collegeInfo.college_code} - ${collegeInfo.college_name}, ${collegeInfo.place}`}
+                value={`${collegeInfo.college_code}, ${collegeInfo.college_name}, ${collegeInfo.place}`}
                 disabled
                 style={{ backgroundColor: "#f0f0f0" }}
               />
@@ -534,7 +535,7 @@ export default function SubmitApplication() {
             ))}
           </select>
 
-          <button type="submit" disabled={formDisabled || loading || !usnValidated}>
+          <button type="submit" disabled={formDisabled || loading || !usnValidated || usnChecking}>
             {loading ? "Processing..." : "Next"}
           </button>
 
