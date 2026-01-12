@@ -333,9 +333,9 @@ export default function SubmitApplication() {
       localStorage.removeItem("application_session");
 
       alert("Application submitted successfully! Redirecting to dashboard...");
-      
+
       setTimeout(() => {
-        navigate("/student-dashboard");
+        navigate("/dashboard");
       }, 2000);
     } catch (error) {
       console.error("Error submitting application:", error);
