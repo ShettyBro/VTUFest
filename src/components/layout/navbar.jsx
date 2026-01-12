@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/navbar.css";
+import collegesData from "../data/colleges.json";
 
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -12,13 +13,37 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   /* ================= USER DATA ================= */
-  const role = localStorage.getItem("role") || "student";
-  const userProfile = JSON.parse(localStorage.getItem("userProfile")) || {};
 
-  const userName = userProfile.name || "User";
-  const userPhoto = userProfile.photo || "/user.png";
 
-  const collegeCode = "ACH-VTU-2026";
+
+  const role = localStorage.getItem("vtufest_role") || "student";
+
+  const userName = localStorage.getItem("name") || "User";
+  const userUsn = localStorage.getItem("usn") || "";
+  const userPhoto = "/user.png";
+
+  const storedCollegeId = localStorage.getItem("college_id");
+
+  if (storedCollegeId) {
+    const college = collegesData.find(
+      c => c.college_id === parseInt(storedCollegeId)
+    );
+
+    if (college) {
+      // For UI (optional)
+      setCollegeName(`${college.college_name}, ${college.place}`);
+
+      // REQUIRED: build CollegeName-CODE
+      const collegeCode = `${college.college_name}-${college.college_code}`;
+
+      // If you want to keep it in React state
+      setCollegeCode(collegeCode);
+
+      // If you want to persist it
+      localStorage.setItem("college_code", collegeCode);
+    }
+  }
+
 
   /* -------- CLOSE DROPDOWNS ON OUTSIDE CLICK -------- */
   useEffect(() => {
@@ -95,37 +120,41 @@ export default function Navbar() {
         </div>
 
         {/* PROFILE */}
-        <div className="profile-wrapper" ref={profileRef}>
-          <div
-            className="profile-trigger"
-            onClick={() => setProfileOpen(!profileOpen)}
-          >
-            <img src={userPhoto} alt="User" className="profile-avatar" />
+        <div
+          className="profile-trigger"
+          onClick={() => setProfileOpen(!profileOpen)}
+        >
+          <img src={userPhoto} alt="User" className="profile-avatar" />
+
+          <div className="profile-name-wrapper">
             <span className="username">{userName}</span>
+            {userUsn && <span className="usn-tooltip">{userUsn}</span>}
           </div>
-
-          {profileOpen && (
-            <div className="profile-menu">
-              <div
-                className="menu-item"
-                onClick={() => navigate("/change-password")}
-              >
-                Change Password
-              </div>
-
-              <div
-                className="menu-item logout"
-                onClick={() => {
-                  localStorage.clear();
-                  navigate("/");
-                }}
-              >
-                Logout
-              </div>
-            </div>
-          )}
         </div>
+
+
+        {profileOpen && (
+          <div className="profile-menu">
+            <div
+              className="menu-item"
+              onClick={() => navigate("/change-password")}
+            >
+              Change Password
+            </div>
+
+            <div
+              className="menu-item logout"
+              onClick={() => {
+                localStorage.clear();
+                navigate("/");
+              }}
+            >
+              Logout
+            </div>
+          </div>
+        )}
       </div>
-    </header>
+    </div>
+    </header >
   );
 }

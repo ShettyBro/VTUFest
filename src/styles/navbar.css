@@ -269,3 +269,28 @@
   color: white;
 }
 
+.profile-name-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.usn-tooltip {
+  position: absolute;
+  top: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e40af;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 999;
+}
+
+.profile-trigger:hover .usn-tooltip {
+  opacity: 1;
+}

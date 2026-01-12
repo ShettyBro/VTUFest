@@ -131,6 +131,7 @@ export default function Login() {
       // ✅ STORE SESSION
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
+      localStorage.setItem("name", data.name);
       
       // Store college_id and usn if present (for students, principals, managers)
       if (data.college_id) {
@@ -141,6 +142,14 @@ export default function Login() {
       }
       if (data.user_id) {
         localStorage.setItem("user_id", data.user_id);
+      }
+      
+  
+      if (data.usn) {
+        localStorage.setItem("usn", data.usn);
+      }
+      if (data.college_id) {
+        localStorage.setItem("college_id", data.college_id);
       }
 
       // ✅ REDIRECT BASED ON ROLE
