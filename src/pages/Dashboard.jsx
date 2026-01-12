@@ -3,6 +3,23 @@ import "../styles/dashboard.css";
 import CampusMap from "../components/CampusMap";
 
 export default function Dashboard() {
+<<<<<<< HEAD
+=======
+  const navigate = useNavigate();
+
+  // State management
+  const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [collegeName, setCollegeName] = useState("");
+  const [canRefresh, setCanRefresh] = useState(false);
+  const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
+
+  // Filter priority 1 and 2+ notifications
+  const priority1Notifications = notificationsData.filter(n => n.priority === 1);
+  const priority2PlusNotifications = notificationsData.filter(n => n.priority >= 2);
+
+>>>>>>> parent of 8b7e373 (V 1.0)
   /* ================= EVENT BLOCK DATA (READ-ONLY) ================= */
   const blockEvents = {
     left: [
@@ -74,6 +91,21 @@ export default function Dashboard() {
         ],
       },
     ],
+<<<<<<< HEAD
+=======
+  };
+
+  // Check if 12 hours have passed
+  const check12HoursPassed = () => {
+    const lastFetch = localStorage.getItem("last_dashboard_fetch_at");
+    if (!lastFetch) return true;
+
+    const lastFetchTime = new Date(lastFetch).getTime();
+    const now = new Date().getTime();
+    const hoursPassed = (now - lastFetchTime) / (1000 * 60 * 60);
+
+    return hoursPassed >= 12;
+>>>>>>> parent of 8b7e373 (V 1.0)
   };
 
   return (
