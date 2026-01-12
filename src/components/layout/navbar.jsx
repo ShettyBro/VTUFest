@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/navbar.css";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import collegesData from "../../data/colleges.json";
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
 =======
 >>>>>>> parent of 8b7e373 (V 1.0)
 
@@ -21,6 +24,7 @@ export default function Navbar() {
   const role = localStorage.getItem("role") || "student";
   const userProfile = JSON.parse(localStorage.getItem("userProfile")) || {};
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   const role = localStorage.getItem("vtufest_role") || "student";
 
@@ -52,10 +56,15 @@ export default function Navbar() {
     }
   }, []);
 =======
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
   const userName = userProfile.name || "User";
   const userPhoto = userProfile.photo || "/user.png";
 
   const collegeCode = "ACH-VTU-2026";
+<<<<<<< HEAD
+>>>>>>> parent of 8b7e373 (V 1.0)
+=======
 >>>>>>> parent of 8b7e373 (V 1.0)
 
   /* -------- CLOSE DROPDOWNS ON OUTSIDE CLICK -------- */
@@ -139,12 +148,16 @@ export default function Navbar() {
 =======
         {/* PROFILE */}
         <div className="profile-wrapper" ref={profileRef}>
+<<<<<<< HEAD
+>>>>>>> parent of 8b7e373 (V 1.0)
+=======
 >>>>>>> parent of 8b7e373 (V 1.0)
           <div
             className="profile-trigger"
             onClick={() => setProfileOpen(!profileOpen)}
           >
             <img src={userPhoto} alt="User" className="profile-avatar" />
+<<<<<<< HEAD
 <<<<<<< HEAD
 
             <div className="profile-name-wrapper">
@@ -157,6 +170,11 @@ export default function Navbar() {
           </div>
 
           {/* PROFILE DROPDOWN - SIBLING of profile-trigger */}
+=======
+            <span className="username">{userName}</span>
+          </div>
+
+>>>>>>> parent of 8b7e373 (V 1.0)
 =======
             <span className="username">{userName}</span>
           </div>

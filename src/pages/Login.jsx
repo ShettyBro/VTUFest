@@ -134,12 +134,15 @@ export default function Login() {
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
 <<<<<<< HEAD
+<<<<<<< HEAD
       
       // ✅ CRITICAL FIX: Store name from response
       if (data.name) {
         localStorage.setItem("name", data.name);
         console.log("Name stored:", data.name); // Debug log
       }
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
 =======
 >>>>>>> parent of 8b7e373 (V 1.0)
       
@@ -156,12 +159,15 @@ export default function Login() {
         localStorage.setItem("user_id", data.user_id);
       }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
       console.log("All localStorage after login:", {
         name: localStorage.getItem("name"),
         usn: localStorage.getItem("usn"),
         role: localStorage.getItem("vtufest_role")
       }); // Debug log
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
 =======
 >>>>>>> parent of 8b7e373 (V 1.0)
 
