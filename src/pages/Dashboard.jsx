@@ -346,7 +346,7 @@ export default function Dashboard() {
               {!dashboardData?.application ? (
                 <>
                   <p>Status: <strong className="status-pending">No Application Submitted</strong></p>
-                  <button className="submit-button" onClick={() => navigate("/studentregister")}>
+                  <button className="submit-button" onClick={() => navigate("/student-register")}>
                     Submit Application
                   </button>
                 </>
@@ -363,7 +363,7 @@ export default function Dashboard() {
               ) : dashboardData.application.status === "IN_PROGRESS" ? (
                 <>
                   <p>Status: <strong className="status-progress">Application In Progress</strong></p>
-                  <button className="submit-button" onClick={() => navigate("/studentregister")}>
+                  <button className="submit-button" onClick={() => navigate("/student-register")}>
                     Complete Application
                   </button>
                 </>
