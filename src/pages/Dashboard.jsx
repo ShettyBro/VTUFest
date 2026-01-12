@@ -111,8 +111,8 @@ export default function Dashboard() {
     ],
   };
 
-  // Check if 12 hours have passed
-  const check12HoursPassed = () => {
+  // Check if 2 hours have passed (changed from 12 hours)
+  const check2HoursPassed = () => {
     const lastFetch = localStorage.getItem("last_dashboard_fetch_at");
     if (!lastFetch) return true;
 
@@ -120,7 +120,33 @@ export default function Dashboard() {
     const now = new Date().getTime();
     const hoursPassed = (now - lastFetchTime) / (1000 * 60 * 60);
 
-    return hoursPassed >= 12;
+    return hoursPassed >= 2; // Changed from 12 to 2 hours
+  };
+
+  // Load cached dashboard data from localStorage
+  const loadCachedData = () => {
+    try {
+      const cachedData = localStorage.getItem("dashboard_data");
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        setDashboardData(parsedData);
+        
+        // Get college name from JSON
+        const storedCollegeId = localStorage.getItem("college_id");
+        if (storedCollegeId) {
+          const college = collegesData.find(c => c.college_id === parseInt(storedCollegeId));
+          if (college) {
+            setCollegeName(`${college.college_name}, ${college.place}`);
+          }
+        }
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error loading cached data:", error);
+      return false;
+    }
   };
 
   // Fetch dashboard data
@@ -178,10 +204,12 @@ export default function Dashboard() {
       setDashboardData(data.data);
       setRetryCount(0);
 
+      // Cache the dashboard data in localStorage
+      localStorage.setItem("dashboard_data", JSON.stringify(data.data));
+
       // Store last fetch timestamp
-      if (data.data.last_dashboard_fetch_at) {
-        localStorage.setItem("last_dashboard_fetch_at", data.data.last_dashboard_fetch_at);
-      }
+      const currentTime = new Date().toISOString();
+      localStorage.setItem("last_dashboard_fetch_at", currentTime);
 
       // Get college name from JSON
       const storedCollegeId = localStorage.getItem("college_id");
@@ -193,7 +221,7 @@ export default function Dashboard() {
       }
 
       // Check if can refresh
-      setCanRefresh(check12HoursPassed());
+      setCanRefresh(false); // Reset after successful fetch
 
     } catch (error) {
       console.error("Dashboard fetch error:", error);
@@ -211,9 +239,39 @@ export default function Dashboard() {
     }
   };
 
-  // Initial load
+  // Initial load - only fetch if needed
   useEffect(() => {
-    fetchDashboardData();
+    // Check if we need to fetch or can use cached data
+    const shouldFetch = localStorage.getItem("should_fetch_dashboard");
+    
+    if (shouldFetch === "true") {
+      // Fetch fresh data (after login or submit application)
+      fetchDashboardData();
+      localStorage.removeItem("should_fetch_dashboard");
+    } else {
+      // Try to load from cache
+      const hasCachedData = loadCachedData();
+      
+      if (!hasCachedData) {
+        // No cached data, fetch fresh
+        fetchDashboardData();
+      } else {
+        // Using cached data
+        setLoading(false);
+      }
+    }
+
+    // Check if manual refresh should be available
+    setCanRefresh(check2HoursPassed());
+  }, []);
+
+  // Update canRefresh every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCanRefresh(check2HoursPassed());
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   // Ticker animation for priority 1 notifications
@@ -246,6 +304,18 @@ export default function Dashboard() {
     if (settingsData.allocated_events_visible) {
       navigate("/allocated-events");
     }
+  };
+
+  // Handle submit application - mark that fresh data should be fetched
+  const handleSubmitApplication = () => {
+    localStorage.setItem("should_fetch_dashboard", "true");
+    navigate("/student-register");
+  };
+
+  // Handle complete application - mark that fresh data should be fetched
+  const handleCompleteApplication = () => {
+    localStorage.setItem("should_fetch_dashboard", "true");
+    navigate("/student-register");
   };
 
   // Skeleton loader component
@@ -288,7 +358,7 @@ export default function Dashboard() {
       {/* ================= REFRESH BUTTON ================= */}
       {canRefresh && !loading && (
         <button className="refresh-button" onClick={handleRefresh}>
-          🔄 Refresh Data
+          🔄 Refresh Data (Available every 2 hours)
         </button>
       )}
 
@@ -346,7 +416,7 @@ export default function Dashboard() {
               {!dashboardData?.application ? (
                 <>
                   <p>Status: <strong className="status-pending">No Application Submitted</strong></p>
-                  <button className="submit-button" onClick={() => navigate("/student-register")}>
+                  <button className="submit-button" onClick={handleSubmitApplication}>
                     Submit Application
                   </button>
                 </>
@@ -363,7 +433,7 @@ export default function Dashboard() {
               ) : dashboardData.application.status === "IN_PROGRESS" ? (
                 <>
                   <p>Status: <strong className="status-progress">Application In Progress</strong></p>
-                  <button className="submit-button" onClick={() => navigate("/student-register")}>
+                  <button className="submit-button" onClick={handleCompleteApplication}>
                     Complete Application
                   </button>
                 </>
