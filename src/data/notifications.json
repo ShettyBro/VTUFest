@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "message": "Registration deadline: 25 Jan 2026 | Submit your applications before the deadline!",
+    "type": "deadline"
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "message": "Event schedule published | Check the event calendar for timings and venues",
+    "type": "announcement"
+  },
+  {
+    "id": 3,
+    "priority": 2,
+    "message": "Approval results will be announced soon",
+    "type": "announcement"
+  },
+  {
+    "id": 4,
+    "priority": 2,
+    "message": "Accommodation requests are now open",
+    "type": "info"
+  },
+  {
+    "id": 5,
+    "priority": 3,
+    "message": "Carry College ID during all events",
+    "type": "reminder"
+  }
+]
