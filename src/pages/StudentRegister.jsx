@@ -326,10 +326,14 @@ export default function SubmitApplication() {
         return;
       }
 
+      localStorage.setItem("application_status", "SUBMITTED");
+      localStorage.setItem("application_id", data.application_id);
+      localStorage.setItem("application_submitted_at", new Date().toISOString());
+
       localStorage.removeItem("application_session");
 
       alert("Application submitted successfully! Redirecting to dashboard...");
-
+      
       setTimeout(() => {
         navigate("/student-dashboard");
       }, 2000);
