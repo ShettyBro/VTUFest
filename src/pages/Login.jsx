@@ -70,17 +70,6 @@ export default function Login() {
       case "manager":
         navigate("/manager-dashboard");
         break;
-      case "admin":
-        navigate("/admin-dashboard");
-        break;
-      case "sub_admin":
-        navigate("/sub-admin-dashboard");
-        break;
-      case "volunteer_registration":
-      case "volunteer_helpdesk":
-      case "volunteer_event":
-        navigate("/volunteer-dashboard");
-        break;
       case "student":
       default:
         navigate("/dashboard");
@@ -217,51 +206,6 @@ export default function Login() {
             >
               Student
             </button>
-
-            <button
-              type="button"
-              className={role === "admin" ? "active" : ""}
-              onClick={() => handleRoleChange("admin")}
-              disabled={loading}
-            >
-              Admin
-            </button>
-
-            <button
-              type="button"
-              className={role === "sub_admin" ? "active" : ""}
-              onClick={() => handleRoleChange("sub_admin")}
-              disabled={loading}
-            >
-              Sub Admin
-            </button>
-
-            <button
-              type="button"
-              className={role === "volunteer_registration" ? "active" : ""}
-              onClick={() => handleRoleChange("volunteer_registration")}
-              disabled={loading}
-            >
-              Vol-Reg
-            </button>
-
-            <button
-              type="button"
-              className={role === "volunteer_helpdesk" ? "active" : ""}
-              onClick={() => handleRoleChange("volunteer_helpdesk")}
-              disabled={loading}
-            >
-              Vol-Help
-            </button>
-
-            <button
-              type="button"
-              className={role === "volunteer_event" ? "active" : ""}
-              onClick={() => handleRoleChange("volunteer_event")}
-              disabled={loading}
-            >
-              Vol-Event
-            </button>
           </div>
 
           {/* FORM */}
@@ -269,7 +213,7 @@ export default function Login() {
             <label>Email ID</label>
             <input
               type="email"
-              placeholder={`Enter ${role.replace(/_/g, " ")} email ID`}
+              placeholder={`Enter ${role} email ID`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
