@@ -88,11 +88,6 @@ export default function Navbar() {
       {/* RIGHT ACTIONS */}
       <div className="navbar-right">
 
-        {/* HOME BUTTON */}
-        <button className="home-btn" onClick={goHome}>
-          Home
-        </button>
-
         {/* NOTIFICATIONS */}
         <div className="notif-wrapper" ref={notifRef}>
           <div
