@@ -68,7 +68,7 @@ export default function Login() {
         navigate("/principal-dashboard");
         break;
       case "manager":
-        navigate("/manager-dashboard");
+        navigate("/principal-dashboard");
         break;
       case "student":
       default:
