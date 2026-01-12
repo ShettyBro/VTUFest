@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/navbar.css";
+<<<<<<< HEAD
 import collegesData from "../../data/colleges.json";
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
 
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -15,7 +18,10 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   /* ================= USER DATA ================= */
+  const role = localStorage.getItem("role") || "student";
+  const userProfile = JSON.parse(localStorage.getItem("userProfile")) || {};
 
+<<<<<<< HEAD
   const role = localStorage.getItem("vtufest_role") || "student";
 
   // ✅ FIXED: Get name from localStorage, fallback to "User" if not found
@@ -45,6 +51,12 @@ export default function Navbar() {
       localStorage.setItem("college_code", code);
     }
   }, []);
+=======
+  const userName = userProfile.name || "User";
+  const userPhoto = userProfile.photo || "/user.png";
+
+  const collegeCode = "ACH-VTU-2026";
+>>>>>>> parent of 8b7e373 (V 1.0)
 
   /* -------- CLOSE DROPDOWNS ON OUTSIDE CLICK -------- */
   useEffect(() => {
@@ -120,14 +132,20 @@ export default function Navbar() {
           )}
         </div>
 
+<<<<<<< HEAD
         {/* PROFILE WRAPPER WITH REF */}
         <div className="profile-wrapper" ref={profileRef}>
           {/* PROFILE TRIGGER - Shows name, USN on hover */}
+=======
+        {/* PROFILE */}
+        <div className="profile-wrapper" ref={profileRef}>
+>>>>>>> parent of 8b7e373 (V 1.0)
           <div
             className="profile-trigger"
             onClick={() => setProfileOpen(!profileOpen)}
           >
             <img src={userPhoto} alt="User" className="profile-avatar" />
+<<<<<<< HEAD
 
             <div className="profile-name-wrapper">
               {/* ✅ Shows the name from localStorage */}
@@ -139,6 +157,11 @@ export default function Navbar() {
           </div>
 
           {/* PROFILE DROPDOWN - SIBLING of profile-trigger */}
+=======
+            <span className="username">{userName}</span>
+          </div>
+
+>>>>>>> parent of 8b7e373 (V 1.0)
           {profileOpen && (
             <div className="profile-menu">
               <div

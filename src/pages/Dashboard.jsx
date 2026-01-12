@@ -27,7 +27,78 @@ export default function Dashboard() {
   const priority1Notifications = notificationsData.filter(n => n.priority === 1);
   const priority2PlusNotifications = notificationsData.filter(n => n.priority >= 2);
 
-  // Block events data
+  /* ================= EVENT BLOCK DATA (READ-ONLY) ================= */
+  const blockEvents = {
+    left: [
+      {
+        blockNo: 1,
+        blockName: "Main Auditorium",
+        events: [
+          { name: "Inauguration", room: "AUD-01", day: "Day 1" },
+          { name: "Dance Finals", room: "AUD-01", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 2,
+        blockName: "ANA Block",
+        events: [
+          { name: "Group Music", room: "ANA-102", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 3,
+        blockName: "CSE Block",
+        events: [
+          { name: "Coding Contest", room: "CS-301", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 4,
+        blockName: "AIGS Block",
+        events: [
+          { name: "Paper Presentation", room: "AIGS-02", day: "Day 2" },
+        ],
+      },
+    ],
+    right: [
+      {
+        blockNo: 5,
+        blockName: "Mechanical Block",
+        events: [
+          { name: "Robo Race", room: "M-01", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 6,
+        blockName: "ASD Block",
+        events: [
+          { name: "Design Showcase", room: "D-12", day: "Day 1" },
+        ],
+      },
+      {
+        blockNo: 7,
+        blockName: "Architecture Block",
+        events: [
+          { name: "Sketching", room: "A-12", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 8,
+        blockName: "ECE Block",
+        events: [
+          { name: "Solo Singing", room: "E-201", day: "Day 1" },
+          { name: "Quiz", room: "E-105", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 9,
+        blockName: "Central Library",
+        events: [
+          { name: "Debate", room: "L-01", day: "Day 1" },
+        ],
+      },
+    ],
+  };
 
   // Check if 12 hours have passed
   const check12HoursPassed = () => {

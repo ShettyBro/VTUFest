@@ -133,12 +133,15 @@ export default function Login() {
       // ✅ STORE SESSION - FIXED: Store name correctly
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
+<<<<<<< HEAD
       
       // ✅ CRITICAL FIX: Store name from response
       if (data.name) {
         localStorage.setItem("name", data.name);
         console.log("Name stored:", data.name); // Debug log
       }
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
       
       // Store college_id and usn if present (for students, principals, managers)
       if (data.college_id) {
@@ -152,12 +155,15 @@ export default function Login() {
       if (data.user_id) {
         localStorage.setItem("user_id", data.user_id);
       }
+<<<<<<< HEAD
 
       console.log("All localStorage after login:", {
         name: localStorage.getItem("name"),
         usn: localStorage.getItem("usn"),
         role: localStorage.getItem("vtufest_role")
       }); // Debug log
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
 
       // ✅ REDIRECT BASED ON ROLE
       redirectBasedOnRole(role);
