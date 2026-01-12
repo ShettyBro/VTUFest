@@ -23,9 +23,20 @@ export default function Dashboard() {
   const [canRefresh, setCanRefresh] = useState(false);
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
 
-  // Filter priority 1 and 2+ notifications
-  const priority1Notifications = notificationsData.filter(n => n.priority === 1);
-  const priority2PlusNotifications = notificationsData.filter(n => n.priority >= 2);
+  // Filter and sort priority 1 notifications by date (most recent first)
+  const priority1Notifications = notificationsData
+    .filter(n => n.priority === 1)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Filter and sort priority 2+ notifications (by priority first, then date)
+  const priority2PlusNotifications = notificationsData
+    .filter(n => n.priority >= 2)
+    .sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return a.priority - b.priority;
+      }
+      return new Date(b.date) - new Date(a.date);
+    });
 
   /* ================= EVENT BLOCK DATA (READ-ONLY) ================= */
   const blockEvents = {
@@ -140,7 +151,6 @@ export default function Dashboard() {
         alert(data.message || "Session expired. Redirecting to login...");
         
         setTimeout(() => {
-          // Clear all localStorage except important data
           const lastFetch = localStorage.getItem("last_dashboard_fetch_at");
           localStorage.clear();
           if (lastFetch) {
@@ -168,7 +178,7 @@ export default function Dashboard() {
       setDashboardData(data.data);
       setRetryCount(0);
 
-      // Store last fetch timestamp in localStorage
+      // Store last fetch timestamp
       if (data.data.last_dashboard_fetch_at) {
         localStorage.setItem("last_dashboard_fetch_at", data.data.last_dashboard_fetch_at);
       }
@@ -321,7 +331,6 @@ export default function Dashboard() {
             <div className="info-card">
               <h4>Registration Status</h4>
 
-              {/* Student Info */}
               <p>
                 <strong>Name:</strong> {localStorage.getItem("name") || "N/A"}
               </p>
@@ -334,7 +343,6 @@ export default function Dashboard() {
 
               <hr style={{ margin: "15px 0" }} />
 
-              {/* Application Status Logic */}
               {!dashboardData?.application ? (
                 <>
                   <p>Status: <strong className="status-pending">No Application Submitted</strong></p>
@@ -386,7 +394,6 @@ export default function Dashboard() {
 
               <hr style={{ margin: "15px 0" }} />
 
-              {/* Allocated Events Button */}
               <button
                 className={`allocated-events-button ${!settingsData.allocated_events_visible ? "disabled" : ""}`}
                 onClick={handleViewAllocatedEvents}
@@ -428,7 +435,6 @@ export default function Dashboard() {
 
           {/* ================= CAMPUS MAP + BLOCK EVENTS ================= */}
           <div className="dashboard-map-wrapper">
-            {/* LEFT BLOCK EVENTS */}
             <div className="map-side left">
               {blockEvents.left.map((block, idx) => (
                 <div className="block-card" key={idx}>
@@ -444,7 +450,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* CENTER MAP */}
             <div className="map-center">
               <h3 className="section-title">Campus Map & Event Locations</h3>
               <p className="section-subtitle">
@@ -453,7 +458,6 @@ export default function Dashboard() {
               <CampusMap />
             </div>
 
-            {/* RIGHT BLOCK EVENTS */}
             <div className="map-side right">
               {blockEvents.right.map((block, idx) => (
                 <div className="block-card" key={idx}>

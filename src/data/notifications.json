@@ -3,30 +3,56 @@
     "id": 1,
     "priority": 1,
     "message": "Registration deadline: 25 Jan 2026 | Submit your applications before the deadline!",
-    "type": "deadline"
+    "type": "deadline",
+    "date": "2026-01-10T10:00:00Z"
   },
   {
     "id": 2,
     "priority": 1,
     "message": "Event schedule published | Check the event calendar for timings and venues",
-    "type": "announcement"
+    "type": "announcement",
+    "date": "2026-01-12T08:00:00Z"
   },
   {
     "id": 3,
     "priority": 2,
     "message": "Approval results will be announced soon",
-    "type": "announcement"
+    "type": "announcement",
+    "date": "2026-01-11T14:00:00Z"
   },
   {
     "id": 4,
     "priority": 2,
     "message": "Accommodation requests are now open",
-    "type": "info"
+    "type": "info",
+    "date": "2026-01-09T09:00:00Z"
   },
   {
     "id": 5,
     "priority": 3,
     "message": "Carry College ID during all events",
-    "type": "reminder"
+    "type": "reminder",
+    "date": "2026-01-08T12:00:00Z"
+  },
+  {
+    "id": 6,
+    "priority": 2,
+    "message": "Transport arrangements finalized",
+    "type": "info",
+    "date": "2026-01-12T15:00:00Z"
+  },
+  {
+    "id": 7,
+    "priority": 3,
+    "message": "Food coupons will be distributed on Day 1",
+    "type": "reminder",
+    "date": "2026-01-11T10:00:00Z"
+  },
+  {
+    "id": 8,
+    "priority": 4,
+    "message": "Follow @vtufest2026 on social media for live updates",
+    "type": "info",
+    "date": "2026-01-07T16:00:00Z"
   }
 ]

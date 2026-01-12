@@ -2,12 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/navbar.css";
 import collegesData from "../../data/colleges.json";
+import notificationsData from "../../data/notifications.json";
 
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [collegeName, setCollegeName] = useState("");
   const [collegeCode, setCollegeCode] = useState("");
+  const [sortedNotifications, setSortedNotifications] = useState([]);
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
@@ -15,20 +17,29 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   /* ================= USER DATA ================= */
-
   const role = localStorage.getItem("vtufest_role") || "student";
-
-  // ✅ FIXED: Get name from localStorage, fallback to "User" if not found
   const userName = localStorage.getItem("name") || "User";
   const userUsn = localStorage.getItem("usn") || "";
   const userPhoto = "/user.png";
 
-  // ✅ DEBUG: Log to verify name is being read
+  /* ================= SORT NOTIFICATIONS ================= */
   useEffect(() => {
-    console.log("Navbar - Name from localStorage:", userName);
-    console.log("Navbar - USN from localStorage:", userUsn);
-  }, [userName, userUsn]);
+    // Filter priority 2+ notifications and sort them
+    const priority2Plus = notificationsData
+      .filter(n => n.priority >= 2)
+      .sort((a, b) => {
+        // First sort by priority (ascending: 2, 3, 4...)
+        if (a.priority !== b.priority) {
+          return a.priority - b.priority;
+        }
+        // If same priority, sort by date (most recent first)
+        return new Date(b.date) - new Date(a.date);
+      });
 
+    setSortedNotifications(priority2Plus);
+  }, []);
+
+  /* ================= COLLEGE DATA ================= */
   useEffect(() => {
     const storedCollegeId = localStorage.getItem("college_id");
     if (!storedCollegeId) return;
@@ -39,14 +50,13 @@ export default function Navbar() {
 
     if (college) {
       setCollegeName(`${college.college_name}, ${college.place}`);
-
       const code = `${college.college_name}-${college.college_code}`;
       setCollegeCode(code);
       localStorage.setItem("college_code", code);
     }
   }, []);
 
-  /* -------- CLOSE DROPDOWNS ON OUTSIDE CLICK -------- */
+  /* ================= CLOSE DROPDOWNS ON OUTSIDE CLICK ================= */
   useEffect(() => {
     const closeOnOutsideClick = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -58,8 +68,7 @@ export default function Navbar() {
     };
 
     document.addEventListener("mousedown", closeOnOutsideClick);
-    return () =>
-      document.removeEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
   }, []);
 
   const goHome = () => {
@@ -87,7 +96,6 @@ export default function Navbar() {
 
       {/* RIGHT ACTIONS */}
       <div className="navbar-right">
-
         {/* NOTIFICATIONS */}
         <div className="notif-wrapper" ref={notifRef}>
           <div
@@ -103,21 +111,33 @@ export default function Navbar() {
                 strokeLinejoin="round"
               />
             </svg>
-            <span className="notif-badge">3</span>
+            {sortedNotifications.length > 0 && (
+              <span className="notif-badge">{sortedNotifications.length}</span>
+            )}
           </div>
 
           {notifOpen && (
             <div className="notif-dropdown">
-              <div className="notif-item">New registration submitted</div>
-              <div className="notif-item">Approval pending</div>
-              <div className="notif-item">Event updated</div>
+              {sortedNotifications.length > 0 ? (
+                sortedNotifications.map(notification => (
+                  <div 
+                    key={notification.id} 
+                    className={`notif-item priority-${notification.priority}`}
+                  >
+                    {notification.message}
+                  </div>
+                ))
+              ) : (
+                <div className="notif-item no-notifications">
+                  No new notifications
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* PROFILE WRAPPER WITH REF */}
+        {/* PROFILE WRAPPER */}
         <div className="profile-wrapper" ref={profileRef}>
-          {/* PROFILE TRIGGER - Shows name, USN on hover */}
           <div
             className="profile-trigger"
             onClick={() => setProfileOpen(!profileOpen)}
@@ -125,15 +145,11 @@ export default function Navbar() {
             <img src={userPhoto} alt="User" className="profile-avatar" />
 
             <div className="profile-name-wrapper">
-              {/* ✅ Shows the name from localStorage */}
               <span className="username">{userName}</span>
-              
-              {/* ✅ Shows USN tooltip on hover (only if USN exists) */}
               {userUsn && <span className="usn-tooltip">{userUsn}</span>}
             </div>
           </div>
 
-          {/* PROFILE DROPDOWN - SIBLING of profile-trigger */}
           {profileOpen && (
             <div className="profile-menu">
               <div
