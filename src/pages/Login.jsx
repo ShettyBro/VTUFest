@@ -122,35 +122,42 @@ export default function Login() {
 
       const data = await response.json();
 
+      console.log("Login response:", data); // Debug log
+
       if (!response.ok) {
         setErrorMsg(data.message || "Login failed. Retry.");
         setLoading(false);
         return;
       }
 
-      // ✅ STORE SESSION
+      // ✅ STORE SESSION - FIXED: Store name correctly
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
-      localStorage.setItem("name", data.name);
+      
+      // ✅ CRITICAL FIX: Store name from response
+      if (data.name) {
+        localStorage.setItem("name", data.name);
+        console.log("Name stored:", data.name); // Debug log
+      }
       
       // Store college_id and usn if present (for students, principals, managers)
       if (data.college_id) {
         localStorage.setItem("college_id", data.college_id);
       }
+      
       if (data.usn) {
         localStorage.setItem("usn", data.usn);
       }
+      
       if (data.user_id) {
         localStorage.setItem("user_id", data.user_id);
       }
-      
-  
-      if (data.usn) {
-        localStorage.setItem("usn", data.usn);
-      }
-      if (data.college_id) {
-        localStorage.setItem("college_id", data.college_id);
-      }
+
+      console.log("All localStorage after login:", {
+        name: localStorage.getItem("name"),
+        usn: localStorage.getItem("usn"),
+        role: localStorage.getItem("vtufest_role")
+      }); // Debug log
 
       // ✅ REDIRECT BASED ON ROLE
       redirectBasedOnRole(role);

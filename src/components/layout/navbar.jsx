@@ -6,6 +6,8 @@ import collegesData from "../data/colleges.json";
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [collegeName, setCollegeName] = useState("");
+  const [collegeCode, setCollegeCode] = useState("");
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
@@ -14,36 +16,35 @@ export default function Navbar() {
 
   /* ================= USER DATA ================= */
 
-
-
   const role = localStorage.getItem("vtufest_role") || "student";
 
+  // ✅ FIXED: Get name from localStorage, fallback to "User" if not found
   const userName = localStorage.getItem("name") || "User";
   const userUsn = localStorage.getItem("usn") || "";
   const userPhoto = "/user.png";
 
-  const storedCollegeId = localStorage.getItem("college_id");
+  // ✅ DEBUG: Log to verify name is being read
+  useEffect(() => {
+    console.log("Navbar - Name from localStorage:", userName);
+    console.log("Navbar - USN from localStorage:", userUsn);
+  }, [userName, userUsn]);
 
-  if (storedCollegeId) {
+  useEffect(() => {
+    const storedCollegeId = localStorage.getItem("college_id");
+    if (!storedCollegeId) return;
+
     const college = collegesData.find(
       c => c.college_id === parseInt(storedCollegeId)
     );
 
     if (college) {
-      // For UI (optional)
       setCollegeName(`${college.college_name}, ${college.place}`);
 
-      // REQUIRED: build CollegeName-CODE
-      const collegeCode = `${college.college_name}-${college.college_code}`;
-
-      // If you want to keep it in React state
-      setCollegeCode(collegeCode);
-
-      // If you want to persist it
-      localStorage.setItem("college_code", collegeCode);
+      const code = `${college.college_name}-${college.college_code}`;
+      setCollegeCode(code);
+      localStorage.setItem("college_code", code);
     }
-  }
-
+  }, []);
 
   /* -------- CLOSE DROPDOWNS ON OUTSIDE CLICK -------- */
   useEffect(() => {
@@ -119,42 +120,47 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* PROFILE */}
-        <div
-          className="profile-trigger"
-          onClick={() => setProfileOpen(!profileOpen)}
-        >
-          <img src={userPhoto} alt="User" className="profile-avatar" />
+        {/* PROFILE WRAPPER WITH REF */}
+        <div className="profile-wrapper" ref={profileRef}>
+          {/* PROFILE TRIGGER - Shows name, USN on hover */}
+          <div
+            className="profile-trigger"
+            onClick={() => setProfileOpen(!profileOpen)}
+          >
+            <img src={userPhoto} alt="User" className="profile-avatar" />
 
-          <div className="profile-name-wrapper">
-            <span className="username">{userName}</span>
-            {userUsn && <span className="usn-tooltip">{userUsn}</span>}
+            <div className="profile-name-wrapper">
+              {/* ✅ Shows the name from localStorage */}
+              <span className="username">{userName}</span>
+              
+              {/* ✅ Shows USN tooltip on hover (only if USN exists) */}
+              {userUsn && <span className="usn-tooltip">{userUsn}</span>}
+            </div>
           </div>
+
+          {/* PROFILE DROPDOWN - SIBLING of profile-trigger */}
+          {profileOpen && (
+            <div className="profile-menu">
+              <div
+                className="menu-item"
+                onClick={() => navigate("/change-password")}
+              >
+                Change Password
+              </div>
+
+              <div
+                className="menu-item logout"
+                onClick={() => {
+                  localStorage.clear();
+                  navigate("/");
+                }}
+              >
+                Logout
+              </div>
+            </div>
+          )}
         </div>
-
-
-        {profileOpen && (
-          <div className="profile-menu">
-            <div
-              className="menu-item"
-              onClick={() => navigate("/change-password")}
-            >
-              Change Password
-            </div>
-
-            <div
-              className="menu-item logout"
-              onClick={() => {
-                localStorage.clear();
-                navigate("/");
-              }}
-            >
-              Logout
-            </div>
-          </div>
-        )}
       </div>
-    </div>
-    </header >
+    </header>
   );
 }
