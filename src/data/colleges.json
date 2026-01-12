@@ -1,0 +1,20 @@
+[
+  {
+    "college_id": 1,
+    "college_code": "AIT-BLR",
+    "college_name": "Acharya Institute of Technology",
+    "place": "Bengaluru"
+  },
+  {
+    "college_id": 2,
+    "college_code": "APS-BLR",
+    "college_name": "A.P.S. College of Engineering",
+    "place": "Bengaluru"
+  },
+  {
+    "college_id": 3,
+    "college_code": "NIE-MYS",
+    "college_name": "The National Institute of Engineering",
+    "place": "Mysuru"
+  }
+]

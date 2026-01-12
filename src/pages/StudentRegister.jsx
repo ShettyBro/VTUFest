@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
+import collegesData from "../data/colleges.json";
 
 const API_BASE = {
-  collegeAndUsn: "https://uploade-vtu01.netlify.app/.netlify/functions/college-and-usn",
   submitApplication: "https://uploade-vtu01.netlify.app/.netlify/functions/student-submit-application"
 };
 
@@ -12,7 +12,6 @@ export default function SubmitApplication() {
 
   // Form state
   const [form, setForm] = useState({
-    usn: "",
     bloodGroup: "",
     address: "",
     department: "",
@@ -22,10 +21,7 @@ export default function SubmitApplication() {
 
   // College state
   const [collegeInfo, setCollegeInfo] = useState(null);
-  const [usnValidated, setUsnValidated] = useState(false);
-  const [usnError, setUsnError] = useState("");
-  const [usnChecking, setUsnChecking] = useState(false);
-  const [formDisabled, setFormDisabled] = useState(false);
+  const [usn, setUsn] = useState("");
 
   // UI state
   const [showUploadSection, setShowUploadSection] = useState(false);
@@ -60,12 +56,26 @@ export default function SubmitApplication() {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("vtufest_token");
-    if (!storedToken) {
+    const storedCollegeId = localStorage.getItem("college_id");
+    const storedUsn = localStorage.getItem("usn");
+
+    if (!storedToken || !storedCollegeId || !storedUsn) {
       alert("Please login first");
       navigate("/");
       return;
     }
+
     setToken(storedToken);
+    setUsn(storedUsn);
+
+    // Find college info from local JSON
+    const college = collegesData.find(c => c.college_id === parseInt(storedCollegeId));
+    if (college) {
+      setCollegeInfo(college);
+    } else {
+      alert("College information not found. Please contact support.");
+    }
+
     loadSessionFromStorage();
   }, [navigate]);
 
@@ -109,8 +119,6 @@ export default function SubmitApplication() {
         const remainingSeconds = Math.floor((expiresAt - now) / 1000);
         setTimer(remainingSeconds);
         setForm((prev) => ({ ...prev, ...data.formData }));
-        setCollegeInfo(data.collegeInfo);
-        setUsnValidated(true);
       } else {
         localStorage.removeItem("application_session");
       }
@@ -119,73 +127,10 @@ export default function SubmitApplication() {
     }
   };
 
-  // Validate USN and fetch college info
-  const validateUSN = async (usn) => {
-    if (!usn.trim()) {
-      setUsnError("");
-      setCollegeInfo(null);
-      setUsnValidated(false);
-      return;
-    }
-
-    try {
-      setUsnChecking(true);
-      setUsnError("");
-      setCollegeInfo(null);
-      setUsnValidated(false);
-
-      const response = await fetch(API_BASE.collegeAndUsn, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "validate_and_fetch_college",
-          usn: usn.trim().toUpperCase(),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.exists) {
-        setUsnError(data.error || "Invalid USN. Please check and try again or register first.");
-        setUsnValidated(false);
-        setCollegeInfo(null);
-        setFormDisabled(true);
-        return;
-      }
-
-      setCollegeInfo({
-        college_id: data.college_id,
-        college_code: data.college_code,
-        college_name: data.college_name,
-        place: data.place,
-      });
-      setUsnValidated(true);
-      setUsnError("");
-      setFormDisabled(false);
-    } catch (error) {
-      console.error("Error validating USN:", error);
-      setUsnError("Error validating USN. Please try again.");
-      setUsnValidated(false);
-      setFormDisabled(true);
-    } finally {
-      setUsnChecking(false);
-    }
-  };
-
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === "usn") {
-      setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
-      // Reset validation when USN changes
-      setUsnValidated(false);
-      setCollegeInfo(null);
-      setUsnError("");
-      setFormDisabled(false);
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
-    }
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle document selection
@@ -223,14 +168,9 @@ export default function SubmitApplication() {
     return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
   };
 
-  // Handle Next button (save details)
+  // Handle Next button (init application)
   const handleNext = async (e) => {
     e.preventDefault();
-
-    if (!usnValidated) {
-      alert("Please enter a valid USN first");
-      return;
-    }
 
     if (!form.bloodGroup) {
       alert("Blood group is required");
@@ -267,62 +207,40 @@ export default function SubmitApplication() {
           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          action: "save_details",
+          action: "init_application",
           blood_group: form.bloodGroup,
           address: form.address.trim(),
           department: form.department,
           year_of_study: parseInt(form.yearOfStudy),
           semester: parseInt(form.semester),
-          college_id: collegeInfo.college_id,
-          college_code: collegeInfo.college_code,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Failed to save details");
-        return;
-      }
-
-      // Generate upload URLs
-      const urlResponse = await fetch(API_BASE.submitApplication, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "generate_upload_urls",
-        }),
-      });
-
-      const urlData = await urlResponse.json();
-
-      if (!urlResponse.ok) {
-        alert(urlData.error || "Failed to generate upload URLs");
+        alert(data.error || "Failed to initialize application");
         return;
       }
 
       const sessionInfo = {
-        session_id: urlData.session_id,
-        upload_urls: urlData.upload_urls,
-        expires_at: urlData.expires_at,
+        session_id: data.session_id,
+        upload_urls: data.upload_urls,
+        expires_at: data.expires_at,
         formData: form,
-        collegeInfo: collegeInfo,
       };
 
       setSessionData(sessionInfo);
       saveSessionToStorage(sessionInfo);
 
-      const expiresAt = new Date(urlData.expires_at).getTime();
+      const expiresAt = new Date(data.expires_at).getTime();
       const now = Date.now();
       const remainingSeconds = Math.floor((expiresAt - now) / 1000);
       setTimer(remainingSeconds);
 
       setShowUploadSection(true);
     } catch (error) {
-      console.error("Error saving details:", error);
+      console.error("Error initializing application:", error);
       alert("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -360,9 +278,6 @@ export default function SubmitApplication() {
       }
 
       setUploadStatus((prev) => ({ ...prev, [docType]: "success" }));
-      
-      // Clear upload block on success
-      localStorage.removeItem(`upload_blocked_until_${docType}`);
     } catch (error) {
       console.error(`Error uploading ${docType}:`, error);
       setUploadStatus((prev) => ({ ...prev, [docType]: "failed" }));
@@ -394,8 +309,13 @@ export default function SubmitApplication() {
           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          action: "finalize_submission",
+          action: "finalize_application",
           session_id: sessionData.session_id,
+          blood_group: form.bloodGroup,
+          address: form.address.trim(),
+          department: form.department,
+          year_of_study: parseInt(form.yearOfStudy),
+          semester: parseInt(form.semester),
         }),
       });
 
@@ -428,22 +348,12 @@ export default function SubmitApplication() {
       {!showUploadSection ? (
         // STEP 1: Application Details Form
         <form className="register-card" onSubmit={handleNext}>
-          <label>USN / Registration Number *</label>
+          <label>USN / Registration Number</label>
           <input
-            name="usn"
-            value={form.usn}
-            onChange={handleChange}
-            onBlur={(e) => validateUSN(e.target.value)}
-            placeholder="e.g., VTU2026CS001"
-            disabled={loading}
-            required
+            value={usn}
+            disabled
+            style={{ backgroundColor: "#f0f0f0" }}
           />
-          {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
-          {usnError && (
-            <p style={{ color: "red", fontSize: "12px" }}>
-              {usnError}
-            </p>
-          )}
 
           {collegeInfo && (
             <>
@@ -461,7 +371,7 @@ export default function SubmitApplication() {
             name="bloodGroup"
             value={form.bloodGroup}
             onChange={handleChange}
-            disabled={formDisabled || loading}
+            disabled={loading}
             required
           >
             <option value="">Select Blood Group</option>
@@ -482,7 +392,7 @@ export default function SubmitApplication() {
             onChange={handleChange}
             placeholder="Enter your permanent address"
             rows="3"
-            disabled={formDisabled || loading}
+            disabled={loading}
             required
           />
 
@@ -491,7 +401,7 @@ export default function SubmitApplication() {
             name="department"
             value={form.department}
             onChange={handleChange}
-            disabled={formDisabled || loading}
+            disabled={loading}
             required
           >
             <option value="">Select Department</option>
@@ -509,7 +419,7 @@ export default function SubmitApplication() {
             name="yearOfStudy"
             value={form.yearOfStudy}
             onChange={handleChange}
-            disabled={formDisabled || loading}
+            disabled={loading}
             required
           >
             <option value="">Select Year</option>
@@ -524,7 +434,7 @@ export default function SubmitApplication() {
             name="semester"
             value={form.semester}
             onChange={handleChange}
-            disabled={formDisabled || loading}
+            disabled={loading}
             required
           >
             <option value="">Select Semester</option>
@@ -535,7 +445,7 @@ export default function SubmitApplication() {
             ))}
           </select>
 
-          <button type="submit" disabled={formDisabled || loading || !usnValidated || usnChecking}>
+          <button type="submit" disabled={loading}>
             {loading ? "Processing..." : "Next"}
           </button>
 
