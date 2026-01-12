@@ -453,7 +453,7 @@ export default function SubmitApplication() {
             {loading ? "Processing..." : "Next"}
           </button>
 
-          <p className="back-link" onClick={() => navigate("/student-dashboard")}>
+          <p className="back-link" onClick={() => navigate("/dashboard")}>
             ← Back to Dashboard
           </p>
         </form>
