@@ -19,6 +19,9 @@ export default function Dashboard() {
   const priority1Notifications = notificationsData.filter(n => n.priority === 1);
   const priority2PlusNotifications = notificationsData.filter(n => n.priority >= 2);
 
+<<<<<<< HEAD
+>>>>>>> parent of 8b7e373 (V 1.0)
+=======
 >>>>>>> parent of 8b7e373 (V 1.0)
   /* ================= EVENT BLOCK DATA (READ-ONLY) ================= */
   const blockEvents = {
@@ -92,7 +95,10 @@ export default function Dashboard() {
       },
     ],
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
   };
 
   // Check if 12 hours have passed

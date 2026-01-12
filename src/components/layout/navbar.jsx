@@ -4,7 +4,10 @@ import "../../styles/navbar.css";
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import collegesData from "../../data/colleges.json";
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
 =======
 >>>>>>> parent of 8b7e373 (V 1.0)
 =======
@@ -27,6 +30,7 @@ export default function Navbar() {
   const role = localStorage.getItem("role") || "student";
   const userProfile = JSON.parse(localStorage.getItem("userProfile")) || {};
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -64,12 +68,17 @@ export default function Navbar() {
 >>>>>>> parent of 8b7e373 (V 1.0)
 =======
 >>>>>>> parent of 8b7e373 (V 1.0)
+=======
+>>>>>>> parent of 8b7e373 (V 1.0)
   const userName = userProfile.name || "User";
   const userPhoto = userProfile.photo || "/user.png";
 
   const collegeCode = "ACH-VTU-2026";
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 8b7e373 (V 1.0)
+=======
 >>>>>>> parent of 8b7e373 (V 1.0)
 =======
 >>>>>>> parent of 8b7e373 (V 1.0)
@@ -159,6 +168,9 @@ export default function Navbar() {
         <div className="profile-wrapper" ref={profileRef}>
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 8b7e373 (V 1.0)
+=======
 >>>>>>> parent of 8b7e373 (V 1.0)
 =======
 >>>>>>> parent of 8b7e373 (V 1.0)
@@ -169,6 +181,7 @@ export default function Navbar() {
             onClick={() => setProfileOpen(!profileOpen)}
           >
             <img src={userPhoto} alt="User" className="profile-avatar" />
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -183,6 +196,11 @@ export default function Navbar() {
           </div>
 
           {/* PROFILE DROPDOWN - SIBLING of profile-trigger */}
+=======
+            <span className="username">{userName}</span>
+          </div>
+
+>>>>>>> parent of 8b7e373 (V 1.0)
 =======
             <span className="username">{userName}</span>
           </div>
