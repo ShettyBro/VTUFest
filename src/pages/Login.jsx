@@ -31,6 +31,12 @@ export default function Login() {
     }
     setRole(currentRole);
 
+    //add temporary login for priciple and manager  
+    if (currentRole === "principal" || currentRole === "manager") {
+      setEmail("temp@example.com");
+      setPassword("tempPassword");
+    }
+
     // Check authentication
     const token = localStorage.getItem("vtufest_token");
     const storedRole = localStorage.getItem("vtufest_role");
