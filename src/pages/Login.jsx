@@ -159,10 +159,12 @@ export default function Login() {
         <div className="login-brand">
           <img src="/acharya.png" alt="Acharya Logo" />
           <span className="logo-separator">|</span>
+          <img src="/habba.png" alt="Habba Logo" />
+          <span className="logo-separator">|</span>
           <img src="/vtu.png" alt="VTU Logo" />
 
           <div className="brand-text">
-            <h3>VTU HABBA 2026</h3>
+            <h3>ACHARYA VTU HABBA 2026</h3>
             <span>Visvesvaraya Technological University</span>
           </div>
         </div>

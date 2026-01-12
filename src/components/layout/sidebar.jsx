@@ -39,6 +39,7 @@ export default function Sidebar({ role }) {
       {/* ================= PRINCIPAL / MANAGER ================= */}
       {(role === "principal" || role === "manager") && (
         <>
+          {/* Dashboard */}
           <div
             className={`sidebar-item ${
               isActive("/principal-dashboard") ? "active" : ""
@@ -53,44 +54,35 @@ export default function Sidebar({ role }) {
             <span className="label">Dashboard</span>
           </div>
 
-          {/* ================= APPROVE / REJECT (STAMP SVG) ================= */}
+          {/* Approvals */}
           <div
             className={`sidebar-item ${
               isActive("/approvals") ? "active" : ""
             }`}
             onClick={() => navigate("/approvals")}
           >
-           <Icon>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {/* Paper */}
-              <path d="M3 16h18l-2 5H5l-2-5z" />
-
-              {/* Paper lines */}
-              <path d="M8 18h8" />
-              <path d="M8 20h6" />
-
-              {/* Stamp handle */}
-              <path d="M14 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
-              <path d="M10 6h4" />
-
-              {/* Stamp neck */}
-              <path d="M9 6l-1 3h8l-1-3" />
-
-              {/* Stamp base */}
-              <rect x="7" y="9" width="10" height="3" rx="1" />
-            </svg>
-          </Icon>
-
+            <Icon>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 16h18l-2 5H5l-2-5z" />
+                <path d="M8 18h8" />
+                <path d="M8 20h6" />
+                <path d="M14 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+                <path d="M10 6h4" />
+                <path d="M9 6l-1 3h8l-1-3" />
+                <rect x="7" y="9" width="10" height="3" rx="1" />
+              </svg>
+            </Icon>
             <span className="label">Approve / Reject</span>
           </div>
 
+          {/* Approved */}
           <div
             className={`sidebar-item ${
               isActive("/approved-students") ? "active" : ""
@@ -105,6 +97,7 @@ export default function Sidebar({ role }) {
             <span className="label">Approved Students</span>
           </div>
 
+          {/* Rejected */}
           <div
             className={`sidebar-item ${
               isActive("/rejected-students") ? "active" : ""
@@ -119,6 +112,7 @@ export default function Sidebar({ role }) {
             <span className="label">Rejected Students</span>
           </div>
 
+          {/* Accompanist */}
           <div
             className={`sidebar-item ${
               isActive("/accompanist-form") ? "active" : ""
@@ -133,6 +127,7 @@ export default function Sidebar({ role }) {
             <span className="label">Add Accompanist</span>
           </div>
 
+          {/* Accommodation */}
           <div
             className={`sidebar-item ${
               isActive("/accommodation") ? "active" : ""
@@ -145,6 +140,33 @@ export default function Sidebar({ role }) {
               </svg>
             </Icon>
             <span className="label">Accommodation</span>
+          </div>
+
+          {/* 💳 Fee Payment */}
+          <div
+            className={`sidebar-item ${
+              isActive("/fee-payment") ? "active" : ""
+            }`}
+            onClick={() => navigate("/fee-payment")}
+          >
+            <Icon>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 7h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                <path d="M3 7l3-4h12l3 4" />
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 9v6" />
+                <path d="M10.5 10.5h3" />
+                <path d="M10.5 13.5h3" />
+              </svg>
+            </Icon>
+            <span className="label">Fee Payment</span>
           </div>
         </>
       )}

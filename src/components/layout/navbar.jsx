@@ -36,6 +36,11 @@ export default function Navbar() {
       document.removeEventListener("mousedown", closeOnOutsideClick);
   }, []);
 
+  const goHome = () => {
+    if (role === "student") navigate("/dashboard");
+    else navigate("/principal-dashboard");
+  };
+
   return (
     <header className="navbar">
       {/* LEFT LOGOS */}
@@ -56,18 +61,19 @@ export default function Navbar() {
 
       {/* RIGHT ACTIONS */}
       <div className="navbar-right">
+
+        {/* HOME BUTTON */}
+        <button className="home-btn" onClick={goHome}>
+          Home
+        </button>
+
         {/* NOTIFICATIONS */}
         <div className="notif-wrapper" ref={notifRef}>
           <div
             className="notif-icon"
             onClick={() => setNotifOpen(!notifOpen)}
           >
-            {/* BLUE BELL SVG */}
-            <svg
-              className="bell-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
+            <svg className="bell-icon" viewBox="0 0 24 24" fill="none">
               <path
                 d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0"
                 stroke="currentColor"
@@ -76,7 +82,6 @@ export default function Navbar() {
                 strokeLinejoin="round"
               />
             </svg>
-
             <span className="notif-badge">3</span>
           </div>
 
@@ -95,11 +100,7 @@ export default function Navbar() {
             className="profile-trigger"
             onClick={() => setProfileOpen(!profileOpen)}
           >
-            <img
-              src={userPhoto}
-              alt="User"
-              className="profile-avatar"
-            />
+            <img src={userPhoto} alt="User" className="profile-avatar" />
             <span className="username">{userName}</span>
           </div>
 

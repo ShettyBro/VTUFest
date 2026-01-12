@@ -5,7 +5,6 @@ import ProtectedRoute from "./ProtectedRoute";
 import Login from "../pages/Login";
 import RegisterStudent from "../pages/RegisterStudent";
 import ForgotPassword from "../pages/ForgotPassword";
-
 import ResetPassword from "../pages/ChangePassword";
 
 /* STUDENT */
@@ -20,6 +19,7 @@ import RejectedStudents from "../pages/RejectedStudents";
 import Accommodation from "../pages/Accommodation";
 import AccompanistForm from "../pages/AccompanistForm";
 import Rules from "../pages/Rules";
+import FeePayment from "../pages/FeePayment";   // ✅ ADD THIS
 
 export default function AppRoutes() {
   return (
@@ -59,7 +59,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ❌ CONTINGENT APPROVAL — PRINCIPAL ONLY */}
       <Route
         path="/approvals"
         element={
@@ -69,7 +68,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* VIEW LISTS — BOTH */}
       <Route
         path="/approved-students"
         element={
@@ -88,7 +86,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ACCOMMODATION — BOTH */}
       <Route
         path="/accommodation"
         element={
@@ -104,6 +101,16 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["student", "principal", "manager"]}>
             <AccompanistForm />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 💳 FEE PAYMENT — PRINCIPAL + MANAGER ONLY */}
+      <Route
+        path="/fee-payment"
+        element={
+          <ProtectedRoute allowedRoles={["principal", "manager"]}>
+            <FeePayment />
           </ProtectedRoute>
         }
       />
