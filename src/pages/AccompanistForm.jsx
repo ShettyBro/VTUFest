@@ -5,16 +5,33 @@ import "../styles/accompanist.css";
 const MAX_CAPACITY = 45;
 const APPROVED_STUDENTS = 32;
 
+/* ================= VTU HABBA EVENTS ================= */
+const EVENT_CATEGORIES = {
+  Theatre: ["One-Act Play", "Skits"],
+  Dance: ["Folk / Tribal Dance", "Classical Dance Solo"],
+  Music: [
+    "Classical Vocal Solo (Hindustani/Carnatic)",
+    "Classical Instrumental Solo (Percussion Tala Vadya)",
+    "Classical Instrumental Solo (Non-Percussion Swara Vadya)",
+    "Light Vocal Solo (Indian)",
+    "Western Vocal Solo",
+    "Group Song (Indian)",
+    "Group Song (Western)",
+    "Folk Orchestra",
+  ],
+};
+
 const emptyAccompanist = {
   name: "",
   mobile: "",
   email: "",
   college: "",
+  category: "",      // Theatre / Dance / Music
   event: "",
   participant: "",
-  type: "Accompanist",   // Accompanist | Faculty
+  type: "Accompanist", // Accompanist | Faculty
   idProof: null,
-  facultyId: null,      // Faculty ID (only for faculty)
+  facultyId: null,
   photo: null,
 };
 
@@ -27,7 +44,6 @@ export default function AccompanistForm() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
     setCurrent({
       ...current,
       [name]: files ? files[0] : value,
@@ -39,6 +55,7 @@ export default function AccompanistForm() {
       !current.name ||
       !current.mobile ||
       !current.college ||
+      !current.category ||
       !current.event ||
       !current.participant
     ) {
@@ -47,7 +64,7 @@ export default function AccompanistForm() {
     }
 
     if (!current.idProof) {
-      alert("ID Proof is required.");
+      alert("Government ID Proof is required.");
       return false;
     }
 
@@ -114,12 +131,12 @@ export default function AccompanistForm() {
             <div className="form-grid">
               <div>
                 <label>Full Name</label>
-                <input name="name" value={current.name} onChange={handleChange} required />
+                <input name="name" value={current.name} onChange={handleChange} />
               </div>
 
               <div>
                 <label>Mobile Number</label>
-                <input name="mobile" value={current.mobile} onChange={handleChange} required />
+                <input name="mobile" value={current.mobile} onChange={handleChange} />
               </div>
 
               <div>
@@ -129,16 +146,42 @@ export default function AccompanistForm() {
 
               <div>
                 <label>College</label>
-                <input name="college" value={current.college} onChange={handleChange} required />
+                <input name="college" value={current.college} onChange={handleChange} />
               </div>
 
               <div>
-                <label>Event Assigned</label>
-                <select name="event" value={current.event} onChange={handleChange} required>
+                <label>Event Category</label>
+                <select
+                  name="category"
+                  value={current.category}
+                  onChange={(e) => {
+                    setCurrent({
+                      ...current,
+                      category: e.target.value,
+                      event: "",
+                    });
+                  }}
+                >
+                  <option value="">Select Category</option>
+                  {Object.keys(EVENT_CATEGORIES).map((cat) => (
+                    <option key={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label>Event</label>
+                <select
+                  name="event"
+                  value={current.event}
+                  onChange={handleChange}
+                  disabled={!current.category}
+                >
                   <option value="">Select Event</option>
-                  <option>Dance</option>
-                  <option>Music</option>
-                  <option>Drama</option>
+                  {current.category &&
+                    EVENT_CATEGORIES[current.category].map((ev) => (
+                      <option key={ev}>{ev}</option>
+                    ))}
                 </select>
               </div>
 
@@ -148,8 +191,6 @@ export default function AccompanistForm() {
                   name="participant"
                   value={current.participant}
                   onChange={handleChange}
-                  placeholder="Enter participant or team"
-                  required
                 />
               </div>
 
@@ -185,7 +226,6 @@ export default function AccompanistForm() {
               <button type="button" className="submit-btn secondary" onClick={addAccompanist}>
                 + Add Accompanist
               </button>
-
               <button type="submit" className="submit-btn">
                 Submit
               </button>
@@ -198,7 +238,7 @@ export default function AccompanistForm() {
               <ul>
                 {accompanists.map((a, i) => (
                   <li key={i}>
-                    {a.name} – {a.event} – {a.type} – Accompanying: {a.participant}
+                    {a.name} – {a.category} / {a.event} – {a.type} – Accompanying: {a.participant}
                   </li>
                 ))}
               </ul>
