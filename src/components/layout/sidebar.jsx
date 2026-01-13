@@ -147,7 +147,7 @@ export default function Sidebar({ role }) {
             className={`sidebar-item ${
               isActive("/fee-payment") ? "active" : ""
             }`}
-            onClick={() => navigate("/fee-payment")}
+            onClick={() => navigate("/Regestration")}
           >
             <Icon>
               <svg

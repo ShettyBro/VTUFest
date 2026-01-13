@@ -67,7 +67,7 @@ export default function ApprovedStudents() {
           </div>
 
           <button className="pdf-btn" onClick={downloadPDF}>
-            Download PDF
+            Download Anexture
           </button>
         </div>
 
