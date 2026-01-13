@@ -32,8 +32,8 @@ export default function ManagerDashboard() {
   });
 
   useEffect(() => {
-    const userRole = localStorage.getItem("role");
-    const token = localStorage.getItem("token");
+    const userRole = localStorage.getItem("vtufest_role");
+    const token = localStorage.getItem("vtufest_token");
     
     if (!userRole || !token || (userRole !== "principal" && userRole !== "manager")) {
       window.location.href = "/";
