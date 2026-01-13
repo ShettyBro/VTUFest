@@ -3,231 +3,251 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/PrincipalDashboard.css";
 import CampusMap from "../components/CampusMap";
+import collegesData from "../data/colleges.json";
 
-export default function PrincipalDashboard() {
+const API_BASE_URL = "https://vtubackend2026.netlify.app/.netlify/functions";
+
+export default function ManagerDashboard() {
   const navigate = useNavigate();
+  const role = localStorage.getItem("vtufest_role") || "MANAGER";
+  const token = localStorage.getItem("vtufest_token");
 
-  // role can be "principal" OR "manager"
-  const role = localStorage.getItem("role") || "manager";
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
 
-  /* ================= ACCOMMODATION STATE ================= */
-  const [accommodation, setAccommodation] = useState({
-    status: "none", // none | applied | assigned
-    girls: 0,
-    boys: 0,
+  // Manager assignment state
+  const [managerForm, setManagerForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
   });
 
-  /* ================= ASSIGN MANAGER STATE ================= */
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [managerName, setManagerName] = useState("");
-  const [managerEmail, setManagerEmail] = useState("");
-  const [managerMobile, setManagerMobile] = useState("");
-  const [isManagerAssigned, setIsManagerAssigned] = useState(false);
-
-  /* ================= LOAD ACCOMMODATION ================= */
   useEffect(() => {
-    const saved = localStorage.getItem("accommodation");
-    if (saved) {
-      const data = JSON.parse(saved);
-      setAccommodation({
-        status: data.status || "none",
-        girls: data.girls || 0,
-        boys: data.boys || 0,
-      });
+    if (!token) {
+      navigate("/");
+      return;
     }
+
+    fetchDashboardData();
+    checkProfileCompletion();
+    checkLockStatus();
   }, []);
 
-  /* ================= ASSIGN MANAGER HANDLER ================= */
-  const handleAssignManager = () => {
-    if (!managerName || !managerEmail || !managerMobile) {
-      alert("Please enter name, email and mobile number");
-      return;
-    }
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(managerEmail)) {
-      alert("Enter a valid email ID");
-      return;
-    }
+      const response = await fetch(`${API_BASE_URL}/manager-dashboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const mobileRegex = /^[6-9]\d{9}$/;
-    if (!mobileRegex.test(managerMobile)) {
-      alert("Enter a valid 10-digit mobile number");
-      return;
-    }
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
 
-    setIsManagerAssigned(true);
-    setShowAssignModal(false);
-    alert("Manager assigned successfully");
+      const data = await response.json();
+
+      if (data.success) {
+        setDashboardData(data.data);
+      }
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /* ================= EVENT DATA ================= */
+  const checkProfileCompletion = async () => {
+    if (role !== "MANAGER") return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/manager-profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action: "check_profile_status" }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && !data.profile_completed) {
+        setShowProfileModal(true);
+      }
+    } catch (error) {
+      console.error("Profile check error:", error);
+    }
+  };
+
+  const checkLockStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/check-lock-status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.is_locked) {
+        setShowFinalApprovalOverlay(true);
+      }
+    } catch (error) {
+      console.error("Lock status check error:", error);
+    }
+  };
+
+  const handleAssignManager = async () => {
+    if (!managerForm.name || !managerForm.email || !managerForm.phone) {
+      alert("All fields are required");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/assign-manager`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          manager_name: managerForm.name,
+          manager_email: managerForm.email,
+          manager_phone: managerForm.phone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Manager assigned successfully. Email sent with credentials.");
+        setShowAssignModal(false);
+        fetchDashboardData();
+      } else {
+        alert(data.error || "Failed to assign manager");
+      }
+    } catch (error) {
+      console.error("Assign manager error:", error);
+      alert("Failed to assign manager");
+    }
+  };
+
   const blockEvents = {
     left: [
-      {
-        blockNo: 1,
-        blockName: "Main Auditorium",
-        events: [
-          { name: "Inauguration", room: "AUD-01", day: "Day 1" },
-          { name: "Dance Finals", room: "AUD-01", day: "Day 3" },
-        ],
-      },
-      {
-        blockNo: 2,
-        blockName: "ANA Block",
-        events: [{ name: "Group Music", room: "ANA-102", day: "Day 2" }],
-      },
-      {
-        blockNo: 3,
-        blockName: "CSE Block",
-        events: [{ name: "Coding Contest", room: "CS-301", day: "Day 2" }],
-      },
-      {
-        blockNo: 4,
-        blockName: "AIGS Block",
-        events: [{ name: "Paper Presentation", room: "AIGS-02", day: "Day 2" }],
-      },
+      { blockNo: 1, blockName: "Main Auditorium", events: [{ name: "Inauguration", room: "AUD-01", day: "Day 1" }] },
+      { blockNo: 2, blockName: "ANA Block", events: [{ name: "Group Music", room: "ANA-102", day: "Day 2" }] },
     ],
     right: [
-      {
-        blockNo: 5,
-        blockName: "Mechanical Block",
-        events: [{ name: "Robo Race", room: "M-01", day: "Day 3" }],
-      },
-      {
-        blockNo: 6,
-        blockName: "ASD Block",
-        events: [{ name: "Design Showcase", room: "D-12", day: "Day 1" }],
-      },
-      {
-        blockNo: 7,
-        blockName: "Architecture Block",
-        events: [{ name: "Sketching", room: "A-12", day: "Day 3" }],
-      },
-      {
-        blockNo: 8,
-        blockName: "ECE Block",
-        events: [
-          { name: "Solo Singing", room: "E-201", day: "Day 1" },
-          { name: "Quiz", room: "E-105", day: "Day 2" },
-        ],
-      },
-      {
-        blockNo: 9,
-        blockName: "Central Library",
-        events: [{ name: "Debate", room: "L-01", day: "Day 1" }],
-      },
+      { blockNo: 5, blockName: "Mechanical Block", events: [{ name: "Robo Race", room: "M-01", day: "Day 3" }] },
+      { blockNo: 8, blockName: "ECE Block", events: [{ name: "Quiz", room: "E-105", day: "Day 2" }] },
     ],
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ textAlign: "center", padding: "50px" }}>
+          <h3>Loading dashboard...</h3>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="dashboard-container">
-        {/* ================= HEADER ================= */}
         <div className="dashboard-header">
-          <h2>
-            {role === "principal"
-              ? "Principal Dashboard"
-              : "Team Manager Dashboard"}
-          </h2>
-          <p>VTU HABBA 6 – Administration Panel</p>
+          <h2>{role === "PRINCIPAL" ? "Principal Dashboard" : "Team Manager Dashboard"}</h2>
+          <p>VTU HABBA 2026 – Administration Panel</p>
 
-          {role === "principal" && (
+          {role === "PRINCIPAL" && dashboardData && !dashboardData.has_team_manager && (
             <button
-              className={`assign-manager-btn ${
-                isManagerAssigned ? "disabled" : ""
-              }`}
-              disabled={isManagerAssigned}
-              onClick={() => !isManagerAssigned && setShowAssignModal(true)}
+              className="assign-manager-btn"
+              onClick={() => setShowAssignModal(true)}
             >
-              {isManagerAssigned ? "Manager Assigned" : "Assign Manager"}
+              Assign Manager
             </button>
           )}
         </div>
 
-        {/* ================= STATS GRID ================= */}
         <div className="stats-grid">
           <div className="stat-card">
             <h4>Total Registrations</h4>
-            <p>0</p>
+            <p>{dashboardData?.stats?.total_students || 0}</p>
+            <small>Students with applications: {dashboardData?.stats?.students_with_applications || 0}</small>
           </div>
 
-          <div
-            className="stat-card warning clickable"
-            onClick={() => navigate("/accompanist-form")}
-          >
+          <div className="stat-card warning clickable" onClick={() => navigate("/accompanist-form")}>
             <h4>Accompanists</h4>
-            <p>0</p>
+            <p>{dashboardData?.stats?.accompanists_count || 0}</p>
           </div>
 
-          <div
-            className="stat-card success clickable"
-            onClick={() => navigate("/approved-students")}
-          >
+          <div className="stat-card success clickable" onClick={() => navigate("/approved-students")}>
             <h4>Approved Students</h4>
-            <p>0</p>
+            <p>{dashboardData?.stats?.approved_students || 0}</p>
           </div>
 
-          <div
-            className="stat-card danger clickable"
-            onClick={() => navigate("/rejected-students")}
-          >
+          <div className="stat-card danger clickable" onClick={() => navigate("/rejected-students")}>
             <h4>Rejected Students</h4>
-            <p>0</p>
+            <p>{dashboardData?.stats?.rejected_students || 0}</p>
           </div>
 
-          <div
-            className="stat-card accommodation clickable"
-            onClick={() => navigate("/accommodation")}
-          >
+          <div className="stat-card accommodation clickable" onClick={() => navigate("/accommodation")}>
             <h4>Accommodation</h4>
-
-            {accommodation.status === "none" && <p>Apply Now</p>}
-            {accommodation.status === "applied" && <p>Applied</p>}
-            {accommodation.status === "assigned" && (
+            {dashboardData?.accommodation ? (
               <>
-                <p>Girls: {accommodation.girls}</p>
-                <p>Boys: {accommodation.boys}</p>
+                <p>Girls: {dashboardData.accommodation.total_girls}</p>
+                <p>Boys: {dashboardData.accommodation.total_boys}</p>
+                <small>Status: {dashboardData.accommodation.status}</small>
               </>
+            ) : (
+              <p>Apply Now</p>
             )}
+          </div>
+
+          <div className="stat-card">
+            <h4>College Quota</h4>
+            <p>{dashboardData?.stats?.quota_used || 0} / {dashboardData?.college?.max_quota || 45}</p>
+            <small>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
           </div>
         </div>
 
-        {/* ================= MAP + EVENTS ================= */}
         <div className="dashboard-map-wrapper">
-          {/* LEFT BLOCKS */}
           <div className="map-side left">
             {blockEvents.left.map((block, idx) => (
               <div className="block-card" key={idx}>
-                <h4>
-                  {block.blockNo}. {block.blockName}
-                </h4>
+                <h4>{block.blockNo}. {block.blockName}</h4>
                 {block.events.map((e, i) => (
-                  <p key={i}>
-                    • {e.name} — Room {e.room} ({e.day})
-                  </p>
+                  <p key={i}>• {e.name} – Room {e.room} ({e.day})</p>
                 ))}
               </div>
             ))}
           </div>
 
-          {/* CENTER MAP */}
           <div className="map-center">
             <h3 className="section-title">Campus Map & Event Locations</h3>
             <CampusMap />
           </div>
 
-          {/* RIGHT BLOCKS */}
           <div className="map-side right">
             {blockEvents.right.map((block, idx) => (
               <div className="block-card" key={idx}>
-                <h4>
-                  {block.blockNo}. {block.blockName}
-                </h4>
+                <h4>{block.blockNo}. {block.blockName}</h4>
                 {block.events.map((e, i) => (
-                  <p key={i}>
-                    • {e.name} — Room {e.room} ({e.day})
-                  </p>
+                  <p key={i}>• {e.name} – Room {e.room} ({e.day})</p>
                 ))}
               </div>
             ))}
@@ -235,35 +255,28 @@ export default function PrincipalDashboard() {
         </div>
       </div>
 
-      {/* ================= ASSIGN MANAGER MODAL ================= */}
-      {role === "principal" && showAssignModal && (
+      {showAssignModal && (
         <div className="modal-overlay">
           <div className="modal-card">
             <h3>Assign Team Manager</h3>
-
             <label>Manager Name</label>
             <input
-              value={managerName}
-              onChange={(e) => setManagerName(e.target.value)}
+              value={managerForm.name}
+              onChange={(e) => setManagerForm({ ...managerForm, name: e.target.value })}
             />
-
             <label>Manager Email</label>
             <input
-              value={managerEmail}
-              onChange={(e) => setManagerEmail(e.target.value)}
+              value={managerForm.email}
+              onChange={(e) => setManagerForm({ ...managerForm, email: e.target.value })}
             />
-
             <label>Manager Mobile</label>
             <input
-              value={managerMobile}
-              onChange={(e) => setManagerMobile(e.target.value)}
+              value={managerForm.phone}
+              onChange={(e) => setManagerForm({ ...managerForm, phone: e.target.value })}
             />
-
             <div className="modal-actions">
               <button onClick={handleAssignManager}>Submit</button>
-              <button onClick={() => setShowAssignModal(false)}>
-                Cancel
-              </button>
+              <button onClick={() => setShowAssignModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
