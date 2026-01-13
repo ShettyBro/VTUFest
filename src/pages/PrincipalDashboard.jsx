@@ -46,7 +46,7 @@ export default function ManagerDashboard() {
 
   const fetchDashboardData = async (token, userRole) => {
     try {
-      const response = await fetch("/.netlify/functions/manager-dashboard", {
+      const response = await fetch("https://dashteam10.netlify.app/.netlify/functions/manager-dashboard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,7 +99,7 @@ export default function ManagerDashboard() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/.netlify/functions/assign-manager", {
+      const response = await fetch("https://teanmdash30.netlify.app/.netlify/functions/assign-manager", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,7 +129,7 @@ export default function ManagerDashboard() {
   const handleInitProfileUpload = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/.netlify/functions/manager-profile", {
+      const response = await fetch("https://teanmdash30.netlify.app/.netlify/functions/manager-profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -201,7 +201,7 @@ export default function ManagerDashboard() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/.netlify/functions/manager-profile", {
+      const response = await fetch("https://teanmdash30.netlify.app/.netlify/functions/manager-profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -234,7 +234,7 @@ export default function ManagerDashboard() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/.netlify/functions/final-approval", {
+      const response = await fetch("https://dashteam10.netlify.app/.netlify/functions/final-approval", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
