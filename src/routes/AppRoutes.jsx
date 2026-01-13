@@ -6,6 +6,10 @@ import Login from "../pages/Login";
 import RegisterStudent from "../pages/RegisterStudent";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ChangePassword";
+import ManagerProfileModal from "../pages/ManagerProfileModal";
+import approvaloverlay from "../pages/approvaloverlay";
+
+
 
 /* STUDENT */
 import Dashboard from "../pages/Dashboard";

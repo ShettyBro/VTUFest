@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import ManagerProfileModal from "./ManagerProfileModal";
-import FinalApprovalOverlay from "./FinalApprovalOverlay";
+import FinalApprovalOverlay from "./ApprovalOverlayy";
 import CampusMap from "../components/CampusMap";
 import "../styles/PrincipalDashboard.css";
 
