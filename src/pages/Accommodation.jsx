@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/Accommodation.css";
 
+const API_BASE_URL = "https://teamdash20.netlify.app/.netlify/functions/";
+
 export default function Accommodation() {
   const navigate = useNavigate();
+  const token = localStorage.getItem("vtufest_token");
 
+  const [loading, setLoading] = useState(true);
+  const [existingAccommodation, setExistingAccommodation] = useState(null);
   const [form, setForm] = useState({
     collegeName: "",
     place: "",
@@ -14,33 +19,154 @@ export default function Accommodation() {
     contactName: "",
     contactPhone: "",
     contactEmail: "",
+    specialRequirements: "",
   });
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/");
+      return;
+    }
+    fetchAccommodationStatus();
+  }, []);
+
+  const fetchAccommodationStatus = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/accommodation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action: "get_accommodation_status" }),
+      });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.accommodation) {
+        setExistingAccommodation(data.accommodation);
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // TEMP: save locally (later backend)
-    localStorage.setItem(
-      "accommodation",
-      JSON.stringify({
-        status: "assigned",
-        collegeName: form.collegeName,
-        place: form.place,
-        girls: Number(form.girls),
-        boys: Number(form.boys),
-        contactName: form.contactName,
-        contactPhone: form.contactPhone,
-        contactEmail: form.contactEmail,
-      })
-    );
+    if (!form.girls || !form.boys || !form.contactName || !form.contactPhone || !form.contactEmail) {
+      alert("Please fill all required fields");
+      return;
+    }
 
-    alert("Accommodation details submitted successfully");
-    navigate("/principal-dashboard");
+    try {
+      const response = await fetch(`${API_BASE_URL}/accommodation`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "submit_accommodation",
+          total_boys: parseInt(form.boys),
+          total_girls: parseInt(form.girls),
+          contact_person_name: form.contactName,
+          contact_person_phone: form.contactPhone,
+          contact_email: form.contactEmail,
+          special_requirements: form.specialRequirements || null,
+        }),
+      });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Accommodation details submitted successfully");
+        navigate("/principal-dashboard");
+      } else {
+        alert(data.error || "Submission failed");
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      alert("Failed to submit accommodation");
+    }
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ textAlign: "center", padding: "50px" }}>
+          <h3>Loading...</h3>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (existingAccommodation) {
+    return (
+      <Layout>
+        <div className="form-container">
+          <h2>Accommodation Status</h2>
+
+          <div className="status-card">
+            <h3>Accommodation Details</h3>
+            <p>
+              <strong>Total Boys:</strong> {existingAccommodation.total_boys}
+            </p>
+            <p>
+              <strong>Total Girls:</strong> {existingAccommodation.total_girls}
+            </p>
+            <p>
+              <strong>Contact Person:</strong> {existingAccommodation.contact_person_name}
+            </p>
+            <p>
+              <strong>Contact Phone:</strong> {existingAccommodation.contact_person_phone}
+            </p>
+            <p>
+              <strong>Contact Email:</strong> {existingAccommodation.contact_email}
+            </p>
+            {existingAccommodation.special_requirements && (
+              <p>
+                <strong>Special Requirements:</strong>{" "}
+                {existingAccommodation.special_requirements}
+              </p>
+            )}
+            <p className={`status ${existingAccommodation.status.toLowerCase()}`}>
+              <strong>Status:</strong> {existingAccommodation.status}
+            </p>
+            {existingAccommodation.admin_remarks && (
+              <p>
+                <strong>Admin Remarks:</strong> {existingAccommodation.admin_remarks}
+              </p>
+            )}
+          </div>
+
+          <button onClick={() => navigate("/principal-dashboard")}>Back to Dashboard</button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -48,25 +174,6 @@ export default function Accommodation() {
         <h2>Accommodation Details</h2>
 
         <form onSubmit={handleSubmit}>
-          {/* COLLEGE NAME */}
-          <label>College Name</label>
-          <input
-            name="collegeName"
-            value={form.collegeName}
-            onChange={handleChange}
-            required
-          />
-
-          {/* PLACE */}
-          <label>Place</label>
-          <input
-            name="place"
-            value={form.place}
-            onChange={handleChange}
-            required
-          />
-
-          {/* GIRLS */}
           <label>No. of Girls</label>
           <input
             type="number"
@@ -76,7 +183,6 @@ export default function Accommodation() {
             required
           />
 
-          {/* BOYS */}
           <label>No. of Boys</label>
           <input
             type="number"
@@ -86,7 +192,6 @@ export default function Accommodation() {
             required
           />
 
-          {/* CONTACT PERSON */}
           <label>Contact Person Name</label>
           <input
             name="contactName"
@@ -114,6 +219,15 @@ export default function Accommodation() {
             value={form.contactEmail}
             onChange={handleChange}
             required
+          />
+
+          <label>Special Requirements (Optional)</label>
+          <textarea
+            name="specialRequirements"
+            placeholder="Any special accommodation requirements..."
+            value={form.specialRequirements}
+            onChange={handleChange}
+            rows="4"
           />
 
           <button type="submit">Submit Accommodation</button>

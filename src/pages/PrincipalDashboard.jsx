@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/PrincipalDashboard.css";
+import ManagerProfileModal from "./ManagerProfileModal";
+import FinalApprovalOverlay from "./FinalApprovalOverlay";
 import CampusMap from "../components/CampusMap";
-import collegesData from "../data/colleges.json";
+import "../styles/PrincipalDashboard.css";
 
-const API_BASE_URL = "https://vtubackend2026.netlify.app/.netlify/functions";
+const API_BASE_URL = "";
 
 export default function ManagerDashboard() {
   const navigate = useNavigate();
@@ -17,8 +18,8 @@ export default function ManagerDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
+  const [lockStatus, setLockStatus] = useState(null);
 
-  // Manager assignment state
   const [managerForm, setManagerForm] = useState({
     name: "",
     email: "",
@@ -40,7 +41,7 @@ export default function ManagerDashboard() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/manager-dashboard`, {
+      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +72,7 @@ export default function ManagerDashboard() {
     if (role !== "MANAGER") return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/manager-profile`, {
+      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/manager-profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,6 +80,13 @@ export default function ManagerDashboard() {
         },
         body: JSON.stringify({ action: "check_profile_status" }),
       });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
 
       const data = await response.json();
 
@@ -92,7 +100,7 @@ export default function ManagerDashboard() {
 
   const checkLockStatus = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/check-lock-status`, {
+      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -100,10 +108,20 @@ export default function ManagerDashboard() {
         },
       });
 
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
       const data = await response.json();
 
-      if (data.success && data.is_locked) {
-        setShowFinalApprovalOverlay(true);
+      if (data.success) {
+        setLockStatus(data);
+        if (data.is_locked) {
+          setShowFinalApprovalOverlay(true);
+        }
       }
     } catch (error) {
       console.error("Lock status check error:", error);
@@ -117,7 +135,7 @@ export default function ManagerDashboard() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/assign-manager`, {
+      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/assign-manager`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -129,6 +147,13 @@ export default function ManagerDashboard() {
           manager_phone: managerForm.phone,
         }),
       });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
 
       const data = await response.json();
 
@@ -145,14 +170,77 @@ export default function ManagerDashboard() {
     }
   };
 
+  const handleFinalApproval = async () => {
+    if (role !== "PRINCIPAL") {
+      alert("Only Principal can submit final approval");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        "⚠️ FINAL APPROVAL WARNING\n\nOnce submitted:\n- All registrations will be LOCKED\n- No further edits allowed\n- Payment page will be unlocked\n\nAre you sure you want to continue?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(
+          `Final Approval Successful!\n\n${data.inserted_students} students + ${data.inserted_accompanists} accompanists = ${data.total_records} records created.\n\nAll actions are now locked. Please proceed to payment.`
+        );
+        fetchDashboardData();
+        checkLockStatus();
+      } else {
+        alert(data.error || "Final approval failed");
+      }
+    } catch (error) {
+      console.error("Final approval error:", error);
+      alert("Failed to submit final approval");
+    }
+  };
+
   const blockEvents = {
     left: [
-      { blockNo: 1, blockName: "Main Auditorium", events: [{ name: "Inauguration", room: "AUD-01", day: "Day 1" }] },
-      { blockNo: 2, blockName: "ANA Block", events: [{ name: "Group Music", room: "ANA-102", day: "Day 2" }] },
+      {
+        blockNo: 1,
+        blockName: "Main Auditorium",
+        events: [{ name: "Inauguration", room: "AUD-01", day: "Day 1" }],
+      },
+      {
+        blockNo: 2,
+        blockName: "ANA Block",
+        events: [{ name: "Group Music", room: "ANA-102", day: "Day 2" }],
+      },
     ],
     right: [
-      { blockNo: 5, blockName: "Mechanical Block", events: [{ name: "Robo Race", room: "M-01", day: "Day 3" }] },
-      { blockNo: 8, blockName: "ECE Block", events: [{ name: "Quiz", room: "E-105", day: "Day 2" }] },
+      {
+        blockNo: 5,
+        blockName: "Mechanical Block",
+        events: [{ name: "Robo Race", room: "M-01", day: "Day 3" }],
+      },
+      {
+        blockNo: 8,
+        blockName: "ECE Block",
+        events: [{ name: "Quiz", room: "E-105", day: "Day 2" }],
+      },
     ],
   };
 
@@ -170,7 +258,9 @@ export default function ManagerDashboard() {
     <Layout>
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h2>{role === "PRINCIPAL" ? "Principal Dashboard" : "Team Manager Dashboard"}</h2>
+          <h2>
+            {role === "PRINCIPAL" ? "Principal Dashboard" : "Team Manager Dashboard"}
+          </h2>
           <p>VTU HABBA 2026 – Administration Panel</p>
 
           {role === "PRINCIPAL" && dashboardData && !dashboardData.has_team_manager && (
@@ -181,31 +271,51 @@ export default function ManagerDashboard() {
               Assign Manager
             </button>
           )}
+
+          {role === "PRINCIPAL" && !dashboardData?.is_final_approved && (
+            <button className="final-approval-btn" onClick={handleFinalApproval}>
+              Submit Final Approval
+            </button>
+          )}
         </div>
 
         <div className="stats-grid">
           <div className="stat-card">
             <h4>Total Registrations</h4>
             <p>{dashboardData?.stats?.total_students || 0}</p>
-            <small>Students with applications: {dashboardData?.stats?.students_with_applications || 0}</small>
+            <small>
+              With applications: {dashboardData?.stats?.students_with_applications || 0}
+            </small>
           </div>
 
-          <div className="stat-card warning clickable" onClick={() => navigate("/accompanist-form")}>
+          <div
+            className="stat-card warning clickable"
+            onClick={() => navigate("/accompanist-form")}
+          >
             <h4>Accompanists</h4>
             <p>{dashboardData?.stats?.accompanists_count || 0}</p>
           </div>
 
-          <div className="stat-card success clickable" onClick={() => navigate("/approved-students")}>
+          <div
+            className="stat-card success clickable"
+            onClick={() => navigate("/approved-students")}
+          >
             <h4>Approved Students</h4>
             <p>{dashboardData?.stats?.approved_students || 0}</p>
           </div>
 
-          <div className="stat-card danger clickable" onClick={() => navigate("/rejected-students")}>
+          <div
+            className="stat-card danger clickable"
+            onClick={() => navigate("/rejected-students")}
+          >
             <h4>Rejected Students</h4>
             <p>{dashboardData?.stats?.rejected_students || 0}</p>
           </div>
 
-          <div className="stat-card accommodation clickable" onClick={() => navigate("/accommodation")}>
+          <div
+            className="stat-card accommodation clickable"
+            onClick={() => navigate("/accommodation")}
+          >
             <h4>Accommodation</h4>
             {dashboardData?.accommodation ? (
               <>
@@ -220,7 +330,10 @@ export default function ManagerDashboard() {
 
           <div className="stat-card">
             <h4>College Quota</h4>
-            <p>{dashboardData?.stats?.quota_used || 0} / {dashboardData?.college?.max_quota || 45}</p>
+            <p>
+              {dashboardData?.stats?.quota_used || 0} /{" "}
+              {dashboardData?.college?.max_quota || 45}
+            </p>
             <small>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
           </div>
         </div>
@@ -229,9 +342,13 @@ export default function ManagerDashboard() {
           <div className="map-side left">
             {blockEvents.left.map((block, idx) => (
               <div className="block-card" key={idx}>
-                <h4>{block.blockNo}. {block.blockName}</h4>
+                <h4>
+                  {block.blockNo}. {block.blockName}
+                </h4>
                 {block.events.map((e, i) => (
-                  <p key={i}>• {e.name} – Room {e.room} ({e.day})</p>
+                  <p key={i}>
+                    • {e.name} – Room {e.room} ({e.day})
+                  </p>
                 ))}
               </div>
             ))}
@@ -245,9 +362,13 @@ export default function ManagerDashboard() {
           <div className="map-side right">
             {blockEvents.right.map((block, idx) => (
               <div className="block-card" key={idx}>
-                <h4>{block.blockNo}. {block.blockName}</h4>
+                <h4>
+                  {block.blockNo}. {block.blockName}
+                </h4>
                 {block.events.map((e, i) => (
-                  <p key={i}>• {e.name} – Room {e.room} ({e.day})</p>
+                  <p key={i}>
+                    • {e.name} – Room {e.room} ({e.day})
+                  </p>
                 ))}
               </div>
             ))}
@@ -280,6 +401,15 @@ export default function ManagerDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {showProfileModal && <ManagerProfileModal onComplete={() => setShowProfileModal(false)} />}
+
+      {showFinalApprovalOverlay && lockStatus && (
+        <FinalApprovalOverlay
+          paymentStatus={lockStatus.payment_status}
+          paymentRemarks={lockStatus.payment_remarks}
+        />
       )}
     </Layout>
   );
