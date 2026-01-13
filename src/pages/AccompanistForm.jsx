@@ -11,6 +11,8 @@ const emptyAccompanist = {
   email: "",
   college: "",
   event: "",
+  participant: "",     // NEW
+  type: "Student",     // NEW (Student / Faculty)
   idProof: null,
   photo: null,
 };
@@ -35,6 +37,12 @@ export default function AccompanistForm() {
       alert(`Maximum limit reached (${MAX_CAPACITY})`);
       return;
     }
+
+    if (!current.name || !current.mobile || !current.college || !current.event || !current.participant) {
+      alert("Please fill all required fields before adding.");
+      return;
+    }
+
     setAccompanists([...accompanists, current]);
     setCurrent(emptyAccompanist);
   };
@@ -42,8 +50,11 @@ export default function AccompanistForm() {
   const handleFinalSubmit = (e) => {
     e.preventDefault();
 
-    const finalList = [...accompanists, current];
-    console.log("Final List:", finalList);
+    const finalList = [...accompanists, current].filter(
+      (a) => a.name.trim() !== ""
+    );
+
+    console.table(finalList);
 
     alert(
       `Submitted Successfully\nTotal: ${
@@ -128,6 +139,32 @@ export default function AccompanistForm() {
                   <option>Drama</option>
                 </select>
               </div>
+
+              {/* NEW */}
+              <div>
+                <label>Accompanying (Participant / Team)</label>
+                <input
+                  name="participant"
+                  value={current.participant}
+                  onChange={handleChange}
+                  placeholder="Enter participant or team name"
+                  required
+                />
+              </div>
+
+              {/* NEW */}
+              <div>
+                <label>Accompanist Type</label>
+                <select
+                  name="type"
+                  value={current.type}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="Student">Student</option>
+                  <option value="Faculty">Faculty (Teacher)</option>
+                </select>
+              </div>
             </div>
 
             <div className="documents">
@@ -163,7 +200,8 @@ export default function AccompanistForm() {
               <ul>
                 {accompanists.map((a, i) => (
                   <li key={i}>
-                    {a.name} – {a.event}
+                    {a.name} – {a.event} – {a.type} – Accompanying:{" "}
+                    {a.participant}
                   </li>
                 ))}
               </ul>

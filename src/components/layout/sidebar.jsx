@@ -142,10 +142,10 @@ export default function Sidebar({ role }) {
             <span className="label">Accommodation</span>
           </div>
 
-          {/* 💳 Fee Payment */}
+          {/* 💳 REGESTRATION (Label only changed) */}
           <div
             className={`sidebar-item ${
-              isActive("/Regestration") ? "active" : ""
+              isActive("/fee-payment") ? "active" : ""
             }`}
             onClick={() => navigate("/fee-payment")}
           >
@@ -166,7 +166,7 @@ export default function Sidebar({ role }) {
                 <path d="M10.5 13.5h3" />
               </svg>
             </Icon>
-            <span className="label">Fee Payment</span>
+            <span className="label">Regestration</span>
           </div>
         </>
       )}
