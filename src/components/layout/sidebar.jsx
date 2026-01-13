@@ -145,9 +145,9 @@ export default function Sidebar({ role }) {
           {/* 💳 Fee Payment */}
           <div
             className={`sidebar-item ${
-              isActive("/fee-payment") ? "active" : ""
+              isActive("/Regestration") ? "active" : ""
             }`}
-            onClick={() => navigate("/Regestration")}
+            onClick={() => navigate("/fee-payment")}
           >
             <Icon>
               <svg
