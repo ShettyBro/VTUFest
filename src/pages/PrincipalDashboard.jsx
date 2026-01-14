@@ -78,12 +78,12 @@ export default function PrincipalDashboard() {
         },
       });
 
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
+      // if (response.status === 401) {
+      //   alert("Session expired. Please login again.");
+      //   localStorage.clear();
+      //   navigate("/");
+      //   return;
+      // }
 
       const data = await response.json();
 
@@ -165,12 +165,12 @@ export default function PrincipalDashboard() {
         },
       });
 
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
+      // if (response.status === 401) {
+      //   alert("Session expired. Please login again.");
+      //   localStorage.clear();
+      //   navigate("/");
+      //   return;
+      // }
 
       const data = await response.json();
 
