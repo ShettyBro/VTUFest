@@ -16,6 +16,10 @@ export default function PrincipalDashboard() {
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
 
+  // Loading states for different actions
+  const [assigningManager, setAssigningManager] = useState(false);
+  const [submittingApproval, setSubmittingApproval] = useState(false);
+
   const [managerForm, setManagerForm] = useState({
     name: "",
     email: "",
@@ -58,6 +62,7 @@ export default function PrincipalDashboard() {
       }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
+      alert("Failed to load dashboard. Please refresh the page.");
     } finally {
       setLoading(false);
     }
@@ -100,6 +105,8 @@ export default function PrincipalDashboard() {
     }
 
     try {
+      setAssigningManager(true);
+
       const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/assign-manager`, {
         method: "POST",
         headers: {
@@ -125,13 +132,16 @@ export default function PrincipalDashboard() {
       if (data.success) {
         alert("Manager assigned successfully. Email sent with credentials.");
         setShowAssignModal(false);
+        setManagerForm({ name: "", email: "", phone: "" });
         fetchDashboardData();
       } else {
         alert(data.error || "Failed to assign manager");
       }
     } catch (error) {
       console.error("Assign manager error:", error);
-      alert("Failed to assign manager");
+      alert("Failed to assign manager. Please try again.");
+    } finally {
+      setAssigningManager(false);
     }
   };
 
@@ -145,6 +155,8 @@ export default function PrincipalDashboard() {
     }
 
     try {
+      setSubmittingApproval(true);
+
       const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
         method: "POST",
         headers: {
@@ -173,7 +185,9 @@ export default function PrincipalDashboard() {
       }
     } catch (error) {
       console.error("Final approval error:", error);
-      alert("Failed to submit final approval");
+      alert("Failed to submit final approval. Please try again.");
+    } finally {
+      setSubmittingApproval(false);
     }
   };
 
@@ -207,8 +221,10 @@ export default function PrincipalDashboard() {
   if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <h3>Loading dashboard...</h3>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h3>Loading Principal Dashboard...</h3>
+          <p>Please wait while we fetch your data</p>
         </div>
       </Layout>
     );
@@ -225,14 +241,19 @@ export default function PrincipalDashboard() {
             <button
               className="assign-manager-btn"
               onClick={() => setShowAssignModal(true)}
+              disabled={assigningManager}
             >
-              Assign Manager
+              {assigningManager ? "Assigning..." : "Assign Manager"}
             </button>
           )}
 
           {!dashboardData?.is_final_approved && (
-            <button className="final-approval-btn" onClick={handleFinalApproval}>
-              Submit Final Approval
+            <button 
+              className="final-approval-btn" 
+              onClick={handleFinalApproval}
+              disabled={submittingApproval}
+            >
+              {submittingApproval ? "Submitting..." : "Submit Final Approval"}
             </button>
           )}
         </div>
@@ -342,20 +363,27 @@ export default function PrincipalDashboard() {
             <input
               value={managerForm.name}
               onChange={(e) => setManagerForm({ ...managerForm, name: e.target.value })}
+              disabled={assigningManager}
             />
             <label>Manager Email</label>
             <input
               value={managerForm.email}
               onChange={(e) => setManagerForm({ ...managerForm, email: e.target.value })}
+              disabled={assigningManager}
             />
             <label>Manager Mobile</label>
             <input
               value={managerForm.phone}
               onChange={(e) => setManagerForm({ ...managerForm, phone: e.target.value })}
+              disabled={assigningManager}
             />
             <div className="modal-actions">
-              <button onClick={handleAssignManager}>Submit</button>
-              <button onClick={() => setShowAssignModal(false)}>Cancel</button>
+              <button onClick={handleAssignManager} disabled={assigningManager}>
+                {assigningManager ? "Assigning..." : "Submit"}
+              </button>
+              <button onClick={() => setShowAssignModal(false)} disabled={assigningManager}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>

@@ -54,6 +54,7 @@ export default function ManagerDashboard() {
       }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
+      alert("Failed to load dashboard. Please refresh the page.");
     } finally {
       setLoading(false);
     }
@@ -147,8 +148,10 @@ export default function ManagerDashboard() {
   if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <h3>Loading dashboard...</h3>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h3>Loading Manager Dashboard...</h3>
+          <p>Please wait while we fetch your data</p>
         </div>
       </Layout>
     );
