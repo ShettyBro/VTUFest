@@ -31,7 +31,7 @@ export default function FeePayment() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ action: "get_payment_info" }),
       });
@@ -71,7 +71,7 @@ export default function FeePayment() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: "init_payment_upload",
@@ -111,7 +111,7 @@ export default function FeePayment() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           action: "finalize_payment",
