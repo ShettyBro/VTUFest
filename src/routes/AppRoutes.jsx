@@ -20,6 +20,7 @@ import Accommodation from "../pages/Accommodation";
 import AccompanistForm from "../pages/AccompanistForm";
 import Rules from "../pages/Rules";
 import FeePayment from "../pages/FeePayment";
+import ManagerDashboard from "../pages/ManagerDashboard";
 
 export default function AppRoutes() {
   return (
@@ -50,14 +51,23 @@ export default function AppRoutes() {
       />
 
       {/* ================= PRINCIPAL + MANAGER ================= */}
-      <Route
+     <Route
         path="/principal-dashboard"
         element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
+          <ProtectedRoute allowedRoles={["principal"]}>
             <PrincipalDashboard />
           </ProtectedRoute>
         }
       />
+ <Route
+        path="/manager-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["manager"]}>
+            <ManagerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/approvals"

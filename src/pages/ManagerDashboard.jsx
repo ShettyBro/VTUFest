@@ -1,34 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
+import ManagerProfileModal from "./ManagerProfileModal";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import "../styles/PrincipalDashboard.css";
 
-export default function PrincipalDashboard() {
+export default function ManagerDashboard() {
   const navigate = useNavigate();
   const role = localStorage.getItem("vtufest_role");
   const token = localStorage.getItem("vtufest_token");
 
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
-  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
 
-  const [managerForm, setManagerForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-
   useEffect(() => {
-    if (!token || role !== "principal") {
+    if (!token || role !== "manager") {
       navigate("/");
       return;
     }
 
     fetchDashboardData();
+    checkProfileCompletion();
     checkLockStatus();
   }, []);
 
@@ -63,6 +59,34 @@ export default function PrincipalDashboard() {
     }
   };
 
+  const checkProfileCompletion = async () => {
+    try {
+      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/manager-profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action: "check_profile_status" }),
+      });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success && !data.profile_completed) {
+        setShowProfileModal(true);
+      }
+    } catch (error) {
+      console.error("Profile check error:", error);
+    }
+  };
+
   const checkLockStatus = async () => {
     try {
       const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`, {
@@ -90,90 +114,6 @@ export default function PrincipalDashboard() {
       }
     } catch (error) {
       console.error("Lock status check error:", error);
-    }
-  };
-
-  const handleAssignManager = async () => {
-    if (!managerForm.name || !managerForm.email || !managerForm.phone) {
-      alert("All fields are required");
-      return;
-    }
-
-    try {
-      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/assign-manager`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          manager_name: managerForm.name,
-          manager_email: managerForm.email,
-          manager_phone: managerForm.phone,
-        }),
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert("Manager assigned successfully. Email sent with credentials.");
-        setShowAssignModal(false);
-        fetchDashboardData();
-      } else {
-        alert(data.error || "Failed to assign manager");
-      }
-    } catch (error) {
-      console.error("Assign manager error:", error);
-      alert("Failed to assign manager");
-    }
-  };
-
-  const handleFinalApproval = async () => {
-    if (
-      !window.confirm(
-        "⚠️ FINAL APPROVAL WARNING\n\nOnce submitted:\n- All registrations will be LOCKED\n- No further edits allowed\n- Payment page will be unlocked\n\nAre you sure you want to continue?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(
-          `Final Approval Successful!\n\n${data.inserted_students} students + ${data.inserted_accompanists} accompanists = ${data.total_records} records created.\n\nAll actions are now locked. Please proceed to payment.`
-        );
-        fetchDashboardData();
-        checkLockStatus();
-      } else {
-        alert(data.error || "Final approval failed");
-      }
-    } catch (error) {
-      console.error("Final approval error:", error);
-      alert("Failed to submit final approval");
     }
   };
 
@@ -218,23 +158,8 @@ export default function PrincipalDashboard() {
     <Layout>
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h2>Principal Dashboard</h2>
-          <p>VTU HABBA 2026 – Principal Administration Panel</p>
-
-          {dashboardData && !dashboardData.has_team_manager && (
-            <button
-              className="assign-manager-btn"
-              onClick={() => setShowAssignModal(true)}
-            >
-              Assign Manager
-            </button>
-          )}
-
-          {!dashboardData?.is_final_approved && (
-            <button className="final-approval-btn" onClick={handleFinalApproval}>
-              Submit Final Approval
-            </button>
-          )}
+          <h2>Team Manager Dashboard</h2>
+          <p>VTU HABBA 2026 – Team Manager Panel</p>
         </div>
 
         <div className="stats-grid">
@@ -334,32 +259,7 @@ export default function PrincipalDashboard() {
         </div>
       </div>
 
-      {showAssignModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Assign Team Manager</h3>
-            <label>Manager Name</label>
-            <input
-              value={managerForm.name}
-              onChange={(e) => setManagerForm({ ...managerForm, name: e.target.value })}
-            />
-            <label>Manager Email</label>
-            <input
-              value={managerForm.email}
-              onChange={(e) => setManagerForm({ ...managerForm, email: e.target.value })}
-            />
-            <label>Manager Mobile</label>
-            <input
-              value={managerForm.phone}
-              onChange={(e) => setManagerForm({ ...managerForm, phone: e.target.value })}
-            />
-            <div className="modal-actions">
-              <button onClick={handleAssignManager}>Submit</button>
-              <button onClick={() => setShowAssignModal(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showProfileModal && <ManagerProfileModal onComplete={() => setShowProfileModal(false)} />}
 
       {showFinalApprovalOverlay && lockStatus && (
         <FinalApprovalOverlay
