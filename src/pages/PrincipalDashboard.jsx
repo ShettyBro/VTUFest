@@ -70,7 +70,7 @@ export default function PrincipalDashboard() {
 
   const checkLockStatus = async () => {
     try {
-      const response = await fetch(``, {
+      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,12 +78,12 @@ export default function PrincipalDashboard() {
         },
       });
 
-      // if (response.status === 401) {
-      //   alert("Session expired. Please login again.");
-      //   localStorage.clear();
-      //   navigate("/");
-      //   return;
-      // }
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
 
       const data = await response.json();
 
@@ -165,12 +165,12 @@ export default function PrincipalDashboard() {
         },
       });
 
-      // if (response.status === 401) {
-      //   alert("Session expired. Please login again.");
-      //   localStorage.clear();
-      //   navigate("/");
-      //   return;
-      // }
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
 
       const data = await response.json();
 
