@@ -68,15 +68,15 @@ export default function PrincipalDashboard() {
     }
   };
 
-  // const checkLockStatus = async () => {
-  //   try {
-  //     const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         "Authorization": `Bearer ${token}`,
-  //       },
-  //     });
+  const checkLockStatus = async () => {
+    try {
+      const response = await fetch(``, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
 
       if (response.status === 401) {
         alert("Session expired. Please login again.");
