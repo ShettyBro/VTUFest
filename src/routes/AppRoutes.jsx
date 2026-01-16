@@ -6,6 +6,7 @@ import Login from "../pages/Login";
 import RegisterStudent from "../pages/RegisterStudent";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ChangePassword";
+import AssignEvents from "./pages/AssignEvents";
 
 /* STUDENT */
 import Dashboard from "../pages/Dashboard";
@@ -30,6 +31,7 @@ export default function AppRoutes() {
       <Route path="/register-student" element={<RegisterStudent />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/assign-events" element={<AssignEvents />} />
 
       {/* ================= STUDENT ================= */}
       <Route
