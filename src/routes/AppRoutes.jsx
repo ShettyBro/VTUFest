@@ -6,7 +6,7 @@ import Login from "../pages/Login";
 import RegisterStudent from "../pages/RegisterStudent";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ChangePassword";
-import AssignEvents from "./pages/AssignEvents";
+import AssignEvents from "../pages/AssignEvents";
 
 /* STUDENT */
 import Dashboard from "../pages/Dashboard";
