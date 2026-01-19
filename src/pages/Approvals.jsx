@@ -11,6 +11,13 @@ export default function Approvals() {
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
   
+  // Quota state
+  const [quota, setQuota] = useState({
+    used: 0,
+    remaining: 0,
+    max: 0
+  });
+  
   // Section states
   const [pendingStudents, setPendingStudents] = useState([]);
   const [approvedStudents, setApprovedStudents] = useState([]);
@@ -49,7 +56,42 @@ export default function Approvals() {
 
   const initializeData = async () => {
     await checkLockStatus();
+    await fetchCollegeQuota();
     await fetchPendingStudents();
+  };
+
+  const fetchCollegeQuota = async () => {
+    try {
+      const response = await fetch(
+        `https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        const stats = data.data.stats || {};
+        const college = data.data.college || {};
+        
+        setQuota({
+          used: stats.quota_used || 0,
+          remaining: stats.quota_remaining || 0,
+          max: college.max_quota || 0
+        });
+      }
+    } catch (error) {
+      console.error("Quota fetch error:", error);
+    }
   };
 
   const checkLockStatus = async () => {
@@ -261,6 +303,12 @@ export default function Approvals() {
   const approvePendingStudent = async (student) => {
     if (isLocked) return;
     
+    // Check quota before approval
+    if (quota.remaining <= 0) {
+      alert("College quota exhausted. Cannot approve more students.");
+      return;
+    }
+    
     // If editing, prevent approval
     if (editingPending === student.application_id) {
       alert("Please save your changes before approving");
@@ -299,6 +347,13 @@ export default function Approvals() {
         setPendingStudents((prev) =>
           prev.filter((s) => s.application_id !== student.application_id)
         );
+        
+        // Update quota immediately
+        setQuota((prev) => ({
+          ...prev,
+          used: prev.used + 1,
+          remaining: prev.remaining - 1
+        }));
         
         // Reset approved loaded flag to force refresh
         setApprovedLoaded(false);
@@ -511,6 +566,13 @@ export default function Approvals() {
             prev.filter((s) => s.student_id !== rejectTarget.data.student_id)
           );
           
+          // Update quota when moving approved to rejected
+          setQuota((prev) => ({
+            ...prev,
+            used: prev.used - 1,
+            remaining: prev.remaining + 1
+          }));
+          
           // Reset rejected loaded flag
           setRejectedLoaded(false);
           if (showRejectedSection) {
@@ -715,6 +777,9 @@ export default function Approvals() {
     );
   }
 
+  // Check if quota is exhausted
+  const isQuotaExhausted = quota.remaining <= 0;
+
   return (
     <Layout>
       <div className="approvals-container">
@@ -723,6 +788,36 @@ export default function Approvals() {
           <p className="subtitle">
             VTU HABBA 2026 — {role === "PRINCIPAL" ? "Principal" : "Team Manager"} Panel
           </p>
+          
+          {/* Quota Display */}
+          <div className="quota-info" style={{
+            padding: "12px 20px",
+            margin: "15px 0",
+            backgroundColor: isQuotaExhausted ? "#fee" : "#f0f9ff",
+            border: `2px solid ${isQuotaExhausted ? "#dc2626" : "#3b82f6"}`,
+            borderRadius: "8px",
+            fontSize: "16px",
+            fontWeight: "600",
+            color: isQuotaExhausted ? "#dc2626" : "#1e40af"
+          }}>
+            College Quota: {quota.used} / {quota.max} — Remaining: {quota.remaining}
+          </div>
+          
+          {isQuotaExhausted && (
+            <div className="quota-warning" style={{
+              padding: "12px 20px",
+              margin: "10px 0",
+              backgroundColor: "#fee2e2",
+              border: "2px solid #dc2626",
+              borderRadius: "8px",
+              color: "#991b1b",
+              fontWeight: "600",
+              textAlign: "center"
+            }}>
+              ⚠️ College quota exhausted. No further approvals allowed.
+            </div>
+          )}
+          
           {isLocked && (
             <div className="lock-banner">
               🔒 Final approval submitted. All actions are locked (read-only).
@@ -746,132 +841,31 @@ export default function Approvals() {
                 <div
                   className="student-header"
                   onClick={() => handlePendingClick(student.application_id)}
-                ><div className="student-name">{student.full_name}</div>
+                >
+                  <div className="student-name">{student.full_name}</div>
                   <div className="student-usn">{student.usn}</div>
                   <div className="expand-icon">
                     {expandedPending === student.application_id ? "▼" : "▶"}
                   </div>
                 </div>
                 {expandedPending === student.application_id && (
-              <div className="student-body">
-                {renderStudentDetails(
-                  student,
-                  editingPending === student.application_id,
-                  editFormPending,
-                  setEditFormPending
-                )}
-
-                <div className="action-buttons">
-                  {!isLocked && (
-                    <>
-                      {editingPending === student.application_id ? (
-                        <>
-                          <button
-                            className="btn-save"
-                            onClick={() =>
-                              saveEditPending(student.application_id)
-                            }
-                            disabled={savingEdit}
-                          >
-                            {savingEdit ? "Saving..." : "Save"}
-                          </button>
-                          <button
-                            className="btn-cancel"
-                            onClick={cancelEditPending}
-                            disabled={savingEdit}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            className="btn-edit"
-                            onClick={() => startEditPending(student)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn-approve"
-                            onClick={() => approvePendingStudent(student)}
-                            disabled={processingAction}
-                          >
-                            {processingAction ? "Approving..." : "Approve"}
-                          </button>
-                          <button
-                            className="btn-reject"
-                            onClick={() => rejectPendingStudent(student)}
-                            disabled={processingAction}
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-
-    {/* ============================================================================ */}
-    {/* SECTION 2: APPROVED STUDENTS */}
-    {/* ============================================================================ */}
-    <div className="section approved-section">
-      <div
-        className="section-toggle"
-        onClick={toggleApprovedSection}
-      >
-        <h3 className="section-title">
-          Approved Students
-          {approvedLoaded && ` (${approvedStudents.length})`}
-        </h3>
-        <div className="toggle-icon">
-          {showApprovedSection ? "▼" : "▶"}
-        </div>
-      </div>
-
-      {showApprovedSection && (
-        <>
-          {!approvedLoaded ? (
-            <div className="loading-indicator">Loading approved students...</div>
-          ) : approvedStudents.length === 0 ? (
-            <p className="empty-message">No approved students yet</p>
-          ) : (
-            approvedStudents.map((student) => (
-              <div key={student.student_id} className="student-card">
-                <div
-                  className="student-header"
-                  onClick={() => handleApprovedClick(student.student_id)}
-                >
-                  <div className="student-name">{student.full_name}</div>
-                  <div className="student-usn">{student.usn}</div>
-                  <div className="expand-icon">
-                    {expandedApproved === student.student_id ? "▼" : "▶"}
-                  </div>
-                </div>
-
-                {expandedApproved === student.student_id && (
                   <div className="student-body">
                     {renderStudentDetails(
                       student,
-                      editingApproved === student.student_id,
-                      editFormApproved,
-                      setEditFormApproved
+                      editingPending === student.application_id,
+                      editFormPending,
+                      setEditFormPending
                     )}
 
                     <div className="action-buttons">
                       {!isLocked && (
                         <>
-                          {editingApproved === student.student_id ? (
+                          {editingPending === student.application_id ? (
                             <>
                               <button
                                 className="btn-save"
                                 onClick={() =>
-                                  saveEditApproved(student.student_id)
+                                  saveEditPending(student.application_id)
                                 }
                                 disabled={savingEdit}
                               >
@@ -879,7 +873,7 @@ export default function Approvals() {
                               </button>
                               <button
                                 className="btn-cancel"
-                                onClick={cancelEditApproved}
+                                onClick={cancelEditPending}
                                 disabled={savingEdit}
                               >
                                 Cancel
@@ -889,17 +883,24 @@ export default function Approvals() {
                             <>
                               <button
                                 className="btn-edit"
-                                onClick={() => startEditApproved(student)}
+                                onClick={() => startEditPending(student)}
                               >
                                 Edit
                               </button>
                               <button
-                                className="btn-reject"
-                                onClick={() =>
-                                  moveApprovedToRejected(student)
-                                }
+                                className="btn-approve"
+                                onClick={() => approvePendingStudent(student)}
+                                disabled={processingAction || isQuotaExhausted}
+                                style={isQuotaExhausted ? { opacity: 0.5, cursor: "not-allowed" } : {}}
                               >
-                                Move to Rejected
+                                {processingAction ? "Approving..." : "Approve"}
+                              </button>
+                              <button
+                                className="btn-reject"
+                                onClick={() => rejectPendingStudent(student)}
+                                disabled={processingAction}
+                              >
+                                Reject
                               </button>
                             </>
                           )}
@@ -911,89 +912,185 @@ export default function Approvals() {
               </div>
             ))
           )}
-        </>
-      )}
-    </div>
-
-    {/* ============================================================================ */}
-    {/* SECTION 3: REJECTED STUDENTS */}
-    {/* ============================================================================ */}
-    <div className="section rejected-section">
-      <div
-        className="section-toggle"
-        onClick={toggleRejectedSection}
-      >
-        <h3 className="section-title">
-          Rejected Students
-          {rejectedLoaded && ` (${rejectedStudents.length})`}
-        </h3>
-        <div className="toggle-icon">
-          {showRejectedSection ? "▼" : "▶"}
         </div>
-      </div>
 
-      {showRejectedSection && (
-        <>
-          {!rejectedLoaded ? (
-            <div className="loading-indicator">Loading rejected students...</div>
-          ) : rejectedStudents.length === 0 ? (
-            <p className="empty-message">No rejected students</p>
-          ) : (
-            <div className="rejected-table">
-              <div className="table-header">
-                <span>Name</span>
-                <span>USN</span>
-                <span>Reason</span>
-              </div>
-              {rejectedStudents.map((student) => (
-                <div key={student.student_id} className="table-row">
-                  <span>{student.full_name}</span>
-                  <span>{student.usn}</span>
-                  <span className="reason">
-                    {student.rejected_reason || "N/A"}
-                  </span>
-                </div>
-              ))}
+        {/* ============================================================================ */}
+        {/* SECTION 2: APPROVED STUDENTS */}
+        {/* ============================================================================ */}
+        <div className="section approved-section">
+          <div
+            className="section-toggle"
+            onClick={toggleApprovedSection}
+          >
+            <h3 className="section-title">
+              Approved Students
+              {approvedLoaded && ` (${approvedStudents.length})`}
+            </h3>
+            <div className="toggle-icon">
+              {showApprovedSection ? "▼" : "▶"}
             </div>
-          )}
-        </>
-      )}
-    </div>
-  </div>
+          </div>
 
-  {/* ============================================================================ */}
-  {/* REJECTION MODAL */}
-  {/* ============================================================================ */}
-  {showRejectModal && (
-    <div className="modal-overlay">
-      <div className="modal-card">
-        <h3>Reject Student</h3>
-        <p>Student: {rejectTarget?.data.full_name}</p>
-        <label>Rejection Reason</label>
-        <textarea
-          value={rejectionReason}
-          onChange={(e) => setRejectionReason(e.target.value)}
-          placeholder="Enter rejection reason..."
-          rows="4"
-          disabled={processingAction}
-        />
-        <div className="modal-actions">
-          <button
-            onClick={confirmReject}
-            disabled={processingAction}
+          {showApprovedSection && (
+            <>
+              {!approvedLoaded ? (
+                <div className="loading-indicator">Loading approved students...</div>
+              ) : approvedStudents.length === 0 ? (
+                <p className="empty-message">No approved students yet</p>
+              ) : (
+                approvedStudents.map((student) => (
+                  <div key={student.student_id} className="student-card">
+                    <div
+                      className="student-header"
+                      onClick={() => handleApprovedClick(student.student_id)}
+                    >
+                      <div className="student-name">{student.full_name}</div>
+                      <div className="student-usn">{student.usn}</div>
+                      <div className="expand-icon">
+                        {expandedApproved === student.student_id ? "▼" : "▶"}
+                      </div>
+                    </div>
+
+                    {expandedApproved === student.student_id && (
+                      <div className="student-body">
+                        {renderStudentDetails(
+                          student,
+                          editingApproved === student.student_id,
+                          editFormApproved,
+                          setEditFormApproved
+                        )}
+
+                        <div className="action-buttons">
+                          {!isLocked && (
+                            <>
+                              {editingApproved === student.student_id ? (
+                                <>
+                                  <button
+                                    className="btn-save"
+                                    onClick={() =>
+                                      saveEditApproved(student.student_id)
+                                    }
+                                    disabled={savingEdit}
+                                  >
+                                    {savingEdit ? "Saving..." : "Save"}
+                                  </button>
+                                  <button
+                                    className="btn-cancel"
+                                    onClick={cancelEditApproved}
+                                    disabled={savingEdit}
+                                  >
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    className="btn-edit"
+                                    onClick={() => startEditApproved(student)}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="btn-reject"
+                                    onClick={() =>
+                                      moveApprovedToRejected(student)
+                                    }
+                                  >
+                                    Move to Rejected
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </>
+          )}
+        </div>
+
+        {/* ============================================================================ */}
+        {/* SECTION 3: REJECTED STUDENTS */}
+        {/* ============================================================================ */}
+        <div className="section rejected-section">
+          <div
+            className="section-toggle"
+            onClick={toggleRejectedSection}
           >
-            {processingAction ? "Processing..." : "Confirm Reject"}
-          </button>
-          <button
-            onClick={closeRejectModal}
-            disabled={processingAction}
-          >
-            Cancel
-          </button>
+            <h3 className="section-title">
+              Rejected Students
+              {rejectedLoaded && ` (${rejectedStudents.length})`}
+            </h3>
+            <div className="toggle-icon">
+              {showRejectedSection ? "▼" : "▶"}
+            </div>
+          </div>
+
+          {showRejectedSection && (
+            <>
+              {!rejectedLoaded ? (
+                <div className="loading-indicator">Loading rejected students...</div>
+              ) : rejectedStudents.length === 0 ? (
+                <p className="empty-message">No rejected students</p>
+              ) : (
+                <div className="rejected-table">
+                  <div className="table-header">
+                    <span>Name</span>
+                    <span>USN</span>
+                    <span>Reason</span>
+                  </div>
+                  {rejectedStudents.map((student) => (
+                    <div key={student.student_id} className="table-row">
+                      <span>{student.full_name}</span>
+                      <span>{student.usn}</span>
+                      <span className="reason">
+                        {student.rejected_reason || "N/A"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-    </div>
-  )}
-</Layout>
-);
+
+      {/* ============================================================================ */}
+      {/* REJECTION MODAL */}
+      {/* ============================================================================ */}
+      {showRejectModal && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h3>Reject Student</h3>
+            <p>Student: {rejectTarget?.data.full_name}</p>
+            <label>Rejection Reason</label>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              rows="4"
+              disabled={processingAction}
+            />
+            <div className="modal-actions">
+              <button
+                onClick={confirmReject}
+                disabled={processingAction}
+              >
+                {processingAction ? "Processing..." : "Confirm Reject"}
+              </button>
+              <button
+                onClick={closeRejectModal}
+                disabled={processingAction}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
 }
