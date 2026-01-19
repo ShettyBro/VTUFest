@@ -34,6 +34,48 @@ const EVENTS_LIST = [
   { slug: "classical_dance_solo", name: "Classical Dance Solo", category: "Dance" },
 ];
 
+// ============================================================================
+// EVENT LIMITS (Frontend-Only Enforcement)
+// ============================================================================
+const EVENT_LIMITS = {
+  // Music - Solo
+  classical_vocal_solo: { maxParticipants: 1, maxAccompanists: 2 },
+  classical_instrumental_percussion: { maxParticipants: 1, maxAccompanists: 2 },
+  classical_instrumental_non_percussion: { maxParticipants: 1, maxAccompanists: 2 },
+  light_vocal_solo: { maxParticipants: 1, maxAccompanists: 2 },
+  western_vocal_solo: { maxParticipants: 1, maxAccompanists: 2 },
+  
+  // Music - Group
+  group_song_indian: { maxParticipants: 6, maxAccompanists: 3 },
+  group_song_western: { maxParticipants: 6, maxAccompanists: 3 },
+  folk_orchestra: { maxParticipants: 9, maxAccompanists: 3 },
+  
+  // Dance
+  folk_tribal_dance: { maxParticipants: 10, maxAccompanists: 5 },
+  classical_dance_solo: { maxParticipants: 1, maxAccompanists: 3 },
+  
+  // Literary
+  quiz: { maxParticipants: 3, maxAccompanists: 0 },
+  debate: { maxParticipants: 2, maxAccompanists: 0 },
+  elocution: { maxParticipants: 1, maxAccompanists: 0 },
+  
+  // Theatre
+  one_act_play: { maxParticipants: 9, maxAccompanists: 3 },
+  skits: { maxParticipants: 6, maxAccompanists: 3 },
+  mime: { maxParticipants: 6, maxAccompanists: 2 },
+  mimicry: { maxParticipants: 1, maxAccompanists: 0 },
+  
+  // Fine Arts
+  on_spot_painting: { maxParticipants: 1, maxAccompanists: 0 },
+  collage_making: { maxParticipants: 1, maxAccompanists: 0 },
+  poster_making: { maxParticipants: 1, maxAccompanists: 0 },
+  clay_modelling: { maxParticipants: 1, maxAccompanists: 0 },
+  cartooning: { maxParticipants: 1, maxAccompanists: 0 },
+  rangoli: { maxParticipants: 1, maxAccompanists: 0 },
+  spot_photography: { maxParticipants: 1, maxAccompanists: 0 },
+  installation: { maxParticipants: 4, maxAccompanists: 0 },
+};
+
 export default function AssignEvents() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
@@ -298,6 +340,22 @@ export default function AssignEvents() {
     return acc;
   }, {});
 
+  // Helper function to check if participant limit is reached
+  const isParticipantLimitReached = (eventSlug) => {
+    if (!eventData[eventSlug]) return false;
+    const limits = EVENT_LIMITS[eventSlug];
+    if (!limits) return false;
+    return eventData[eventSlug].participants.length >= limits.maxParticipants;
+  };
+
+  // Helper function to check if accompanist limit is reached
+  const isAccompanistLimitReached = (eventSlug) => {
+    if (!eventData[eventSlug]) return false;
+    const limits = EVENT_LIMITS[eventSlug];
+    if (!limits) return false;
+    return eventData[eventSlug].accompanists.length >= limits.maxAccompanists;
+  };
+
   return (
     <Layout>
       <div className="assign-events-container">
@@ -340,10 +398,12 @@ export default function AssignEvents() {
                           <div className="section-header">
                             <h4>Participants</h4>
                             <span className="counter">
-                              {eventData[event.slug].participants.length} assigned
+                              {eventData[event.slug].participants.length}
+                              {EVENT_LIMITS[event.slug] && ` / ${EVENT_LIMITS[event.slug].maxParticipants}`} assigned
                             </span>
                             {/* FIX #4: ADD / REMOVE VISIBILITY - Use isManager instead of role === "MANAGER" */}
-                            {isManager && !isLocked && (
+                            {/* LIMIT CHECK: Hide button when participant limit is reached */}
+                            {isManager && !isLocked && !isParticipantLimitReached(event.slug) && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "participant")}
@@ -391,10 +451,13 @@ export default function AssignEvents() {
                           <div className="section-header">
                             <h4>Accompanists</h4>
                             <span className="counter">
-                              {eventData[event.slug].accompanists.length} assigned
+                              {eventData[event.slug].accompanists.length}
+                              {EVENT_LIMITS[event.slug] && ` / ${EVENT_LIMITS[event.slug].maxAccompanists}`} assigned
                             </span>
                             {/* FIX #4: Use isManager instead of role === "MANAGER" */}
-                            {isManager && !isLocked && (
+                            {/* LIMIT CHECK: Hide button when accompanist limit is reached or max is 0 */}
+                            {isManager && !isLocked && !isAccompanistLimitReached(event.slug) && 
+                             EVENT_LIMITS[event.slug]?.maxAccompanists > 0 && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "accompanist")}
