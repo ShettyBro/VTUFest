@@ -3,265 +3,434 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/approvals.css";
 
-const API_BASE_URL = "https://dashteam10.netlify.app/.netlify/functions";
-
-const EVENT_CATEGORIES = {
-  Theatre: ["Mime", "Mimicry", "One-Act Play", "Skits"],
-  Literary: ["Debate", "Elocution", "Quiz"],
-  Fine_Arts: [
-    "Cartooning",
-    "Clay Modelling",
-    "Collage Making",
-    "Installation",
-    "On Spot Painting",
-    "Poster Making",
-    "Rangoli",
-    "Spot Photography",
-  ],
-  Music: [
-    "Classical Vocal Solo (Hindustani/Carnatic)",
-    "Classical Instrumental Solo (Percussion Tala Vadya)",
-    "Classical Instrumental Solo (Non-Percussion Swara Vadya)",
-    "Light Vocal Solo (Indian)",
-    "Western Vocal Solo",
-    "Group Song (Indian)",
-    "Group Song (Western)",
-    "Folk Orchestra",
-  ],
-  Dance: ["Folk / Tribal Dance", "Classical Dance Solo"],
-};
-
-const ACCOMPANYING_EVENT_CATEGORIES = {
-  Theatre: ["One-Act Play", "Skits"],
-  Dance: ["Folk / Tribal Dance", "Classical Dance Solo"],
-  Music: [
-    "Classical Vocal Solo (Hindustani/Carnatic)",
-    "Classical Instrumental Solo (Percussion Tala Vadya)",
-    "Classical Instrumental Solo (Non-Percussion Swara Vadya)",
-    "Light Vocal Solo (Indian)",
-    "Western Vocal Solo",
-    "Group Song (Indian)",
-    "Group Song (Western)",
-    "Folk Orchestra",
-  ],
-};
-
-export default function ApproveReject() {
+export default function Approvals() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
   const role = localStorage.getItem("vtufest_role");
 
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
-  const [students, setStudents] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [openId, setOpenId] = useState(null);
-  const [editId, setEditId] = useState(null);
-  const [quotaUsed, setQuotaUsed] = useState(0);
+  
+  // Section states
+  const [pendingStudents, setPendingStudents] = useState([]);
+  const [approvedStudents, setApprovedStudents] = useState([]);
+  const [rejectedStudents, setRejectedStudents] = useState([]);
+  
+  // Lazy loading flags
+  const [approvedLoaded, setApprovedLoaded] = useState(false);
+  const [rejectedLoaded, setRejectedLoaded] = useState(false);
+  
+  // UI states
+  const [expandedPending, setExpandedPending] = useState(null);
+  const [expandedApproved, setExpandedApproved] = useState(null);
+  const [showApprovedSection, setShowApprovedSection] = useState(false);
+  const [showRejectedSection, setShowRejectedSection] = useState(false);
+  
+  // Edit states
+  const [editingPending, setEditingPending] = useState(null);
+  const [editingApproved, setEditingApproved] = useState(null);
+  const [editFormPending, setEditFormPending] = useState({});
+  const [editFormApproved, setEditFormApproved] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
+  
+  // Modal states
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [processingAction, setProcessingAction] = useState(false);
 
   useEffect(() => {
     if (!token) {
       navigate("/");
       return;
     }
-    fetchData();
+    initializeData();
   }, []);
 
-  const fetchData = async () => {
+  const initializeData = async () => {
+    await checkLockStatus();
+    await fetchPendingStudents();
+  };
+
+  const checkLockStatus = async () => {
     try {
-      setLoading(true);
+      const response = await fetch(
+        `https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      // Fetch pending applications
-      const appsResponse = await fetch(`https://dashteam10.netlify.app/.netlify/functions/review-applications`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action: "get_pending_applications" }),
-      });
-
-      if (appsResponse.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
+      if (response.status === 401) {
+        handleSessionExpired();
         return;
       }
 
-      const appsData = await appsResponse.json();
-
-      if (appsData.success) {
-        setStudents(
-          appsData.applications.map((app) => ({
-            id: app.application_id,
-            student_id: app.student_id,
-            name: app.full_name,
-            usn: app.usn,
-            email: app.email,
-            phone: app.phone,
-            gender: app.gender,
-            blood_group: app.blood_group,
-            address: app.address,
-            department: app.department,
-            year_of_study: app.year_of_study,
-            semester: app.semester,
-            status: "Pending",
-            assignedEvents: [],
-            accompanyingEvents: [],
-            documents: app.documents,
-          }))
-        );
-      }
-
-      // Fetch events with limits
-      const eventsResponse = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/get-events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      const eventsData = await eventsResponse.json();
-      if (eventsData.success) {
-        setEvents(eventsData.events);
-      }
-
-      // Fetch dashboard for quota
-      const dashResponse = await fetch(`https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      const dashData = await dashResponse.json();
-      if (dashData.success) {
-        setQuotaUsed(dashData.data.stats.quota_used);
-        setIsLocked(dashData.data.is_final_approved);
+      const data = await response.json();
+      if (data.success) {
+        setIsLocked(data.is_locked);
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Lock check error:", error);
+    }
+  };
+
+  const fetchPendingStudents = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: "get_pending_applications" }),
+        }
+      );
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setPendingStudents(data.applications);
+      }
+    } catch (error) {
+      console.error("Fetch pending error:", error);
+      alert("Failed to load pending students");
     } finally {
       setLoading(false);
     }
   };
 
-  const getEventIdByName = (eventName) => {
-    const event = events.find((e) => e.event_name === eventName);
-    return event ? event.event_id : null;
-  };
-
-  const getEventLimit = (eventName) => {
-    const event = events.find((e) => e.event_name === eventName);
-    if (!event) return null;
-    return {
-      current: event.current_participants,
-      max: event.max_participants_per_college,
-    };
-  };
-
-  const toggleEvent = (id, eventName, key) => {
-    if (isLocked) return;
-
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              [key]: s[key].includes(eventName)
-                ? s[key].filter((e) => e !== eventName)
-                : [...s[key], eventName],
-            }
-          : s
-      )
-    );
-  };
-
-  const handleApprove = async (s) => {
-    if (isLocked) return;
-
-    if (openId !== s.id) {
-      setOpenId(s.id);
-      return;
-    }
-
-    const hasEvents = s.assignedEvents.length > 0 || s.accompanyingEvents.length > 0;
-
-    if (!hasEvents) {
-      alert("Please select at least one event before approving.");
-      return;
-    }
-
-    // Check quota
-    if (quotaUsed >= 45) {
-      alert("College quota exceeded (45/45). Cannot approve more students.");
-      return;
-    }
-
-    // Validate event limits
-    for (const eventName of s.assignedEvents) {
-      const limit = getEventLimit(eventName);
-      if (limit && limit.current >= limit.max) {
-        alert(`Event "${eventName}" is full (${limit.current}/${limit.max})`);
-        return;
-      }
-    }
-
+  const fetchApprovedStudents = async () => {
+    if (approvedLoaded) return;
+    
     try {
-      const participatingEventIds = s.assignedEvents
-        .map(getEventIdByName)
-        .filter(Boolean);
-      const accompanyingEventIds = s.accompanyingEvents
-        .map(getEventIdByName)
-        .filter(Boolean);
-
-      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/review-applications`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "approve_student",
-          application_id: s.id,
-          participating_events: participatingEventIds,
-          accompanying_events: accompanyingEventIds,
-        }),
-      });
+      const response = await fetch(
+        `https://dashteam10.netlify.app/.netlify/functions/approved-students`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: "get_approved_students" }),
+        }
+      );
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
+        handleSessionExpired();
         return;
       }
 
       const data = await response.json();
-
       if (data.success) {
+        setApprovedStudents(data.students);
+        setApprovedLoaded(true);
+      }
+    } catch (error) {
+      console.error("Fetch approved error:", error);
+      alert("Failed to load approved students");
+    }
+  };
+
+  const fetchRejectedStudents = async () => {
+    if (rejectedLoaded) return;
+    
+    try {
+      const response = await fetch(
+        `https://teamdash20.netlify.app/.netlify/functions/rejected-students`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setRejectedStudents(data.students);
+        setRejectedLoaded(true);
+      }
+    } catch (error) {
+      console.error("Fetch rejected error:", error);
+      alert("Failed to load rejected students");
+    }
+  };
+
+  const handleSessionExpired = () => {
+    alert("Session expired. Please login again.");
+    localStorage.clear();
+    navigate("/");
+  };
+
+  // ============================================================================
+  // PENDING SECTION HANDLERS
+  // ============================================================================
+  
+  const handlePendingClick = (id) => {
+    if (isLocked) return;
+    setExpandedPending(expandedPending === id ? null : id);
+    setEditingPending(null);
+  };
+
+  const startEditPending = (student) => {
+    if (isLocked) return;
+    setEditingPending(student.application_id);
+    setEditFormPending({
+      full_name: student.full_name,
+      email: student.email,
+      phone: student.phone,
+      gender: student.gender,
+      blood_group: student.blood_group,
+      address: student.address,
+      department: student.department,
+      year_of_study: student.year_of_study,
+      semester: student.semester,
+    });
+  };
+
+  const cancelEditPending = () => {
+    setEditingPending(null);
+    setEditFormPending({});
+  };
+
+  const saveEditPending = async (application_id) => {
+    try {
+      setSavingEdit(true);
+      const response = await fetch(
+        `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "edit_student_details",
+            application_id,
+            ...editFormPending,
+          }),
+        }
+      );
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Update local state
+        setPendingStudents((prev) =>
+          prev.map((s) =>
+            s.application_id === application_id
+              ? { ...s, ...editFormPending }
+              : s
+          )
+        );
+        setEditingPending(null);
+        alert("Details saved successfully. You can now approve.");
+      } else {
+        alert(data.error || "Failed to save details");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("Failed to save details");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const approvePendingStudent = async (student) => {
+    if (isLocked) return;
+    
+    // If editing, prevent approval
+    if (editingPending === student.application_id) {
+      alert("Please save your changes before approving");
+      return;
+    }
+
+    if (!confirm(`Approve ${student.full_name}?`)) return;
+
+    try {
+      setProcessingAction(true);
+      const response = await fetch(
+        `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "approve_student",
+            application_id: student.application_id,
+            participating_events: [],
+            accompanying_events: [],
+          }),
+        }
+      );
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Remove from pending
+        setPendingStudents((prev) =>
+          prev.filter((s) => s.application_id !== student.application_id)
+        );
+        
+        // Reset approved loaded flag to force refresh
+        setApprovedLoaded(false);
+        if (showApprovedSection) {
+          await fetchApprovedStudents();
+        }
+        
+        setExpandedPending(null);
         alert("Student approved successfully");
-        fetchData();
-        setOpenId(null);
       } else {
         alert(data.error || "Approval failed");
       }
     } catch (error) {
       console.error("Approve error:", error);
       alert("Failed to approve student");
+    } finally {
+      setProcessingAction(false);
     }
   };
 
-  const handleReject = (s) => {
+  const rejectPendingStudent = (student) => {
     if (isLocked) return;
-    setSelectedStudentId(s.id);
+    setRejectTarget({ type: "pending", data: student });
     setShowRejectModal(true);
   };
 
+  // ============================================================================
+  // APPROVED SECTION HANDLERS
+  // ============================================================================
+  
+  const toggleApprovedSection = async () => {
+    const newState = !showApprovedSection;
+    setShowApprovedSection(newState);
+    if (newState && !approvedLoaded) {
+      await fetchApprovedStudents();
+    }
+  };
+
+  const handleApprovedClick = (id) => {
+    if (isLocked) return;
+    setExpandedApproved(expandedApproved === id ? null : id);
+    setEditingApproved(null);
+  };
+
+  const startEditApproved = (student) => {
+    if (isLocked) return;
+    setEditingApproved(student.student_id);
+    setEditFormApproved({
+      full_name: student.full_name,
+      email: student.email,
+      phone: student.phone,
+      gender: student.gender,
+      blood_group: student.blood_group,
+      address: student.address,
+      department: student.department,
+      year_of_study: student.year_of_study,
+      semester: student.semester,
+    });
+  };
+
+  const cancelEditApproved = () => {
+    setEditingApproved(null);
+    setEditFormApproved({});
+  };
+
+  const saveEditApproved = async (student_id) => {
+    try {
+      setSavingEdit(true);
+      const response = await fetch(
+        `https://dashteam10.netlify.app/.netlify/functions/approved-students`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "edit_approved_student_details",
+            student_id,
+            ...editFormApproved,
+          }),
+        }
+      );
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Update local state
+        setApprovedStudents((prev) =>
+          prev.map((s) =>
+            s.student_id === student_id ? { ...s, ...editFormApproved } : s
+          )
+        );
+        setEditingApproved(null);
+        alert("Details saved successfully");
+      } else {
+        alert(data.error || "Failed to save details");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("Failed to save details");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const moveApprovedToRejected = (student) => {
+    if (isLocked) return;
+    setRejectTarget({ type: "approved", data: student });
+    setShowRejectModal(true);
+  };
+
+  // ============================================================================
+  // REJECTED SECTION HANDLERS
+  // ============================================================================
+  
+  const toggleRejectedSection = async () => {
+    const newState = !showRejectedSection;
+    setShowRejectedSection(newState);
+    if (newState && !rejectedLoaded) {
+      await fetchRejectedStudents();
+    }
+  };
+
+  // ============================================================================
+  // REJECTION MODAL
+  // ============================================================================
+  
   const confirmReject = async () => {
     if (!rejectionReason.trim()) {
       alert("Please provide a rejection reason");
@@ -269,48 +438,278 @@ export default function ApproveReject() {
     }
 
     try {
-      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/review-applications`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "reject_student",
-          application_id: selectedStudentId,
-          rejection_reason: rejectionReason,
-        }),
-      });
+      setProcessingAction(true);
 
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
+      if (rejectTarget.type === "pending") {
+        const response = await fetch(
+          `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              action: "reject_student",
+              application_id: rejectTarget.data.application_id,
+              rejection_reason: rejectionReason,
+            }),
+          }
+        );
 
-      const data = await response.json();
+        if (response.status === 401) {
+          handleSessionExpired();
+          return;
+        }
 
-      if (data.success) {
-        alert("Student rejected successfully");
-        fetchData();
-        setShowRejectModal(false);
-        setRejectionReason("");
-        setSelectedStudentId(null);
-      } else {
-        alert(data.error || "Rejection failed");
+        const data = await response.json();
+        if (data.success) {
+          // Remove from pending
+          setPendingStudents((prev) =>
+            prev.filter(
+              (s) => s.application_id !== rejectTarget.data.application_id
+            )
+          );
+          
+          // Reset rejected loaded flag
+          setRejectedLoaded(false);
+          if (showRejectedSection) {
+            await fetchRejectedStudents();
+          }
+          
+          closeRejectModal();
+          alert("Student rejected successfully");
+        } else {
+          alert(data.error || "Rejection failed");
+        }
+      } else if (rejectTarget.type === "approved") {
+        const response = await fetch(
+          `https://dashteam10.netlify.app/.netlify/functions/approved-students`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              action: "move_to_rejected",
+              student_id: rejectTarget.data.student_id,
+              rejection_reason: rejectionReason,
+            }),
+          }
+        );
+
+        if (response.status === 401) {
+          handleSessionExpired();
+          return;
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          // Remove from approved
+          setApprovedStudents((prev) =>
+            prev.filter((s) => s.student_id !== rejectTarget.data.student_id)
+          );
+          
+          // Reset rejected loaded flag
+          setRejectedLoaded(false);
+          if (showRejectedSection) {
+            await fetchRejectedStudents();
+          }
+          
+          closeRejectModal();
+          alert("Student moved to rejected successfully");
+        } else {
+          alert(data.error || "Failed to move student");
+        }
       }
     } catch (error) {
       console.error("Reject error:", error);
-      alert("Failed to reject student");
+      alert("Failed to process rejection");
+    } finally {
+      setProcessingAction(false);
     }
   };
+
+  const closeRejectModal = () => {
+    setShowRejectModal(false);
+    setRejectTarget(null);
+    setRejectionReason("");
+  };
+
+  // ============================================================================
+  // RENDER HELPERS
+  // ============================================================================
+  
+  const renderStudentDetails = (student, isEditing, editForm, setEditForm) => (
+    <div className="student-details">
+      <div className="detail-row">
+        <label>Full Name:</label>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editForm.full_name}
+            onChange={(e) =>
+              setEditForm({ ...editForm, full_name: e.target.value })
+            }
+            disabled={savingEdit}
+          />
+        ) : (
+          <span>{student.full_name}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>USN:</label>
+        <span>{student.usn}</span>
+      </div>
+
+      <div className="detail-row">
+        <label>Email:</label>
+        {isEditing ? (
+          <input
+            type="email"
+            value={editForm.email}
+            onChange={(e) =>
+              setEditForm({ ...editForm, email: e.target.value })
+            }
+            disabled={savingEdit}
+          />
+        ) : (
+          <span>{student.email}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>Phone:</label>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editForm.phone}
+            onChange={(e) =>
+              setEditForm({ ...editForm, phone: e.target.value })
+            }
+            disabled={savingEdit}
+          />
+        ) : (
+          <span>{student.phone}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>Gender:</label>
+        {isEditing ? (
+          <select
+            value={editForm.gender}
+            onChange={(e) =>
+              setEditForm({ ...editForm, gender: e.target.value })
+            }
+            disabled={savingEdit}
+          >
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        ) : (
+          <span>{student.gender}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>Blood Group:</label>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editForm.blood_group}
+            onChange={(e) =>
+              setEditForm({ ...editForm, blood_group: e.target.value })
+            }
+            disabled={savingEdit}
+          />
+        ) : (
+          <span>{student.blood_group}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>Address:</label>
+        {isEditing ? (
+          <textarea
+            value={editForm.address}
+            onChange={(e) =>
+              setEditForm({ ...editForm, address: e.target.value })
+            }
+            disabled={savingEdit}
+            rows="2"
+          />
+        ) : (
+          <span>{student.address}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>Department:</label>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editForm.department}
+            onChange={(e) =>
+              setEditForm({ ...editForm, department: e.target.value })
+            }
+            disabled={savingEdit}
+          />
+        ) : (
+          <span>{student.department}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>Year of Study:</label>
+        {isEditing ? (
+          <input
+            type="number"
+            value={editForm.year_of_study}
+            onChange={(e) =>
+              setEditForm({
+                ...editForm,
+                year_of_study: parseInt(e.target.value),
+              })
+            }
+            disabled={savingEdit}
+            min="1"
+            max="4"
+          />
+        ) : (
+          <span>{student.year_of_study}</span>
+        )}
+      </div>
+
+      <div className="detail-row">
+        <label>Semester:</label>
+        {isEditing ? (
+          <input
+            type="number"
+            value={editForm.semester}
+            onChange={(e) =>
+              setEditForm({ ...editForm, semester: parseInt(e.target.value) })
+            }
+            disabled={savingEdit}
+            min="1"
+            max="8"
+          />
+        ) : (
+          <span>{student.semester}</span>
+        )}
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <h3>Loading applications...</h3>
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <h3>Loading approvals...</h3>
         </div>
       </Layout>
     );
@@ -318,126 +717,283 @@ export default function ApproveReject() {
 
   return (
     <Layout>
-      <div className="approval-container">
-        <h2>Approve Participants</h2>
-        <p className="subtitle">
-          VTU HABBA 2026 – {role === "PRINCIPAL" ? "Principal" : "Team Manager"} Panel
-        </p>
-
-        <div className="quota-banner">
-          <strong>College Quota:</strong> {quotaUsed} / 45
+      <div className="approvals-container">
+        <div className="approvals-header">
+          <h2>Student Approvals</h2>
+          <p className="subtitle">
+            VTU HABBA 2026 — {role === "PRINCIPAL" ? "Principal" : "Team Manager"} Panel
+          </p>
+          {isLocked && (
+            <div className="lock-banner">
+              🔒 Final approval submitted. All actions are locked (read-only).
+            </div>
+          )}
         </div>
 
-        {students.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <p>No pending applications</p>
+        {/* ============================================================================ */}
+        {/* SECTION 1: PENDING APPROVALS */}
+        {/* ============================================================================ */}
+        <div className="section pending-section">
+          <h3 className="section-title">
+            Pending Approvals ({pendingStudents.length})
+          </h3>
+
+          {pendingStudents.length === 0 ? (
+            <p className="empty-message">No pending applications</p>
+          ) : (
+            pendingStudents.map((student) => (
+              <div key={student.application_id} className="student-card">
+                <div
+                  className="student-header"
+                  onClick={() => handlePendingClick(student.application_id)}
+                ><div className="student-name">{student.full_name}</div>
+                  <div className="student-usn">{student.usn}</div>
+                  <div className="expand-icon">
+                    {expandedPending === student.application_id ? "▼" : "▶"}
+                  </div>
+                </div>
+                {expandedPending === student.application_id && (
+              <div className="student-body">
+                {renderStudentDetails(
+                  student,
+                  editingPending === student.application_id,
+                  editFormPending,
+                  setEditFormPending
+                )}
+
+                <div className="action-buttons">
+                  {!isLocked && (
+                    <>
+                      {editingPending === student.application_id ? (
+                        <>
+                          <button
+                            className="btn-save"
+                            onClick={() =>
+                              saveEditPending(student.application_id)
+                            }
+                            disabled={savingEdit}
+                          >
+                            {savingEdit ? "Saving..." : "Save"}
+                          </button>
+                          <button
+                            className="btn-cancel"
+                            onClick={cancelEditPending}
+                            disabled={savingEdit}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="btn-edit"
+                            onClick={() => startEditPending(student)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn-approve"
+                            onClick={() => approvePendingStudent(student)}
+                            disabled={processingAction}
+                          >
+                            {processingAction ? "Approving..." : "Approve"}
+                          </button>
+                          <button
+                            className="btn-reject"
+                            onClick={() => rejectPendingStudent(student)}
+                            disabled={processingAction}
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          students.map((s) => (
-            <div key={s.id} className="student-card">
-              <div
-                className="student-row"
-                onClick={() => {
-                  if (isLocked) return;
-                  setOpenId(s.id);
-                }}
-              >
-                <div>
-                  <strong>{s.name}</strong>
-                  <div className="sub-text">{s.usn}</div>
-                  <div className="sub-text">{s.email}</div>
+        ))
+      )}
+    </div>
+
+    {/* ============================================================================ */}
+    {/* SECTION 2: APPROVED STUDENTS */}
+    {/* ============================================================================ */}
+    <div className="section approved-section">
+      <div
+        className="section-toggle"
+        onClick={toggleApprovedSection}
+      >
+        <h3 className="section-title">
+          Approved Students
+          {approvedLoaded && ` (${approvedStudents.length})`}
+        </h3>
+        <div className="toggle-icon">
+          {showApprovedSection ? "▼" : "▶"}
+        </div>
+      </div>
+
+      {showApprovedSection && (
+        <>
+          {!approvedLoaded ? (
+            <div className="loading-indicator">Loading approved students...</div>
+          ) : approvedStudents.length === 0 ? (
+            <p className="empty-message">No approved students yet</p>
+          ) : (
+            approvedStudents.map((student) => (
+              <div key={student.student_id} className="student-card">
+                <div
+                  className="student-header"
+                  onClick={() => handleApprovedClick(student.student_id)}
+                >
+                  <div className="student-name">{student.full_name}</div>
+                  <div className="student-usn">{student.usn}</div>
+                  <div className="expand-icon">
+                    {expandedApproved === student.student_id ? "▼" : "▶"}
+                  </div>
                 </div>
 
-                <div className={`status ${s.status.toLowerCase()}`}>{s.status}</div>
+                {expandedApproved === student.student_id && (
+                  <div className="student-body">
+                    {renderStudentDetails(
+                      student,
+                      editingApproved === student.student_id,
+                      editFormApproved,
+                      setEditFormApproved
+                    )}
 
-                {!isLocked && (
-                  <div className="actions" onClick={(e) => e.stopPropagation()}>
-                    <button className="approve" onClick={() => handleApprove(s)}>
-                      Approve
-                    </button>
-
-                    <button className="reject" onClick={() => handleReject(s)}>
-                      Reject
-                    </button>
+                    <div className="action-buttons">
+                      {!isLocked && (
+                        <>
+                          {editingApproved === student.student_id ? (
+                            <>
+                              <button
+                                className="btn-save"
+                                onClick={() =>
+                                  saveEditApproved(student.student_id)
+                                }
+                                disabled={savingEdit}
+                              >
+                                {savingEdit ? "Saving..." : "Save"}
+                              </button>
+                              <button
+                                className="btn-cancel"
+                                onClick={cancelEditApproved}
+                                disabled={savingEdit}
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                className="btn-edit"
+                                onClick={() => startEditApproved(student)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="btn-reject"
+                                onClick={() =>
+                                  moveApprovedToRejected(student)
+                                }
+                              >
+                                Move to Rejected
+                              </button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
+            ))
+          )}
+        </>
+      )}
+    </div>
 
-              {!isLocked && openId === s.id && (
-                <div className="event-panel">
-                  <p className="assign-title">Participating Events</p>
-
-                  {Object.entries(EVENT_CATEGORIES).map(([cat, eventNames]) => (
-                    <div key={cat} className="event-category">
-                      <h4>{cat}</h4>
-                      <div className="event-grid">
-                        {eventNames.map((ev) => {
-                          const limit = getEventLimit(ev);
-                          return (
-                            <label key={ev} className="event-option">
-                              <input
-                                type="checkbox"
-                                checked={s.assignedEvents.includes(ev)}
-                                onChange={() => toggleEvent(s.id, ev, "assignedEvents")}
-                              />
-                              {ev}
-                              {limit && (
-                                <small className="event-limit">
-                                  ({limit.current}/{limit.max})
-                                </small>
-                              )}
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-
-                  <p className="assign-title">Accompanying Events</p>
-
-                  {Object.entries(ACCOMPANYING_EVENT_CATEGORIES).map(([cat, eventNames]) => (
-                    <div key={cat} className="event-category">
-                      <h4>{cat}</h4>
-                      <div className="event-grid">
-                        {eventNames.map((ev) => (
-                          <label key={ev} className="event-option">
-                            <input
-                              type="checkbox"
-                              checked={s.accompanyingEvents.includes(ev)}
-                              onChange={() => toggleEvent(s.id, ev, "accompanyingEvents")}
-                            />
-                            {ev}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))
-        )}
+    {/* ============================================================================ */}
+    {/* SECTION 3: REJECTED STUDENTS */}
+    {/* ============================================================================ */}
+    <div className="section rejected-section">
+      <div
+        className="section-toggle"
+        onClick={toggleRejectedSection}
+      >
+        <h3 className="section-title">
+          Rejected Students
+          {rejectedLoaded && ` (${rejectedStudents.length})`}
+        </h3>
+        <div className="toggle-icon">
+          {showRejectedSection ? "▼" : "▶"}
+        </div>
       </div>
 
-      {showRejectModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Reject Student</h3>
-            <label>Rejection Reason</label>
-            <textarea
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
-              rows="4"
-              style={{ width: "100%", padding: "10px", marginTop: "10px" }}
-            />
-            <div className="modal-actions">
-              <button onClick={confirmReject}>Confirm Reject</button>
-              <button onClick={() => setShowRejectModal(false)}>Cancel</button>
+      {showRejectedSection && (
+        <>
+          {!rejectedLoaded ? (
+            <div className="loading-indicator">Loading rejected students...</div>
+          ) : rejectedStudents.length === 0 ? (
+            <p className="empty-message">No rejected students</p>
+          ) : (
+            <div className="rejected-table">
+              <div className="table-header">
+                <span>Name</span>
+                <span>USN</span>
+                <span>Reason</span>
+              </div>
+              {rejectedStudents.map((student) => (
+                <div key={student.student_id} className="table-row">
+                  <span>{student.full_name}</span>
+                  <span>{student.usn}</span>
+                  <span className="reason">
+                    {student.rejected_reason || "N/A"}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
-    </Layout>
-  );
+    </div>
+  </div>
+
+  {/* ============================================================================ */}
+  {/* REJECTION MODAL */}
+  {/* ============================================================================ */}
+  {showRejectModal && (
+    <div className="modal-overlay">
+      <div className="modal-card">
+        <h3>Reject Student</h3>
+        <p>Student: {rejectTarget?.data.full_name}</p>
+        <label>Rejection Reason</label>
+        <textarea
+          value={rejectionReason}
+          onChange={(e) => setRejectionReason(e.target.value)}
+          placeholder="Enter rejection reason..."
+          rows="4"
+          disabled={processingAction}
+        />
+        <div className="modal-actions">
+          <button
+            onClick={confirmReject}
+            disabled={processingAction}
+          >
+            {processingAction ? "Processing..." : "Confirm Reject"}
+          </button>
+          <button
+            onClick={closeRejectModal}
+            disabled={processingAction}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+</Layout>
+);
 }
