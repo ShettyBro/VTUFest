@@ -7,6 +7,9 @@ export default function Approvals() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
   const role = localStorage.getItem("vtufest_role");
+  
+  // Role-based access control
+  const isReadOnly = role === "PRINCIPAL";
 
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
@@ -227,13 +230,13 @@ export default function Approvals() {
   // ============================================================================
   
   const handlePendingClick = (id) => {
-    if (isLocked) return;
+    // Expansion allowed for both roles
     setExpandedPending(expandedPending === id ? null : id);
     setEditingPending(null);
   };
 
   const startEditPending = (student) => {
-    if (isLocked) return;
+    if (isReadOnly || isLocked) return;
     setEditingPending(student.application_id);
     setEditFormPending({
       full_name: student.full_name,
@@ -249,11 +252,14 @@ export default function Approvals() {
   };
 
   const cancelEditPending = () => {
+    if (isReadOnly) return;
     setEditingPending(null);
     setEditFormPending({});
   };
 
   const saveEditPending = async (application_id) => {
+    if (isReadOnly) return;
+    
     try {
       setSavingEdit(true);
       const response = await fetch(
@@ -301,7 +307,7 @@ export default function Approvals() {
   };
 
   const approvePendingStudent = async (student) => {
-    if (isLocked) return;
+    if (isReadOnly || isLocked) return;
     
     // Check quota before approval
     if (quota.remaining <= 0) {
@@ -375,7 +381,7 @@ export default function Approvals() {
   };
 
   const rejectPendingStudent = (student) => {
-    if (isLocked) return;
+    if (isReadOnly || isLocked) return;
     setRejectTarget({ type: "pending", data: student });
     setShowRejectModal(true);
   };
@@ -393,13 +399,13 @@ export default function Approvals() {
   };
 
   const handleApprovedClick = (id) => {
-    if (isLocked) return;
+    // Expansion allowed for both roles
     setExpandedApproved(expandedApproved === id ? null : id);
     setEditingApproved(null);
   };
 
   const startEditApproved = (student) => {
-    if (isLocked) return;
+    if (isReadOnly || isLocked) return;
     setEditingApproved(student.student_id);
     setEditFormApproved({
       full_name: student.full_name,
@@ -415,11 +421,14 @@ export default function Approvals() {
   };
 
   const cancelEditApproved = () => {
+    if (isReadOnly) return;
     setEditingApproved(null);
     setEditFormApproved({});
   };
 
   const saveEditApproved = async (student_id) => {
+    if (isReadOnly) return;
+    
     try {
       setSavingEdit(true);
       const response = await fetch(
@@ -465,7 +474,7 @@ export default function Approvals() {
   };
 
   const moveApprovedToRejected = (student) => {
-    if (isLocked) return;
+    if (isReadOnly || isLocked) return;
     setRejectTarget({ type: "approved", data: student });
     setShowRejectModal(true);
   };
@@ -487,6 +496,8 @@ export default function Approvals() {
   // ============================================================================
   
   const confirmReject = async () => {
+    if (isReadOnly) return;
+    
     if (!rejectionReason.trim()) {
       alert("Please provide a rejection reason");
       return;
@@ -771,7 +782,7 @@ export default function Approvals() {
       <Layout>
         <div className="loading-container">
           <div className="spinner"></div>
-          <h3>Loading approvals...</h3>
+          <h3>Loading Applications...</h3>
         </div>
       </Layout>
     );
@@ -784,10 +795,26 @@ export default function Approvals() {
     <Layout>
       <div className="approvals-container">
         <div className="approvals-header">
-          <h2>Student Approvals</h2>
+          <h2>Student Applications</h2>
           <p className="subtitle">
-            VTU HABBA 2026 — {role === "PRINCIPAL" ? "Principal" : "Team Manager"} Panel
+            VTU HABBA 2026
           </p>
+          
+          {/* Read-Only Banner for Principal */}
+          {isReadOnly && (
+            <div className="readonly-banner" style={{
+              padding: "12px 20px",
+              margin: "15px 0",
+              backgroundColor: "#fef3c7",
+              border: "2px solid #f59e0b",
+              borderRadius: "8px",
+              color: "#92400e",
+              fontWeight: "600",
+              textAlign: "center"
+            }}>
+              👁️ VIEW ONLY MODE - Principal access (no edit/approve/reject permissions)
+            </div>
+          )}
           
           {/* Quota Display */}
           <div className="quota-info" style={{
@@ -803,7 +830,7 @@ export default function Approvals() {
             College Quota: {quota.used} / {quota.max} — Remaining: {quota.remaining}
           </div>
           
-          {isQuotaExhausted && (
+          {isQuotaExhausted && !isReadOnly && (
             <div className="quota-warning" style={{
               padding: "12px 20px",
               margin: "10px 0",
@@ -858,7 +885,7 @@ export default function Approvals() {
                     )}
 
                     <div className="action-buttons">
-                      {!isLocked && (
+                      {!isLocked && !isReadOnly && (
                         <>
                           {editingPending === student.application_id ? (
                             <>
@@ -961,7 +988,7 @@ export default function Approvals() {
                         )}
 
                         <div className="action-buttons">
-                          {!isLocked && (
+                          {!isLocked && !isReadOnly && (
                             <>
                               {editingApproved === student.student_id ? (
                                 <>
@@ -1061,7 +1088,7 @@ export default function Approvals() {
       {/* ============================================================================ */}
       {/* REJECTION MODAL */}
       {/* ============================================================================ */}
-      {showRejectModal && (
+      {showRejectModal && !isReadOnly && (
         <div className="modal-overlay">
           <div className="modal-card">
             <h3>Reject Student</h3>
