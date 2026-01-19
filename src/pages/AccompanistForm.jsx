@@ -9,8 +9,6 @@ const emptyAccompanist = {
   name: "",
   mobile: "",
   email: "",
-  event: "",
-  participant: "",
   type: "student",
   idProof: null,
   photo: null,
@@ -24,7 +22,6 @@ export default function AccompanistForm() {
   const [current, setCurrent] = useState(emptyAccompanist);
   const [accompanists, setAccompanists] = useState([]);
   const [quotaUsed, setQuotaUsed] = useState(0);
-  const [events, setEvents] = useState([]);
   const [uploadingSession, setUploadingSession] = useState(null);
   const [uploadProgress, setUploadProgress] = useState({});
 
@@ -61,20 +58,6 @@ export default function AccompanistForm() {
         setQuotaUsed(dashData.data.stats.quota_used);
       }
 
-      // Fetch events
-      const eventsResponse = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/get-events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      const eventsData = await eventsResponse.json();
-      if (eventsData.success) {
-        setEvents(eventsData.events.filter((e) => e.max_accompanists_per_college > 0));
-      }
-
       // Fetch existing accompanists
       const accResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
         method: "POST",
@@ -108,8 +91,8 @@ export default function AccompanistForm() {
   };
 
   const validateEntry = () => {
-    if (!current.name || !current.mobile || !current.event || !current.participant) {
-      alert("All fields are mandatory.");
+    if (!current.name || !current.mobile) {
+      alert("Name and Mobile are mandatory.");
       return false;
     }
 
@@ -154,12 +137,6 @@ export default function AccompanistForm() {
     for (const acc of finalList) {
       try {
         // Step 1: Init session
-        const selectedEvent = events.find((e) => e.event_name === acc.event);
-        if (!selectedEvent) {
-          alert(`Event "${acc.event}" not found`);
-          continue;
-        }
-
         const initResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
           method: "POST",
           headers: {
@@ -173,7 +150,6 @@ export default function AccompanistForm() {
             email: acc.email || null,
             accompanist_type: acc.type,
             student_id: null,
-            assigned_events: [selectedEvent.event_id],
           }),
         });
 
@@ -244,7 +220,7 @@ export default function AccompanistForm() {
       }
     }
 
-    alert(`Submitted Successfully\nTotal: ${quotaUsed + finalList.length} / 45`);
+    alert(`Submitted Successfully\nTotal: ${quotaUsed + finalList.length} / 45\n\nNote: Assign events to these accompanists in the "Assign Events" section.`);
 
     setAccompanists([]);
     setCurrent(emptyAccompanist);
@@ -267,8 +243,11 @@ export default function AccompanistForm() {
     <Layout>
       <div className="accompanist-container">
         <div className="accompanist-card">
-          <h2>Add Accompanist</h2>
+          <h2>Register Accompanist</h2>
           <p className="subtitle">VTU HABBA 2026 – Accompanist Registration</p>
+          <p className="info-text">
+            Register accompanists here. Event assignment will be done separately in the "Assign Events" section.
+          </p>
 
           <div className="capacity-info">
             <span>
@@ -302,31 +281,8 @@ export default function AccompanistForm() {
               </div>
 
               <div>
-                <label>Email</label>
+                <label>Email (Optional)</label>
                 <input name="email" value={current.email} onChange={handleChange} />
-              </div>
-
-              <div>
-                <label>Event Assigned</label>
-                <select name="event" value={current.event} onChange={handleChange} required>
-                  <option value="">Select Event</option>
-                  {events.map((e) => (
-                    <option key={e.event_id} value={e.event_name}>
-                      {e.event_name} ({e.current_accompanists}/{e.max_accompanists_per_college})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label>Accompanying (Participant / Team)</label>
-                <input
-                  name="participant"
-                  value={current.participant}
-                  onChange={handleChange}
-                  placeholder="Enter participant or team"
-                  required
-                />
               </div>
 
               <div>
@@ -377,11 +333,11 @@ export default function AccompanistForm() {
 
           {accompanists.length > 0 && (
             <div className="preview">
-              <h4>Added Accompanists</h4>
+              <h4>Added Accompanists (Pending Submission)</h4>
               <ul>
                 {accompanists.map((a, i) => (
                   <li key={i}>
-                    {a.name} – {a.event} – {a.type} – Accompanying: {a.participant}
+                    {a.name} – {a.mobile} – {a.type}
                   </li>
                 ))}
               </ul>
