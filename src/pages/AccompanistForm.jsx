@@ -114,7 +114,7 @@ export default function AccompanistForm() {
     if (accompanistsLoaded) return; // Already loaded
 
     try {
-      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const response = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -236,7 +236,7 @@ export default function AccompanistForm() {
       setSubmitting(true);
 
       // Call init_accompanist
-      const initResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const initResponse = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -328,7 +328,7 @@ export default function AccompanistForm() {
       setSubmitting(true);
 
       // Call finalize_accompanist
-      const finalizeResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const finalizeResponse = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -427,7 +427,7 @@ export default function AccompanistForm() {
     try {
       setSavingEdit(true);
 
-      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const response = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -480,7 +480,7 @@ export default function AccompanistForm() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const response = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
