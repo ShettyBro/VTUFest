@@ -97,7 +97,7 @@ export default function Sidebar({ role }) {
             <span className="label">Accommodation</span>
           </div>
 
-          {/* 💳 REGESTRATION (Label only changed) */}
+          
           <div
             className={`sidebar-item ${
               isActive("/fee-payment") ? "active" : ""
@@ -121,7 +121,7 @@ export default function Sidebar({ role }) {
                 <path d="M10.5 13.5h3" />
               </svg>
             </Icon>
-            <span className="label">Regestration</span>
+            <span className="label">Fees Payment</span>
           </div>
         </>
       )}
