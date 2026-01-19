@@ -4,6 +4,8 @@ import Layout from "../components/layout/layout";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import "../styles/PrincipalDashboard.css";
+import notificationsData from "../data/notifications.json";
+import eventsCalendarData from "../data/events-calendar.json";
 
 export default function PrincipalDashboard() {
   const navigate = useNavigate();
@@ -15,6 +17,22 @@ export default function PrincipalDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
+    const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
+
+  // Filter and sort priority 1 notifications by date (most recent first)
+  const priority1Notifications = notificationsData
+    .filter(n => n.priority === 1)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Filter and sort priority 2+ notifications (by priority first, then date)
+  const priority2PlusNotifications = notificationsData
+    .filter(n => n.priority >= 2)
+    .sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return a.priority - b.priority;
+      }
+      return new Date(b.date) - new Date(a.date);
+    });
 
   // Loading states for different actions
   const [assigningManager, setAssigningManager] = useState(false);
@@ -35,6 +53,19 @@ export default function PrincipalDashboard() {
     fetchDashboardData();
     checkLockStatus();
   }, []);
+
+   // Ticker animation for priority 1 notifications
+  useEffect(() => {
+    if (priority1Notifications.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentPriority1Index(prev => 
+        (prev + 1) % priority1Notifications.length
+      );
+    }, 20000); // 20 seconds per notification
+
+    return () => clearInterval(interval);
+  }, [priority1Notifications.length]);
 
   const fetchDashboardData = async () => {
     try {
@@ -232,6 +263,19 @@ export default function PrincipalDashboard() {
 
   return (
     <Layout>
+      {priority1Notifications.length > 0 && (
+        <div className="top-banner">
+           <div className="priority-ticker">
+            <span className="ticker-label">IMP Notification:</span>
+            <div className="ticker-wrapper">
+              <span className="ticker-text">
+                {priority1Notifications[currentPriority1Index]?.message}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-container">
         <div className="dashboard-header">
           <h2>Principal Dashboard</h2>

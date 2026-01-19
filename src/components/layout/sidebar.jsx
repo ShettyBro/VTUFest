@@ -82,36 +82,7 @@ export default function Sidebar({ role }) {
             <span className="label">Approve / Reject</span>
           </div>
 
-          {/* Approved
-          <div
-            className={`sidebar-item ${
-              isActive("/approved-students") ? "active" : ""
-            }`}
-            onClick={() => navigate("/approved-students")}
-          >
-            <Icon>
-              <svg viewBox="0 0 24 24">
-                <path d="M5 13l4 4L19 7" />
-              </svg>
-            </Icon>
-            <span className="label">Approved Students</span>
-          </div> */}
-
-          {/* Rejected
-          <div
-            className={`sidebar-item ${
-              isActive("/rejected-students") ? "active" : ""
-            }`}
-            onClick={() => navigate("/rejected-students")}
-          >
-            <Icon>
-              <svg viewBox="0 0 24 24">
-                <path d="M6 6l12 12M6 18L18 6" />
-              </svg>
-            </Icon>
-            <span className="label">Rejected Students</span>
-          </div> */}
-
+        
           {/* Accompanist */}
           <div
             className={`sidebar-item ${

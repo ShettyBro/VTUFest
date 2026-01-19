@@ -593,9 +593,7 @@ export default function AccompanistForm() {
         <div className="accompanist-card">
           <h2>Register Accompanist</h2>
           <p className="subtitle">VTU HABBA 2026 – Accompanist Registration</p>
-          <p className="info-text">
-            Register accompanists here. Event assignment will be done separately in the "Assign Events" section.
-          </p>
+          
 
           <div className="capacity-info">
             <span>
