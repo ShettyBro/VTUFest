@@ -39,6 +39,12 @@ export default function AssignEvents() {
   const token = localStorage.getItem("vtufest_token");
   const role = localStorage.getItem("vtufest_role");
 
+  // ============================================================================
+  // FIX #1: ROLE CHECK BUG - Support MANAGER, manager, and TEAM_MANAGER
+  // ============================================================================
+  const isManager = role === "MANAGER" || role === "manager" || role === "TEAM_MANAGER";
+  const isPrincipal = role === "PRINCIPAL" || role === "principal";
+
   const [loading, setLoading] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [expandedEvent, setExpandedEvent] = useState(null);
@@ -151,7 +157,11 @@ export default function AssignEvents() {
     setModalEventSlug(event_slug);
     setModalType(type);
     setSelectedPersonId("");
-    setSelectedPersonType("student");
+    // ============================================================================
+    // FIX #2: PARTICIPANT vs ACCOMPANIST RULES
+    // Participants MUST be students only, accompanists can be students OR accompanists
+    // ============================================================================
+    setSelectedPersonType(type === "participant" ? "student" : "student");
     setShowAddModal(true);
   };
 
@@ -294,7 +304,7 @@ export default function AssignEvents() {
         <div className="assign-events-header">
           <h2>Assign Events</h2>
           <p className="subtitle">
-            VTU HABBA 2026 — {role === "PRINCIPAL" ? "Principal" : "Team Manager"} Panel
+            VTU HABBA 2026 — {isPrincipal ? "Principal" : "Team Manager"} Panel
           </p>
           {isLocked && (
             <div className="lock-banner">
@@ -332,7 +342,8 @@ export default function AssignEvents() {
                             <span className="counter">
                               {eventData[event.slug].participants.length} assigned
                             </span>
-                            {role === "MANAGER" && !isLocked && (
+                            {/* FIX #4: ADD / REMOVE VISIBILITY - Use isManager instead of role === "MANAGER" */}
+                            {isManager && !isLocked && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "participant")}
@@ -357,7 +368,8 @@ export default function AssignEvents() {
                                       {p.person_type === "student" ? "Student" : "Accompanist"}
                                     </div>
                                   </div>
-                                  {role === "MANAGER" && !isLocked && (
+                                  {/* FIX #4: Use isManager instead of role === "MANAGER" */}
+                                  {isManager && !isLocked && (
                                     <button
                                       className="remove-btn"
                                       onClick={() =>
@@ -381,7 +393,8 @@ export default function AssignEvents() {
                             <span className="counter">
                               {eventData[event.slug].accompanists.length} assigned
                             </span>
-                            {role === "MANAGER" && !isLocked && (
+                            {/* FIX #4: Use isManager instead of role === "MANAGER" */}
+                            {isManager && !isLocked && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "accompanist")}
@@ -406,7 +419,8 @@ export default function AssignEvents() {
                                       {a.person_type === "student" ? "Student" : "Accompanist"}
                                     </div>
                                   </div>
-                                  {role === "MANAGER" && !isLocked && (
+                                  {/* FIX #4: Use isManager instead of role === "MANAGER" */}
+                                  {isManager && !isLocked && (
                                     <button
                                       className="remove-btn"
                                       onClick={() =>
@@ -444,17 +458,24 @@ export default function AssignEvents() {
             </h3>
 
             <label>Person Type</label>
-            <select
-              value={selectedPersonType}
-              onChange={(e) => {
-                setSelectedPersonType(e.target.value);
-                setSelectedPersonId("");
-              }}
-              disabled={actionLoading}
-            >
-              <option value="student">Student</option>
-              <option value="accompanist">Accompanist</option>
-            </select>
+            {/* FIX #2: Lock person_type to "student" for participants */}
+            {modalType === "participant" ? (
+              <select value="student" disabled>
+                <option value="student">Student</option>
+              </select>
+            ) : (
+              <select
+                value={selectedPersonType}
+                onChange={(e) => {
+                  setSelectedPersonType(e.target.value);
+                  setSelectedPersonId("");
+                }}
+                disabled={actionLoading}
+              >
+                <option value="student">Student</option>
+                <option value="accompanist">Accompanist</option>
+              </select>
+            )}
 
             <label>Select Person</label>
             <select
