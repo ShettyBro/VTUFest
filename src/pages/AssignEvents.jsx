@@ -97,7 +97,7 @@ export default function AssignEvents() {
       setLoading(true);
 
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/assign-events`,
+        `https://teanmdash30.netlify.app/.netlify/functions/assign-events`,
         {
           method: "POST",
           headers: {
@@ -173,7 +173,7 @@ export default function AssignEvents() {
       setActionLoading(true);
 
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/assign-events`,
+        `https://teanmdash30.netlify.app/.netlify/functions/assign-events`,
         {
           method: "POST",
           headers: {
@@ -223,7 +223,7 @@ export default function AssignEvents() {
       setActionLoading(true);
 
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/assign-events`,
+        `https://teanmdash30.netlify.app/.netlify/functions/assign-events`,
         {
           method: "POST",
           headers: {
