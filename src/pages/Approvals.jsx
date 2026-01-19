@@ -9,7 +9,7 @@ export default function Approvals() {
   const role = localStorage.getItem("vtufest_role");
   
   // Role-based access control
-  const isReadOnly = role === "PRINCIPAL";
+  const isReadOnly = role === "PRINCIPAL" || role === "principal";
 
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
