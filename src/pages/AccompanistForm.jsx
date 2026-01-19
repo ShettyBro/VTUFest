@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/accompanist.css";
+import "../styles/approvals.css";
 
 const API_BASE_URL = "https://teamdash20.netlify.app/.netlify/functions";
 
@@ -114,7 +115,7 @@ export default function AccompanistForm() {
     if (accompanistsLoaded) return; // Already loaded
 
     try {
-      const response = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
+      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -236,7 +237,7 @@ export default function AccompanistForm() {
       setSubmitting(true);
 
       // Call init_accompanist
-      const initResponse = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
+      const initResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -328,7 +329,7 @@ export default function AccompanistForm() {
       setSubmitting(true);
 
       // Call finalize_accompanist
-      const finalizeResponse = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
+      const finalizeResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -427,7 +428,7 @@ export default function AccompanistForm() {
     try {
       setSavingEdit(true);
 
-      const response = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
+      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -480,7 +481,7 @@ export default function AccompanistForm() {
     }
 
     try {
-      const response = await fetch(`https://teamdash20.netlify.app/.netlify/functions/manage-accompanists`, {
+      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -517,57 +518,58 @@ export default function AccompanistForm() {
     }
   };
 
+  // ============================================================================
+  // RENDER ACCOMPANIST DETAILS
+  // CRITICAL: Use same structure as Approvals.jsx renderStudentDetails
+  // ============================================================================
   const renderAccompanistDetails = (accompanist, isEditing, form, setForm) => {
     return (
-      <div className="details-grid">
-        <div className="detail-item">
-          <label>Full Name</label>
+      <div className="student-details">
+        <div className="detail-row">
+          <label>Full Name:</label>
           {isEditing ? (
             <input
+              type="text"
               value={form.full_name}
               onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              disabled={savingEdit}
             />
           ) : (
             <span>{accompanist.full_name}</span>
           )}
         </div>
 
-        <div className="detail-item">
-          <label>Phone</label>
+        <div className="detail-row">
+          <label>Phone:</label>
           {isEditing ? (
             <input
+              type="text"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              disabled={savingEdit}
             />
           ) : (
             <span>{accompanist.phone}</span>
           )}
         </div>
 
-        <div className="detail-item">
-          <label>Email</label>
+        <div className="detail-row">
+          <label>Email:</label>
           {isEditing ? (
             <input
+              type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              disabled={savingEdit}
             />
           ) : (
             <span>{accompanist.email || "N/A"}</span>
           )}
         </div>
 
-        <div className="detail-item">
-          <label>Type</label>
+        <div className="detail-row">
+          <label>Type:</label>
           <span>{accompanist.accompanist_type}</span>
-        </div>
-
-        <div className="detail-item">
-          <label>Assigned Events</label>
-          <span>
-            {accompanist.assigned_events && accompanist.assigned_events.length > 0
-              ? accompanist.assigned_events.map((e) => e.event_name).join(", ")
-              : "None"}
-          </span>
         </div>
       </div>
     );
@@ -612,7 +614,8 @@ export default function AccompanistForm() {
           </div>
 
           {/* SECTION 2: ADDED ACCOMPANISTS (LAZY LOAD) */}
-          <div className="accompanists-section">
+          {/* CRITICAL: Use same structure as Approvals.jsx approved students section */}
+          <div className="section">
             <div className="section-toggle" onClick={toggleAccompanistsList}>
               <h3 className="section-title">
                 Added Accompanists
@@ -629,20 +632,20 @@ export default function AccompanistForm() {
                   <p className="empty-message">No accompanists added yet</p>
                 ) : (
                   accompanists.map((accompanist) => (
-                    <div key={accompanist.accompanist_id} className="accompanist-card-item">
+                    <div key={accompanist.accompanist_id} className="student-card">
                       <div
-                        className="accompanist-header"
+                        className="student-header"
                         onClick={() => handleAccompanistClick(accompanist.accompanist_id)}
                       >
-                        <div className="accompanist-name">{accompanist.full_name}</div>
-                        <div className="accompanist-phone">{accompanist.phone}</div>
+                        <div className="student-name">{accompanist.full_name}</div>
+                        <div className="student-usn">{accompanist.phone}</div>
                         <div className="expand-icon">
                           {expandedAccompanist === accompanist.accompanist_id ? "▼" : "▶"}
                         </div>
                       </div>
 
                       {expandedAccompanist === accompanist.accompanist_id && (
-                        <div className="accompanist-body">
+                        <div className="student-body">
                           {renderAccompanistDetails(
                             accompanist,
                             editingAccompanist === accompanist.accompanist_id,
@@ -670,7 +673,7 @@ export default function AccompanistForm() {
                                   Edit
                                 </button>
                                 <button
-                                  className="btn-remove"
+                                  className="btn-reject"
                                   onClick={() => removeAccompanist(accompanist.accompanist_id)}
                                 >
                                   Remove
