@@ -316,8 +316,8 @@ export default function Accommodation() {
             rows="4"
           />
 
-          <div className="consent-section">
-            <label className="consent-checkbox">
+          <div className="consent-box">
+            <label className="consent-row">
               <input
                 type="checkbox"
                 checked={consentChecked}
