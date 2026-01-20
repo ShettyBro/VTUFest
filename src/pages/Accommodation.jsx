@@ -319,13 +319,11 @@ export default function Accommodation() {
           {/* MANDATORY CONSENT CHECKBOX */}
           <div className="consent-section">
             <label className="consent-checkbox">
-              <span>
                 <input
                 type="checkbox"
                 checked={consentChecked}
                 onChange={(e) => setConsentChecked(e.target.checked)}
               /> I understand that this accommodation application can be submitted only once and cannot be edited or re-applied.
-              </span>
             </label>
           </div>
 
