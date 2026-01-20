@@ -159,3 +159,39 @@ button:hover {
   user-select: none;
 }
 
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #ff9933;
+  box-shadow: 0 0 0 2px rgba(255, 153, 51, 0.25);
+}
+
+button:disabled {
+  background: #9ca3af;      /* gray */
+  cursor: not-allowed;
+  opacity: 0.75;
+  transform: none;
+}
+
+button:disabled:hover {
+  background: #9ca3af;
+}
+button:disabled {
+  background: #9ca3af;      /* gray */
+  cursor: not-allowed;
+  opacity: 0.75;
+  transform: none;
+}
+
+button:disabled:hover {
+  background: #9ca3af;
+}

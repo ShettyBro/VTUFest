@@ -313,7 +313,7 @@ export default function Accommodation() {
             placeholder="Any special accommodation requirements..."
             value={form.specialRequirements}
             onChange={handleChange}
-            rows="4"
+            rows="5"
           />
 
           <div className="consent-box">
@@ -334,7 +334,7 @@ export default function Accommodation() {
           <button
             type="submit"
             disabled={!consentChecked}
-            className={!consentChecked ? 'button-disabled' : ''}
+            
           >
             Submit Accommodation
           </button>
