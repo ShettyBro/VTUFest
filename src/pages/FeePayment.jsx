@@ -6,18 +6,18 @@ import "../styles/FeePayment.css";
 const API_BASE_URL = "https://teamdash20.netlify.app/.netlify/functions";
 
 // ============================================================================
-// EVENT NAME MAPPING (Frontend Only)
+// EVENT NAME MAPPING (Frontend Only) - CORRECTED KEYS
 // ============================================================================
 const EVENT_NAMES = {
   'event_classical_vocal_solo': 'Classical Vocal Solo (Hindustani/Carnatic)',
   'event_light_vocal_solo': 'Light Vocal Solo (Indian)',
   'event_western_vocal_solo': 'Western Vocal Solo',
-  'event_classical_instrumental_percussion': 'Classical Instrumental Solo (Percussion Tala Vadya)',
-  'event_classical_instrumental_non_percussion': 'Classical Instrumental Solo (Non-Percussion Swara Vadya)',
+  'event_classical_instr_percussion': 'Classical Instrumental Solo (Percussion Tala Vadya)',           // ✅ FIXED
+  'event_classical_instr_non_percussion': 'Classical Instrumental Solo (Non-Percussion Swara Vadya)', // ✅ FIXED
   'event_folk_orchestra': 'Folk Orchestra',
   'event_group_song_indian': 'Group Song (Indian)',
   'event_group_song_western': 'Group Song (Western)',
-  'event_folk_tribal_dance': 'Folk / Tribal Dance',
+  'event_folk_dance': 'Folk / Tribal Dance',                                                          // ✅ FIXED
   'event_classical_dance_solo': 'Classical Dance Solo',
   'event_mime': 'Mime',
   'event_mimicry': 'Mimicry',
@@ -501,7 +501,7 @@ export default function FeePayment() {
               readOnly
               disabled
             />
-            <span>Participating less than 10 events – ₹8,000</span>
+            <span>Participating less than 10 events — ₹8,000</span>
           </label>
 
           <label className="checkbox">
@@ -511,7 +511,7 @@ export default function FeePayment() {
               readOnly
               disabled
             />
-            <span>Participating more than 10 events – ₹25,000</span>
+            <span>Participating more than 10 events — ₹25,000</span>
           </label>
         </div>
 
