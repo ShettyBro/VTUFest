@@ -603,13 +603,13 @@ export default function RegisterStudent() {
               marginBottom: "5px",
               fontWeight: "500"
             }}>
-              ⚠ Click on Upload Photo to proceed
+              ⚠ Upload Photo to proceed
             </p>
           )}
 
           <button
             type="submit"
-            title={!isUploadComplete ? "Click on Upload Photo to proceed" : ""}
+            title={!isUploadComplete ? "Upload Photo to proceed" : ""}
             disabled={
               timerExpired ||
               loading ||

@@ -800,7 +800,7 @@ export default function Approvals() {
             VTU HABBA 2026
           </p>
           
-          {/* Read-Only Banner for Principal */}
+          {/* Read-Only Banner for Principal
           {isReadOnly && (
             <div className="readonly-banner" style={{
               padding: "12px 20px",
@@ -812,9 +812,9 @@ export default function Approvals() {
               fontWeight: "600",
               textAlign: "center"
             }}>
-              👁️ VIEW ONLY MODE - Principal access (no edit/approve/reject permissions)
+              👁️ VIEW 
             </div>
-          )}
+          )} */}
           
           {/* Quota Display */}
           <div className="quota-info" style={{
