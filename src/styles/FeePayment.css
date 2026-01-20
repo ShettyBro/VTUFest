@@ -1,113 +1,6 @@
-/* Center the payment card */
-.fee-container {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 40px 20px;
-}
-
-/* Page title */
-.fee-container h2 {
-  text-align: center;
-  color: #0b3c5d;
-  margin-bottom: 20px;
-}
-
-/* Bank details card */
-.bank-card {
-  background: #0b3c5d;
-  color: white;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 25px;
-}
-
-.bank-card p {
-  margin: 8px 0;
-}
-
-/* Main white form */
-.fee-form {
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  text-align: left;
-}
-
-/* Participation options */
-.category-box {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-/* Checkbox rows */
-.checkbox {
-  display: flex;
-  align-items: center;          /* FIXED */
-  justify-content: flex-start;
-  gap: 10px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  width: 100%;
-}
-
-/* Form fields */
-.fee-section {
-  margin-bottom: 20px;
-}
-
-.fee-section label {
-  font-weight: 600;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* Inputs */
-.amount-input,
-.fee-section input[type="file"] {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-
-/* Remove number arrows */
-.amount-input::-webkit-outer-spin-button,
-.amount-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.amount-input {
-  -moz-appearance: textfield;
-}
-
-/* Remove checkbox focus glow */
-.checkbox:focus,
-.checkbox:focus-within,
-input[type="checkbox"]:focus {
-  outline: none;
-  box-shadow: none;
-}
-
-/* Submit button */
-.submit-btn {
-  width: 100%;
-  padding: 12px;
-  background: #0b3c5d;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.submit-btn:hover {
-  background: #09507a;
-}
-
-
-/* added by ShettyBro */
+/* ============================================================================
+   FEE PAYMENT - BASE STYLES
+   ============================================================================ */
 
 .fee-container {
   max-width: 800px;
@@ -122,6 +15,7 @@ input[type="checkbox"]:focus {
   color: #1a1a2e;
   margin-bottom: 20px;
   font-size: 28px;
+  text-align: center;
 }
 
 .fee-container h3 {
@@ -287,6 +181,7 @@ input[type="checkbox"]:focus {
   border-radius: 6px;
   font-size: 16px;
   transition: border-color 0.3s;
+  box-sizing: border-box;
 }
 
 .utr-input:focus {
@@ -514,6 +409,7 @@ input[type="checkbox"]:focus {
   border-radius: 6px;
   cursor: pointer;
   transition: border-color 0.3s;
+  box-sizing: border-box;
 }
 
 .file-upload-item input[type="file"]:hover:not(:disabled) {
@@ -554,12 +450,27 @@ input[type="checkbox"]:focus {
   margin: 15px 0;
 }
 
-.success-section {
-  background: #d4edda;
-  border: 2px solid #28a745;
-  padding: 20px;
-  border-radius: 8px;
-  margin: 15px 0;
+.upload-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.upload-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.upload-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .modal-actions {

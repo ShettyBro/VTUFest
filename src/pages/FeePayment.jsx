@@ -12,12 +12,12 @@ const EVENT_NAMES = {
   'event_classical_vocal_solo': 'Classical Vocal Solo (Hindustani/Carnatic)',
   'event_light_vocal_solo': 'Light Vocal Solo (Indian)',
   'event_western_vocal_solo': 'Western Vocal Solo',
-  'event_classical_instr_percussion': 'Classical Instrumental Solo (Percussion Tala Vadya)',           // ✅ FIXED
-  'event_classical_instr_non_percussion': 'Classical Instrumental Solo (Non-Percussion Swara Vadya)', // ✅ FIXED
+  'event_classical_instr_percussion': 'Classical Instrumental Solo (Percussion Tala Vadya)',
+  'event_classical_instr_non_percussion': 'Classical Instrumental Solo (Non-Percussion Swara Vadya)',
   'event_folk_orchestra': 'Folk Orchestra',
   'event_group_song_indian': 'Group Song (Indian)',
   'event_group_song_western': 'Group Song (Western)',
-  'event_folk_dance': 'Folk / Tribal Dance',                                                          // ✅ FIXED
+  'event_folk_dance': 'Folk / Tribal Dance',
   'event_classical_dance_solo': 'Classical Dance Solo',
   'event_mime': 'Mime',
   'event_mimicry': 'Mimicry',
@@ -55,10 +55,16 @@ export default function FeePayment() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadSession, setUploadSession] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState(""); // '', 'uploading', 'done', 'failed'
+  const [uploadStatus, setUploadStatus] = useState(""); // '', 'uploading', 'uploaded', 'failed'
   const [uploadMessage, setUploadMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Timer state
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
+
+  // Processing state for main button
+  const [initializing, setInitializing] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -125,6 +131,9 @@ export default function FeePayment() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // ============================================================================
+  // STEP 1: Initialize Upload Session (Called when "Upload Payment Proof" clicked)
+  // ============================================================================
   const openUploadModal = async () => {
     if (!utrNumber.trim()) {
       alert("Please enter UTR / Reference Number");
@@ -137,8 +146,7 @@ export default function FeePayment() {
     }
 
     try {
-      setUploadStatus("initializing");
-      setUploadMessage("Initializing upload session...");
+      setInitializing(true);
 
       const response = await fetch(`${API_BASE_URL}/payment`, {
         method: "POST",
@@ -164,7 +172,7 @@ export default function FeePayment() {
 
       if (!data.success) {
         alert(data.error || "Failed to initialize upload");
-        setUploadStatus("");
+        setInitializing(false);
         return;
       }
 
@@ -178,14 +186,18 @@ export default function FeePayment() {
       setTimer(remainingSeconds);
       setTimerExpired(false);
 
-      // Open modal
-      setShowUploadModal(true);
+      // Reset upload states
+      setUploadFile(null);
       setUploadStatus("");
       setUploadMessage("");
+
+      // Open modal
+      setShowUploadModal(true);
     } catch (error) {
       console.error("Init error:", error);
       alert("Failed to initialize upload");
-      setUploadStatus("");
+    } finally {
+      setInitializing(false);
     }
   };
 
@@ -197,6 +209,7 @@ export default function FeePayment() {
     setUploadMessage("");
     setTimer(null);
     setTimerExpired(false);
+    setSubmitting(false);
   };
 
   const handleFileSelect = (e) => {
@@ -217,8 +230,13 @@ export default function FeePayment() {
     }
 
     setUploadFile(file);
+    setUploadStatus(""); // Reset status when new file selected
+    setUploadMessage("");
   };
 
+  // ============================================================================
+  // STEP 2: Upload File to Azure Blob (ONLY uploads, does NOT finalize)
+  // ============================================================================
   const uploadToBlob = async () => {
     if (!uploadFile) {
       alert("Please select a file");
@@ -244,24 +262,26 @@ export default function FeePayment() {
         throw new Error(`Upload failed: ${response.status}`);
       }
 
-      setUploadStatus("done");
-      setUploadMessage("File uploaded successfully!");
-
-      // Auto-finalize after 1 second
-      setTimeout(() => {
-        finalizePayment();
-      }, 1000);
+      setUploadStatus("uploaded");
+      setUploadMessage("✓ File uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
       setUploadStatus("failed");
-      setUploadMessage("Upload failed. Please try again.");
+      setUploadMessage("✗ Upload failed. Please try again.");
     }
   };
 
-  const finalizePayment = async () => {
+  // ============================================================================
+  // STEP 3: Finalize Payment (Submit to DB)
+  // ============================================================================
+  const handleSubmit = async () => {
+    if (uploadStatus !== "uploaded") {
+      alert("Please upload the file first");
+      return;
+    }
+
     try {
-      setUploadStatus("finalizing");
-      setUploadMessage("Finalizing payment submission...");
+      setSubmitting(true);
 
       const response = await fetch(`${API_BASE_URL}/payment`, {
         method: "POST",
@@ -285,24 +305,20 @@ export default function FeePayment() {
       const data = await response.json();
 
       if (!data.success) {
-        alert(data.error || "Failed to finalize payment");
-        setUploadStatus("failed");
-        setUploadMessage("Finalization failed.");
+        alert(data.error || "Failed to submit payment");
+        setSubmitting(false);
         return;
       }
 
-      setUploadStatus("success");
-      setUploadMessage("Payment submitted successfully! Waiting for verification.");
+      alert("Payment submitted successfully! Waiting for verification.");
 
-      // Close modal and refresh after 2 seconds
-      setTimeout(() => {
-        closeUploadModal();
-        fetchPaymentInfo();
-      }, 2000);
+      // Close modal and refresh
+      closeUploadModal();
+      fetchPaymentInfo();
     } catch (error) {
-      console.error("Finalize error:", error);
-      setUploadStatus("failed");
-      setUploadMessage("Failed to finalize payment.");
+      console.error("Submit error:", error);
+      alert("Failed to submit payment");
+      setSubmitting(false);
     }
   };
 
@@ -446,7 +462,7 @@ export default function FeePayment() {
   }
 
   // CASE 3B: MANAGER - Can upload payment
-  const isUploadDisabled = !consentChecked || !utrNumber.trim();
+  const isUploadDisabled = !consentChecked || !utrNumber.trim() || initializing;
 
   return (
     <Layout>
@@ -549,7 +565,7 @@ export default function FeePayment() {
           onClick={openUploadModal}
           disabled={isUploadDisabled}
         >
-          Upload Payment Proof
+          {initializing ? "Processing..." : "Upload Payment Proof"}
         </button>
       </div>
 
@@ -580,7 +596,7 @@ export default function FeePayment() {
             )}
 
             {/* Upload Section */}
-            {!timerExpired && uploadStatus !== "success" && (
+            {!timerExpired && (
               <>
                 <div className="file-upload-item">
                   <label>Payment Proof (PNG/JPG/PDF, max 5MB) *</label>
@@ -588,54 +604,53 @@ export default function FeePayment() {
                     type="file"
                     accept="image/png,image/jpeg,image/jpg,application/pdf"
                     onChange={handleFileSelect}
-                    disabled={uploadStatus === "done" || uploadStatus === "uploading"}
+                    disabled={uploadStatus === "uploaded" || uploadStatus === "uploading"}
                   />
                 </div>
 
-                {uploadFile && uploadStatus !== "done" && (
+                {uploadFile && uploadStatus !== "uploaded" && (
                   <div className="file-info">
                     Selected: {uploadFile.name} ({(uploadFile.size / 1024).toFixed(2)} KB)
                   </div>
                 )}
 
-                {uploadStatus === "done" && (
-                  <p className="success-message">✓ File uploaded successfully</p>
-                )}
-
                 {uploadMessage && (
-                  <p className={uploadStatus === "failed" ? "error-message" : "info-message"}>
+                  <p className={uploadStatus === "failed" ? "error-message" : uploadStatus === "uploaded" ? "success-message" : "info-message"}>
                     {uploadMessage}
                   </p>
+                )}
+
+                {/* Upload File Button */}
+                {uploadStatus !== "uploaded" && (
+                  <button
+                    className="upload-btn"
+                    onClick={uploadToBlob}
+                    disabled={!uploadFile || uploadStatus === "uploading"}
+                    style={{ width: "100%", marginTop: "15px", marginBottom: "10px" }}
+                  >
+                    {uploadStatus === "uploading" ? "Uploading..." : "Upload File"}
+                  </button>
                 )}
               </>
             )}
 
-            {/* Success Message */}
-            {uploadStatus === "success" && (
-              <div className="success-section">
-                <p className="success-message">✓ {uploadMessage}</p>
-              </div>
-            )}
-
             {/* Action Buttons */}
             <div className="modal-actions">
-              {uploadStatus !== "success" && !timerExpired && (
+              {!timerExpired && (
                 <>
-                  {uploadStatus !== "done" ? (
-                    <button
-                      onClick={uploadToBlob}
-                      disabled={!uploadFile || uploadStatus === "uploading"}
-                    >
-                      {uploadStatus === "uploading" ? "Uploading..." : "Upload File"}
-                    </button>
-                  ) : null}
-                  <button onClick={closeUploadModal} disabled={uploadStatus === "uploading"}>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={uploadStatus !== "uploaded" || submitting}
+                  >
+                    {submitting ? "Submitting..." : "Submit Payment"}
+                  </button>
+                  <button onClick={closeUploadModal} disabled={submitting}>
                     Cancel
                   </button>
                 </>
               )}
 
-              {(uploadStatus === "success" || timerExpired) && (
+              {timerExpired && (
                 <button onClick={closeUploadModal}>Close</button>
               )}
             </div>
