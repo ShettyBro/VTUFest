@@ -217,7 +217,7 @@ export default function Accommodation() {
             )}
           </div>
 
-          <button onClick={() => navigate(userRole === 'PRINCIPAL' ? '/principal-dashboard' : '/team-dashboard')}>
+          <button onClick={() => navigate(userRole === 'PRINCIPAL' || userRole === 'principal' ? '/principal-dashboard' : '/team-dashboard')}>
             Back to Dashboard
           </button>
         </div>
@@ -227,7 +227,7 @@ export default function Accommodation() {
 
   // CASE A: No accommodation exists
   // PRINCIPAL: Always read-only (empty form)
-  if (userRole === 'PRINCIPAL') {
+  if (userRole === 'PRINCIPAL' || userRole === 'principal') {
     return (
       <Layout>
         <div className="form-container">
