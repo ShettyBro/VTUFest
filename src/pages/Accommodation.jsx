@@ -178,7 +178,7 @@ export default function Accommodation() {
           {/* Read-only form view */}
           <div className="form-readonly">
             <h3>Form Details (Read-Only)</h3>
-            
+
             <label>No. of Girls</label>
             <input
               type="number"
@@ -232,7 +232,7 @@ export default function Accommodation() {
       <Layout>
         <div className="form-container">
           <h2>Accommodation Details</h2>
-          
+
           <div className="info-message">
             <p>No accommodation request has been submitted yet.</p>
           </div>
@@ -316,19 +316,23 @@ export default function Accommodation() {
             rows="4"
           />
 
-          {/* MANDATORY CONSENT CHECKBOX */}
           <div className="consent-section">
             <label className="consent-checkbox">
-                <input
+              <input
                 type="checkbox"
                 checked={consentChecked}
                 onChange={(e) => setConsentChecked(e.target.checked)}
-              /> I understand that this accommodation application can be submitted only once and cannot be edited or re-applied.
+              />
+              <span>
+                I understand that this accommodation application can be submitted only once
+                and cannot be edited or re-applied.
+              </span>
             </label>
           </div>
 
-          <button 
-            type="submit" 
+
+          <button
+            type="submit"
             disabled={!consentChecked}
             className={!consentChecked ? 'button-disabled' : ''}
           >

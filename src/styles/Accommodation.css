@@ -125,3 +125,27 @@ button:hover {
     font-size: 14px;
   }
 }
+
+
+/* Added by ShettyBro */
+.consent-section {
+  margin: 16px 0;
+}
+
+.consent-checkbox {
+  display: flex;
+  align-items: flex-start; /* aligns checkbox with first line of text */
+  gap: 10px;
+  font-size: 14px;
+  color: #1e40af;
+  cursor: pointer;
+}
+
+.consent-checkbox input[type="checkbox"] {
+  margin-top: 3px; /* fine-tune vertical alignment */
+  cursor: pointer;
+}
+
+.consent-checkbox span {
+  line-height: 1.4;
+}
