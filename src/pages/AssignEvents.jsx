@@ -321,7 +321,7 @@ export default function AssignEvents() {
     try {
       setFinalApproving(true);
 
-      const response = await fetch(`${API_BASE_URL}/final-approval`, {
+      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
