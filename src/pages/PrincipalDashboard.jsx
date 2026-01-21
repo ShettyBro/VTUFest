@@ -19,12 +19,10 @@ export default function PrincipalDashboard() {
   const [lockStatus, setLockStatus] = useState(null);
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
 
-  // Filter and sort priority 1 notifications by date (most recent first)
   const priority1Notifications = notificationsData
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Filter and sort priority 2+ notifications (by priority first, then date)
   const priority2PlusNotifications = notificationsData
     .filter(n => n.priority >= 2)
     .sort((a, b) => {
@@ -34,7 +32,6 @@ export default function PrincipalDashboard() {
       return new Date(b.date) - new Date(a.date);
     });
 
-  // Loading states for different actions
   const [assigningManager, setAssigningManager] = useState(false);
 
   const [managerForm, setManagerForm] = useState({
@@ -53,7 +50,6 @@ export default function PrincipalDashboard() {
     checkLockStatus();
   }, []);
 
-  // Ticker animation for priority 1 notifications
   useEffect(() => {
     if (priority1Notifications.length === 0) return;
 
@@ -61,7 +57,7 @@ export default function PrincipalDashboard() {
       setCurrentPriority1Index(prev => 
         (prev + 1) % priority1Notifications.length
       );
-    }, 20000); // 20 seconds per notification
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [priority1Notifications.length]);
@@ -214,10 +210,8 @@ export default function PrincipalDashboard() {
     );
   }
 
-  // ============================================================================
-  // 🆕 A3: Check if "View Assigned Events" button should be shown
-  // ============================================================================
-  const showViewEventsButton = dashboardData?.stats?.participating_event_count >= 1;
+  const participatingCount = dashboardData?.stats?.participating_event_count || 0;
+  const showViewEventsButton = participatingCount >= 1;
 
   return (
     <Layout>
@@ -237,11 +231,9 @@ export default function PrincipalDashboard() {
       <div className="dashboard-container">
         <div className="dashboard-header">
           <h2>Principal Dashboard</h2>
-          <p>VTU HABBA 2026 – Principal Administration Panel</p>
+          <p>VTU HABBA 2026 — Principal Administration Panel</p>
 
-          {/* ============================================================================
-              🔧 A1 FIX: Show "Assign Manager" button ONLY IF manager does NOT exist
-              ============================================================================ */}
+          {/* Show "Assign Manager" button ONLY IF manager does NOT exist */}
           {dashboardData && !dashboardData.has_team_manager && (
             <button
               className="assign-manager-btn"
@@ -251,34 +243,6 @@ export default function PrincipalDashboard() {
               {assigningManager ? "Assigning..." : "Assign Manager"}
             </button>
           )}
-
-          {/* ============================================================================
-              🆕 A3: Show "View Assigned Events" button if participating_event_count >= 1
-              ============================================================================ */}
-          {showViewEventsButton && (
-            <button 
-              className="view-events-btn" 
-              onClick={() => navigate("/assign-events")}
-              style={{
-                marginLeft: "12px",
-                padding: "8px 16px",
-                background: "#2563eb",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "600"
-              }}
-            >
-              View Assigned Events
-            </button>
-          )}
-
-          {/* ============================================================================
-              ❌ A2 FIX: REMOVED FINAL APPROVAL BUTTON FROM DASHBOARD
-              Final approval is now ONLY on Assign Events page
-              ============================================================================ */}
         </div>
 
         <div className="stats-grid">
@@ -330,6 +294,7 @@ export default function PrincipalDashboard() {
             )}
           </div>
 
+          {/* College Quota Card with "View Events" button inside */}
           <div className="stat-card">
             <h4>College Quota</h4>
             <p>
@@ -337,6 +302,34 @@ export default function PrincipalDashboard() {
               {dashboardData?.college?.max_quota || 45}
             </p>
             <small>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
+            
+            {/* View Assigned Events button - shown if participating_event_count >= 1 */}
+            {showViewEventsButton && (
+              <button
+                onClick={() => navigate("/assign-events")}
+                style={{
+                  marginTop: "12px",
+                  width: "100%",
+                  padding: "8px 12px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  transition: "background 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#1d4ed8";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#2563eb";
+                }}
+              >
+                View Assigned Events
+              </button>
+            )}
           </div>
         </div>
 
@@ -349,7 +342,7 @@ export default function PrincipalDashboard() {
                 </h4>
                 {block.events.map((e, i) => (
                   <p key={i}>
-                    • {e.name} – Room {e.room} ({e.day})
+                    • {e.name} — Room {e.room} ({e.day})
                   </p>
                 ))}
               </div>
@@ -369,7 +362,7 @@ export default function PrincipalDashboard() {
                 </h4>
                 {block.events.map((e, i) => (
                   <p key={i}>
-                    • {e.name} – Room {e.room} ({e.day})
+                    • {e.name} — Room {e.room} ({e.day})
                   </p>
                 ))}
               </div>

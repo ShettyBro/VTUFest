@@ -5,7 +5,6 @@ import "../styles/assignEvents.css";
 
 const API_BASE_URL = "https://teanmdash30.netlify.app/.netlify/functions";
 
-// Event categories mapping
 const EVENT_CATEGORIES = {
   "Music Events": [
     { name: "Classical Vocal Solo", slug: "classical_vocal_solo" },
@@ -49,29 +48,23 @@ export default function AssignEvents() {
   const token = localStorage.getItem("vtufest_token");
   const role = localStorage.getItem("vtufest_role");
 
-  // State management
   const [loading, setLoading] = useState(true);
   const [expandedEvent, setExpandedEvent] = useState(null);
   const [eventData, setEventData] = useState({});
   const [loadingEvents, setLoadingEvents] = useState({});
-
-  // 🆕 B1: Dashboard data for Events Quota Bar
   const [dashboardData, setDashboardData] = useState(null);
 
-  // Modal states
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState(""); // "add_participant" or "add_accompanist"
+  const [modalMode, setModalMode] = useState("");
   const [currentEventSlug, setCurrentEventSlug] = useState("");
   const [selectedPersonId, setSelectedPersonId] = useState("");
   const [selectedPersonType, setSelectedPersonType] = useState("student");
   const [submitting, setSubmitting] = useState(false);
 
-  // 🆕 B3: Final Approval Modal
   const [showFinalApprovalModal, setShowFinalApprovalModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [finalApproving, setFinalApproving] = useState(false);
 
-  // Lock status
   const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
@@ -84,7 +77,6 @@ export default function AssignEvents() {
     checkLockStatus();
   }, []);
 
-  // 🆕 B1: Fetch dashboard data for quota bar
   const fetchDashboardData = async () => {
     try {
       const response = await fetch(
@@ -255,13 +247,13 @@ export default function AssignEvents() {
       if (data.success) {
         alert(data.message);
         closeModal();
-        // Refresh event data
         setEventData((prev) => {
           const updated = { ...prev };
           delete updated[currentEventSlug];
           return updated;
         });
         fetchEventData(currentEventSlug);
+        fetchDashboardData(); // Refresh to update event count
       } else {
         alert(data.error || "Failed to add assignment");
       }
@@ -304,13 +296,13 @@ export default function AssignEvents() {
 
       if (data.success) {
         alert(data.message);
-        // Refresh event data
         setEventData((prev) => {
           const updated = { ...prev };
           delete updated[eventSlug];
           return updated;
         });
         fetchEventData(eventSlug);
+        fetchDashboardData(); // Refresh to update event count
       } else {
         alert(data.error || "Failed to remove assignment");
       }
@@ -320,7 +312,6 @@ export default function AssignEvents() {
     }
   };
 
-  // 🆕 B4: Handle Final Approval
   const handleFinalApproval = async () => {
     if (!termsAccepted) {
       alert("You must accept the terms to proceed");
@@ -351,7 +342,6 @@ export default function AssignEvents() {
         alert(data.message);
         setShowFinalApprovalModal(false);
         setIsLocked(true);
-        // Refresh dashboard to update approval status
         fetchDashboardData();
       } else {
         alert(data.error || "Final approval failed");
@@ -372,7 +362,6 @@ export default function AssignEvents() {
     );
   }
 
-  // 🆕 B2: Calculate participating event count
   const participatingCount = dashboardData?.stats?.participating_event_count || 0;
   const showFinalApprovalButton =
     role === "principal" &&
@@ -387,52 +376,49 @@ export default function AssignEvents() {
           <p className="subtitle">VTU HABBA 2026 — Event Assignment Management</p>
         </div>
 
-        {/* 🆕 B1: Events Quota Bar (styled like College Quota Bar) */}
+        {/* Events Quota Bar - matches College Quota styling */}
         {dashboardData && (
           <div
             style={{
-              background: "linear-gradient(135deg, #1e40af, #2563eb)",
-              color: "#ffffff",
+              background: "transparent",
+              border: "2px solid #2563eb",
+              color: "#1e40af",
               padding: "16px 24px",
               borderRadius: "12px",
               marginBottom: "24px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             }}
           >
             <div>
-              <h4 style={{ margin: 0, fontSize: "14px", opacity: 0.9 }}>Events Assigned</h4>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Events Assigned</h4>
               <p style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: "700" }}>
                 {participatingCount} / 25
               </p>
-              <small style={{ opacity: 0.85 }}>Remaining: {25 - participatingCount}</small>
+              <small style={{ fontSize: "13px" }}>Remaining: {25 - participatingCount}</small>
             </div>
 
-            {/* 🆕 B2: Final Approval Button (right side of quota bar) */}
+            {/* Final Approval Button - only for Principal when conditions met */}
             {showFinalApprovalButton && (
               <button
                 onClick={() => setShowFinalApprovalModal(true)}
                 style={{
-                  background: "#dc2626",
+                  background: "#2563eb",
                   color: "#ffffff",
                   border: "none",
                   padding: "10px 20px",
-                  borderRadius: "8px",
+                  borderRadius: "6px",
                   fontSize: "14px",
                   fontWeight: "600",
                   cursor: "pointer",
-                  boxShadow: "0 2px 8px rgba(220, 38, 38, 0.3)",
-                  transition: "all 0.2s ease",
+                  transition: "background 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = "#b91c1c";
-                  e.target.style.transform = "translateY(-2px)";
+                  e.target.style.background = "#1d4ed8";
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = "#dc2626";
-                  e.target.style.transform = "translateY(0)";
+                  e.target.style.background = "#2563eb";
                 }}
               >
                 Submit Final Approval
@@ -443,17 +429,18 @@ export default function AssignEvents() {
             {dashboardData?.is_final_approved && (
               <div
                 style={{
-                  background: "#10b981",
+                  background: "#dcfce7",
+                  color: "#166534",
                   padding: "10px 20px",
-                  borderRadius: "8px",
+                  borderRadius: "6px",
                   fontSize: "14px",
                   fontWeight: "600",
-                  boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+                  border: "1px solid #86efac",
                 }}
               >
                 ✓ Final Approved
                 {dashboardData?.final_approved_at && (
-                  <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px" }}>
+                  <div style={{ fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
                     {new Date(dashboardData.final_approved_at).toLocaleString()}
                   </div>
                 )}
@@ -660,7 +647,7 @@ export default function AssignEvents() {
           </div>
         )}
 
-        {/* 🆕 B3: Final Approval Modal */}
+        {/* Final Approval Modal */}
         {showFinalApprovalModal && (
           <div className="modal-overlay">
             <div className="modal-card" style={{ maxWidth: "600px" }}>
