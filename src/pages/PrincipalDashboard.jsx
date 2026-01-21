@@ -17,7 +17,7 @@ export default function PrincipalDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
-    const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
+  const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
 
   // Filter and sort priority 1 notifications by date (most recent first)
   const priority1Notifications = notificationsData
@@ -36,7 +36,6 @@ export default function PrincipalDashboard() {
 
   // Loading states for different actions
   const [assigningManager, setAssigningManager] = useState(false);
-  const [submittingApproval, setSubmittingApproval] = useState(false);
 
   const [managerForm, setManagerForm] = useState({
     name: "",
@@ -54,7 +53,7 @@ export default function PrincipalDashboard() {
     checkLockStatus();
   }, []);
 
-   // Ticker animation for priority 1 notifications
+  // Ticker animation for priority 1 notifications
   useEffect(() => {
     if (priority1Notifications.length === 0) return;
 
@@ -176,52 +175,6 @@ export default function PrincipalDashboard() {
     }
   };
 
-  const handleFinalApproval = async () => {
-    if (
-      !window.confirm(
-        "⚠️ FINAL APPROVAL WARNING\n\nOnce submitted:\n- All registrations will be LOCKED\n- No further edits allowed\n- Payment page will be unlocked\n\nAre you sure you want to continue?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setSubmittingApproval(true);
-
-      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(
-          `Final Approval Successful!\n\n${data.inserted_students} students + ${data.inserted_accompanists} accompanists = ${data.total_records} records created.\n\nAll actions are now locked. Please proceed to payment.`
-        );
-        fetchDashboardData();
-        checkLockStatus();
-      } else {
-        alert(data.error || "Final approval failed");
-      }
-    } catch (error) {
-      console.error("Final approval error:", error);
-      alert("Failed to submit final approval. Please try again.");
-    } finally {
-      setSubmittingApproval(false);
-    }
-  };
-
   const blockEvents = {
     left: [
       {
@@ -261,11 +214,16 @@ export default function PrincipalDashboard() {
     );
   }
 
+  // ============================================================================
+  // 🆕 A3: Check if "View Assigned Events" button should be shown
+  // ============================================================================
+  const showViewEventsButton = dashboardData?.stats?.participating_event_count >= 1;
+
   return (
     <Layout>
       {priority1Notifications.length > 0 && (
         <div className="top-banner">
-           <div className="priority-ticker">
+          <div className="priority-ticker">
             <span className="ticker-label">IMP Notification:</span>
             <div className="ticker-wrapper">
               <span className="ticker-text">
@@ -281,6 +239,9 @@ export default function PrincipalDashboard() {
           <h2>Principal Dashboard</h2>
           <p>VTU HABBA 2026 – Principal Administration Panel</p>
 
+          {/* ============================================================================
+              🔧 A1 FIX: Show "Assign Manager" button ONLY IF manager does NOT exist
+              ============================================================================ */}
           {dashboardData && !dashboardData.has_team_manager && (
             <button
               className="assign-manager-btn"
@@ -291,15 +252,33 @@ export default function PrincipalDashboard() {
             </button>
           )}
 
-          {!dashboardData?.is_final_approved && (
+          {/* ============================================================================
+              🆕 A3: Show "View Assigned Events" button if participating_event_count >= 1
+              ============================================================================ */}
+          {showViewEventsButton && (
             <button 
-              className="final-approval-btn" 
-              onClick={handleFinalApproval}
-              disabled={submittingApproval}
+              className="view-events-btn" 
+              onClick={() => navigate("/assign-events")}
+              style={{
+                marginLeft: "12px",
+                padding: "8px 16px",
+                background: "#2563eb",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "600"
+              }}
             >
-              {submittingApproval ? "Submitting..." : "Submit Final Approval"}
+              View Assigned Events
             </button>
           )}
+
+          {/* ============================================================================
+              ❌ A2 FIX: REMOVED FINAL APPROVAL BUTTON FROM DASHBOARD
+              Final approval is now ONLY on Assign Events page
+              ============================================================================ */}
         </div>
 
         <div className="stats-grid">

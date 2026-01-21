@@ -1,79 +1,47 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/assignEvents.css";
 
-// ============================================================================
-// FIXED 25 EVENTS (Frontend Constants)
-// ============================================================================
-const EVENTS_LIST = [
-  { slug: "mime", name: "Mime", category: "Theatre" },
-  { slug: "mimicry", name: "Mimicry", category: "Theatre" },
-  { slug: "one_act_play", name: "One-Act Play", category: "Theatre" },
-  { slug: "skits", name: "Skits", category: "Theatre" },
-  { slug: "debate", name: "Debate", category: "Literary" },
-  { slug: "elocution", name: "Elocution", category: "Literary" },
-  { slug: "quiz", name: "Quiz", category: "Literary" },
-  { slug: "cartooning", name: "Cartooning", category: "Fine Arts" },
-  { slug: "clay_modelling", name: "Clay Modelling", category: "Fine Arts" },
-  { slug: "collage_making", name: "Collage Making", category: "Fine Arts" },
-  { slug: "installation", name: "Installation", category: "Fine Arts" },
-  { slug: "on_spot_painting", name: "On Spot Painting", category: "Fine Arts" },
-  { slug: "poster_making", name: "Poster Making", category: "Fine Arts" },
-  { slug: "rangoli", name: "Rangoli", category: "Fine Arts" },
-  { slug: "spot_photography", name: "Spot Photography", category: "Fine Arts" },
-  { slug: "classical_vocal_solo", name: "Classical Vocal Solo (Hindustani/Carnatic)", category: "Music" },
-  { slug: "classical_instrumental_percussion", name: "Classical Instrumental Solo (Percussion Tala Vadya)", category: "Music" },
-  { slug: "classical_instrumental_non_percussion", name: "Classical Instrumental Solo (Non-Percussion Swara Vadya)", category: "Music" },
-  { slug: "light_vocal_solo", name: "Light Vocal Solo (Indian)", category: "Music" },
-  { slug: "western_vocal_solo", name: "Western Vocal Solo", category: "Music" },
-  { slug: "group_song_indian", name: "Group Song (Indian)", category: "Music" },
-  { slug: "group_song_western", name: "Group Song (Western)", category: "Music" },
-  { slug: "folk_orchestra", name: "Folk Orchestra", category: "Music" },
-  { slug: "folk_tribal_dance", name: "Folk / Tribal Dance", category: "Dance" },
-  { slug: "classical_dance_solo", name: "Classical Dance Solo", category: "Dance" },
-];
+const API_BASE_URL = "https://teanmdash30.netlify.app/.netlify/functions";
 
-// ============================================================================
-// EVENT LIMITS (Frontend-Only Enforcement)
-// ============================================================================
-const EVENT_LIMITS = {
-  // Music - Solo
-  classical_vocal_solo: { maxParticipants: 1, maxAccompanists: 2 },
-  classical_instrumental_percussion: { maxParticipants: 1, maxAccompanists: 2 },
-  classical_instrumental_non_percussion: { maxParticipants: 1, maxAccompanists: 2 },
-  light_vocal_solo: { maxParticipants: 1, maxAccompanists: 2 },
-  western_vocal_solo: { maxParticipants: 1, maxAccompanists: 2 },
-  
-  // Music - Group
-  group_song_indian: { maxParticipants: 6, maxAccompanists: 3 },
-  group_song_western: { maxParticipants: 6, maxAccompanists: 3 },
-  folk_orchestra: { maxParticipants: 9, maxAccompanists: 3 },
-  
-  // Dance
-  folk_tribal_dance: { maxParticipants: 10, maxAccompanists: 5 },
-  classical_dance_solo: { maxParticipants: 1, maxAccompanists: 3 },
-  
-  // Literary
-  quiz: { maxParticipants: 3, maxAccompanists: 0 },
-  debate: { maxParticipants: 2, maxAccompanists: 0 },
-  elocution: { maxParticipants: 1, maxAccompanists: 0 },
-  
-  // Theatre
-  one_act_play: { maxParticipants: 9, maxAccompanists: 3 },
-  skits: { maxParticipants: 6, maxAccompanists: 3 },
-  mime: { maxParticipants: 6, maxAccompanists: 2 },
-  mimicry: { maxParticipants: 1, maxAccompanists: 0 },
-  
-  // Fine Arts
-  on_spot_painting: { maxParticipants: 1, maxAccompanists: 0 },
-  collage_making: { maxParticipants: 1, maxAccompanists: 0 },
-  poster_making: { maxParticipants: 1, maxAccompanists: 0 },
-  clay_modelling: { maxParticipants: 1, maxAccompanists: 0 },
-  cartooning: { maxParticipants: 1, maxAccompanists: 0 },
-  rangoli: { maxParticipants: 1, maxAccompanists: 0 },
-  spot_photography: { maxParticipants: 1, maxAccompanists: 0 },
-  installation: { maxParticipants: 4, maxAccompanists: 0 },
+// Event categories mapping
+const EVENT_CATEGORIES = {
+  "Music Events": [
+    { name: "Classical Vocal Solo", slug: "classical_vocal_solo" },
+    { name: "Light Vocal Solo", slug: "light_vocal_solo" },
+    { name: "Western Vocal Solo", slug: "western_vocal_solo" },
+    { name: "Classical Instrumental (Percussion)", slug: "classical_instrumental_percussion" },
+    { name: "Classical Instrumental (Non-Percussion)", slug: "classical_instrumental_non_percussion" },
+    { name: "Group Song (Indian)", slug: "group_song_indian" },
+    { name: "Group Song (Western)", slug: "group_song_western" },
+    { name: "Folk Orchestra", slug: "folk_orchestra" },
+  ],
+  "Dance Events": [
+    { name: "Classical Dance Solo", slug: "classical_dance_solo" },
+    { name: "Folk/Tribal Dance", slug: "folk_tribal_dance" },
+  ],
+  "Theatre Events": [
+    { name: "Mime", slug: "mime" },
+    { name: "Mimicry", slug: "mimicry" },
+    { name: "One Act Play", slug: "one_act_play" },
+    { name: "Skits", slug: "skits" },
+  ],
+  "Literary Events": [
+    { name: "Debate", slug: "debate" },
+    { name: "Elocution", slug: "elocution" },
+    { name: "Quiz", slug: "quiz" },
+  ],
+  "Fine Arts Events": [
+    { name: "Cartooning", slug: "cartooning" },
+    { name: "Clay Modelling", slug: "clay_modelling" },
+    { name: "Collage Making", slug: "collage_making" },
+    { name: "Installation", slug: "installation" },
+    { name: "On-Spot Painting", slug: "on_spot_painting" },
+    { name: "Poster Making", slug: "poster_making" },
+    { name: "Rangoli", slug: "rangoli" },
+    { name: "Spot Photography", slug: "spot_photography" },
+  ],
 };
 
 export default function AssignEvents() {
@@ -81,26 +49,30 @@ export default function AssignEvents() {
   const token = localStorage.getItem("vtufest_token");
   const role = localStorage.getItem("vtufest_role");
 
-  // ============================================================================
-  // FIX #1: ROLE CHECK BUG - Support MANAGER, manager, and TEAM_MANAGER
-  // ============================================================================
-  const isManager = role === "MANAGER" || role === "manager" || role === "TEAM_MANAGER";
-  const isPrincipal = role === "PRINCIPAL" || role === "principal";
-
-  const [loading, setLoading] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
+  // State management
+  const [loading, setLoading] = useState(true);
   const [expandedEvent, setExpandedEvent] = useState(null);
   const [eventData, setEventData] = useState({});
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
+  const [loadingEvents, setLoadingEvents] = useState({});
 
-  // Modal state
-  const [modalEventSlug, setModalEventSlug] = useState(null);
-  const [modalType, setModalType] = useState(null); // 'participant' or 'accompanist'
+  // 🆕 B1: Dashboard data for Events Quota Bar
+  const [dashboardData, setDashboardData] = useState(null);
+
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState(""); // "add_participant" or "add_accompanist"
+  const [currentEventSlug, setCurrentEventSlug] = useState("");
   const [selectedPersonId, setSelectedPersonId] = useState("");
   const [selectedPersonType, setSelectedPersonType] = useState("student");
+  const [submitting, setSubmitting] = useState(false);
+
+  // 🆕 B3: Final Approval Modal
+  const [showFinalApprovalModal, setShowFinalApprovalModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [finalApproving, setFinalApproving] = useState(false);
+
+  // Lock status
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -108,13 +80,15 @@ export default function AssignEvents() {
       return;
     }
 
+    fetchDashboardData();
     checkLockStatus();
   }, []);
 
-  const checkLockStatus = async () => {
+  // 🆕 B1: Fetch dashboard data for quota bar
+  const fetchDashboardData = async () => {
     try {
       const response = await fetch(
-        `https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`,
+        `https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`,
         {
           method: "POST",
           headers: {
@@ -133,31 +107,58 @@ export default function AssignEvents() {
 
       const data = await response.json();
       if (data.success) {
-        setIsLocked(data.is_locked);
+        setDashboardData(data.data);
       }
     } catch (error) {
-      console.error("Lock check error:", error);
+      console.error("Dashboard fetch error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchEventData = async (event_slug) => {
+  const checkLockStatus = async () => {
     try {
-      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/check-lock-status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const response = await fetch(
-        `https://teanmdash30.netlify.app/.netlify/functions/assign-events`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            action: "FETCH",
-            event_slug,
-          }),
-        }
-      );
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.is_locked) {
+        setIsLocked(true);
+      }
+    } catch (error) {
+      console.error("Lock status check error:", error);
+    }
+  };
+
+  const fetchEventData = async (eventSlug) => {
+    if (loadingEvents[eventSlug] || eventData[eventSlug]) return;
+
+    setLoadingEvents((prev) => ({ ...prev, [eventSlug]: true }));
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/assign-events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "FETCH",
+          event_slug: eventSlug,
+        }),
+      });
 
       if (response.status === 401) {
         alert("Session expired. Please login again.");
@@ -171,76 +172,76 @@ export default function AssignEvents() {
       if (data.success) {
         setEventData((prev) => ({
           ...prev,
-          [event_slug]: data,
+          [eventSlug]: {
+            participants: data.participants || [],
+            accompanists: data.accompanists || [],
+            available_students: data.available_students || [],
+            available_accompanists: data.available_accompanists || [],
+          },
         }));
       } else {
-        showError(data.error || "Failed to fetch event data");
+        alert(data.error || "Failed to load event data");
       }
     } catch (error) {
-      console.error("Fetch error:", error);
-      showError("Failed to fetch event data");
+      console.error("Fetch event error:", error);
+      alert("Failed to load event data");
     } finally {
-      setLoading(false);
+      setLoadingEvents((prev) => ({ ...prev, [eventSlug]: false }));
     }
   };
 
-  const handleEventClick = (event_slug) => {
-    if (expandedEvent === event_slug) {
+  const handleEventClick = (eventSlug) => {
+    if (expandedEvent === eventSlug) {
       setExpandedEvent(null);
     } else {
-      setExpandedEvent(event_slug);
-      if (!eventData[event_slug]) {
-        fetchEventData(event_slug);
+      setExpandedEvent(eventSlug);
+      if (!eventData[eventSlug]) {
+        fetchEventData(eventSlug);
       }
     }
   };
 
-  const openAddModal = (event_slug, type) => {
-    setModalEventSlug(event_slug);
-    setModalType(type);
+  const openAddModal = (eventSlug, mode) => {
+    setCurrentEventSlug(eventSlug);
+    setModalMode(mode);
     setSelectedPersonId("");
-    // ============================================================================
-    // FIX #2: PARTICIPANT vs ACCOMPANIST RULES
-    // Participants MUST be students only, accompanists can be students OR accompanists
-    // ============================================================================
-    setSelectedPersonType(type === "participant" ? "student" : "student");
-    setShowAddModal(true);
+    setSelectedPersonType("student");
+    setShowModal(true);
   };
 
-  const closeAddModal = () => {
-    setShowAddModal(false);
-    setModalEventSlug(null);
-    setModalType(null);
+  const closeModal = () => {
+    setShowModal(false);
+    setCurrentEventSlug("");
+    setModalMode("");
     setSelectedPersonId("");
     setSelectedPersonType("student");
   };
 
   const handleAdd = async () => {
     if (!selectedPersonId) {
-      showError("Please select a person");
+      alert("Please select a person");
       return;
     }
 
     try {
-      setActionLoading(true);
+      setSubmitting(true);
 
-      const response = await fetch(
-        `https://teanmdash30.netlify.app/.netlify/functions/assign-events`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            action: "ADD",
-            event_slug: modalEventSlug,
-            person_id: parseInt(selectedPersonId),
-            person_type: selectedPersonType,
-            event_type: modalType === "participant" ? "participating" : "accompanying",
-          }),
-        }
-      );
+      const eventType = modalMode === "add_participant" ? "participating" : "accompanying";
+
+      const response = await fetch(`${API_BASE_URL}/assign-events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "ADD",
+          event_slug: currentEventSlug,
+          person_id: parseInt(selectedPersonId),
+          person_type: selectedPersonType,
+          event_type: eventType,
+        }),
+      });
 
       if (response.status === 401) {
         alert("Session expired. Please login again.");
@@ -252,44 +253,45 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        closeAddModal();
+        alert(data.message);
+        closeModal();
         // Refresh event data
-        await fetchEventData(modalEventSlug);
+        setEventData((prev) => {
+          const updated = { ...prev };
+          delete updated[currentEventSlug];
+          return updated;
+        });
+        fetchEventData(currentEventSlug);
       } else {
-        showError(data.error || "Failed to add assignment");
+        alert(data.error || "Failed to add assignment");
       }
     } catch (error) {
       console.error("Add error:", error);
-      showError("Failed to add assignment");
+      alert("Failed to add assignment");
     } finally {
-      setActionLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleRemove = async (event_slug, person_id, person_type) => {
-    if (!confirm(`Are you sure you want to remove this assignment?`)) {
+  const handleRemove = async (eventSlug, personId, personType) => {
+    if (!confirm("Are you sure you want to remove this assignment?")) {
       return;
     }
 
     try {
-      setActionLoading(true);
-
-      const response = await fetch(
-        `https://teanmdash30.netlify.app/.netlify/functions/assign-events`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            action: "REMOVE",
-            event_slug,
-            person_id,
-            person_type,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/assign-events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "REMOVE",
+          event_slug: eventSlug,
+          person_id: personId,
+          person_type: personType,
+        }),
+      });
 
       if (response.status === 401) {
         alert("Session expired. Please login again.");
@@ -301,95 +303,191 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
+        alert(data.message);
         // Refresh event data
-        await fetchEventData(event_slug);
+        setEventData((prev) => {
+          const updated = { ...prev };
+          delete updated[eventSlug];
+          return updated;
+        });
+        fetchEventData(eventSlug);
       } else {
-        showError(data.error || "Failed to remove assignment");
+        alert(data.error || "Failed to remove assignment");
       }
     } catch (error) {
       console.error("Remove error:", error);
-      showError("Failed to remove assignment");
+      alert("Failed to remove assignment");
+    }
+  };
+
+  // 🆕 B4: Handle Final Approval
+  const handleFinalApproval = async () => {
+    if (!termsAccepted) {
+      alert("You must accept the terms to proceed");
+      return;
+    }
+
+    try {
+      setFinalApproving(true);
+
+      const response = await fetch(`${API_BASE_URL}/final-approval`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message);
+        setShowFinalApprovalModal(false);
+        setIsLocked(true);
+        // Refresh dashboard to update approval status
+        fetchDashboardData();
+      } else {
+        alert(data.error || "Final approval failed");
+      }
+    } catch (error) {
+      console.error("Final approval error:", error);
+      alert("Final approval failed");
     } finally {
-      setActionLoading(false);
+      setFinalApproving(false);
     }
   };
 
-  const showError = (message) => {
-    setErrorMessage(message);
-    setShowErrorModal(true);
-  };
+  if (loading) {
+    return (
+      <Layout>
+        <div className="loading-indicator">Loading...</div>
+      </Layout>
+    );
+  }
 
-  const getAvailableOptions = () => {
-    if (!modalEventSlug || !eventData[modalEventSlug]) return [];
-
-    const data = eventData[modalEventSlug];
-
-    if (selectedPersonType === "student") {
-      return data.available_students || [];
-    } else {
-      return data.available_accompanists || [];
-    }
-  };
-
-  // Group events by category
-  const groupedEvents = EVENTS_LIST.reduce((acc, event) => {
-    if (!acc[event.category]) {
-      acc[event.category] = [];
-    }
-    acc[event.category].push(event);
-    return acc;
-  }, {});
-
-  // Helper function to check if participant limit is reached
-  const isParticipantLimitReached = (eventSlug) => {
-    if (!eventData[eventSlug]) return false;
-    const limits = EVENT_LIMITS[eventSlug];
-    if (!limits) return false;
-    return eventData[eventSlug].participants.length >= limits.maxParticipants;
-  };
-
-  // Helper function to check if accompanist limit is reached
-  const isAccompanistLimitReached = (eventSlug) => {
-    if (!eventData[eventSlug]) return false;
-    const limits = EVENT_LIMITS[eventSlug];
-    if (!limits) return false;
-    return eventData[eventSlug].accompanists.length >= limits.maxAccompanists;
-  };
+  // 🆕 B2: Calculate participating event count
+  const participatingCount = dashboardData?.stats?.participating_event_count || 0;
+  const showFinalApprovalButton =
+    role === "principal" &&
+    participatingCount >= 1 &&
+    dashboardData?.is_final_approved === false;
 
   return (
     <Layout>
       <div className="assign-events-container">
         <div className="assign-events-header">
           <h2>Assign Events</h2>
-          <p className="subtitle">
-            VTU HABBA 2026 — {isPrincipal ? "Principal" : "Team Manager"} Panel
-          </p>
-          {isLocked && (
-            <div className="lock-banner">
-              🔒 Final approval submitted. All assignments are locked (read-only).
-            </div>
-          )}
+          <p className="subtitle">VTU HABBA 2026 — Event Assignment Management</p>
         </div>
 
-        {Object.entries(groupedEvents).map(([category, events]) => (
+        {/* 🆕 B1: Events Quota Bar (styled like College Quota Bar) */}
+        {dashboardData && (
+          <div
+            style={{
+              background: "linear-gradient(135deg, #1e40af, #2563eb)",
+              color: "#ffffff",
+              padding: "16px 24px",
+              borderRadius: "12px",
+              marginBottom: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+          >
+            <div>
+              <h4 style={{ margin: 0, fontSize: "14px", opacity: 0.9 }}>Events Assigned</h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: "700" }}>
+                {participatingCount} / 25
+              </p>
+              <small style={{ opacity: 0.85 }}>Remaining: {25 - participatingCount}</small>
+            </div>
+
+            {/* 🆕 B2: Final Approval Button (right side of quota bar) */}
+            {showFinalApprovalButton && (
+              <button
+                onClick={() => setShowFinalApprovalModal(true)}
+                style={{
+                  background: "#dc2626",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(220, 38, 38, 0.3)",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#b91c1c";
+                  e.target.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#dc2626";
+                  e.target.style.transform = "translateY(0)";
+                }}
+              >
+                Submit Final Approval
+              </button>
+            )}
+
+            {/* Show approval status if already approved */}
+            {dashboardData?.is_final_approved && (
+              <div
+                style={{
+                  background: "#10b981",
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
+                }}
+              >
+                ✓ Final Approved
+                {dashboardData?.final_approved_at && (
+                  <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px" }}>
+                    {new Date(dashboardData.final_approved_at).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Lock Banner */}
+        {isLocked && (
+          <div className="lock-banner">
+            🔒 Final approval submitted. All event assignments are now locked and read-only.
+          </div>
+        )}
+
+        {/* Event Categories */}
+        {Object.entries(EVENT_CATEGORIES).map(([category, events]) => (
           <div key={category} className="event-category-section">
             <h3 className="category-title">{category}</h3>
-
             {events.map((event) => (
               <div key={event.slug} className="event-accordion">
                 <div
                   className={`event-header ${expandedEvent === event.slug ? "expanded" : ""}`}
                   onClick={() => handleEventClick(event.slug)}
                 >
-                  <div className="event-name">{event.name}</div>
-                  <div className="event-arrow">
+                  <span className="event-name">{event.name}</span>
+                  <span className="event-arrow">
                     {expandedEvent === event.slug ? "▼" : "▶"}
-                  </div>
+                  </span>
                 </div>
 
                 {expandedEvent === event.slug && (
                   <div className="event-body">
-                    {loading ? (
+                    {loadingEvents[event.slug] ? (
                       <div className="loading-indicator">Loading event data...</div>
                     ) : eventData[event.slug] ? (
                       <>
@@ -399,14 +497,11 @@ export default function AssignEvents() {
                             <h4>Participants</h4>
                             <span className="counter">
                               {eventData[event.slug].participants.length}
-                              {EVENT_LIMITS[event.slug] && ` / ${EVENT_LIMITS[event.slug].maxParticipants}`} assigned
                             </span>
-                            {/* FIX #4: ADD / REMOVE VISIBILITY - Use isManager instead of role === "MANAGER" */}
-                            {/* LIMIT CHECK: Hide button when participant limit is reached */}
-                            {isManager && !isLocked && !isParticipantLimitReached(event.slug) && (
+                            {!isLocked && role === "manager" && (
                               <button
                                 className="add-btn"
-                                onClick={() => openAddModal(event.slug, "participant")}
+                                onClick={() => openAddModal(event.slug, "add_participant")}
                               >
                                 + Add Participant
                               </button>
@@ -414,28 +509,30 @@ export default function AssignEvents() {
                           </div>
 
                           {eventData[event.slug].participants.length === 0 ? (
-                            <p className="empty-message">No participants assigned yet</p>
+                            <p className="empty-message">No participants assigned</p>
                           ) : (
                             <div className="person-list">
-                              {eventData[event.slug].participants.map((p) => (
-                                <div key={`${p.person_type}-${p.person_id}`} className="person-card">
+                              {eventData[event.slug].participants.map((person) => (
+                                <div key={`${person.person_type}-${person.person_id}`} className="person-card">
                                   <div className="person-info">
-                                    <strong>{p.full_name}</strong>
+                                    <strong>{person.full_name}</strong>
                                     <div className="person-details">
-                                      {p.phone} | {p.email}
+                                      Phone: {person.phone} | Email: {person.email || "N/A"}
                                     </div>
-                                    <div className="person-type">
-                                      {p.person_type === "student" ? "Student" : "Accompanist"}
-                                    </div>
+                                    <span className="person-type">
+                                      {person.person_type === "student" ? "Student" : "Accompanist"}
+                                    </span>
                                   </div>
-                                  {/* FIX #4: Use isManager instead of role === "MANAGER" */}
-                                  {isManager && !isLocked && (
+                                  {!isLocked && role === "manager" && (
                                     <button
                                       className="remove-btn"
                                       onClick={() =>
-                                        handleRemove(event.slug, p.person_id, p.person_type)
+                                        handleRemove(
+                                          event.slug,
+                                          person.person_id,
+                                          person.person_type
+                                        )
                                       }
-                                      disabled={actionLoading}
                                     >
                                       Remove
                                     </button>
@@ -452,15 +549,11 @@ export default function AssignEvents() {
                             <h4>Accompanists</h4>
                             <span className="counter">
                               {eventData[event.slug].accompanists.length}
-                              {EVENT_LIMITS[event.slug] && ` / ${EVENT_LIMITS[event.slug].maxAccompanists}`} assigned
                             </span>
-                            {/* FIX #4: Use isManager instead of role === "MANAGER" */}
-                            {/* LIMIT CHECK: Hide button when accompanist limit is reached or max is 0 */}
-                            {isManager && !isLocked && !isAccompanistLimitReached(event.slug) && 
-                             EVENT_LIMITS[event.slug]?.maxAccompanists > 0 && (
+                            {!isLocked && role === "manager" && (
                               <button
                                 className="add-btn"
-                                onClick={() => openAddModal(event.slug, "accompanist")}
+                                onClick={() => openAddModal(event.slug, "add_accompanist")}
                               >
                                 + Add Accompanist
                               </button>
@@ -468,28 +561,30 @@ export default function AssignEvents() {
                           </div>
 
                           {eventData[event.slug].accompanists.length === 0 ? (
-                            <p className="empty-message">No accompanists assigned yet</p>
+                            <p className="empty-message">No accompanists assigned</p>
                           ) : (
                             <div className="person-list">
-                              {eventData[event.slug].accompanists.map((a) => (
-                                <div key={`${a.person_type}-${a.person_id}`} className="person-card">
+                              {eventData[event.slug].accompanists.map((person) => (
+                                <div key={`${person.person_type}-${person.person_id}`} className="person-card">
                                   <div className="person-info">
-                                    <strong>{a.full_name}</strong>
+                                    <strong>{person.full_name}</strong>
                                     <div className="person-details">
-                                      {a.phone} | {a.email}
+                                      Phone: {person.phone} | Email: {person.email || "N/A"}
                                     </div>
-                                    <div className="person-type">
-                                      {a.person_type === "student" ? "Student" : "Accompanist"}
-                                    </div>
+                                    <span className="person-type">
+                                      {person.person_type === "student" ? "Student" : "Accompanist"}
+                                    </span>
                                   </div>
-                                  {/* FIX #4: Use isManager instead of role === "MANAGER" */}
-                                  {isManager && !isLocked && (
+                                  {!isLocked && role === "manager" && (
                                     <button
                                       className="remove-btn"
                                       onClick={() =>
-                                        handleRemove(event.slug, a.person_id, a.person_type)
+                                        handleRemove(
+                                          event.slug,
+                                          person.person_id,
+                                          person.person_type
+                                        )
                                       }
-                                      disabled={actionLoading}
                                     >
                                       Remove
                                     </button>
@@ -501,7 +596,7 @@ export default function AssignEvents() {
                         </div>
                       </>
                     ) : (
-                      <p>Failed to load event data</p>
+                      <div className="empty-message">No data available</div>
                     )}
                   </div>
                 )}
@@ -509,79 +604,125 @@ export default function AssignEvents() {
             ))}
           </div>
         ))}
-      </div>
 
-      {/* Add Modal */}
-      {showAddModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>
-              Add {modalType === "participant" ? "Participant" : "Accompanist"} to{" "}
-              {EVENTS_LIST.find((e) => e.slug === modalEventSlug)?.name}
-            </h3>
+        {/* Add Person Modal */}
+        {showModal && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <h3>
+                {modalMode === "add_participant" ? "Add Participant" : "Add Accompanist"}
+              </h3>
 
-            <label>Person Type</label>
-            {/* FIX #2: Lock person_type to "student" for participants */}
-            {modalType === "participant" ? (
-              <select value="student" disabled>
-                <option value="student">Student</option>
-              </select>
-            ) : (
+              <label>Person Type</label>
               <select
                 value={selectedPersonType}
                 onChange={(e) => {
                   setSelectedPersonType(e.target.value);
                   setSelectedPersonId("");
                 }}
-                disabled={actionLoading}
+                disabled={submitting}
               >
                 <option value="student">Student</option>
                 <option value="accompanist">Accompanist</option>
               </select>
-            )}
 
-            <label>Select Person</label>
-            <select
-              value={selectedPersonId}
-              onChange={(e) => setSelectedPersonId(e.target.value)}
-              disabled={actionLoading}
-            >
-              <option value="">-- Select --</option>
-              {getAvailableOptions().map((person) => (
-                <option
-                  key={person.student_id || person.accompanist_id}
-                  value={person.student_id || person.accompanist_id}
+              <label>
+                Select {selectedPersonType === "student" ? "Student" : "Accompanist"}
+              </label>
+              <select
+                value={selectedPersonId}
+                onChange={(e) => setSelectedPersonId(e.target.value)}
+                disabled={submitting}
+              >
+                <option value="">-- Select --</option>
+                {selectedPersonType === "student"
+                  ? eventData[currentEventSlug]?.available_students?.map((student) => (
+                      <option key={student.student_id} value={student.student_id}>
+                        {student.full_name} ({student.usn})
+                      </option>
+                    ))
+                  : eventData[currentEventSlug]?.available_accompanists?.map((acc) => (
+                      <option key={acc.accompanist_id} value={acc.accompanist_id}>
+                        {acc.full_name} ({acc.accompanist_type})
+                      </option>
+                    ))}
+              </select>
+
+              <div className="modal-actions">
+                <button onClick={handleAdd} disabled={submitting}>
+                  {submitting ? "Adding..." : "Add"}
+                </button>
+                <button onClick={closeModal} disabled={submitting}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 🆕 B3: Final Approval Modal */}
+        {showFinalApprovalModal && (
+          <div className="modal-overlay">
+            <div className="modal-card" style={{ maxWidth: "600px" }}>
+              <h3 style={{ color: "#dc2626", marginBottom: "20px" }}>
+                ⚠️ Submit Final Approval
+              </h3>
+
+              <div style={{ marginBottom: "24px", lineHeight: "1.6" }}>
+                <p style={{ fontWeight: "600", marginBottom: "12px" }}>
+                  WARNING: This action is irreversible!
+                </p>
+                <ul style={{ paddingLeft: "20px", color: "#374151" }}>
+                  <li>All student registrations will be locked</li>
+                  <li>Event assignments cannot be modified</li>
+                  <li>Accompanist details cannot be changed</li>
+                  <li>You can still manage accommodation and payment</li>
+                </ul>
+              </div>
+
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "16px",
+                  background: "#f9fafb",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  marginBottom: "24px",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  disabled={finalApproving}
+                  style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                />
+                <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                  I understand and want to proceed with final approval
+                </span>
+              </label>
+
+              <div className="modal-actions">
+                <button
+                  onClick={handleFinalApproval}
+                  disabled={!termsAccepted || finalApproving}
+                  style={{
+                    background: termsAccepted ? "#dc2626" : "#9ca3af",
+                    cursor: termsAccepted && !finalApproving ? "pointer" : "not-allowed",
+                  }}
                 >
-                  {person.full_name} - {person.phone}
-                  {person.usn ? ` (${person.usn})` : ""}
-                </option>
-              ))}
-            </select>
-
-            <div className="modal-actions">
-              <button onClick={handleAdd} disabled={actionLoading}>
-                {actionLoading ? "Adding..." : "Add"}
-              </button>
-              <button onClick={closeAddModal} disabled={actionLoading}>
-                Cancel
-              </button>
+                  {finalApproving ? "Submitting..." : "Submit Final Approval"}
+                </button>
+                <button onClick={() => setShowFinalApprovalModal(false)} disabled={finalApproving}>
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Error Modal */}
-      {showErrorModal && (
-        <div className="modal-overlay">
-          <div className="modal-card error-modal">
-            <h3>⚠️ Error</h3>
-            <p>{errorMessage}</p>
-            <div className="modal-actions">
-              <button onClick={() => setShowErrorModal(false)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </Layout>
   );
 }
