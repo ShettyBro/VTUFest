@@ -413,6 +413,8 @@ export default function AssignEvents() {
                   fontWeight: "600",
                   cursor: "pointer",
                   transition: "background 0.2s ease",
+                  width: "200px",
+                  marginTop: "0px",
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.background = "#1d4ed8";
@@ -436,6 +438,8 @@ export default function AssignEvents() {
                   fontSize: "14px",
                   fontWeight: "600",
                   border: "1px solid #86efac",
+                   width: "200px",
+                  marginTop: "0px",
                 }}
               >
                 ✓ Final Approved
