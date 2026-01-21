@@ -22,9 +22,8 @@ export default function Sidebar({ role }) {
       {/* ================= STUDENT ================= */}
       {role === "student" && (
         <div
-          className={`sidebar-item ${
-            isActive("/student-register") ? "active" : ""
-          }`}
+          className={`sidebar-item ${isActive("/student-register") ? "active" : ""
+            }`}
           onClick={() => navigate("/student-register")}
         >
           <Icon>
@@ -40,9 +39,8 @@ export default function Sidebar({ role }) {
         <>
           {/* Dashboard */}
           <div
-            className={`sidebar-item ${
-              isActive("/principal-dashboard") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/principal-dashboard") ? "active" : ""
+              }`}
             onClick={() => navigate("/principal-dashboard")}
           >
             <Icon>
@@ -55,9 +53,8 @@ export default function Sidebar({ role }) {
 
           {/* Approvals */}
           <div
-            className={`sidebar-item ${
-              isActive("/approvals") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/approvals") ? "active" : ""
+              }`}
             onClick={() => navigate("/approvals")}
           >
             <Icon>
@@ -81,12 +78,25 @@ export default function Sidebar({ role }) {
             <span className="label">View Applications</span>
           </div>
 
-              
+          {/* Assign Events */}
+          <div
+            className={`sidebar-item ${isActive("/assign-events") ? "active" : ""
+              }`}
+            onClick={() => navigate("/assign-events")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+              </svg>
+            </Icon>
+            <span className="label">Assigned Events</span>
+          </div>
+
           {/* Accommodation */}
           <div
-            className={`sidebar-item ${
-              isActive("/accommodation") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/accommodation") ? "active" : ""
+              }`}
             onClick={() => navigate("/accommodation")}
           >
             <Icon>
@@ -97,11 +107,10 @@ export default function Sidebar({ role }) {
             <span className="label">Accommodation</span>
           </div>
 
-          
+
           <div
-            className={`sidebar-item ${
-              isActive("/fee-payment") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/fee-payment") ? "active" : ""
+              }`}
             onClick={() => navigate("/fee-payment")}
           >
             <Icon>
@@ -131,9 +140,8 @@ export default function Sidebar({ role }) {
         <>
           {/* Dashboard */}
           <div
-            className={`sidebar-item ${
-              isActive("/principal-dashboard") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/principal-dashboard") ? "active" : ""
+              }`}
             onClick={() => navigate("/principal-dashboard")}
           >
             <Icon>
@@ -146,9 +154,8 @@ export default function Sidebar({ role }) {
 
           {/* Approvals */}
           <div
-            className={`sidebar-item ${
-              isActive("/approvals") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/approvals") ? "active" : ""
+              }`}
             onClick={() => navigate("/approvals")}
           >
             <Icon>
@@ -172,12 +179,11 @@ export default function Sidebar({ role }) {
             <span className="label">Approve / Reject</span>
           </div>
 
-        
+
           {/* Accompanist */}
           <div
-            className={`sidebar-item ${
-              isActive("/accompanist-form") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/accompanist-form") ? "active" : ""
+              }`}
             onClick={() => navigate("/accompanist-form")}
           >
             <Icon>
@@ -189,26 +195,24 @@ export default function Sidebar({ role }) {
           </div>
 
           {/* Assign Events */}
-  <div
-    className={`sidebar-item ${
-      isActive("/assign-events") ? "active" : ""
-    }`}
-    onClick={() => navigate("/assign-events")}
-  >
-    <Icon>
-      <svg viewBox="0 0 24 24">
-        <path d="M9 11l3 3L22 4" />
-        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-      </svg>
-    </Icon>
-    <span className="label">Assign Events</span>
-  </div>
+          <div
+            className={`sidebar-item ${isActive("/assign-events") ? "active" : ""
+              }`}
+            onClick={() => navigate("/assign-events")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+              </svg>
+            </Icon>
+            <span className="label">Assign Events</span>
+          </div>
 
           {/* Accommodation */}
           <div
-            className={`sidebar-item ${
-              isActive("/accommodation") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/accommodation") ? "active" : ""
+              }`}
             onClick={() => navigate("/accommodation")}
           >
             <Icon>
@@ -221,9 +225,8 @@ export default function Sidebar({ role }) {
 
           {/* 💳 REGESTRATION (Label only changed) */}
           <div
-            className={`sidebar-item ${
-              isActive("/fee-payment") ? "active" : ""
-            }`}
+            className={`sidebar-item ${isActive("/fee-payment") ? "active" : ""
+              }`}
             onClick={() => navigate("/fee-payment")}
           >
             <Icon>
@@ -243,35 +246,35 @@ export default function Sidebar({ role }) {
                 <path d="M10.5 13.5h3" />
               </svg>
             </Icon>
-            <span className="label">Regestration</span>
+            <span className="label">Fees Payment</span>
           </div>
         </>
       )}
 
-  {/* ================= RULES ================= */}
-  <div
-    className={`sidebar-item ${isActive("/rules") ? "active" : ""}`}
-    onClick={() => navigate("/rules")}
-  >
-    <Icon>
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      {/* ================= RULES ================= */}
+      <div
+        className={`sidebar-item ${isActive("/rules") ? "active" : ""}`}
+        onClick={() => navigate("/rules")}
       >
-        <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
-        <path d="M14 2v6h6" />
-        <path d="M8 13h8" />
-        <path d="M8 17h6" />
-      </svg>
-    </Icon>
-    <span className="label">Rules & Regulations</span>
-  </div>
+        <Icon>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+            <path d="M14 2v6h6" />
+            <path d="M8 13h8" />
+            <path d="M8 17h6" />
+          </svg>
+        </Icon>
+        <span className="label">Rules & Regulations</span>
+      </div>
 
-  
-</aside>
+
+    </aside>
   );
 }
