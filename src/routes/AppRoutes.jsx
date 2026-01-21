@@ -6,12 +6,13 @@ import Login from "../pages/Login";
 import RegisterStudent from "../pages/RegisterStudent";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ChangePassword";
+import AssignEvents from "../pages/AssignEvents";
 
 /* STUDENT */
 import Dashboard from "../pages/Dashboard";
 import StudentRegister from "../pages/StudentRegister";
 
-/* ADMIN / MANAGER */
+/* PRINCIPAL + MANAGER */
 import PrincipalDashboard from "../pages/PrincipalDashboard";
 import Approvals from "../pages/Approvals";
 import ApprovedStudents from "../pages/ApprovedStudents";
@@ -19,7 +20,8 @@ import RejectedStudents from "../pages/RejectedStudents";
 import Accommodation from "../pages/Accommodation";
 import AccompanistForm from "../pages/AccompanistForm";
 import Rules from "../pages/Rules";
-import FeePayment from "../pages/FeePayment";   // ✅ ADD THIS
+import FeePayment from "../pages/FeePayment";
+import ManagerDashboard from "../pages/ManagerDashboard";
 
 export default function AppRoutes() {
   return (
@@ -29,6 +31,7 @@ export default function AppRoutes() {
       <Route path="/register-student" element={<RegisterStudent />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/assign-events" element={<AssignEvents />} />
 
       {/* ================= STUDENT ================= */}
       <Route
@@ -50,14 +53,23 @@ export default function AppRoutes() {
       />
 
       {/* ================= PRINCIPAL + MANAGER ================= */}
-      <Route
+     <Route
         path="/principal-dashboard"
         element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
+          <ProtectedRoute allowedRoles={["principal"]}>
             <PrincipalDashboard />
           </ProtectedRoute>
         }
       />
+ <Route
+        path="/manager-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["manager"]}>
+            <ManagerDashboard />
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route
         path="/approvals"
@@ -95,17 +107,17 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ACCOMPANIST — STUDENT + ADMIN */}
+      {/* ACCOMPANIST – PRINCIPAL + MANAGER ONLY */}
       <Route
         path="/accompanist-form"
         element={
-          <ProtectedRoute allowedRoles={["student", "principal", "manager"]}>
+          <ProtectedRoute allowedRoles={["principal", "manager"]}>
             <AccompanistForm />
           </ProtectedRoute>
         }
       />
 
-      {/* 💳 FEE PAYMENT — PRINCIPAL + MANAGER ONLY */}
+      {/* FEE PAYMENT – PRINCIPAL + MANAGER ONLY */}
       <Route
         path="/fee-payment"
         element={
@@ -115,7 +127,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* RULES — ALL */}
+      {/* RULES – ALL */}
       <Route
         path="/rules"
         element={

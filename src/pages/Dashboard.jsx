@@ -358,7 +358,7 @@ export default function Dashboard() {
       {/* ================= REFRESH BUTTON ================= */}
       {canRefresh && !loading && (
         <button className="refresh-button" onClick={handleRefresh}>
-          🔄 Refresh Data (Available every 2 hours)
+          🔄 Refresh Data
         </button>
       )}
 

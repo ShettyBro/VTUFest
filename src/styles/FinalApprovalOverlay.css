@@ -1,0 +1,121 @@
+/* =========================================================
+   FINAL APPROVAL OVERLAY – VTU HABBA 2026
+   Styled to match ManagerProfileModal, Dashboard & Layout
+   ========================================================= */
+
+.final-approval-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 25, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* Card */
+.overlay-content {
+  background: #ffffff;
+  width: 90%;
+  max-width: 640px;
+  border-radius: 12px;
+  padding: 32px 36px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  animation: fadeInScale 0.25s ease;
+  text-align: center;
+}
+
+/* Title */
+.overlay-content h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: #0f172a;
+}
+
+/* General text */
+.overlay-content p {
+  font-size: 14px;
+  color: #334155;
+  margin: 6px 0;
+}
+
+/* Payment status box */
+.payment-section {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+/* Status labels */
+.status {
+  font-weight: 600;
+  margin-top: 8px;
+  display: block;
+}
+
+.status.waiting {
+  color: #d97706;
+}
+
+.status.approved {
+  color: #16a34a;
+}
+
+.status.failed {
+  color: #dc2626;
+}
+
+/* Payment button */
+.payment-btn {
+  margin-top: 14px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.payment-btn:hover {
+  background: #1d4ed8;
+}
+
+/* Remarks */
+.remarks {
+  margin-top: 10px;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+/* Close / back button */
+.close-btn {
+  margin-top: 24px;
+  background: #0f172a;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #020617;
+}
+
+/* Animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

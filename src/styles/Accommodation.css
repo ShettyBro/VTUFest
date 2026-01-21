@@ -125,3 +125,73 @@ button:hover {
     font-size: 14px;
   }
 }
+
+
+/* Added by ShettyBro */
+
+
+.consent-box {
+  margin: 20px 0 24px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f8fafc;            /* soft neutral background */
+  border: 1px solid #c7d2fe;       /* subtle blue border */
+}
+
+.consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  color: #1e40af;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.consent-row input[type="checkbox"] {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.consent-row span {
+  user-select: none;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #ff9933;
+  box-shadow: 0 0 0 2px rgba(255, 153, 51, 0.25);
+}
+
+button:disabled {
+  background: #9ca3af;      /* gray */
+  cursor: not-allowed;
+  opacity: 0.75;
+  transform: none;
+}
+
+button:disabled:hover {
+  background: #9ca3af;
+}
+button:disabled {
+  background: #9ca3af;      /* gray */
+  cursor: not-allowed;
+  opacity: 0.75;
+  transform: none;
+}
+
+button:disabled:hover {
+  background: #9ca3af;
+}

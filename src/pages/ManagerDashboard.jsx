@@ -1,23 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
+import ManagerProfileModal from "./ManagerProfileModal";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import "../styles/PrincipalDashboard.css";
 import notificationsData from "../data/notifications.json";
 import eventsCalendarData from "../data/events-calendar.json";
 
-export default function PrincipalDashboard() {
+export default function ManagerDashboard() {
   const navigate = useNavigate();
   const role = localStorage.getItem("vtufest_role");
   const token = localStorage.getItem("vtufest_token");
 
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
-  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
-    const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
+   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
 
   // Filter and sort priority 1 notifications by date (most recent first)
   const priority1Notifications = notificationsData
@@ -34,27 +35,19 @@ export default function PrincipalDashboard() {
       return new Date(b.date) - new Date(a.date);
     });
 
-  // Loading states for different actions
-  const [assigningManager, setAssigningManager] = useState(false);
-  const [submittingApproval, setSubmittingApproval] = useState(false);
-
-  const [managerForm, setManagerForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
 
   useEffect(() => {
-    if (!token || role !== "principal") {
+    if (!token || role !== "manager") {
       navigate("/");
       return;
     }
 
     fetchDashboardData();
+    checkProfileCompletion();
     checkLockStatus();
   }, []);
 
-   // Ticker animation for priority 1 notifications
+  // Ticker animation for priority 1 notifications
   useEffect(() => {
     if (priority1Notifications.length === 0) return;
 
@@ -99,6 +92,34 @@ export default function PrincipalDashboard() {
     }
   };
 
+  const checkProfileCompletion = async () => {
+    try {
+      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/manager-profile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action: "check_profile_status" }),
+      });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success && !data.profile_completed) {
+        setShowProfileModal(true);
+      }
+    } catch (error) {
+      console.error("Profile check error:", error);
+    }
+  };
+
   const checkLockStatus = async () => {
     try {
       const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`, {
@@ -126,99 +147,6 @@ export default function PrincipalDashboard() {
       }
     } catch (error) {
       console.error("Lock status check error:", error);
-    }
-  };
-
-  const handleAssignManager = async () => {
-    if (!managerForm.name || !managerForm.email || !managerForm.phone) {
-      alert("All fields are required");
-      return;
-    }
-
-    try {
-      setAssigningManager(true);
-
-      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/assign-manager`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          manager_name: managerForm.name,
-          manager_email: managerForm.email,
-          manager_phone: managerForm.phone,
-        }),
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert("Manager assigned successfully. Email sent with credentials.");
-        setShowAssignModal(false);
-        setManagerForm({ name: "", email: "", phone: "" });
-        fetchDashboardData();
-      } else {
-        alert(data.error || "Failed to assign manager");
-      }
-    } catch (error) {
-      console.error("Assign manager error:", error);
-      alert("Failed to assign manager. Please try again.");
-    } finally {
-      setAssigningManager(false);
-    }
-  };
-
-  const handleFinalApproval = async () => {
-    if (
-      !window.confirm(
-        "⚠️ FINAL APPROVAL WARNING\n\nOnce submitted:\n- All registrations will be LOCKED\n- No further edits allowed\n- Payment page will be unlocked\n\nAre you sure you want to continue?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setSubmittingApproval(true);
-
-      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert(
-          `Final Approval Successful!\n\n${data.inserted_students} students + ${data.inserted_accompanists} accompanists = ${data.total_records} records created.\n\nAll actions are now locked. Please proceed to payment.`
-        );
-        fetchDashboardData();
-        checkLockStatus();
-      } else {
-        alert(data.error || "Final approval failed");
-      }
-    } catch (error) {
-      console.error("Final approval error:", error);
-      alert("Failed to submit final approval. Please try again.");
-    } finally {
-      setSubmittingApproval(false);
     }
   };
 
@@ -254,7 +182,7 @@ export default function PrincipalDashboard() {
       <Layout>
         <div className="loading-container">
           <div className="spinner"></div>
-          <h3>Loading Principal Dashboard...</h3>
+          <h3>Loading Manager Dashboard...</h3>
           <p>Please wait while we fetch your data</p>
         </div>
       </Layout>
@@ -275,31 +203,11 @@ export default function PrincipalDashboard() {
           </div>
         </div>
       )}
-
+        
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h2>Principal Dashboard</h2>
-          <p>VTU HABBA 2026 – Principal Administration Panel</p>
-
-          {dashboardData && !dashboardData.has_team_manager && (
-            <button
-              className="assign-manager-btn"
-              onClick={() => setShowAssignModal(true)}
-              disabled={assigningManager}
-            >
-              {assigningManager ? "Assigning..." : "Assign Manager"}
-            </button>
-          )}
-
-          {!dashboardData?.is_final_approved && (
-            <button 
-              className="final-approval-btn" 
-              onClick={handleFinalApproval}
-              disabled={submittingApproval}
-            >
-              {submittingApproval ? "Submitting..." : "Submit Final Approval"}
-            </button>
-          )}
+          <h2>Team Manager Dashboard</h2>
+          <p>VTU HABBA 2026 – Team Manager Panel</p>
         </div>
 
         <div className="stats-grid">
@@ -399,39 +307,7 @@ export default function PrincipalDashboard() {
         </div>
       </div>
 
-      {showAssignModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Assign Team Manager</h3>
-            <label>Manager Name</label>
-            <input
-              value={managerForm.name}
-              onChange={(e) => setManagerForm({ ...managerForm, name: e.target.value })}
-              disabled={assigningManager}
-            />
-            <label>Manager Email</label>
-            <input
-              value={managerForm.email}
-              onChange={(e) => setManagerForm({ ...managerForm, email: e.target.value })}
-              disabled={assigningManager}
-            />
-            <label>Manager Mobile</label>
-            <input
-              value={managerForm.phone}
-              onChange={(e) => setManagerForm({ ...managerForm, phone: e.target.value })}
-              disabled={assigningManager}
-            />
-            <div className="modal-actions">
-              <button onClick={handleAssignManager} disabled={assigningManager}>
-                {assigningManager ? "Assigning..." : "Submit"}
-              </button>
-              <button onClick={() => setShowAssignModal(false)} disabled={assigningManager}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showProfileModal && <ManagerProfileModal onComplete={() => setShowProfileModal(false)} />}
 
       {showFinalApprovalOverlay && lockStatus && (
         <FinalApprovalOverlay

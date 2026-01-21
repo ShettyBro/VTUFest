@@ -406,6 +406,9 @@ export default function RegisterStudent() {
     }
   };
 
+  // Helper: Check if upload is complete
+  const isUploadComplete = uploadStatus === "success";
+
   return (
     <div className="register-page">
       <h2>Student Registration</h2>
@@ -590,14 +593,38 @@ export default function RegisterStudent() {
             required
           />
 
+          {/* Helper message when upload is incomplete */}
+          {!isUploadComplete && !timerExpired && (
+            <p style={{
+              color: "#d32f2f",
+              fontSize: "13px",
+              textAlign: "center",
+              marginTop: "10px",
+              marginBottom: "5px",
+              fontWeight: "500"
+            }}>
+              ⚠ Upload Photo to proceed
+            </p>
+          )}
+
           <button
             type="submit"
+            title={!isUploadComplete ? "Upload Photo to proceed" : ""}
             disabled={
               timerExpired ||
               loading ||
-              uploadStatus !== "success" ||
+              !isUploadComplete ||
               isUploadBlocked()
             }
+            style={{
+              cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked()) 
+                ? "not-allowed" 
+                : "pointer",
+              opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked()) 
+                ? 0.5 
+                : 1,
+              transition: "opacity 0.2s ease"
+            }}
           >
             {loading ? "Registering..." : "Register"}
           </button>
