@@ -246,7 +246,7 @@ export default function Sidebar({ role }) {
                 <path d="M10.5 13.5h3" />
               </svg>
             </Icon>
-            <span className="label">Fees Payment</span>
+            <span className="label">Regestration</span>
           </div>
         </>
       )}
