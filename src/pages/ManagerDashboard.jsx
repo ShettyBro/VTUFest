@@ -309,12 +309,12 @@ export default function ManagerDashboard() {
 
       {showProfileModal && <ManagerProfileModal onComplete={() => setShowProfileModal(false)} />}
 
-      {showFinalApprovalOverlay && lockStatus && (
+      {/* {showFinalApprovalOverlay && lockStatus && (
         <FinalApprovalOverlay
           paymentStatus={lockStatus.payment_status}
           paymentRemarks={lockStatus.payment_remarks}
         />
-      )}
+      )} */}
     </Layout>
   );
 }

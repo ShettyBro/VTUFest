@@ -405,12 +405,12 @@ export default function PrincipalDashboard() {
         </div>
       )}
 
-      {showFinalApprovalOverlay && lockStatus && (
+      {/* {showFinalApprovalOverlay && lockStatus && (
         <FinalApprovalOverlay
           paymentStatus={lockStatus.payment_status}
           paymentRemarks={lockStatus.payment_remarks}
         />
-      )}
+      )} */}
     </Layout>
   );
 }
