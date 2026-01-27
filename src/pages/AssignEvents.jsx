@@ -43,6 +43,41 @@ const EVENT_CATEGORIES = {
   ],
 };
 
+// Event-wise limits for participants and accompanists (MANDATORY)
+const EVENT_LIMITS = {
+  classical_vocal_solo: { participants: 1, accompanists: 2 },
+  classical_instrumental_percussion: { participants: 1, accompanists: 2 },
+  classical_instrumental_non_percussion: { participants: 1, accompanists: 2 },
+  light_vocal_solo: { participants: 1, accompanists: 2 },
+  western_vocal_solo: { participants: 1, accompanists: 2 },
+
+  group_song_indian: { participants: 6, accompanists: 3 },
+  group_song_western: { participants: 6, accompanists: 3 },
+  folk_orchestra: { participants: 9, accompanists: 3 },
+  folk_tribal_dance: { participants: 10, accompanists: 5 },
+
+  classical_dance_solo: { participants: 1, accompanists: 3 },
+
+  quiz: { participants: 3, accompanists: 0 },
+  elocution: { participants: 1, accompanists: 0 },
+  debate: { participants: 2, accompanists: 0 },
+
+  one_act_play: { participants: 9, accompanists: 3 },
+  skits: { participants: 6, accompanists: 3 },
+  mime: { participants: 6, accompanists: 2 },
+  mimicry: { participants: 1, accompanists: 0 },
+
+  on_spot_painting: { participants: 1, accompanists: 0 },
+  collage_making: { participants: 1, accompanists: 0 },
+  poster_making: { participants: 1, accompanists: 0 },
+  clay_modelling: { participants: 1, accompanists: 0 },
+  cartooning: { participants: 1, accompanists: 0 },
+  rangoli: { participants: 1, accompanists: 0 },
+  spot_photography: { participants: 1, accompanists: 0 },
+
+  installation: { participants: 4, accompanists: 0 },
+};
+
 export default function AssignEvents() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
@@ -197,7 +232,7 @@ export default function AssignEvents() {
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
     setSelectedPersonId("");
-    // Force student type for participants, allow choice for accompanists
+    // CRITICAL: Force student type for participants, default to student for accompanists
     setSelectedPersonType(mode === "add_participant" ? "student" : "student");
     setShowModal(true);
   };
@@ -216,10 +251,33 @@ export default function AssignEvents() {
       return;
     }
 
-    // Safety check: Participants must be students only
+    // CRITICAL BUSINESS RULE: Participants MUST be students only
     if (modalMode === "add_participant" && selectedPersonType !== "student") {
       alert("Participants must be students only");
       return;
+    }
+
+    // Get event limits
+    const eventLimits = EVENT_LIMITS[currentEventSlug];
+    if (!eventLimits) {
+      alert("Event configuration not found");
+      return;
+    }
+
+    // Check event-wise limits BEFORE API call
+    const currentData = eventData[currentEventSlug];
+    if (modalMode === "add_participant") {
+      const currentParticipants = currentData?.participants?.length || 0;
+      if (currentParticipants >= eventLimits.participants) {
+        alert(`Maximum participants (${eventLimits.participants}) reached for this event`);
+        return;
+      }
+    } else if (modalMode === "add_accompanist") {
+      const currentAccompanists = currentData?.accompanists?.length || 0;
+      if (currentAccompanists >= eventLimits.accompanists) {
+        alert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`);
+        return;
+      }
     }
 
     try {
