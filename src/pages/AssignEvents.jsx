@@ -335,6 +335,11 @@ export default function AssignEvents() {
           delete updated[currentEventSlug];
           return updated;
         });
+        setLoadingEvents((prev) => {
+          const updated = { ...prev };
+          delete updated[currentEventSlug];
+          return updated;
+        });
         fetchEventData(currentEventSlug);
         fetchDashboardData(); // Refresh to update event count
       } else {
@@ -380,6 +385,11 @@ export default function AssignEvents() {
       if (data.success) {
         alert(data.message);
         setEventData((prev) => {
+          const updated = { ...prev };
+          delete updated[eventSlug];
+          return updated;
+        });
+        setLoadingEvents((prev) => {
           const updated = { ...prev };
           delete updated[eventSlug];
           return updated;
