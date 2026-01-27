@@ -232,7 +232,7 @@ export default function AssignEvents() {
     // Check event-wise limits BEFORE opening modal
     const eventLimits = EVENT_LIMITS[eventSlug];
     const currentData = eventData[eventSlug];
-
+    
     if (mode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
       if (currentParticipants >= eventLimits?.participants) {
@@ -246,7 +246,7 @@ export default function AssignEvents() {
         return;
       }
     }
-
+    
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
     setSelectedPersonId("");
@@ -400,23 +400,6 @@ export default function AssignEvents() {
       alert("You must accept the terms to proceed");
       return;
     }
-    // Helper function to check if add button should be disabled
-    const isAddButtonDisabled = (eventSlug, type) => {
-      const limits = EVENT_LIMITS[eventSlug];
-      const currentData = eventData[eventSlug];
-
-      if (!limits || !currentData) return false;
-
-      if (type === "participant") {
-        const currentCount = currentData.participants?.length || 0;
-        return currentCount >= limits.participants;
-      } else if (type === "accompanist") {
-        const currentCount = currentData.accompanists?.length || 0;
-        return currentCount >= limits.accompanists;
-      }
-
-      return false;
-    };
 
     try {
       setFinalApproving(true);
@@ -452,6 +435,24 @@ export default function AssignEvents() {
     } finally {
       setFinalApproving(false);
     }
+  };
+
+  // Helper function to check if add button should be disabled
+  const isAddButtonDisabled = (eventSlug, type) => {
+    const limits = EVENT_LIMITS[eventSlug];
+    const currentData = eventData[eventSlug];
+    
+    if (!limits || !currentData) return false;
+
+    if (type === "participant") {
+      const currentCount = currentData.participants?.length || 0;
+      return currentCount >= limits.participants;
+    } else if (type === "accompanist") {
+      const currentCount = currentData.accompanists?.length || 0;
+      return currentCount >= limits.accompanists;
+    }
+    
+    return false;
   };
 
   if (loading) {
@@ -538,7 +539,7 @@ export default function AssignEvents() {
                   fontSize: "14px",
                   fontWeight: "600",
                   border: "1px solid #86efac",
-                  width: "200px",
+                   width: "200px",
                   marginTop: "0px",
                 }}
               >
@@ -727,10 +728,10 @@ export default function AssignEvents() {
               )}
 
               <label>
-                {modalMode === "add_participant"
+                {modalMode === "add_participant" 
                   ? "Select Student"
-                  : selectedPersonType === "student"
-                    ? "Select Student"
+                  : selectedPersonType === "student" 
+                    ? "Select Student" 
                     : "Select Accompanist"}
               </label>
               <select
