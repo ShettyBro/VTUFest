@@ -206,9 +206,11 @@ export default function AssignEvents() {
             available_accompanists: data.available_accompanists || [],
           },
         }));
+      } else {
+        alert(data.error || "Failed to load event data");
       }
     } catch (error) {
-      console.error("Event data fetch error:", error);
+      console.error("Fetch event error:", error);
       alert("Failed to load event data");
     } finally {
       setLoadingEvents((prev) => ({ ...prev, [eventSlug]: false }));
@@ -220,43 +222,43 @@ export default function AssignEvents() {
       setExpandedEvent(null);
     } else {
       setExpandedEvent(eventSlug);
-      fetchEventData(eventSlug);
+      if (!eventData[eventSlug]) {
+        fetchEventData(eventSlug);
+      }
     }
   };
 
   const openAddModal = (eventSlug, mode) => {
-    const limits = EVENT_LIMITS[eventSlug];
+    // Check event-wise limits BEFORE opening modal
+    const eventLimits = EVENT_LIMITS[eventSlug];
     const currentData = eventData[eventSlug];
-
-    // Check limits before opening modal
+    
     if (mode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
-      if (currentParticipants >= limits.participants) {
-        alert(`Maximum participants (${limits.participants}) reached for this event`);
+      if (currentParticipants >= eventLimits?.participants) {
+        alert(`Maximum participants (${eventLimits.participants}) reached for this event`);
         return;
       }
-      // CRITICAL: Force student type for participants
-      setSelectedPersonType("student");
     } else if (mode === "add_accompanist") {
       const currentAccompanists = currentData?.accompanists?.length || 0;
-      if (currentAccompanists >= limits.accompanists) {
-        alert(`Maximum accompanists (${limits.accompanists}) reached for this event`);
+      if (currentAccompanists >= eventLimits?.accompanists) {
+        alert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`);
         return;
       }
-      // For accompanists, default to student but allow switching
-      setSelectedPersonType("student");
     }
-
+    
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
     setSelectedPersonId("");
+    // CRITICAL: Force student type for participants, default to student for accompanists
+    setSelectedPersonType(mode === "add_participant" ? "student" : "student");
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
-    setModalMode("");
     setCurrentEventSlug("");
+    setModalMode("");
     setSelectedPersonId("");
     setSelectedPersonType("student");
   };
@@ -267,32 +269,40 @@ export default function AssignEvents() {
       return;
     }
 
-    // Double-check limits before API call
-    const limits = EVENT_LIMITS[currentEventSlug];
-    const currentData = eventData[currentEventSlug];
+    // CRITICAL BUSINESS RULE: Participants MUST be students only
+    if (modalMode === "add_participant" && selectedPersonType !== "student") {
+      alert("Participants must be students only");
+      return;
+    }
 
+    // Get event limits
+    const eventLimits = EVENT_LIMITS[currentEventSlug];
+    if (!eventLimits) {
+      alert("Event configuration not found");
+      return;
+    }
+
+    // Check event-wise limits BEFORE API call
+    const currentData = eventData[currentEventSlug];
     if (modalMode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
-      if (currentParticipants >= limits.participants) {
-        alert(`Maximum participants (${limits.participants}) reached for this event`);
-        return;
-      }
-      // Enforce business rule: participants MUST be students
-      if (selectedPersonType !== "student") {
-        alert("Participants can only be students");
+      if (currentParticipants >= eventLimits.participants) {
+        alert(`Maximum participants (${eventLimits.participants}) reached for this event`);
         return;
       }
     } else if (modalMode === "add_accompanist") {
       const currentAccompanists = currentData?.accompanists?.length || 0;
-      if (currentAccompanists >= limits.accompanists) {
-        alert(`Maximum accompanists (${limits.accompanists}) reached for this event`);
+      if (currentAccompanists >= eventLimits.accompanists) {
+        alert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`);
         return;
       }
     }
 
-    setSubmitting(true);
-
     try {
+      setSubmitting(true);
+
+      const eventType = modalMode === "add_participant" ? "participating" : "accompanying";
+
       const response = await fetch(`${API_BASE_URL}/assign-events`, {
         method: "POST",
         headers: {
@@ -302,9 +312,9 @@ export default function AssignEvents() {
         body: JSON.stringify({
           action: "ADD",
           event_slug: currentEventSlug,
-          person_id: selectedPersonId,
+          person_id: parseInt(selectedPersonId),
           person_type: selectedPersonType,
-          event_type: modalMode === "add_participant" ? "participating" : "accompanying",
+          event_type: eventType,
         }),
       });
 
@@ -318,28 +328,30 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message || "Added successfully");
+        alert(data.message);
         closeModal();
-        // Refresh event data
         setEventData((prev) => {
           const updated = { ...prev };
           delete updated[currentEventSlug];
           return updated;
         });
         fetchEventData(currentEventSlug);
+        fetchDashboardData(); // Refresh to update event count
       } else {
-        alert(data.message || "Failed to add person");
+        alert(data.error || "Failed to add assignment");
       }
     } catch (error) {
-      console.error("Add person error:", error);
-      alert("Failed to add person");
+      console.error("Add error:", error);
+      alert("Failed to add assignment");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleRemove = async (eventSlug, personId, personType) => {
-    if (!confirm("Are you sure you want to remove this person?")) return;
+    if (!confirm("Are you sure you want to remove this assignment?")) {
+      return;
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/assign-events`, {
@@ -366,28 +378,33 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message || "Removed successfully");
-        // Refresh event data
+        alert(data.message);
         setEventData((prev) => {
           const updated = { ...prev };
           delete updated[eventSlug];
           return updated;
         });
         fetchEventData(eventSlug);
+        fetchDashboardData(); // Refresh to update event count
       } else {
-        alert(data.message || "Failed to remove person");
+        alert(data.error || "Failed to remove assignment");
       }
     } catch (error) {
-      console.error("Remove person error:", error);
-      alert("Failed to remove person");
+      console.error("Remove error:", error);
+      alert("Failed to remove assignment");
     }
   };
 
   const handleFinalApproval = async () => {
-    setFinalApproving(true);
+    if (!termsAccepted) {
+      alert("You must accept the terms to proceed");
+      return;
+    }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/final-approval`, {
+      setFinalApproving(true);
+
+      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -405,119 +422,157 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message || "Final approval submitted successfully");
-        setIsLocked(true);
+        alert(data.message);
         setShowFinalApprovalModal(false);
-        setTermsAccepted(false);
+        setIsLocked(true);
+        fetchDashboardData();
       } else {
-        alert(data.message || "Failed to submit final approval");
+        alert(data.error || "Final approval failed");
       }
     } catch (error) {
       console.error("Final approval error:", error);
-      alert("Failed to submit final approval");
+      alert("Final approval failed");
     } finally {
       setFinalApproving(false);
     }
   };
 
-  // Helper function to check if add button should be disabled
-  const isAddDisabled = (eventSlug, type) => {
-    const limits = EVENT_LIMITS[eventSlug];
-    const currentData = eventData[eventSlug];
-    
-    if (!limits || !currentData) return false;
-
-    if (type === "participant") {
-      const currentCount = currentData.participants?.length || 0;
-      return currentCount >= limits.participants;
-    } else if (type === "accompanist") {
-      const currentCount = currentData.accompanists?.length || 0;
-      return currentCount >= limits.accompanists;
-    }
-    
-    return false;
-  };
-
   if (loading) {
     return (
       <Layout>
-        <div className="assign-events-page">
-          <div className="loading-spinner">Loading...</div>
-        </div>
+        <div className="loading-indicator">Loading...</div>
       </Layout>
     );
   }
 
+  const participatingCount = dashboardData?.stats?.participating_event_count || 0;
+  const showFinalApprovalButton =
+    role === "principal" &&
+    participatingCount >= 1 &&
+    dashboardData?.is_final_approved === false;
+
   return (
     <Layout>
-      <div className="assign-events-page">
-        <div className="page-header">
-          <h1>Assign Events</h1>
-          <div className="header-badge">
-            VTUHABA 2026 — Event Assignment Management
-          </div>
-          {!isLocked && role === "manager" && (
-            <button
-              className="final-approval-btn"
-              onClick={() => setShowFinalApprovalModal(true)}
-            >
-              Submit Final Approval
-            </button>
-          )}
-          {isLocked && (
-            <div className="lock-indicator">
-              🔒 Assignments Locked
-            </div>
-          )}
+      <div className="assign-events-container">
+        <div className="assign-events-header">
+          <h2>Assign Events</h2>
+          <p className="subtitle">VTU HABBA 2026 — Event Assignment Management</p>
         </div>
 
+        {/* Events Quota Bar - matches College Quota styling */}
         {dashboardData && (
-          <div className="dashboard-stats">
-            <div className="stat-card">
-              <h3>Events Assigned</h3>
-              <div className="stat-value">
-                {dashboardData.events_assigned} / {dashboardData.total_events}
-              </div>
-              <div className="stat-label">
-                Remaining: {dashboardData.events_remaining}
-              </div>
+          <div
+            style={{
+              background: "transparent",
+              border: "2px solid #2563eb",
+              color: "#1e40af",
+              padding: "16px 24px",
+              borderRadius: "12px",
+              marginBottom: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Events Assigned</h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: "700" }}>
+                {participatingCount} / 25
+              </p>
+              <small style={{ fontSize: "13px" }}>Remaining: {25 - participatingCount}</small>
             </div>
+
+            {/* Final Approval Button - only for Principal when conditions met */}
+            {showFinalApprovalButton && (
+              <button
+                onClick={() => setShowFinalApprovalModal(true)}
+                style={{
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background 0.2s ease",
+                  width: "200px",
+                  marginTop: "0px",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#1d4ed8";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#2563eb";
+                }}
+              >
+                Submit Final Approval
+              </button>
+            )}
+
+            {/* Show approval status if already approved */}
+            {dashboardData?.is_final_approved && (
+              <div
+                style={{
+                  background: "#dcfce7",
+                  color: "#166534",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  border: "1px solid #86efac",
+                   width: "200px",
+                  marginTop: "0px",
+                }}
+              >
+                ✓ Final Approved
+                {dashboardData?.final_approved_at && (
+                  <div style={{ fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
+                    {new Date(dashboardData.final_approved_at).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
+        {/* Lock Banner */}
+        {isLocked && (
+          <div className="lock-banner">
+            🔒 Final approval submitted. All event assignments are now locked and read-only.
+          </div>
+        )}
+
+        {/* Event Categories */}
         {Object.entries(EVENT_CATEGORIES).map(([category, events]) => (
-          <div key={category} className="event-category">
-            <h2 className="category-title">{category}</h2>
+          <div key={category} className="event-category-section">
+            <h3 className="category-title">{category}</h3>
             {events.map((event) => (
               <div key={event.slug} className="event-accordion">
                 <div
-                  className="event-header"
+                  className={`event-header ${expandedEvent === event.slug ? "expanded" : ""}`}
                   onClick={() => handleEventClick(event.slug)}
                 >
                   <span className="event-name">{event.name}</span>
-                  <span className="expand-icon">
+                  <span className="event-arrow">
                     {expandedEvent === event.slug ? "▼" : "▶"}
                   </span>
                 </div>
 
                 {expandedEvent === event.slug && (
-                  <div className="event-content">
+                  <div className="event-body">
                     {loadingEvents[event.slug] ? (
-                      <div className="loading-spinner">Loading event data...</div>
+                      <div className="loading-indicator">Loading event data...</div>
                     ) : eventData[event.slug] ? (
                       <>
                         {/* Participants Section */}
                         <div className="assignment-section">
                           <div className="section-header">
-                            <h4>
-                              Participants {eventData[event.slug].participants.length}/
-                              {EVENT_LIMITS[event.slug]?.participants || 0}
-                            </h4>
+                            <h4>Participants {eventData[event.slug].participants.length}/{EVENT_LIMITS[event.slug]?.participants || 0}</h4>
                             {!isLocked && role === "manager" && (
                               <button
-                                className={`add-btn ${isAddDisabled(event.slug, "participant") ? "disabled" : ""}`}
+                                className="add-btn"
                                 onClick={() => openAddModal(event.slug, "add_participant")}
-                                disabled={isAddDisabled(event.slug, "participant")}
                               >
                                 + Add Participant
                               </button>
@@ -535,7 +590,9 @@ export default function AssignEvents() {
                                     <div className="person-details">
                                       Phone: {person.phone} | Email: {person.email || "N/A"}
                                     </div>
-                                    <span className="person-type">Student</span>
+                                    <span className="person-type">
+                                      {person.person_type === "student" ? "Student" : "Accompanist"}
+                                    </span>
                                   </div>
                                   {!isLocked && role === "manager" && (
                                     <button
@@ -560,15 +617,11 @@ export default function AssignEvents() {
                         {/* Accompanists Section */}
                         <div className="assignment-section">
                           <div className="section-header">
-                            <h4>
-                              Accompanists {eventData[event.slug].accompanists.length}/
-                              {EVENT_LIMITS[event.slug]?.accompanists || 0}
-                            </h4>
+                            <h4>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
                             {!isLocked && role === "manager" && (
                               <button
-                                className={`add-btn ${isAddDisabled(event.slug, "accompanist") ? "disabled" : ""}`}
+                                className="add-btn"
                                 onClick={() => openAddModal(event.slug, "add_accompanist")}
-                                disabled={isAddDisabled(event.slug, "accompanist")}
                               >
                                 + Add Accompanist
                               </button>
@@ -628,7 +681,7 @@ export default function AssignEvents() {
                 {modalMode === "add_participant" ? "Add Participant" : "Add Accompanist"}
               </h3>
 
-              {/* CRITICAL: Only show Person Type selector for accompanists */}
+              {/* Only show Person Type selector for accompanists */}
               {modalMode === "add_accompanist" && (
                 <>
                   <label>Person Type</label>
@@ -636,7 +689,7 @@ export default function AssignEvents() {
                     value={selectedPersonType}
                     onChange={(e) => {
                       setSelectedPersonType(e.target.value);
-                      setSelectedPersonId(""); // Clear selection when switching type
+                      setSelectedPersonId("");
                     }}
                     disabled={submitting}
                   >
@@ -646,8 +699,6 @@ export default function AssignEvents() {
                 </>
               )}
 
-              {/* Participant modal: Always show "Select Student" */}
-              {/* Accompanist modal: Show based on selectedPersonType */}
               <label>
                 {modalMode === "add_participant" 
                   ? "Select Student"
@@ -661,15 +712,15 @@ export default function AssignEvents() {
                 disabled={submitting}
               >
                 <option value="">-- Select --</option>
-                {/* For participants: ONLY show students */}
-                {modalMode === "add_participant" && 
+                {/* For add_participant: ALWAYS show only students */}
+                {modalMode === "add_participant" &&
                   eventData[currentEventSlug]?.available_students?.map((student) => (
                     <option key={student.student_id} value={student.student_id}>
                       {student.full_name} ({student.usn})
                     </option>
                   ))
                 }
-                {/* For accompanists: Show based on selected type */}
+                {/* For add_accompanist: show based on selectedPersonType */}
                 {modalMode === "add_accompanist" && selectedPersonType === "student" &&
                   eventData[currentEventSlug]?.available_students?.map((student) => (
                     <option key={student.student_id} value={student.student_id}>
