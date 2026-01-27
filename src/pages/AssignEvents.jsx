@@ -197,7 +197,8 @@ export default function AssignEvents() {
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
     setSelectedPersonId("");
-    setSelectedPersonType("student");
+    // Force student type for participants, allow choice for accompanists
+    setSelectedPersonType(mode === "add_participant" ? "student" : "student");
     setShowModal(true);
   };
 
@@ -212,6 +213,12 @@ export default function AssignEvents() {
   const handleAdd = async () => {
     if (!selectedPersonId) {
       alert("Please select a person");
+      return;
+    }
+
+    // Safety check: Participants must be students only
+    if (modalMode === "add_participant" && selectedPersonType !== "student") {
+      alert("Participants must be students only");
       return;
     }
 
@@ -604,18 +611,23 @@ export default function AssignEvents() {
                 {modalMode === "add_participant" ? "Add Participant" : "Add Accompanist"}
               </h3>
 
-              <label>Person Type</label>
-              <select
-                value={selectedPersonType}
-                onChange={(e) => {
-                  setSelectedPersonType(e.target.value);
-                  setSelectedPersonId("");
-                }}
-                disabled={submitting}
-              >
-                <option value="student">Student</option>
-                <option value="accompanist">Accompanist</option>
-              </select>
+              {/* Only show Person Type selector for accompanists */}
+              {modalMode === "add_accompanist" && (
+                <>
+                  <label>Person Type</label>
+                  <select
+                    value={selectedPersonType}
+                    onChange={(e) => {
+                      setSelectedPersonType(e.target.value);
+                      setSelectedPersonId("");
+                    }}
+                    disabled={submitting}
+                  >
+                    <option value="student">Student</option>
+                    <option value="accompanist">Accompanist</option>
+                  </select>
+                </>
+              )}
 
               <label>
                 Select {selectedPersonType === "student" ? "Student" : "Accompanist"}
