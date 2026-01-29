@@ -30,10 +30,30 @@ export default function AppRoutes() {
       <Route path="/" element={<Login />} />
       <Route path="/register-student" element={<RegisterStudent />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/assign-events" element={<AssignEvents />} />
 
-      {/* ================= STUDENT ================= */}
+      {/* ================= RESET PASSWORD (RESET-AUTHORIZED) ================= */}
+      {/* 
+        SECURITY DECISION: ChangePassword uses ProtectedRoute with isResetPage=true
+        
+        WHY:
+        - NOT fully public (requires token + email + role in URL)
+        - Allows forced reset without JWT
+        - Backend validates token authenticity
+        - Works for both forced-reset and forgot-password flows
+        
+        Path changed from /reset-password to /changepassword to match Login.jsx redirect
+      */}
+      <Route
+        path="/changepassword"
+        element={
+          <ProtectedRoute isResetPage={true}>
+            <ResetPassword />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ================= STUDENT (JWT REQUIRED) ================= */}
       <Route
         path="/dashboard"
         element={
@@ -52,8 +72,8 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ================= PRINCIPAL + MANAGER ================= */}
-     <Route
+      {/* ================= PRINCIPAL + MANAGER (JWT REQUIRED) ================= */}
+      <Route
         path="/principal-dashboard"
         element={
           <ProtectedRoute allowedRoles={["principal"]}>
@@ -61,7 +81,8 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
- <Route
+
+      <Route
         path="/manager-dashboard"
         element={
           <ProtectedRoute allowedRoles={["manager"]}>
@@ -69,7 +90,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
 
       <Route
         path="/approvals"
@@ -127,7 +147,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* RULES – ALL */}
+      {/* RULES – ALL AUTHENTICATED USERS */}
       <Route
         path="/rules"
         element={
