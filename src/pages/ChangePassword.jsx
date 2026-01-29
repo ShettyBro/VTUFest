@@ -1,4 +1,5 @@
-// ResetPassword.jsx
+// ChangePassword.jsx (ResetPassword)
+// ✅ NO CHANGES NEEDED - Already handles token-based reset for both flows
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../styles/ForgotPassword.css";
@@ -17,6 +18,7 @@ export default function ResetPassword() {
   const role = searchParams.get("role");
 
   useEffect(() => {
+    // ✅ Validate all required parameters exist
     if (!role || !token || !email) {
       navigate("/");
     }
@@ -40,6 +42,8 @@ export default function ResetPassword() {
     try {
       setLoading(true);
 
+      // ✅ Same endpoint for both forgot-password and forced-reset flows
+      // Backend differentiates based on token and force_password_reset flag
       const response = await fetch(
         `https://vtubackend2026.netlify.app/.netlify/functions/reset-password/${role}`,
         {
@@ -61,6 +65,7 @@ export default function ResetPassword() {
         return;
       }
 
+      // ✅ Success - redirect to login after 2 seconds
       setSuccessMsg(data.message);
       setTimeout(() => {
         navigate("/");

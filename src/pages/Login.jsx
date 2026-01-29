@@ -20,6 +20,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  
+  // ✅ NEW: State for forced password reset toast
+  const [showForceResetToast, setShowForceResetToast] = useState(false);
+  const [forceResetData, setForceResetData] = useState(null);
 
   /* ---------- INITIALIZE ROLE & AUTO REDIRECT ON PAGE LOAD ---------- */
   useEffect(() => {
@@ -61,6 +65,17 @@ export default function Login() {
     redirectBasedOnRole(storedRole);
   }, [navigate]);
 
+  /* ---------- AUTO-REDIRECT AFTER 3 SECONDS FOR FORCED RESET ---------- */
+  useEffect(() => {
+    if (showForceResetToast && forceResetData) {
+      const timer = setTimeout(() => {
+        handleForceResetRedirect();
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showForceResetToast, forceResetData]);
+
   /* ---------- REDIRECT HELPER ---------- */
   const redirectBasedOnRole = (userRole) => {
     switch (userRole) {
@@ -84,15 +99,31 @@ export default function Login() {
     setEmail("");
     setPassword("");
     setErrorMsg("");
+    setShowForceResetToast(false);
+    setForceResetData(null);
   };
 
   /* ---------- EMAIL VALIDATION ---------- */
   const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
+  /* ---------- FORCED RESET REDIRECT HANDLER ---------- */
+  const handleForceResetRedirect = () => {
+    if (!forceResetData) return;
+
+    const { reset_token, email, role } = forceResetData;
+    
+    // Navigate to reset password page with token
+    navigate(
+      `/changepassword?token=${encodeURIComponent(reset_token)}&email=${encodeURIComponent(email)}&role=${role}`
+    );
+  };
+
   /* ---------- LOGIN HANDLER ---------- */
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMsg("");
+    setShowForceResetToast(false);
+    setForceResetData(null);
 
     if (!email || !password) {
       setErrorMsg("Please enter email ID and password");
@@ -130,7 +161,24 @@ export default function Login() {
         return;
       }
 
-      // ✅ STORE SESSION - FIXED: Store name correctly
+      // ⚠️ CRITICAL: Check for FORCE_RESET status
+      if (data.status === "FORCE_RESET") {
+        // Store reset data for redirect
+        setForceResetData({
+          reset_token: data.reset_token,
+          email: data.email,
+          role: data.role,
+        });
+        
+        // Show toast message
+        setShowForceResetToast(true);
+        setLoading(false);
+        
+        // Auto-redirect handled by useEffect after 3 seconds
+        return;
+      }
+
+      // ✅ NORMAL LOGIN - STORE SESSION
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
 
@@ -174,6 +222,54 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      {/* ================= FORCED RESET TOAST ================= */}
+      {showForceResetToast && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            padding: "20px 30px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            zIndex: 10000,
+            maxWidth: "500px",
+            textAlign: "center",
+            animation: "slideDown 0.3s ease-out",
+          }}
+        >
+          <div style={{ fontSize: "24px", marginBottom: "10px" }}>👋</div>
+          <div style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>
+            Welcome! First-time login detected.
+          </div>
+          <div style={{ fontSize: "14px", marginBottom: "15px" }}>
+            Please reset your password to continue.
+          </div>
+          <div style={{ fontSize: "12px", color: "#e8f5e9" }}>
+            Redirecting automatically in 3 seconds...
+          </div>
+          <button
+            onClick={handleForceResetRedirect}
+            style={{
+              marginTop: "15px",
+              padding: "10px 20px",
+              backgroundColor: "white",
+              color: "#4CAF50",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontWeight: "600",
+              fontSize: "14px",
+            }}
+          >
+            Reset Password Now
+          </button>
+        </div>
+      )}
+
       {/* ================= TOP NAVBAR ================= */}
       <nav className="login-navbar">
         <div className="login-brand">
@@ -203,7 +299,7 @@ export default function Login() {
               type="button"
               className={role === "principal" ? "active" : ""}
               onClick={() => handleRoleChange("principal")}
-              disabled={loading}
+              disabled={loading || showForceResetToast}
             >
               Principal
             </button>
@@ -212,7 +308,7 @@ export default function Login() {
               type="button"
               className={role === "manager" ? "active" : ""}
               onClick={() => handleRoleChange("manager")}
-              disabled={loading}
+              disabled={loading || showForceResetToast}
             >
               Team Manager
             </button>
@@ -221,7 +317,7 @@ export default function Login() {
               type="button"
               className={role === "student" ? "active" : ""}
               onClick={() => handleRoleChange("student")}
-              disabled={loading}
+              disabled={loading || showForceResetToast}
             >
               Student
             </button>
@@ -235,7 +331,7 @@ export default function Login() {
               placeholder={`Enter ${role} email ID`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
+              disabled={loading || showForceResetToast}
               required
             />
 
@@ -245,7 +341,7 @@ export default function Login() {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
+              disabled={loading || showForceResetToast}
               required
             />
 
@@ -255,7 +351,11 @@ export default function Login() {
               </div>
             )}
 
-            <button type="submit" className="login-btn" disabled={loading}>
+            <button 
+              type="submit" 
+              className="login-btn" 
+              disabled={loading || showForceResetToast}
+            >
               {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
@@ -266,7 +366,11 @@ export default function Login() {
               <>
                 <span
                   className="login-link"
-                  onClick={() => navigate("/register-student")}
+                  onClick={() => !showForceResetToast && navigate("/register-student")}
+                  style={{ 
+                    cursor: showForceResetToast ? "not-allowed" : "pointer",
+                    opacity: showForceResetToast ? 0.5 : 1 
+                  }}
                 >
                   New Candidate Registration
                 </span>
@@ -276,7 +380,11 @@ export default function Login() {
 
             <span
               className="login-link"
-              onClick={() => navigate("/forgot-password")}
+              onClick={() => !showForceResetToast && navigate("/forgot-password")}
+              style={{ 
+                cursor: showForceResetToast ? "not-allowed" : "pointer",
+                opacity: showForceResetToast ? 0.5 : 1 
+              }}
             >
               Forgot Password?
             </span>
@@ -286,6 +394,22 @@ export default function Login() {
 
       {/* ================= BOTTOM FOOTER ================= */}
       <footer className="login-bottom">© 2026 ACHARYA | VTU</footer>
+
+      {/* ================= TOAST ANIMATION ================= */}
+      <style>
+        {`
+          @keyframes slideDown {
+            from {
+              transform: translateX(-50%) translateY(-100px);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(-50%) translateY(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
