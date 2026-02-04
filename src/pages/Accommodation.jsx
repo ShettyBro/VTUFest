@@ -33,7 +33,7 @@ export default function Accommodation() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}accommodation`, {
+      const response = await fetch(`${API_BASE_URL}/manager/accommodation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,7 +79,7 @@ export default function Accommodation() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}accommodation`, {
+      const response = await fetch(`${API_BASE_URL}/manager/accommodation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
