@@ -401,22 +401,14 @@ export default function SubmitApplication() {
           />
 
           <label>Department *</label>
-          <select
+          <input
+            type="text"
             name="department"
-            value={form.department}
+            placeholder="Department"
+            value={formData.department}
             onChange={handleChange}
-            disabled={loading}
-            required
-          >
-            <option value="">Select Department</option>
-            <option>AI & ML</option>
-            <option>CSE</option>
-            <option>ISE</option>
-            <option>ECE</option>
-            <option>EEE</option>
-            <option>Mechanical</option>
-            <option>Civil</option>
-          </select>
+          />
+
 
           <label>Year of Study *</label>
           <select
