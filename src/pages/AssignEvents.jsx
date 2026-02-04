@@ -185,7 +185,7 @@ export default function AssignEvents() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          action: "FETCH",
+          action: "fetch",
           event_slug: eventSlug,
         }),
       });
@@ -313,7 +313,7 @@ export default function AssignEvents() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          action: "ADD",
+          action: "add",
           event_slug: currentEventSlug,
           person_id: parseInt(selectedPersonId),
           person_type: selectedPersonType,
@@ -430,7 +430,7 @@ export default function AssignEvents() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          action: "REMOVE",
+          action: "remove",
           event_slug: eventSlug,
           person_id: personId,
           person_type: personType,
