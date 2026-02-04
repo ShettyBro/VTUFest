@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/Accommodation.css";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
 export default function Accommodation() {
   const navigate = useNavigate();
