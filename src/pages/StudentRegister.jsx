@@ -404,11 +404,12 @@ export default function SubmitApplication() {
           <input
             type="text"
             name="department"
-            placeholder="Department"
-            value={formData.department}
+            value={form.department || ""}
             onChange={handleChange}
+            placeholder="Enter your department"
+            disabled={loading}
+            required
           />
-
 
           <label>Year of Study *</label>
           <select
