@@ -66,7 +66,7 @@ export default function PrincipalDashboard() {
     try {
       setLoading(true);
 
-      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`, {
+      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/principal/dashboard`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export default function PrincipalDashboard() {
 
   const checkLockStatus = async () => {
     try {
-      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`, {
+      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -133,7 +133,7 @@ export default function PrincipalDashboard() {
     try {
       setAssigningManager(true);
 
-      const response = await fetch(`https://teanmdash30.netlify.app/.netlify/functions/assign-manager`, {
+      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/principal/assign-manager`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

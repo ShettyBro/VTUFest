@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/rejectedStudents.css";
 
-const API_BASE_URL = "";
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/manager";
 export default function RejectedStudents() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
@@ -23,7 +23,7 @@ export default function RejectedStudents() {
     try {
       setLoading(true);
 
-      const response = await fetch(`https://teamdash20.netlify.app/.netlify/functions/rejected-students`, {
+      const response = await fetch(`${API_BASE_URL}/rejected-students`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

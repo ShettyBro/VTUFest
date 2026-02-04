@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ManagerProfileModal.css";
 
-const API_URL = "https://teanmdash30.netlify.app/.netlify/functions/manager-profile";
+const API_URL = "https://vtu-festserver-production.up.railway.app/api/manager/manager-profile";
 
 export default function ManagerProfileModal({ onComplete }) {
   const navigate = useNavigate();

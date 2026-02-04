@@ -4,7 +4,7 @@ import Layout from "../components/layout/layout";
 import "../styles/accompanist.css";
 import "../styles/approvals.css";
 
-const API_BASE_URL = "https://teamdash20.netlify.app/.netlify/functions";
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
 export default function AccompanistForm() {
   const navigate = useNavigate();
@@ -83,16 +83,13 @@ export default function AccompanistForm() {
     try {
       setLoading(true);
 
-      const dashResponse = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const dashResponse = await fetch(`${API_BASE_URL}/manager/dashboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (dashResponse.status === 401) {
         handleSessionExpired();
@@ -115,7 +112,7 @@ export default function AccompanistForm() {
     if (accompanistsLoaded) return; // Already loaded
 
     try {
-      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +234,7 @@ export default function AccompanistForm() {
       setSubmitting(true);
 
       // Call init_accompanist
-      const initResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const initResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -329,7 +326,7 @@ export default function AccompanistForm() {
       setSubmitting(true);
 
       // Call finalize_accompanist
-      const finalizeResponse = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const finalizeResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -428,7 +425,7 @@ export default function AccompanistForm() {
     try {
       setSavingEdit(true);
 
-      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -481,7 +478,7 @@ export default function AccompanistForm() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/manage-accompanists`, {
+      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

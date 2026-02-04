@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "../styles/ForgotPassword.css";
 
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
+
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -45,7 +47,7 @@ export default function ResetPassword() {
       // ✅ Same endpoint for both forgot-password and forced-reset flows
       // Backend differentiates based on token and force_password_reset flag
       const response = await fetch(
-        `https://vtubackend2026.netlify.app/.netlify/functions/reset-password/${role}`,
+        `${API_BASE_URL}auth/reset-password/${role}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

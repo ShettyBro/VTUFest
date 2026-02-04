@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ForgotPassword.css";
 
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
+
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -37,7 +39,7 @@ export default function ForgotPassword() {
       setLoading(true);
 
       const response = await fetch(
-        `https://vtubackend2026.netlify.app/.netlify/functions/forgot-password/${role}`,
+        `${API_BASE_URL}auth/forgot-password/${role}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

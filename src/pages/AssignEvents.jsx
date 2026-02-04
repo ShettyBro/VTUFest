@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/assignEvents.css";
 
-const API_BASE_URL = "https://teanmdash30.netlify.app/.netlify/functions";
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
 const EVENT_CATEGORIES = {
   "Music Events": [
@@ -118,7 +118,7 @@ export default function AssignEvents() {
   const fetchDashboardData = async () => {
     try {
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`,
+        `${API_BASE_URL}/manager/dashboard`,
         {
           method: "POST",
           headers: {
@@ -148,7 +148,7 @@ export default function AssignEvents() {
 
   const checkLockStatus = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/check-lock-status`, {
+      const response = await fetch(`${API_BASE_URL}/principal/check-lock-status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -178,7 +178,7 @@ export default function AssignEvents() {
     setLoadingEvents((prev) => ({ ...prev, [eventSlug]: true }));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/assign-events`, {
+      const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -306,7 +306,7 @@ export default function AssignEvents() {
 
       const eventType = modalMode === "add_participant" ? "participating" : "accompanying";
 
-      const response = await fetch(`${API_BASE_URL}/assign-events`, {
+      const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -423,7 +423,7 @@ export default function AssignEvents() {
     try {
       setRemovingPersonId(personKey);
 
-      const response = await fetch(`${API_BASE_URL}/assign-events`, {
+      const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -524,7 +524,7 @@ export default function AssignEvents() {
     try {
       setFinalApproving(true);
 
-      const response = await fetch(`https://dashteam10.netlify.app/.netlify/functions/final-approval`, {
+      const response = await fetch(`${API_BASE_URL}/principal/final-approval`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -66,7 +66,7 @@ export default function Approvals() {
   const fetchCollegeQuota = async () => {
     try {
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/manager-dashboard`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/manager-dashboard`,
         {
           method: "POST",
           headers: {
@@ -100,7 +100,7 @@ export default function Approvals() {
   const checkLockStatus = async () => {
     try {
       const response = await fetch(
-        `https://teanmdash30.netlify.app/.netlify/functions/check-lock-status`,
+        `https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`,
         {
           method: "POST",
           headers: {
@@ -128,7 +128,7 @@ export default function Approvals() {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
         {
           method: "POST",
           headers: {
@@ -161,7 +161,7 @@ export default function Approvals() {
     
     try {
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/approved-students`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/approved-students`,
         {
           method: "POST",
           headers: {
@@ -193,7 +193,7 @@ export default function Approvals() {
     
     try {
       const response = await fetch(
-        `https://teamdash20.netlify.app/.netlify/functions/rejected-students`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/rejected-students`,
         {
           method: "POST",
           headers: {
@@ -263,7 +263,7 @@ export default function Approvals() {
     try {
       setSavingEdit(true);
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
         {
           method: "POST",
           headers: {
@@ -326,7 +326,7 @@ export default function Approvals() {
     try {
       setProcessingAction(true);
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
         {
           method: "POST",
           headers: {
@@ -432,7 +432,7 @@ export default function Approvals() {
     try {
       setSavingEdit(true);
       const response = await fetch(
-        `https://dashteam10.netlify.app/.netlify/functions/approved-students`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/approved-students`,
         {
           method: "POST",
           headers: {
@@ -508,7 +508,7 @@ export default function Approvals() {
 
       if (rejectTarget.type === "pending") {
         const response = await fetch(
-          `https://dashteam10.netlify.app/.netlify/functions/review-applications`,
+          `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
           {
             method: "POST",
             headers: {
@@ -550,7 +550,7 @@ export default function Approvals() {
         }
       } else if (rejectTarget.type === "approved") {
         const response = await fetch(
-          `https://dashteam10.netlify.app/.netlify/functions/approved-students`,
+          `https://vtu-festserver-production.up.railway.app/api/manager/approved-students`,
           {
             method: "POST",
             headers: {

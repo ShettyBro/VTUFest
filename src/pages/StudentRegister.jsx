@@ -4,7 +4,7 @@ import "../styles/register.css";
 import collegesData from "../data/colleges.json";
 
 const API_BASE = {
-  submitApplication: "https://uploade-vtu01.netlify.app/.netlify/functions/student-submit-application"
+  submitApplication: "https://vtu-festserver-production.up.railway.app/api/student/submit-application"
 };
 
 export default function SubmitApplication() {

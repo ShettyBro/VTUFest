@@ -136,7 +136,7 @@ export default function Login() {
     }
 
     // Single unified login API endpoint
-    const loginApi = "https://vtubackend2026.netlify.app/.netlify/functions/login";
+    const loginApi = "https://vtu-festserver-production.up.railway.app/api/auth/login";
 
     try {
       setLoading(true);

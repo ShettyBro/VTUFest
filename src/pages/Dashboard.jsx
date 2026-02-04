@@ -10,7 +10,7 @@ import settingsData from "../data/settings.json";
 import notificationsData from "../data/notifications.json";
 import eventsCalendarData from "../data/events-calendar.json";
 
-const API_BASE_URL = "https://vtu13.netlify.app/.netlify/functions/student-dashboard";
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student/dashboard";
 
 export default function Dashboard() {
   const navigate = useNavigate();

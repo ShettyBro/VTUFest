@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/FeePayment.css";
 
-const API_BASE_URL = "https://teamdash20.netlify.app/.netlify/functions";
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student/payment";
 
 // ============================================================================
 // EVENT NAME MAPPING (Frontend Only) - CORRECTED KEYS

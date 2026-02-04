@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 
 const API_BASE = {
-  collegeAndUsn: "https://uploade-vtu01.netlify.app/.netlify/functions/college-and-usn",
-  registration: "https://vtubackend2026.netlify.app/.netlify/functions/register"
+  registration: "https://vtu-festserver-production.up.railway.app/api/student/register"
 };
 
 export default function RegisterStudent() {
@@ -97,7 +96,7 @@ export default function RegisterStudent() {
   // Fetch colleges
   const fetchColleges = async () => {
     try {
-      const response = await fetch(`${API_BASE.collegeAndUsn}?action=get_colleges`);
+      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/colleges`);
       const data = await response.json();
       if (data.colleges) {
         setColleges(data.colleges);
@@ -116,7 +115,7 @@ export default function RegisterStudent() {
 
     try {
       setUsnChecking(true);
-      const response = await fetch(`${API_BASE.collegeAndUsn}`, {
+      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/check-usn`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "check_usn", usn: usn.trim().toUpperCase() }),
