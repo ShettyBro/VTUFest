@@ -66,7 +66,7 @@ export default function Approvals() {
   const fetchCollegeQuota = async () => {
     try {
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/manager-dashboard`,
+        `https://vtu-festserver-production.up.railway.app/api/manager/dashboard`,
         {
           method: "POST",
           headers: {
@@ -135,7 +135,7 @@ export default function Approvals() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ action: "get_pending_applications" }),
+          body: JSON.stringify({ action: "list" }),
         }
       );
 
@@ -168,7 +168,7 @@ export default function Approvals() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ action: "get_approved_students" }),
+          body: JSON.stringify({ action: "list" }),
         }
       );
 
