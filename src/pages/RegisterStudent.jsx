@@ -14,13 +14,13 @@ const API_ENDPOINTS = {
 export default function RegisterStudent() {
   const navigate = useNavigate();
 
-  // Form state - ✅ FIXED: Changed 'mobile' to 'phone' to match backend
+  // Form state
   const [colleges, setColleges] = useState([]);
   const [form, setForm] = useState({
     usn: "",
     fullName: "",
     email: "",
-    phone: "", // ✅ FIXED: Backend expects 'phone' not 'mobile'
+    phone: "",
     gender: "",
     collegeId: "",
     password: "",
@@ -33,21 +33,21 @@ export default function RegisterStudent() {
   const [loading, setLoading] = useState(false);
   const [usnError, setUsnError] = useState("");
   const [usnChecking, setUsnChecking] = useState(false);
-  const [formDisabled, setFormDisabled] = useState(false);
+  const [usnValid, setUsnValid] = useState(false); // ✅ NEW: Track if USN is valid and not registered
+  const [formDisabled, setFormDisabled] = useState(true); // ✅ Start disabled until USN is validated
   const [showUploadSection, setShowUploadSection] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadRetries, setUploadRetries] = useState(0);
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // ✅ NEW: Global error message
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Session state
   const [sessionData, setSessionData] = useState(null);
 
-  // Fetch colleges on mount
+  // ✅ REMOVED: Don't fetch colleges on mount
   useEffect(() => {
-    fetchColleges();
     loadSessionFromStorage();
   }, []);
 
@@ -99,34 +99,44 @@ export default function RegisterStudent() {
     }
   };
 
-  // Fetch colleges
+  // ✅ FIXED: Fetch colleges only after USN is validated
   const fetchColleges = async () => {
     try {
       const response = await fetch(API_ENDPOINTS.colleges);
       const data = await response.json();
       
-      // ✅ FIXED: Better error handling
-      if (response.ok && data.colleges) {
-        setColleges(data.colleges);
+      console.log("Colleges API response:", data); // Debug log
+      
+      if (response.ok && data.success && data.data && data.data.colleges) {
+        setColleges(data.data.colleges); // ✅ FIXED: Access nested colleges array
+        setErrorMessage(""); // Clear any previous error
       } else {
         console.error("Failed to fetch colleges:", data);
-        setErrorMessage("Failed to load colleges. Please refresh the page.");
+        setErrorMessage("Failed to load colleges. Please try again.");
+        setColleges([]);
       }
     } catch (error) {
       console.error("Error fetching colleges:", error);
       setErrorMessage("Failed to load colleges. Please check your internet connection.");
+      setColleges([]);
     }
   };
 
-  // Check USN availability
+  // ✅ FIXED: Check USN and fetch colleges if valid
   const checkUSN = async (usn) => {
     if (!usn.trim()) {
       setUsnError("");
+      setUsnValid(false);
+      setFormDisabled(true);
+      setColleges([]);
       return;
     }
 
     try {
       setUsnChecking(true);
+      setUsnError("");
+      setErrorMessage("");
+      
       const response = await fetch(API_ENDPOINTS.checkUsn, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -138,25 +148,36 @@ export default function RegisterStudent() {
 
       const data = await response.json();
 
-      // ✅ FIXED: Better response handling
       if (response.ok) {
         if (data.exists) {
+          // ✅ USN already registered - disable form and hide colleges
           setUsnError("USN already registered");
+          setUsnValid(false);
           setFormDisabled(true);
+          setColleges([]);
           setTimeout(() => {
             navigate("/");
           }, 2000);
         } else {
+          // ✅ USN is valid and available - enable form and fetch colleges
           setUsnError("");
+          setUsnValid(true);
           setFormDisabled(false);
+          await fetchColleges(); // Fetch colleges only now
         }
       } else {
         console.error("USN check failed:", data);
         setUsnError("Failed to check USN. Please try again.");
+        setUsnValid(false);
+        setFormDisabled(true);
+        setColleges([]);
       }
     } catch (error) {
       console.error("Error checking USN:", error);
       setUsnError("Network error. Please try again.");
+      setUsnValid(false);
+      setFormDisabled(true);
+      setColleges([]);
     } finally {
       setUsnChecking(false);
     }
@@ -168,14 +189,13 @@ export default function RegisterStudent() {
 
     if (name === "usn") {
       setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
-    } else if (name === "phone") { // ✅ FIXED: Changed from 'mobile' to 'phone'
+    } else if (name === "phone") {
       const digits = value.replace(/\D/g, "").slice(0, 10);
       setForm((prev) => ({ ...prev, [name]: digits }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
 
-    // Clear error message when user starts typing
     setErrorMessage("");
   };
 
@@ -195,7 +215,7 @@ export default function RegisterStudent() {
     }
 
     setPhotoFile(file);
-    setUploadStatus(""); // Reset upload status when new file is selected
+    setUploadStatus("");
     setErrorMessage("");
 
     const reader = new FileReader();
@@ -215,11 +235,15 @@ export default function RegisterStudent() {
   // Handle Next button (init registration)
   const handleNext = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
 
-    // ✅ IMPROVED: Better validation
     if (!form.usn.trim()) {
       setErrorMessage("USN is required");
+      return;
+    }
+
+    if (!usnValid) {
+      setErrorMessage("Please enter a valid USN that is not already registered");
       return;
     }
 
@@ -251,16 +275,15 @@ export default function RegisterStudent() {
     try {
       setLoading(true);
 
-      // ✅ FIXED: Correct field names to match backend expectations
       const response = await fetch(API_ENDPOINTS.registration, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "init",
           usn: form.usn.trim().toUpperCase(),
-          full_name: form.fullName.trim(), // ✅ Backend expects 'full_name'
+          full_name: form.fullName.trim(),
           email: form.email.trim().toLowerCase(),
-          phone: form.phone.trim(), // ✅ FIXED: Backend expects 'phone' not 'mobile'
+          phone: form.phone.trim(),
           gender: form.gender,
           college_id: parseInt(form.collegeId),
         }),
@@ -268,13 +291,11 @@ export default function RegisterStudent() {
 
       const data = await response.json();
 
-      // ✅ IMPROVED: Better error handling
       if (!response.ok) {
         setErrorMessage(data.error || "Registration initialization failed. Please try again.");
         return;
       }
 
-      // ✅ Validate response structure
       if (!data.session_id || !data.upload_urls || !data.expires_at) {
         setErrorMessage("Invalid server response. Please try again.");
         return;
@@ -304,14 +325,12 @@ export default function RegisterStudent() {
     }
   };
 
-  // ✅ FIXED: Complete Azure Blob upload implementation
   const uploadPhoto = async () => {
     if (!photoFile || !sessionData) {
       setErrorMessage("Please select a photo first");
       return;
     }
 
-    // Check if upload is blocked (30-minute cooldown after 3 failures)
     if (isUploadBlocked()) {
       const blockUntil = localStorage.getItem("upload_blocked_until");
       const remainingMinutes = Math.ceil((parseInt(blockUntil) - Date.now()) / 60000);
@@ -324,7 +343,6 @@ export default function RegisterStudent() {
       setUploadProgress(0);
       setErrorMessage("");
 
-      // Get upload URL from session data
       const uploadUrl = sessionData.upload_urls?.passport_photo;
       
       if (!uploadUrl) {
@@ -333,7 +351,6 @@ export default function RegisterStudent() {
         return;
       }
 
-      // ✅ FIXED: Proper Azure Blob upload with PUT request and headers
       const uploadResponse = await fetch(uploadUrl, {
         method: "PUT",
         headers: {
@@ -346,7 +363,7 @@ export default function RegisterStudent() {
       if (uploadResponse.ok || uploadResponse.status === 201) {
         setUploadStatus("success");
         setUploadProgress(100);
-        setUploadRetries(0); // Reset retry count on success
+        setUploadRetries(0);
         localStorage.removeItem("upload_blocked_until");
       } else {
         const errorText = await uploadResponse.text();
@@ -360,7 +377,6 @@ export default function RegisterStudent() {
       setUploadRetries(newRetries);
 
       if (newRetries >= 3) {
-        // Block uploads for 30 minutes after 3 failures
         const blockUntil = Date.now() + 30 * 60 * 1000;
         localStorage.setItem("upload_blocked_until", blockUntil.toString());
         setErrorMessage("Upload failed 3 times. Please try again after 30 minutes.");
@@ -373,7 +389,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Check if upload is blocked due to multiple failures
   const isUploadBlocked = () => {
     const blockUntil = localStorage.getItem("upload_blocked_until");
     if (!blockUntil) return false;
@@ -387,12 +402,10 @@ export default function RegisterStudent() {
     }
   };
 
-  // Handle final registration
   const handleRegister = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Clear previous errors
+    setErrorMessage("");
 
-    // Validation
     if (!form.password || form.password.length < 8) {
       setErrorMessage("Password must be at least 8 characters");
       return;
@@ -416,7 +429,6 @@ export default function RegisterStudent() {
     try {
       setLoading(true);
 
-      // ✅ FIXED: Proper finalize request
       const response = await fetch(API_ENDPOINTS.registration, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -429,20 +441,16 @@ export default function RegisterStudent() {
 
       const data = await response.json();
 
-      // ✅ IMPROVED: Better error handling
       if (!response.ok) {
         setErrorMessage(data.error || data.message || "Registration failed. Please try again.");
         return;
       }
 
-      // Clear session data
       localStorage.removeItem("registration_session");
       localStorage.removeItem("upload_blocked_until");
 
-      // ✅ Show success message
       alert("Registration successful! You can now login with your credentials.");
       
-      // Redirect to login
       setTimeout(() => {
         navigate("/");
       }, 1500);
@@ -454,14 +462,12 @@ export default function RegisterStudent() {
     }
   };
 
-  // Helper: Check if upload is complete
   const isUploadComplete = uploadStatus === "success";
 
   return (
     <div className="register-page">
       <h2>Student Registration</h2>
 
-      {/* ✅ NEW: Global error message display */}
       {errorMessage && (
         <div style={{
           backgroundColor: "#ffebee",
@@ -479,7 +485,6 @@ export default function RegisterStudent() {
       )}
 
       {!showUploadSection ? (
-        // STEP 1: Basic Information Form
         <form className="register-card" onSubmit={handleNext}>
           <label>USN / Registration Number *</label>
           <input
@@ -488,7 +493,7 @@ export default function RegisterStudent() {
             onChange={handleChange}
             onBlur={(e) => checkUSN(e.target.value)}
             placeholder="e.g., VTU2026CS001 (alphanumeric only)"
-            disabled={formDisabled || loading}
+            disabled={loading}
             required
           />
           {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
@@ -506,6 +511,7 @@ export default function RegisterStudent() {
             onChange={handleChange}
             placeholder="Enter your full name"
             disabled={formDisabled || loading}
+            style={{ opacity: formDisabled ? 0.5 : 1 }}
             required
           />
 
@@ -515,11 +521,12 @@ export default function RegisterStudent() {
             value={form.collegeId}
             onChange={handleChange}
             disabled={formDisabled || loading}
+            style={{ opacity: formDisabled ? 0.5 : 1 }}
             required
           >
             <option value="">Select College</option>
             {colleges.map((c) => (
-              <option key={c.college_id} value={c.college_id}>
+              <option key={c.id} value={c.id}>
                 {c.college_code} - {c.college_name}, {c.place || "N/A"}
               </option>
             ))}
@@ -533,6 +540,7 @@ export default function RegisterStudent() {
             onChange={handleChange}
             placeholder="Enter your email"
             disabled={formDisabled || loading}
+            style={{ opacity: formDisabled ? 0.5 : 1 }}
             required
           />
 
@@ -544,6 +552,7 @@ export default function RegisterStudent() {
             placeholder="e.g., 9876543210 (10 digits)"
             maxLength="10"
             disabled={formDisabled || loading}
+            style={{ opacity: formDisabled ? 0.5 : 1 }}
             required
           />
 
@@ -553,6 +562,7 @@ export default function RegisterStudent() {
             value={form.gender}
             onChange={handleChange}
             disabled={formDisabled || loading}
+            style={{ opacity: formDisabled ? 0.5 : 1 }}
             required
           >
             <option value="">Select Gender</option>
@@ -570,7 +580,6 @@ export default function RegisterStudent() {
           </p>
         </form>
       ) : (
-        // STEP 2: Document Upload & Password
         <form className="register-card" onSubmit={handleRegister}>
           {timer !== null && !timerExpired && (
             <div style={{
@@ -666,7 +675,6 @@ export default function RegisterStudent() {
             required
           />
 
-          {/* Helper message when upload is incomplete */}
           {!isUploadComplete && !timerExpired && (
             <p style={{
               color: "#d32f2f",
