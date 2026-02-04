@@ -66,7 +66,7 @@ export default function PrincipalDashboard() {
     try {
       setLoading(true);
 
-      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/principal/dashboard`, {
+      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/manager/dashboard`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

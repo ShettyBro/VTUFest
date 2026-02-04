@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/FeePayment.css";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student/payment";
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student";
 
 // ============================================================================
 // EVENT NAME MAPPING (Frontend Only) - CORRECTED KEYS
