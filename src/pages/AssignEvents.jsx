@@ -201,10 +201,10 @@ export default function AssignEvents() {
         setEventData((prev) => ({
           ...prev,
           [eventSlug]: {
-            participants: data.data.participants || [],
-            accompanists: data.data.accompanists || [],
-            available_students: data.data.available_students || [],
-            available_accompanists: data.data.available_accompanists || [],
+            participants: data.data?.participants || [],
+            accompanists: data.data?.accompanists || [],
+            available_students: data.data?.available_students || [],
+            available_accompanists: data.data?.available_accompanists || [],
           },
         }));
       } else {
