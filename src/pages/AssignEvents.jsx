@@ -333,72 +333,16 @@ export default function AssignEvents() {
       if (data.success) {
         alert(data.message);
         
-        // CRITICAL FIX: Update local state immediately after backend confirms success
-        // Find the person being added from available lists
-        let personToAdd = null;
+        // Refetch event data to get updated lists instantly
+        setEventData((prev) => {
+          const updated = { ...prev };
+          delete updated[currentEventSlug]; // Clear cache
+          return updated;
+        });
         
-        if (selectedPersonType === "student") {
-          personToAdd = currentData.available_students?.find(
-            (s) => s.student_id === parseInt(selectedPersonId)
-          );
-          if (personToAdd) {
-            // Transform student data to match backend format
-            personToAdd = {
-              person_id: personToAdd.student_id,
-              person_type: "student",
-              full_name: personToAdd.full_name,
-              phone: personToAdd.phone,
-              email: personToAdd.email || "",
-            };
-          }
-        } else if (selectedPersonType === "accompanist") {
-          personToAdd = currentData.available_accompanists?.find(
-            (a) => a.accompanist_id === parseInt(selectedPersonId)
-          );
-          if (personToAdd) {
-            // Transform accompanist data to match backend format
-            personToAdd = {
-              person_id: personToAdd.accompanist_id,
-              person_type: "accompanist",
-              full_name: personToAdd.full_name,
-              phone: personToAdd.phone,
-              email: personToAdd.email || "",
-            };
-          }
-        }
-
-        if (personToAdd) {
-          setEventData((prev) => {
-            const updated = { ...prev };
-            const eventState = { ...updated[currentEventSlug] };
-
-            if (modalMode === "add_participant") {
-              // Add to participants list
-              eventState.participants = [...eventState.participants, personToAdd];
-              // Remove from available students
-              eventState.available_students = eventState.available_students.filter(
-                (s) => s.student_id !== parseInt(selectedPersonId)
-              );
-            } else if (modalMode === "add_accompanist") {
-              // Add to accompanists list
-              eventState.accompanists = [...eventState.accompanists, personToAdd];
-              // Remove from appropriate available list
-              if (selectedPersonType === "student") {
-                eventState.available_students = eventState.available_students.filter(
-                  (s) => s.student_id !== parseInt(selectedPersonId)
-                );
-              } else {
-                eventState.available_accompanists = eventState.available_accompanists.filter(
-                  (a) => a.accompanist_id !== parseInt(selectedPersonId)
-                );
-              }
-            }
-
-            updated[currentEventSlug] = eventState;
-            return updated;
-          });
-        }
-
+        // Fetch fresh data
+        await fetchEventData(currentEventSlug);
+        
         closeModal();
         fetchDashboardData(); // Refresh to update event count
       } else {
@@ -449,60 +393,16 @@ export default function AssignEvents() {
       if (data.success) {
         alert(data.message);
         
-        // CRITICAL FIX: Update local state immediately after backend confirms success
+        // Refetch event data to get updated lists instantly
         setEventData((prev) => {
           const updated = { ...prev };
-          const eventState = { ...updated[eventSlug] };
-
-          // Find which list the person was in
-          const participantIndex = eventState.participants.findIndex(
-            (p) => p.person_id === personId && p.person_type === personType
-          );
-          const accompanistIndex = eventState.accompanists.findIndex(
-            (p) => p.person_id === personId && p.person_type === personType
-          );
-
-          let removedPerson = null;
-
-          if (participantIndex !== -1) {
-            // Remove from participants
-            removedPerson = eventState.participants[participantIndex];
-            eventState.participants = eventState.participants.filter(
-              (p) => !(p.person_id === personId && p.person_type === personType)
-            );
-          } else if (accompanistIndex !== -1) {
-            // Remove from accompanists
-            removedPerson = eventState.accompanists[accompanistIndex];
-            eventState.accompanists = eventState.accompanists.filter(
-              (p) => !(p.person_id === personId && p.person_type === personType)
-            );
-          }
-
-          // Add back to appropriate available list
-          if (removedPerson && personType === "student") {
-            const studentData = {
-              student_id: removedPerson.person_id,
-              full_name: removedPerson.full_name,
-              phone: removedPerson.phone,
-              email: removedPerson.email,
-              usn: "", // USN not available from assignment data
-            };
-            eventState.available_students = [...eventState.available_students, studentData];
-          } else if (removedPerson && personType === "accompanist") {
-            const accompanistData = {
-              accompanist_id: removedPerson.person_id,
-              full_name: removedPerson.full_name,
-              phone: removedPerson.phone,
-              email: removedPerson.email,
-              accompanist_type: "", // Type not available from assignment data
-            };
-            eventState.available_accompanists = [...eventState.available_accompanists, accompanistData];
-          }
-
-          updated[eventSlug] = eventState;
+          delete updated[eventSlug]; // Clear cache
           return updated;
         });
-
+        
+        // Fetch fresh data
+        await fetchEventData(eventSlug);
+        
         fetchDashboardData(); // Refresh to update event count
       } else {
         alert(data.error || "Failed to remove assignment");
