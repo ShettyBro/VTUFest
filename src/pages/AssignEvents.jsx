@@ -304,7 +304,7 @@ export default function AssignEvents() {
     try {
       setIsSubmittingAdd(true);
 
-      const eventType = modalMode === "add_participant" ? "participating" : "accompanying";
+      const eventType = modalMode === "add_participant" ? "PARTICIPANT" : "ACCOMPANIST";
 
       const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
         method: "POST",
