@@ -51,8 +51,8 @@ export default function Accommodation() {
 
       const data = await response.json();
 
-      if (data.success && data.accommodation) {
-        setExistingAccommodation(data.accommodation);
+      if (data.success && data.data && data.data.accommodation) {
+        setExistingAccommodation(data.data.accommodation);
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -334,7 +334,7 @@ export default function Accommodation() {
           <button
             type="submit"
             disabled={!consentChecked}
-            
+
           >
             Submit Accommodation
           </button>
