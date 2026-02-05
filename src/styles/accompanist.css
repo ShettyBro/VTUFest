@@ -234,7 +234,7 @@ select:focus {
 }
 
 .remove-btn {
-  padding: 8px 20px;
+  padding: 6px 16px;
   background: #f44336;
   color: white;
   border: none;
@@ -243,6 +243,8 @@ select:focus {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 90px;
 }
 
 .remove-btn:hover:not(:disabled) {
