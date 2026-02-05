@@ -11,6 +11,7 @@ export default function AccompanistForm() {
 
   const [loading, setLoading] = useState(true);
   const [quotaUsed, setQuotaUsed] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState(1);
@@ -115,6 +116,9 @@ export default function AccompanistForm() {
       if (data.success && data.data && data.data.accompanists) {
         setAccompanists(data.data.accompanists);
         setAccompanistsLoaded(true);
+        if (data.data.is_locked !== undefined) {
+          setIsLocked(data.data.is_locked);
+        }
       }
     } catch (error) {
       console.error("Fetch accompanists error:", error);
@@ -136,6 +140,10 @@ export default function AccompanistForm() {
   };
 
   const openModal = () => {
+    if (isLocked) {
+      return;
+    }
+
     if (remainingSlots <= 0) {
       alert("Maximum capacity 45 reached. Remove existing participants before adding new ones.");
       return;
@@ -234,72 +242,62 @@ export default function AccompanistForm() {
       const initData = await initResponse.json();
 
       if (!initData.success) {
-        alert(initData.error || initData.message || "Failed to initialize session");
+        alert(initData.message || "Failed to initialize session");
         return;
       }
 
-      setSessionData(initData.data || initData);
+      const { session_id, upload_urls, expires_at } = initData.data;
+      const expiresTime = new Date(expires_at).getTime();
+      const nowTime = Date.now();
+      const remainingSeconds = Math.floor((expiresTime - nowTime) / 1000);
 
-      const expiresAtValue = (initData.data && initData.data.expires_at) || initData.expires_at;
-      const expiresAt = new Date(expiresAtValue).getTime();
-      const now = Date.now();
-      const remainingSeconds = Math.floor((expiresAt - now) / 1000);
-      setTimer(remainingSeconds);
-      setTimerExpired(false);
-
+      setSessionData({ session_id, upload_urls });
+      setTimer(remainingSeconds > 0 ? remainingSeconds : 0);
       setModalStep(2);
     } catch (error) {
       console.error("Init error:", error);
-      alert("Failed to initialize session");
+      alert("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
   const uploadFile = async (key) => {
-    if (!uploadFiles[key]) {
-      alert(`Please select ${key.replace(/_/g, " ")}`);
-      return;
-    }
-
-    const uploadUrls = sessionData.upload_urls || (sessionData.data && sessionData.data.upload_urls);
-    if (!uploadUrls || !uploadUrls[key]) {
-      alert("Session expired. Please restart.");
-      return;
-    }
+    const file = uploadFiles[key];
+    if (!file || !sessionData?.upload_urls?.[key]) return;
 
     try {
       setUploadProgress((prev) => ({ ...prev, [key]: "uploading" }));
 
-      const response = await fetch(uploadUrls[key], {
+      const uploadResponse = await fetch(sessionData.upload_urls[key], {
         method: "PUT",
-        headers: { "x-ms-blob-type": "BlockBlob" },
-        body: uploadFiles[key],
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Type": file.type,
+        },
+        body: file,
       });
 
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status}`);
+      if (uploadResponse.ok) {
+        setUploadStatus((prev) => ({ ...prev, [key]: "done" }));
+        setUploadProgress((prev) => ({ ...prev, [key]: "done" }));
+      } else {
+        setUploadProgress((prev) => ({ ...prev, [key]: "failed" }));
       }
-
-      setUploadStatus((prev) => ({ ...prev, [key]: "done" }));
-      setUploadProgress((prev) => ({ ...prev, [key]: "done" }));
     } catch (error) {
-      console.error(`Upload error (${key}):`, error);
+      console.error("Upload error:", error);
       setUploadProgress((prev) => ({ ...prev, [key]: "failed" }));
-      alert(`Failed to upload ${key.replace(/_/g, " ")}`);
     }
   };
 
   const handleSubmit = async () => {
-    if (uploadStatus.government_id_proof !== "done" || uploadStatus.passport_photo !== "done") {
-      alert("Please upload both documents before submitting");
+    if (!sessionData?.session_id) {
+      alert("Session not initialized");
       return;
     }
 
     try {
       setSubmitting(true);
-
-      const sessionIdValue = sessionData.session_id || (sessionData.data && sessionData.data.session_id);
 
       const finalizeResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
@@ -309,7 +307,7 @@ export default function AccompanistForm() {
         },
         body: JSON.stringify({
           action: "finalize_accompanist",
-          session_id: sessionIdValue,
+          session_id: sessionData.session_id,
         }),
       });
 
@@ -321,39 +319,27 @@ export default function AccompanistForm() {
       const finalizeData = await finalizeResponse.json();
 
       if (!finalizeData.success) {
-        alert(finalizeData.error || finalizeData.message || "Failed to finalize accompanist");
+        alert(finalizeData.message || "Failed to add accompanist");
         return;
       }
 
-      alert("Accompanist registered successfully!");
-
-      const accompanistId = (finalizeData.data && finalizeData.data.accompanist_id) || finalizeData.accompanist_id;
-
-      const newAccompanist = {
-        accompanist_id: accompanistId,
-        full_name: modalForm.full_name,
-        phone: modalForm.phone,
-        email: modalForm.email,
-        accompanist_type: modalForm.accompanist_type,
-        student_id: null,
-        passport_photo_url: "",
-        id_proof_url: "",
-        created_at: new Date().toISOString(),
-      };
-      setAccompanists([newAccompanist, ...accompanists]);
-
-      setQuotaUsed(quotaUsed + 1);
-
+      alert("Accompanist added successfully");
       closeModal();
+      await fetchQuota();
+      await fetchAccompanists();
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Failed to submit accompanist");
+      alert("Network error. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
   const removeAccompanist = async (accompanist_id) => {
+    if (isLocked) {
+      return;
+    }
+
     if (!confirm("Are you sure you want to remove this accompanist?")) {
       return;
     }
@@ -381,7 +367,7 @@ export default function AccompanistForm() {
       const data = await response.json();
 
       if (!data.success) {
-        alert(data.error || data.message || "Failed to remove accompanist");
+        alert(data.message || "Failed to remove accompanist");
         setRemovingId(null);
         return;
       }
@@ -416,6 +402,20 @@ export default function AccompanistForm() {
           <h2>Register Accompanist</h2>
           <p className="subtitle">VTU HABBA 2026 – Accompanist Registration</p>
 
+          {isLocked && (
+            <div style={{ 
+              padding: "12px", 
+              marginBottom: "20px", 
+              backgroundColor: "#fff3cd", 
+              border: "1px solid #ffc107", 
+              borderRadius: "4px", 
+              color: "#856404", 
+              textAlign: "center" 
+            }}>
+              Final approval has been completed. Edits are not allowed.
+            </div>
+          )}
+
           <div className="capacity-info">
             <span>
               Quota Used: <strong>{quotaUsed}</strong>
@@ -426,7 +426,7 @@ export default function AccompanistForm() {
           </div>
 
           <div className="add-section">
-            <button className="add-btn" onClick={openModal} disabled={remainingSlots <= 0}>
+            <button className="add-btn" onClick={openModal} disabled={remainingSlots <= 0 || isLocked}>
               + Add Accompanist
             </button>
           </div>
@@ -459,7 +459,7 @@ export default function AccompanistForm() {
                     <button
                       className="remove-btn"
                       onClick={() => removeAccompanist(accompanist.accompanist_id)}
-                      disabled={removingId === accompanist.accompanist_id}
+                      disabled={removingId === accompanist.accompanist_id || isLocked}
                     >
                       {removingId === accompanist.accompanist_id ? "Removing..." : "Remove"}
                     </button>
