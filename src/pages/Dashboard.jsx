@@ -111,17 +111,17 @@ export default function Dashboard() {
     ],
   };
 
-  // Check if 2 hours have passed (changed from 12 hours)
-  const check2HoursPassed = () => {
-    const lastFetch = localStorage.getItem("last_dashboard_fetch_at");
-    if (!lastFetch) return true;
+  // // Check if 2 hours have passed (changed from 12 hours)
+  // const check2HoursPassed = () => {
+  //   const lastFetch = localStorage.getItem("last_dashboard_fetch_at");
+  //   if (!lastFetch) return true;
 
-    const lastFetchTime = new Date(lastFetch).getTime();
-    const now = new Date().getTime();
-    const hoursPassed = (now - lastFetchTime) / (1000 * 60 * 60);
+  //   const lastFetchTime = new Date(lastFetch).getTime();
+  //   const now = new Date().getTime();
+  //   const hoursPassed = (now - lastFetchTime) / (1000 * 60 * 60);
 
-    return hoursPassed >= 2; // Changed from 12 to 2 hours
-  };
+  //   return hoursPassed >= 2; // Changed from 12 to 2 hours
+  // };
 
   // Load cached dashboard data from localStorage
   const loadCachedData = () => {
