@@ -10,13 +10,11 @@ export default function AccompanistForm() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
 
-  // Loading and quota states
   const [loading, setLoading] = useState(true);
   const [quotaUsed, setQuotaUsed] = useState(0);
 
-  // Modal states
   const [showModal, setShowModal] = useState(false);
-  const [modalStep, setModalStep] = useState(1); // 1: form, 2: upload
+  const [modalStep, setModalStep] = useState(1);
   const [modalForm, setModalForm] = useState({
     full_name: "",
     phone: "",
@@ -24,7 +22,6 @@ export default function AccompanistForm() {
     accompanist_type: "faculty",
   });
 
-  // Session and upload states
   const [sessionData, setSessionData] = useState(null);
   const [uploadFiles, setUploadFiles] = useState({
     government_id_proof: null,
@@ -40,17 +37,14 @@ export default function AccompanistForm() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // Timer state
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
 
-  // Accompanist list states (LAZY LOADING)
   const [accompanists, setAccompanists] = useState([]);
   const [accompanistsLoaded, setAccompanistsLoaded] = useState(false);
   const [showAccompanistsList, setShowAccompanistsList] = useState(false);
   const [expandedAccompanist, setExpandedAccompanist] = useState(null);
 
-  // Edit states
   const [editingAccompanist, setEditingAccompanist] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [savingEdit, setSavingEdit] = useState(false);
@@ -63,7 +57,6 @@ export default function AccompanistForm() {
     fetchQuota();
   }, []);
 
-  // Countdown timer for session
   useEffect(() => {
     if (timer && timer > 0 && !timerExpired) {
       const interval = setInterval(() => {
@@ -107,9 +100,8 @@ export default function AccompanistForm() {
     }
   };
 
-  // LAZY LOAD: Fetch accompanists only when dropdown is expanded
   const fetchAccompanists = async () => {
-    if (accompanistsLoaded) return; // Already loaded
+    if (accompanistsLoaded) return;
 
     try {
       const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
@@ -128,7 +120,7 @@ export default function AccompanistForm() {
 
       const data = await response.json();
       if (data.success) {
-        setAccompanists(data.accompanists);
+        setAccompanists(data.accompanists || []);
         setAccompanistsLoaded(true);
       }
     } catch (error) {
@@ -150,10 +142,6 @@ export default function AccompanistForm() {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
-
-  // ============================================================================
-  // MODAL HANDLERS
-  // ============================================================================
 
   const openModal = () => {
     if (remainingSlots <= 0) {
@@ -203,13 +191,11 @@ export default function AccompanistForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
       alert("Only PNG, JPG, or PDF files allowed");
       return;
     }
 
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       alert("File must be less than 5MB");
       return;
@@ -219,7 +205,6 @@ export default function AccompanistForm() {
   };
 
   const handleNext = async () => {
-    // Validate form
     if (!modalForm.full_name || !modalForm.phone) {
       alert("Name and Phone are required");
       return;
@@ -233,7 +218,6 @@ export default function AccompanistForm() {
     try {
       setSubmitting(true);
 
-      // Call init_accompanist
       const initResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
@@ -262,17 +246,14 @@ export default function AccompanistForm() {
         return;
       }
 
-      // Store session data
       setSessionData(initData);
 
-      // Set timer
       const expiresAt = new Date(initData.expires_at).getTime();
       const now = Date.now();
       const remainingSeconds = Math.floor((expiresAt - now) / 1000);
       setTimer(remainingSeconds);
       setTimerExpired(false);
 
-      // Move to upload step
       setModalStep(2);
     } catch (error) {
       console.error("Init error:", error);
@@ -316,7 +297,6 @@ export default function AccompanistForm() {
   };
 
   const handleSubmit = async () => {
-    // Validate uploads
     if (uploadStatus.government_id_proof !== "done" || uploadStatus.passport_photo !== "done") {
       alert("Please upload both documents before submitting");
       return;
@@ -325,7 +305,6 @@ export default function AccompanistForm() {
     try {
       setSubmitting(true);
 
-      // Call finalize_accompanist
       const finalizeResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
@@ -352,9 +331,7 @@ export default function AccompanistForm() {
 
       alert("Accompanist registered successfully!");
 
-      // If list is already open, append new accompanist dynamically
       if (showAccompanistsList && accompanistsLoaded) {
-        // Append new accompanist to local state
         const newAccompanist = {
           accompanist_id: finalizeData.accompanist_id,
           full_name: modalForm.full_name,
@@ -363,18 +340,14 @@ export default function AccompanistForm() {
           accompanist_type: modalForm.accompanist_type,
           student_id: null,
           created_at: new Date().toISOString(),
-          assigned_events: [],
         };
         setAccompanists([newAccompanist, ...accompanists]);
       } else {
-        // Mark as not loaded to force refetch on next expand
         setAccompanistsLoaded(false);
       }
 
-      // Update quota
       setQuotaUsed(quotaUsed + 1);
 
-      // Close modal
       closeModal();
     } catch (error) {
       console.error("Submit error:", error);
@@ -384,15 +357,10 @@ export default function AccompanistForm() {
     }
   };
 
-  // ============================================================================
-  // ACCOMPANIST LIST HANDLERS
-  // ============================================================================
-
   const toggleAccompanistsList = () => {
     const newState = !showAccompanistsList;
     setShowAccompanistsList(newState);
 
-    // LAZY LOAD: Fetch data only when expanding
     if (newState && !accompanistsLoaded) {
       fetchAccompanists();
     }
@@ -452,7 +420,6 @@ export default function AccompanistForm() {
         return;
       }
 
-      // Update local state ONLY - no refetch
       setAccompanists(
         accompanists.map((acc) =>
           acc.accompanist_id === accompanist_id
@@ -502,10 +469,8 @@ export default function AccompanistForm() {
         return;
       }
 
-      // Update local state ONLY - no refetch
       setAccompanists(accompanists.filter((acc) => acc.accompanist_id !== accompanist_id));
 
-      // Update quota
       setQuotaUsed(quotaUsed - 1);
 
       alert("Accompanist removed successfully");
@@ -515,10 +480,6 @@ export default function AccompanistForm() {
     }
   };
 
-  // ============================================================================
-  // RENDER ACCOMPANIST DETAILS
-  // CRITICAL: Use same structure as Approvals.jsx renderStudentDetails
-  // ============================================================================
   const renderAccompanistDetails = (accompanist, isEditing, form, setForm) => {
     return (
       <div className="student-details">
@@ -568,6 +529,24 @@ export default function AccompanistForm() {
           <label>Type:</label>
           <span>{accompanist.accompanist_type}</span>
         </div>
+
+        {accompanist.passport_photo_url && (
+          <div className="detail-row">
+            <label>Passport Photo:</label>
+            <a href={accompanist.passport_photo_url} target="_blank" rel="noopener noreferrer">
+              View Photo
+            </a>
+          </div>
+        )}
+
+        {accompanist.id_proof_url && (
+          <div className="detail-row">
+            <label>ID Proof:</label>
+            <a href={accompanist.id_proof_url} target="_blank" rel="noopener noreferrer">
+              View ID Proof
+            </a>
+          </div>
+        )}
       </div>
     );
   };
@@ -601,15 +580,12 @@ export default function AccompanistForm() {
             </span>
           </div>
 
-          {/* SECTION 1: ADD ACCOMPANIST */}
           <div className="add-section">
-            <button className="add-btn" onClick={openModal}>
+            <button className="add-btn" onClick={openModal} disabled={remainingSlots <= 0}>
               + Add Accompanist
             </button>
           </div>
 
-          {/* SECTION 2: ADDED ACCOMPANISTS (LAZY LOAD) */}
-          {/* CRITICAL: Use same structure as Approvals.jsx approved students section */}
           <div className="section">
             <div className="section-toggle" onClick={toggleAccompanistsList}>
               <h3 className="section-title">
@@ -687,7 +663,6 @@ export default function AccompanistForm() {
         </div>
       </div>
 
-      {/* MODAL */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -745,7 +720,6 @@ export default function AccompanistForm() {
               </>
             ) : (
               <>
-                {/* Timer display */}
                 {timer !== null && !timerExpired && (
                   <div
                     style={{
