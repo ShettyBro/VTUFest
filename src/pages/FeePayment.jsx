@@ -110,12 +110,13 @@ export default function FeePayment() {
         return;
       }
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.success) {
-        setPaymentInfo(data.data);
+      if (result.success) {
+        // ✅ FIXED: Backend wraps response in 'data' object
+        setPaymentInfo(result.data);
       } else {
-        alert(data.error || "Failed to fetch payment info");
+        alert(result.error || "Failed to fetch payment info");
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -168,19 +169,22 @@ export default function FeePayment() {
         return;
       }
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (!data.success) {
-        alert(data.error || "Failed to initialize upload");
+      if (!result.success) {
+        alert(result.error || "Failed to initialize upload");
         setInitializing(false);
         return;
       }
 
+      // ✅ FIXED: Backend wraps response in 'data' object
+      const data = result.data;
+
       // Store session data
-      setUploadSession(data.data);
+      setUploadSession(data);
 
       // Set timer
-      const expiresAt = new Date(data.data.expires_at).getTime();
+      const expiresAt = new Date(data.expires_at).getTime();
       const now = Date.now();
       const remainingSeconds = Math.floor((expiresAt - now) / 1000);
       setTimer(remainingSeconds);
@@ -243,11 +247,17 @@ export default function FeePayment() {
       return;
     }
 
+    if (!uploadSession?.upload_url) {
+      alert("Upload session expired. Please restart.");
+      return;
+    }
+
     try {
       setUploadStatus("uploading");
       setUploadMessage("Uploading file to Azure Blob Storage...");
 
-      const response = await fetch(uploadSession.upload_url, {
+      // Upload using PUT request with x-ms-blob-type header
+      const uploadResponse = await fetch(uploadSession.upload_url, {
         method: "PUT",
         headers: {
           "x-ms-blob-type": "BlockBlob",
@@ -256,8 +266,8 @@ export default function FeePayment() {
         body: uploadFile,
       });
 
-      if (!response.ok) {
-        throw new Error(`Upload failed with status ${response.status}`);
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
       }
 
       setUploadStatus("uploaded");
@@ -270,11 +280,16 @@ export default function FeePayment() {
   };
 
   // ============================================================================
-  // STEP 3: Finalize Payment (DB Insert)
+  // STEP 3: Finalize Payment (After file is uploaded)
   // ============================================================================
   const handleSubmit = async () => {
     if (uploadStatus !== "uploaded") {
       alert("Please upload the file first");
+      return;
+    }
+
+    if (!uploadSession?.session_id) {
+      alert("Invalid session. Please restart.");
       return;
     }
 
@@ -300,28 +315,32 @@ export default function FeePayment() {
         return;
       }
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.success) {
-        alert("Payment submitted successfully!");
+      if (result.success) {
+        alert("Payment submitted successfully! Waiting for admin verification.");
         closeUploadModal();
-        await fetchPaymentInfo();
+        fetchPaymentInfo(); // Refresh to show updated status
       } else {
-        alert(data.error || "Submission failed");
-        setSubmitting(false);
+        alert(result.error || "Failed to submit payment");
       }
     } catch (error) {
       console.error("Submit error:", error);
       alert("Failed to submit payment");
+    } finally {
       setSubmitting(false);
     }
   };
 
+  // ============================================================================
+  // RENDER LOGIC
+  // ============================================================================
+
   if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <h3>Loading...</h3>
+        <div className="fee-container">
+          <h2>Loading payment information...</h2>
         </div>
       </Layout>
     );
@@ -330,97 +349,9 @@ export default function FeePayment() {
   if (!paymentInfo) {
     return (
       <Layout>
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <h3>Error loading payment information</h3>
-        </div>
-      </Layout>
-    );
-  }
-
-  // CASE 1: Payment status exists - Show read-only status page (ALL ROLES)
-  if (paymentInfo.payment_status) {
-    const status = paymentInfo.payment_status;
-
-    return (
-      <Layout>
         <div className="fee-container">
-          <h2>Payment Status</h2>
-
-          <div className="status-card">
-            <div className={`status-badge ${status.status.toLowerCase().replace(/_/g, "-")}`}>
-              {status.status.replace(/_/g, " ")}
-            </div>
-
-            <h3>Submitted Payment Details</h3>
-            <p>
-              <strong>Amount Paid:</strong> ₹{status.amount_paid}
-            </p>
-            <p>
-              <strong>UTR / Reference:</strong> {status.utr_reference_number}
-            </p>
-            <p>
-              <strong>Submitted At:</strong> {new Date(status.uploaded_at).toLocaleString()}
-            </p>
-
-            {status.admin_remarks && (
-              <div className="admin-remarks">
-                <strong>Admin Remarks:</strong>
-                <p>{status.admin_remarks}</p>
-              </div>
-            )}
-
-            {status.status === "rejected" && (
-              <div className="contact-details">
-                <h4>Contact Support</h4>
-                <p>
-                  <strong>Email:</strong> support@vtufest.com
-                </p>
-                <p>
-                  <strong>Phone:</strong> +91-9876543210
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Events Participating In */}
-          <div className="events-section">
-            <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
-            {paymentInfo.total_events === 0 ? (
-              <p className="empty-message">No events assigned yet</p>
-            ) : (
-              <ul className="events-list">
-                {paymentInfo.participating_event_keys.map((key) => (
-                  <li key={key}>{EVENT_NAMES[key] || key}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Bank Details (Read-only) */}
-          <div className="bank-card">
-            <h3>Bank Account Details</h3>
-            <p>
-              <strong>Account No:</strong> 123456789012
-            </p>
-            <p>
-              <strong>IFSC Code:</strong> SBIN0000456
-            </p>
-            <p>
-              <strong>Name:</strong> VTU HABBA FEST FUND
-            </p>
-          </div>
-
-          <div className="fee-info">
-            <h3>Payment Amount</h3>
-            <p>
-              <strong>Total Events:</strong> {paymentInfo.total_events}
-            </p>
-            <p>
-              <strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}
-            </p>
-          </div>
-
-          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/team-dashboard")}>
+          <h2>Failed to load payment information</h2>
+          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/manager-dashboard")}>
             Back to Dashboard
           </button>
         </div>
@@ -428,17 +359,84 @@ export default function FeePayment() {
     );
   }
 
-  // CASE 2: can_upload === false - Show approval pending message (ALL ROLES)
-  if (!paymentInfo.can_upload) {
+  // ============================================================================
+  // CASE 1: Final Approval Not Done Yet (can_upload = false)
+  // ============================================================================
+  if (paymentInfo.can_upload === false) {
     return (
       <Layout>
         <div className="fee-container">
           <h2>Fee Payment</h2>
 
-          <div className="info-message" style={{ padding: "20px", backgroundColor: "#fff3cd", border: "1px solid #ffc107", borderRadius: "8px", marginBottom: "20px" }}>
-            <p style={{ margin: 0, color: "#856404", fontWeight: "500" }}>
-              Final approval is pending. You can view payment details, but uploading payment proof will be enabled after approval.
+          <div className="alert-box">
+            <p>{paymentInfo.message || "Final approval not done yet. Payment is locked."}</p>
+          </div>
+
+          <div className="info-message">
+            <p>
+              Payment can only be uploaded after final approval is completed by the principal.
+              Please check back later or contact your administrator.
             </p>
+          </div>
+
+          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/manager-dashboard")}>
+            Back to Dashboard
+          </button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ============================================================================
+  // CASE 2: Payment Already Uploaded - Show Status
+  // ============================================================================
+  if (paymentInfo.payment_status) {
+    const ps = paymentInfo.payment_status;
+
+    return (
+      <Layout>
+        <div className="fee-container">
+          <h2>Fee Payment Status</h2>
+
+          {/* Status Badge */}
+          <div className={`status-badge ${ps.status}`}>
+            {ps.status === "waiting_for_verification" && "⏳ Waiting for Verification"}
+            {ps.status === "payment_approved" && "✅ Payment Approved"}
+            {ps.status === "verification_failed" && "❌ Verification Failed"}
+          </div>
+
+          {/* Payment Details */}
+          <div className="payment-details">
+            <h3>Payment Information</h3>
+            <p>
+              <strong>Amount Paid:</strong> ₹{ps.amount_paid}
+            </p>
+            <p>
+              <strong>UTR Reference:</strong> {ps.utr_reference_number}
+            </p>
+            <p>
+              <strong>Uploaded At:</strong>{" "}
+              {new Date(ps.uploaded_at).toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </p>
+            {ps.receipt_url && (
+              <p>
+                <strong>Receipt:</strong>{" "}
+                <a href={ps.receipt_url} target="_blank" rel="noopener noreferrer">
+                  View Receipt
+                </a>
+              </p>
+            )}
+
+            {/* Admin Remarks (if verification failed) */}
+            {ps.admin_remarks && (
+              <div className="admin-remarks">
+                <strong>Admin Remarks:</strong>
+                <p>{ps.admin_remarks}</p>
+              </div>
+            )}
           </div>
 
           {/* Events Participating In */}
@@ -455,55 +453,7 @@ export default function FeePayment() {
             )}
           </div>
 
-          {/* Bank Details */}
-          <div className="bank-card">
-            <h3>Bank Account Details</h3>
-            <p>
-              <strong>Account No:</strong> 123456789012
-            </p>
-            <p>
-              <strong>IFSC Code:</strong> SBIN0000456
-            </p>
-            <p>
-              <strong>Name:</strong> VTU HABBA FEST FUND
-            </p>
-          </div>
-
-          {/* Fee Calculation */}
-          <div className="fee-info">
-            <h3>Payment Details</h3>
-            <p>
-              <strong>Total Events Participating:</strong> {paymentInfo.total_events}
-            </p>
-            <p>
-              <strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}
-            </p>
-          </div>
-
-          {/* Category Selection (Read-only) */}
-          <div className="category-box">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={paymentInfo.total_events < 10}
-                readOnly
-                disabled
-              />
-              <span>Participating less than 10 events — ₹8,000</span>
-            </label>
-
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={paymentInfo.total_events >= 10}
-                readOnly
-                disabled
-              />
-              <span>Participating more than 10 events — ₹25,000</span>
-            </label>
-          </div>
-
-          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/team-dashboard")}>
+          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/manager-dashboard")}>
             Back to Dashboard
           </button>
         </div>
@@ -511,13 +461,18 @@ export default function FeePayment() {
     );
   }
 
-  // CASE 3: can_upload === true - Split by role
-  // CASE 3A: PRINCIPAL - Read-only view
+  // ============================================================================
+  // CASE 3A: PRINCIPAL - Read-Only View (No Upload Capability)
+  // ============================================================================
   if (isPrincipal) {
     return (
       <Layout>
         <div className="fee-container">
-          <h2>Fee Payment</h2>
+          <h2>Fee Payment (Read-Only)</h2>
+
+          <div className="info-message">
+            <p>Only managers can upload payment proofs. Principals can view this information.</p>
+          </div>
 
           {/* Events Participating In */}
           <div className="events-section">
@@ -563,7 +518,9 @@ export default function FeePayment() {
     );
   }
 
+  // ============================================================================
   // CASE 3B: MANAGER - Can upload payment
+  // ============================================================================
   const isUploadDisabled = !consentChecked || !utrNumber.trim() || initializing;
 
   return (
