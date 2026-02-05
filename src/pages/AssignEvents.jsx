@@ -105,26 +105,6 @@ export default function AssignEvents() {
 
   const [isLocked, setIsLocked] = useState(false);
 
-  // Custom Alert/Confirm Modals
-  const [alertModal, setAlertModal] = useState({ show: false, message: "", type: "info" });
-  const [confirmModal, setConfirmModal] = useState({ show: false, message: "", onConfirm: null });
-
-  const showAlert = (message, type = "info") => {
-    setAlertModal({ show: true, message, type });
-  };
-
-  const closeAlert = () => {
-    setAlertModal({ show: false, message: "", type: "info" });
-  };
-
-  const showConfirm = (message, onConfirm) => {
-    setConfirmModal({ show: true, message, onConfirm });
-  };
-
-  const closeConfirm = () => {
-    setConfirmModal({ show: false, message: "", onConfirm: null });
-  };
-
   useEffect(() => {
     if (!token) {
       navigate("/");
@@ -149,7 +129,7 @@ export default function AssignEvents() {
       );
 
       if (response.status === 401) {
-        showAlert("Session expired. Please login again.", "error");
+        alert("Session expired. Please login again.");
         localStorage.clear();
         navigate("/");
         return;
@@ -177,7 +157,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        showAlert("Session expired. Please login again.", "error");
+        alert("Session expired. Please login again.");
         localStorage.clear();
         navigate("/");
         return;
@@ -211,7 +191,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        showAlert("Session expired. Please login again.", "error");
+        alert("Session expired. Please login again.");
         localStorage.clear();
         navigate("/");
         return;
@@ -230,11 +210,11 @@ export default function AssignEvents() {
           },
         }));
       } else {
-        showAlert(data.error || "Failed to load event data", "error");
+        alert(data.error || "Failed to load event data");
       }
     } catch (error) {
       console.error("Fetch event error:", error);
-      showAlert("Failed to load event data", "error");
+      alert("Failed to load event data");
     } finally {
       setLoadingEvents((prev) => ({ ...prev, [eventSlug]: false }));
     }
@@ -259,13 +239,13 @@ export default function AssignEvents() {
     if (mode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
       if (currentParticipants >= eventLimits?.participants) {
-        showAlert(`Maximum participants (${eventLimits.participants}) reached for this event`, "warning");
+        alert(`Maximum participants (${eventLimits.participants}) reached for this event`);
         return;
       }
     } else if (mode === "add_accompanist") {
       const currentAccompanists = currentData?.accompanists?.length || 0;
       if (currentAccompanists >= eventLimits?.accompanists) {
-        showAlert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
+        alert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`);
         return;
       }
     }
@@ -288,20 +268,20 @@ export default function AssignEvents() {
 
   const handleAdd = async () => {
     if (!selectedPersonId) {
-      showAlert("Please select a person", "warning");
+      alert("Please select a person");
       return;
     }
 
     // CRITICAL BUSINESS RULE: Participants MUST be students only
     if (modalMode === "add_participant" && selectedPersonType !== "student") {
-      showAlert("Participants must be students only", "error");
+      alert("Participants must be students only");
       return;
     }
 
     // Get event limits
     const eventLimits = EVENT_LIMITS[currentEventSlug];
     if (!eventLimits) {
-      showAlert("Event configuration not found", "error");
+      alert("Event configuration not found");
       return;
     }
 
@@ -310,13 +290,13 @@ export default function AssignEvents() {
     if (modalMode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
       if (currentParticipants >= eventLimits.participants) {
-        showAlert(`Maximum participants (${eventLimits.participants}) reached for this event`, "warning");
+        alert(`Maximum participants (${eventLimits.participants}) reached for this event`);
         return;
       }
     } else if (modalMode === "add_accompanist") {
       const currentAccompanists = currentData?.accompanists?.length || 0;
       if (currentAccompanists >= eventLimits.accompanists) {
-        showAlert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
+        alert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`);
         return;
       }
     }
@@ -324,7 +304,7 @@ export default function AssignEvents() {
     try {
       setIsSubmittingAdd(true);
 
-      const eventType = modalMode === "add_participant" ? "PARTICIPANT" : "ACCOMPANIST";
+      const eventType = modalMode === "add_participant" ? "participating" : "accompanying";
 
       const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
         method: "POST",
@@ -342,7 +322,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        showAlert("Session expired. Please login again.", "error");
+        alert("Session expired. Please login again.");
         localStorage.clear();
         navigate("/");
         return;
@@ -351,7 +331,7 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        showAlert(data.message || "Assignment added successfully", "success");
+        alert(data.message);
         
         // CRITICAL FIX: Update local state immediately after backend confirms success
         // Find the person being added from available lists
@@ -422,126 +402,128 @@ export default function AssignEvents() {
         closeModal();
         fetchDashboardData(); // Refresh to update event count
       } else {
-        showAlert(data.error || "Failed to add assignment", "error");
+        alert(data.error || "Failed to add assignment");
       }
     } catch (error) {
       console.error("Add error:", error);
-      showAlert("Failed to add assignment", "error");
+      alert("Failed to add assignment");
     } finally {
       setIsSubmittingAdd(false);
     }
   };
 
   const handleRemove = async (eventSlug, personId, personType) => {
-    showConfirm("Are you sure you want to remove this assignment?", async () => {
-      // Create unique key for this person
-      const personKey = `${personType}-${personId}`;
+    if (!confirm("Are you sure you want to remove this assignment?")) {
+      return;
+    }
 
-      try {
-        setRemovingPersonId(personKey);
+    // Create unique key for this person
+    const personKey = `${personType}-${personId}`;
 
-        const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            action: "remove",
-            event_slug: eventSlug,
-            person_id: personId,
-            person_type: personType,
-          }),
+    try {
+      setRemovingPersonId(personKey);
+
+      const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "remove",
+          event_slug: eventSlug,
+          person_id: personId,
+          person_type: personType,
+        }),
+      });
+
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message);
+        
+        // CRITICAL FIX: Update local state immediately after backend confirms success
+        setEventData((prev) => {
+          const updated = { ...prev };
+          const eventState = { ...updated[eventSlug] };
+
+          // Find which list the person was in
+          const participantIndex = eventState.participants.findIndex(
+            (p) => p.person_id === personId && p.person_type === personType
+          );
+          const accompanistIndex = eventState.accompanists.findIndex(
+            (p) => p.person_id === personId && p.person_type === personType
+          );
+
+          let removedPerson = null;
+
+          if (participantIndex !== -1) {
+            // Remove from participants
+            removedPerson = eventState.participants[participantIndex];
+            eventState.participants = eventState.participants.filter(
+              (p) => !(p.person_id === personId && p.person_type === personType)
+            );
+          } else if (accompanistIndex !== -1) {
+            // Remove from accompanists
+            removedPerson = eventState.accompanists[accompanistIndex];
+            eventState.accompanists = eventState.accompanists.filter(
+              (p) => !(p.person_id === personId && p.person_type === personType)
+            );
+          }
+
+          // Add back to appropriate available list
+          if (removedPerson && personType === "student") {
+            const studentData = {
+              student_id: removedPerson.person_id,
+              full_name: removedPerson.full_name,
+              phone: removedPerson.phone,
+              email: removedPerson.email,
+              usn: "", // USN not available from assignment data
+            };
+            eventState.available_students = [...eventState.available_students, studentData];
+          } else if (removedPerson && personType === "accompanist") {
+            const accompanistData = {
+              accompanist_id: removedPerson.person_id,
+              full_name: removedPerson.full_name,
+              phone: removedPerson.phone,
+              email: removedPerson.email,
+              accompanist_type: "", // Type not available from assignment data
+            };
+            eventState.available_accompanists = [...eventState.available_accompanists, accompanistData];
+          }
+
+          updated[eventSlug] = eventState;
+          return updated;
         });
 
-        if (response.status === 401) {
-          showAlert("Session expired. Please login again.", "error");
-          localStorage.clear();
-          navigate("/");
-          return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-          showAlert(data.message || "Assignment removed successfully", "success");
-          
-          // CRITICAL FIX: Update local state immediately after backend confirms success
-          setEventData((prev) => {
-            const updated = { ...prev };
-            const eventState = { ...updated[eventSlug] };
-
-            // Find which list the person was in
-            const participantIndex = eventState.participants.findIndex(
-              (p) => p.person_id === personId && p.person_type === personType
-            );
-            const accompanistIndex = eventState.accompanists.findIndex(
-              (p) => p.person_id === personId && p.person_type === personType
-            );
-
-            let removedPerson = null;
-
-            if (participantIndex !== -1) {
-              // Remove from participants
-              removedPerson = eventState.participants[participantIndex];
-              eventState.participants = eventState.participants.filter(
-                (p) => !(p.person_id === personId && p.person_type === personType)
-              );
-            } else if (accompanistIndex !== -1) {
-              // Remove from accompanists
-              removedPerson = eventState.accompanists[accompanistIndex];
-              eventState.accompanists = eventState.accompanists.filter(
-                (p) => !(p.person_id === personId && p.person_type === personType)
-              );
-            }
-
-            // Add back to appropriate available list
-            if (removedPerson && personType === "student") {
-              const studentData = {
-                student_id: removedPerson.person_id,
-                full_name: removedPerson.full_name,
-                phone: removedPerson.phone,
-                email: removedPerson.email,
-                usn: "", // USN not available from assignment data
-              };
-              eventState.available_students = [...eventState.available_students, studentData];
-            } else if (removedPerson && personType === "accompanist") {
-              const accompanistData = {
-                accompanist_id: removedPerson.person_id,
-                full_name: removedPerson.full_name,
-                phone: removedPerson.phone,
-                email: removedPerson.email,
-                accompanist_type: "", // Type not available from assignment data
-              };
-              eventState.available_accompanists = [...eventState.available_accompanists, accompanistData];
-            }
-
-            updated[eventSlug] = eventState;
-            return updated;
-          });
-
-          fetchDashboardData(); // Refresh to update event count
-        } else {
-          showAlert(data.error || "Failed to remove assignment", "error");
-        }
-      } catch (error) {
-        console.error("Remove error:", error);
-        showAlert("Failed to remove assignment", "error");
-      } finally {
-        setRemovingPersonId(null);
+        fetchDashboardData(); // Refresh to update event count
+      } else {
+        alert(data.error || "Failed to remove assignment");
       }
-    });
+    } catch (error) {
+      console.error("Remove error:", error);
+      alert("Failed to remove assignment");
+    } finally {
+      setRemovingPersonId(null);
+    }
   };
 
   const handleFinalApproval = async () => {
     if (!termsAccepted) {
-      showAlert("Please accept the terms to proceed", "warning");
+      alert("You must accept the terms to proceed");
       return;
     }
 
-    setFinalApproving(true);
-
     try {
+      setFinalApproving(true);
+
       const response = await fetch(`${API_BASE_URL}/principal/final-approval`, {
         method: "POST",
         headers: {
@@ -551,7 +533,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        showAlert("Session expired. Please login again.", "error");
+        alert("Session expired. Please login again.");
         localStorage.clear();
         navigate("/");
         return;
@@ -560,112 +542,189 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        showAlert("Final approval submitted successfully!", "success");
+        alert(data.message);
         setShowFinalApprovalModal(false);
         setIsLocked(true);
-        window.location.reload();
+        fetchDashboardData();
       } else {
-        showAlert(data.error || data.message || "Failed to submit final approval", "error");
+        alert(data.error || "Final approval failed");
       }
     } catch (error) {
       console.error("Final approval error:", error);
-      showAlert("Failed to submit final approval", "error");
+      alert("Final approval failed");
     } finally {
       setFinalApproving(false);
     }
   };
 
+  // Helper function to check if add button should be disabled
+  const isAddButtonDisabled = (eventSlug, type) => {
+    const limits = EVENT_LIMITS[eventSlug];
+    const currentData = eventData[eventSlug];
+    
+    if (!limits || !currentData) return false;
+
+    if (type === "participant") {
+      const currentCount = currentData.participants?.length || 0;
+      return currentCount >= limits.participants;
+    } else if (type === "accompanist") {
+      const currentCount = currentData.accompanists?.length || 0;
+      return currentCount >= limits.accompanists;
+    }
+    
+    return false;
+  };
+
   if (loading) {
     return (
       <Layout>
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading...</p>
-        </div>
+        <div className="loading-indicator">Loading...</div>
       </Layout>
     );
   }
 
+  const participatingCount = dashboardData?.stats?.participating_event_count || 0;
+  const showFinalApprovalButton =
+    role === "principal" &&
+    participatingCount >= 1 &&
+    dashboardData?.is_final_approved === false;
+
   return (
     <Layout>
-      <div className="assign-events-page">
-        <div className="page-header">
-          <div>
-            <h1>🎭 Assign Events</h1>
-            <p>
-              Assign students and accompanists to events (max limits apply)
-            </p>
-          </div>
-
-          {role === "principal" && !isLocked && (
-            <button
-              className="final-approval-btn"
-              onClick={() => setShowFinalApprovalModal(true)}
-            >
-              Submit Final Approval
-            </button>
-          )}
+      <div className="assign-events-container">
+        <div className="assign-events-header">
+          <h2>Assign Events</h2>
+          <p className="subtitle">VTU HABBA 2026 — Event Assignment Management</p>
         </div>
 
-        {isLocked && (
-          <div className="lock-banner">
-            🔒 Final approval has been submitted. No modifications allowed.
+        {/* Events Quota Bar - matches College Quota styling */}
+        {dashboardData && (
+          <div
+            style={{
+              background: "transparent",
+              border: "2px solid #2563eb",
+              color: "#1e40af",
+              padding: "16px 24px",
+              borderRadius: "12px",
+              marginBottom: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Events Assigned</h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: "700" }}>
+                {participatingCount} / 25
+              </p>
+              <small style={{ fontSize: "13px" }}>Remaining: {25 - participatingCount}</small>
+            </div>
+
+            {/* Final Approval Button - only for Principal when conditions met */}
+            {showFinalApprovalButton && (
+              <button
+                onClick={() => setShowFinalApprovalModal(true)}
+                style={{
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background 0.2s ease",
+                  width: "200px",
+                  marginTop: "0px",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#1d4ed8";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#2563eb";
+                }}
+              >
+                Submit Final Approval
+              </button>
+            )}
+
+            {/* Show approval status if already approved */}
+            {dashboardData?.is_final_approved && (
+              <div
+                style={{
+                  background: "#dcfce7",
+                  color: "#166534",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  border: "1px solid #86efac",
+                   width: "200px",
+                  marginTop: "0px",
+                }}
+              >
+                ✓ Final Approved
+                {dashboardData?.final_approved_at && (
+                  <div style={{ fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
+                    {new Date(dashboardData.final_approved_at).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {Object.entries(EVENT_CATEGORIES).map(([category, events]) => (
-          <div key={category} className="event-category">
-            <h2 className="category-title">{category}</h2>
+        {/* Lock Banner */}
+        {isLocked && (
+          <div className="lock-banner">
+            🔒 Final approval submitted. All event assignments are now locked and read-only.
+          </div>
+        )}
 
+        {/* Event Categories */}
+        {Object.entries(EVENT_CATEGORIES).map(([category, events]) => (
+          <div key={category} className="event-category-section">
+            <h3 className="category-title">{category}</h3>
             {events.map((event) => (
-              <div key={event.slug} className="event-card">
+              <div key={event.slug} className="event-accordion">
                 <div
-                  className="event-header"
+                  className={`event-header ${expandedEvent === event.slug ? "expanded" : ""}`}
                   onClick={() => handleEventClick(event.slug)}
                 >
-                  <h3>{event.name}</h3>
-                  <span className="expand-icon">
-                    {expandedEvent === event.slug ? "−" : "+"}
+                  <span className="event-name">{event.name}</span>
+                  <span className="event-arrow">
+                    {expandedEvent === event.slug ? "▼" : "▶"}
                   </span>
                 </div>
 
                 {expandedEvent === event.slug && (
-                  <div className="event-content">
+                  <div className="event-body">
                     {loadingEvents[event.slug] ? (
-                      <div className="loading-message">Loading event data...</div>
+                      <div className="loading-indicator">Loading event data...</div>
                     ) : eventData[event.slug] ? (
                       <>
-                        <div className="limits-info">
-                          <span>
-                            Max Participants: {EVENT_LIMITS[event.slug]?.participants || 0}
-                          </span>
-                          <span>
-                            Max Accompanists: {EVENT_LIMITS[event.slug]?.accompanists || 0}
-                          </span>
-                        </div>
-
-                        {/* PARTICIPANTS SECTION */}
-                        <div className="section">
+                        {/* Participants Section */}
+                        <div className="assignment-section">
                           <div className="section-header">
-                            <h4>
-                              Participants (
-                              {eventData[event.slug]?.participants?.length || 0}/
-                              {EVENT_LIMITS[event.slug]?.participants || 0})
-                            </h4>
-                            {!isLocked &&
-                              role === "manager" &&
-                              (eventData[event.slug]?.participants?.length || 0) <
-                                (EVENT_LIMITS[event.slug]?.participants || 0) && (
-                                <button
-                                  className="add-btn"
-                                  onClick={() => openAddModal(event.slug, "add_participant")}
-                                >
-                                  + Add Participant
-                                </button>
-                              )}
+                            <h4>Participants {eventData[event.slug].participants.length}/{EVENT_LIMITS[event.slug]?.participants || 0}</h4>
+                            {!isLocked && role === "manager" && (
+                              <button
+                                className="add-btn"
+                                onClick={() => openAddModal(event.slug, "add_participant")}
+                                disabled={isAddButtonDisabled(event.slug, "participant")}
+                                style={{
+                                  opacity: isAddButtonDisabled(event.slug, "participant") ? 0.5 : 1,
+                                  cursor: isAddButtonDisabled(event.slug, "participant") ? "not-allowed" : "pointer"
+                                }}
+                              >
+                                + Add Participant
+                              </button>
+                            )}
                           </div>
 
-                          {eventData[event.slug]?.participants?.length > 0 ? (
+                          {eventData[event.slug].participants.length === 0 ? (
+                            <p className="empty-message">No participants assigned</p>
+                          ) : (
                             <div className="person-list">
                               {eventData[event.slug].participants.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
@@ -708,34 +767,31 @@ export default function AssignEvents() {
                                 );
                               })}
                             </div>
-                          ) : (
-                            <div className="empty-message">No participants assigned</div>
                           )}
                         </div>
 
-                        {/* ACCOMPANISTS SECTION */}
-                        <div className="section">
+                        {/* Accompanists Section */}
+                        <div className="assignment-section">
                           <div className="section-header">
-                            <h4>
-                              Accompanists (
-                              {eventData[event.slug]?.accompanists?.length || 0}/
-                              {EVENT_LIMITS[event.slug]?.accompanists || 0})
-                            </h4>
-                            {!isLocked &&
-                              role === "manager" &&
-                              EVENT_LIMITS[event.slug]?.accompanists > 0 &&
-                              (eventData[event.slug]?.accompanists?.length || 0) <
-                                (EVENT_LIMITS[event.slug]?.accompanists || 0) && (
-                                <button
-                                  className="add-btn"
-                                  onClick={() => openAddModal(event.slug, "add_accompanist")}
-                                >
-                                  + Add Accompanist
-                                </button>
-                              )}
+                            <h4>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
+                            {!isLocked && role === "manager" && (
+                              <button
+                                className="add-btn"
+                                onClick={() => openAddModal(event.slug, "add_accompanist")}
+                                disabled={isAddButtonDisabled(event.slug, "accompanist")}
+                                style={{
+                                  opacity: isAddButtonDisabled(event.slug, "accompanist") ? 0.5 : 1,
+                                  cursor: isAddButtonDisabled(event.slug, "accompanist") ? "not-allowed" : "pointer"
+                                }}
+                              >
+                                + Add Accompanist
+                              </button>
+                            )}
                           </div>
 
-                          {eventData[event.slug]?.accompanists?.length > 0 ? (
+                          {eventData[event.slug].accompanists.length === 0 ? (
+                            <p className="empty-message">No accompanists assigned</p>
+                          ) : (
                             <div className="person-list">
                               {eventData[event.slug].accompanists.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
@@ -777,12 +833,6 @@ export default function AssignEvents() {
                                   </div>
                                 );
                               })}
-                            </div>
-                          ) : (
-                            <div className="empty-message">
-                              {EVENT_LIMITS[event.slug]?.accompanists === 0
-                                ? "No accompanists allowed for this event"
-                                : "No accompanists assigned"}
                             </div>
                           )}
                         </div>
@@ -873,60 +923,6 @@ export default function AssignEvents() {
                   {isSubmittingAdd ? "Adding..." : "Add"}
                 </button>
                 <button onClick={closeModal} disabled={isSubmittingAdd}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Custom Alert Modal */}
-        {alertModal.show && (
-          <div className="modal-overlay">
-            <div className="modal-card" style={{ maxWidth: "400px" }}>
-              <h3 style={{ 
-                color: alertModal.type === "error" ? "#dc2626" : 
-                       alertModal.type === "success" ? "#16a34a" : 
-                       alertModal.type === "warning" ? "#ea580c" : "#2563eb",
-                marginBottom: "20px" 
-              }}>
-                {alertModal.type === "error" ? "❌ Error" : 
-                 alertModal.type === "success" ? "✅ Success" : 
-                 alertModal.type === "warning" ? "⚠️ Warning" : "ℹ️ Information"}
-              </h3>
-              <p style={{ marginBottom: "24px", lineHeight: "1.6" }}>
-                {alertModal.message}
-              </p>
-              <div className="modal-actions">
-                <button onClick={closeAlert}>OK</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Custom Confirm Modal */}
-        {confirmModal.show && (
-          <div className="modal-overlay">
-            <div className="modal-card" style={{ maxWidth: "400px" }}>
-              <h3 style={{ color: "#dc2626", marginBottom: "20px" }}>
-                ⚠️ Confirm Action
-              </h3>
-              <p style={{ marginBottom: "24px", lineHeight: "1.6" }}>
-                {confirmModal.message}
-              </p>
-              <div className="modal-actions">
-                <button 
-                  onClick={() => {
-                    if (confirmModal.onConfirm) {
-                      confirmModal.onConfirm();
-                    }
-                    closeConfirm();
-                  }}
-                  style={{ background: "#dc2626" }}
-                >
-                  Yes, Remove
-                </button>
-                <button onClick={closeConfirm}>
                   Cancel
                 </button>
               </div>
