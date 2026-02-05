@@ -162,7 +162,7 @@
 }
 
 .remove-btn {
-
+ width: 35%;
   padding: 8px 18px;
   background: #ef4444;
   color: white;
@@ -173,7 +173,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  min-width: 15px;
+  min-width: 40px;
 }
 
 .remove-btn:hover:not(:disabled) {
