@@ -42,12 +42,7 @@ export default function AccompanistForm() {
 
   const [accompanists, setAccompanists] = useState([]);
   const [accompanistsLoaded, setAccompanistsLoaded] = useState(false);
-  const [showAccompanistsList, setShowAccompanistsList] = useState(false);
-  const [expandedAccompanist, setExpandedAccompanist] = useState(null);
-
-  const [editingAccompanist, setEditingAccompanist] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [savingEdit, setSavingEdit] = useState(false);
+  const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -55,6 +50,7 @@ export default function AccompanistForm() {
       return;
     }
     fetchQuota();
+    fetchAccompanists();
   }, []);
 
   useEffect(() => {
@@ -101,8 +97,6 @@ export default function AccompanistForm() {
   };
 
   const fetchAccompanists = async () => {
-    if (accompanistsLoaded) return;
-
     try {
       const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
@@ -119,13 +113,12 @@ export default function AccompanistForm() {
       }
 
       const data = await response.json();
-      if (data.success) {
-        setAccompanists(data.accompanists || []);
+      if (data.success && data.data && data.data.accompanists) {
+        setAccompanists(data.data.accompanists);
         setAccompanistsLoaded(true);
       }
     } catch (error) {
       console.error("Fetch accompanists error:", error);
-      alert("Failed to load accompanists");
     }
   };
 
@@ -331,20 +324,18 @@ export default function AccompanistForm() {
 
       alert("Accompanist registered successfully!");
 
-      if (showAccompanistsList && accompanistsLoaded) {
-        const newAccompanist = {
-          accompanist_id: finalizeData.accompanist_id,
-          full_name: modalForm.full_name,
-          phone: modalForm.phone,
-          email: modalForm.email,
-          accompanist_type: modalForm.accompanist_type,
-          student_id: null,
-          created_at: new Date().toISOString(),
-        };
-        setAccompanists([newAccompanist, ...accompanists]);
-      } else {
-        setAccompanistsLoaded(false);
-      }
+      const newAccompanist = {
+        accompanist_id: finalizeData.accompanist_id || finalizeData.data?.accompanist_id,
+        full_name: modalForm.full_name,
+        phone: modalForm.phone,
+        email: modalForm.email,
+        accompanist_type: modalForm.accompanist_type,
+        student_id: null,
+        passport_photo_url: "",
+        id_proof_url: "",
+        created_at: new Date().toISOString(),
+      };
+      setAccompanists([newAccompanist, ...accompanists]);
 
       setQuotaUsed(quotaUsed + 1);
 
@@ -357,94 +348,14 @@ export default function AccompanistForm() {
     }
   };
 
-  const toggleAccompanistsList = () => {
-    const newState = !showAccompanistsList;
-    setShowAccompanistsList(newState);
-
-    if (newState && !accompanistsLoaded) {
-      fetchAccompanists();
-    }
-  };
-
-  const handleAccompanistClick = (accompanist_id) => {
-    setExpandedAccompanist(expandedAccompanist === accompanist_id ? null : accompanist_id);
-  };
-
-  const startEdit = (accompanist) => {
-    setEditingAccompanist(accompanist.accompanist_id);
-    setEditForm({
-      full_name: accompanist.full_name,
-      phone: accompanist.phone,
-      email: accompanist.email || "",
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingAccompanist(null);
-    setEditForm({});
-  };
-
-  const saveEdit = async (accompanist_id) => {
-    if (!editForm.full_name || !editForm.phone) {
-      alert("Name and Phone are required");
-      return;
-    }
-
-    try {
-      setSavingEdit(true);
-
-      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "update_accompanist_details",
-          accompanist_id,
-          full_name: editForm.full_name,
-          phone: editForm.phone,
-          email: editForm.email || null,
-        }),
-      });
-
-      if (response.status === 401) {
-        handleSessionExpired();
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        alert(data.error || "Failed to update accompanist");
-        return;
-      }
-
-      setAccompanists(
-        accompanists.map((acc) =>
-          acc.accompanist_id === accompanist_id
-            ? { ...acc, full_name: editForm.full_name, phone: editForm.phone, email: editForm.email }
-            : acc
-        )
-      );
-
-      setEditingAccompanist(null);
-      setEditForm({});
-      alert("Accompanist updated successfully");
-    } catch (error) {
-      console.error("Update error:", error);
-      alert("Failed to update accompanist");
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
   const removeAccompanist = async (accompanist_id) => {
     if (!confirm("Are you sure you want to remove this accompanist?")) {
       return;
     }
 
     try {
+      setRemovingId(accompanist_id);
+
       const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
@@ -466,89 +377,19 @@ export default function AccompanistForm() {
 
       if (!data.success) {
         alert(data.error || "Failed to remove accompanist");
+        setRemovingId(null);
         return;
       }
 
       setAccompanists(accompanists.filter((acc) => acc.accompanist_id !== accompanist_id));
-
       setQuotaUsed(quotaUsed - 1);
-
       alert("Accompanist removed successfully");
     } catch (error) {
       console.error("Remove error:", error);
       alert("Failed to remove accompanist");
+    } finally {
+      setRemovingId(null);
     }
-  };
-
-  const renderAccompanistDetails = (accompanist, isEditing, form, setForm) => {
-    return (
-      <div className="student-details">
-        <div className="detail-row">
-          <label>Full Name:</label>
-          {isEditing ? (
-            <input
-              type="text"
-              value={form.full_name}
-              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              disabled={savingEdit}
-            />
-          ) : (
-            <span>{accompanist.full_name}</span>
-          )}
-        </div>
-
-        <div className="detail-row">
-          <label>Phone:</label>
-          {isEditing ? (
-            <input
-              type="text"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              disabled={savingEdit}
-            />
-          ) : (
-            <span>{accompanist.phone}</span>
-          )}
-        </div>
-
-        <div className="detail-row">
-          <label>Email:</label>
-          {isEditing ? (
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              disabled={savingEdit}
-            />
-          ) : (
-            <span>{accompanist.email || "N/A"}</span>
-          )}
-        </div>
-
-        <div className="detail-row">
-          <label>Type:</label>
-          <span>{accompanist.accompanist_type}</span>
-        </div>
-
-        {accompanist.passport_photo_url && (
-          <div className="detail-row">
-            <label>Passport Photo:</label>
-            <a href={accompanist.passport_photo_url} target="_blank" rel="noopener noreferrer">
-              View Photo
-            </a>
-          </div>
-        )}
-
-        {accompanist.id_proof_url && (
-          <div className="detail-row">
-            <label>ID Proof:</label>
-            <a href={accompanist.id_proof_url} target="_blank" rel="noopener noreferrer">
-              View ID Proof
-            </a>
-          </div>
-        )}
-      </div>
-    );
   };
 
   if (loading) {
@@ -569,7 +410,6 @@ export default function AccompanistForm() {
         <div className="accompanist-card">
           <h2>Register Accompanist</h2>
           <p className="subtitle">VTU HABBA 2026 – Accompanist Registration</p>
-          
 
           <div className="capacity-info">
             <span>
@@ -587,77 +427,40 @@ export default function AccompanistForm() {
           </div>
 
           <div className="section">
-            <div className="section-toggle" onClick={toggleAccompanistsList}>
-              <h3 className="section-title">
-                Added Accompanists
-                {accompanistsLoaded && ` (${accompanists.length})`}
-              </h3>
-              <div className="toggle-icon">{showAccompanistsList ? "▼" : "▶"}</div>
-            </div>
+            <h3 className="section-title">Added Accompanists ({accompanists.length})</h3>
 
-            {showAccompanistsList && (
-              <>
-                {!accompanistsLoaded ? (
-                  <div className="loading-indicator">Loading accompanists...</div>
-                ) : accompanists.length === 0 ? (
-                  <p className="empty-message">No accompanists added yet</p>
-                ) : (
-                  accompanists.map((accompanist) => (
-                    <div key={accompanist.accompanist_id} className="student-card">
-                      <div
-                        className="student-header"
-                        onClick={() => handleAccompanistClick(accompanist.accompanist_id)}
-                      >
-                        <div className="student-name">{accompanist.full_name}</div>
-                        <div className="student-usn">{accompanist.phone}</div>
-                        <div className="expand-icon">
-                          {expandedAccompanist === accompanist.accompanist_id ? "▼" : "▶"}
-                        </div>
+            {!accompanistsLoaded ? (
+              <div className="loading-indicator">Loading accompanists...</div>
+            ) : accompanists.length === 0 ? (
+              <p className="empty-message">No accompanists added yet</p>
+            ) : (
+              <div className="accompanists-list">
+                {accompanists.map((accompanist) => (
+                  <div key={accompanist.accompanist_id} className="accompanist-item">
+                    <div className="accompanist-info">
+                      <div className="accompanist-name">{accompanist.full_name}</div>
+                      <div className="accompanist-details">
+                        <span className="accompanist-phone">{accompanist.phone}</span>
+                        <span className="accompanist-divider">•</span>
+                        <span className="accompanist-type">{accompanist.accompanist_type}</span>
+                        {accompanist.email && (
+                          <>
+                            <span className="accompanist-divider">•</span>
+                            <span className="accompanist-email">{accompanist.email}</span>
+                          </>
+                        )}
                       </div>
-
-                      {expandedAccompanist === accompanist.accompanist_id && (
-                        <div className="student-body">
-                          {renderAccompanistDetails(
-                            accompanist,
-                            editingAccompanist === accompanist.accompanist_id,
-                            editForm,
-                            setEditForm
-                          )}
-
-                          <div className="action-buttons">
-                            {editingAccompanist === accompanist.accompanist_id ? (
-                              <>
-                                <button
-                                  className="btn-save"
-                                  onClick={() => saveEdit(accompanist.accompanist_id)}
-                                  disabled={savingEdit}
-                                >
-                                  {savingEdit ? "Saving..." : "Save"}
-                                </button>
-                                <button className="btn-cancel" onClick={cancelEdit} disabled={savingEdit}>
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button className="btn-edit" onClick={() => startEdit(accompanist)}>
-                                  Edit
-                                </button>
-                                <button
-                                  className="btn-reject"
-                                  onClick={() => removeAccompanist(accompanist.accompanist_id)}
-                                >
-                                  Remove
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  ))
-                )}
-              </>
+                    <button
+                      className="remove-btn"
+                      onClick={() => removeAccompanist(accompanist.accompanist_id)}
+                      disabled={removingId === accompanist.accompanist_id}
+                    >
+                      {removingId === accompanist.accompanist_id ? "Removing..." : "Remove"}
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
