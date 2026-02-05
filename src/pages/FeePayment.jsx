@@ -113,7 +113,7 @@ export default function FeePayment() {
       const data = await response.json();
 
       if (data.success) {
-        setPaymentInfo(data);
+        setPaymentInfo(data.data);
       } else {
         alert(data.error || "Failed to fetch payment info");
       }
@@ -177,10 +177,10 @@ export default function FeePayment() {
       }
 
       // Store session data
-      setUploadSession(data);
+      setUploadSession(data.data);
 
       // Set timer
-      const expiresAt = new Date(data.expires_at).getTime();
+      const expiresAt = new Date(data.data.expires_at).getTime();
       const now = Date.now();
       const remainingSeconds = Math.floor((expiresAt - now) / 1000);
       setTimer(remainingSeconds);
@@ -243,36 +243,34 @@ export default function FeePayment() {
       return;
     }
 
-    if (!uploadSession?.upload_url) {
-      alert("Session expired. Please restart.");
-      return;
-    }
-
     try {
       setUploadStatus("uploading");
       setUploadMessage("Uploading file to Azure Blob Storage...");
 
       const response = await fetch(uploadSession.upload_url, {
         method: "PUT",
-        headers: { "x-ms-blob-type": "BlockBlob" },
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Type": uploadFile.type,
+        },
         body: uploadFile,
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status}`);
+        throw new Error(`Upload failed with status ${response.status}`);
       }
 
       setUploadStatus("uploaded");
-      setUploadMessage("✓ File uploaded successfully");
+      setUploadMessage("File uploaded successfully! Now click 'Submit Payment' to finalize.");
     } catch (error) {
       console.error("Upload error:", error);
       setUploadStatus("failed");
-      setUploadMessage("✗ Upload failed. Please try again.");
+      setUploadMessage("Upload failed. Please try again.");
     }
   };
 
   // ============================================================================
-  // STEP 3: Finalize Payment (Submit to DB)
+  // STEP 3: Finalize Payment (DB Insert)
   // ============================================================================
   const handleSubmit = async () => {
     if (uploadStatus !== "uploaded") {
@@ -304,17 +302,14 @@ export default function FeePayment() {
 
       const data = await response.json();
 
-      if (!data.success) {
-        alert(data.error || "Failed to submit payment");
+      if (data.success) {
+        alert("Payment submitted successfully!");
+        closeUploadModal();
+        await fetchPaymentInfo();
+      } else {
+        alert(data.error || "Submission failed");
         setSubmitting(false);
-        return;
       }
-
-      alert("Payment submitted successfully! Waiting for verification.");
-
-      // Close modal and refresh
-      closeUploadModal();
-      fetchPaymentInfo();
     } catch (error) {
       console.error("Submit error:", error);
       alert("Failed to submit payment");
@@ -326,116 +321,103 @@ export default function FeePayment() {
     return (
       <Layout>
         <div style={{ textAlign: "center", padding: "50px" }}>
-          <h3>Loading payment information...</h3>
+          <h3>Loading...</h3>
         </div>
       </Layout>
     );
   }
 
-  // CASE 1: Final approval not done
-  // CASE 1: Final approval NOT done — VIEW ONLY (Option B)
-if (!paymentInfo?.can_upload) {
-  return (
-    <Layout>
-      <div className="fee-container">
-        <h2>Fee Payment</h2>
-
-        <div className="alert-box warning">
-          <p>
-            Final approval is pending. You can view payment details below.
-            Uploading payment proof will be enabled after approval.
-          </p>
+  if (!paymentInfo) {
+    return (
+      <Layout>
+        <div style={{ textAlign: "center", padding: "50px" }}>
+          <h3>Error loading payment information</h3>
         </div>
+      </Layout>
+    );
+  }
 
-        {/* Events Participating In */}
-        <div className="events-section">
-          <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
-          {paymentInfo.total_events === 0 ? (
-            <p className="empty-message">No events assigned yet</p>
-          ) : (
-            <ul className="events-list">
-              {paymentInfo.participating_event_keys.map((key) => (
-                <li key={key}>{EVENT_NAMES[key] || key}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Bank Details (Read-only) */}
-        <div className="bank-card">
-          <h3>Bank Account Details</h3>
-          <p><strong>Account No:</strong> 123456789012</p>
-          <p><strong>IFSC Code:</strong> SBIN0000456</p>
-          <p><strong>Name:</strong> VTU HABBA FEST FUND</p>
-        </div>
-
-        {/* Fee Info */}
-        <div className="fee-info">
-          <h3>Payment Details</h3>
-          <p><strong>Total Events:</strong> {paymentInfo.total_events}</p>
-          <p><strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}</p>
-        </div>
-
-        {/* Upload Disabled Notice */}
-        <div className="info-message">
-          <p>🔒 Payment upload is disabled until final approval is completed.</p>
-        </div>
-
-        <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/team-dashboard")}>
-          Back to Dashboard
-        </button>
-      </div>
-    </Layout>
-  );
-}
-
-  // CASE 2: Payment already exists (Read-only for ALL roles)
+  // CASE 1: Payment status exists - Show read-only status page (ALL ROLES)
   if (paymentInfo.payment_status) {
-    const status = paymentInfo.payment_status.status;
-    const statusLabels = {
-      waiting_for_verification: "Waiting for Verification",
-      payment_approved: "Payment Approved",
-      verification_failed: "Verification Failed",
-    };
+    const status = paymentInfo.payment_status;
 
     return (
       <Layout>
         <div className="fee-container">
           <h2>Payment Status</h2>
 
-          <div className={`status-badge ${status}`}>
-            {statusLabels[status] || status}
+          <div className="status-card">
+            <div className={`status-badge ${status.status.toLowerCase().replace(/_/g, "-")}`}>
+              {status.status.replace(/_/g, " ")}
+            </div>
+
+            <h3>Submitted Payment Details</h3>
+            <p>
+              <strong>Amount Paid:</strong> ₹{status.amount_paid}
+            </p>
+            <p>
+              <strong>UTR / Reference:</strong> {status.utr_reference_number}
+            </p>
+            <p>
+              <strong>Submitted At:</strong> {new Date(status.uploaded_at).toLocaleString()}
+            </p>
+
+            {status.admin_remarks && (
+              <div className="admin-remarks">
+                <strong>Admin Remarks:</strong>
+                <p>{status.admin_remarks}</p>
+              </div>
+            )}
+
+            {status.status === "rejected" && (
+              <div className="contact-details">
+                <h4>Contact Support</h4>
+                <p>
+                  <strong>Email:</strong> support@vtufest.com
+                </p>
+                <p>
+                  <strong>Phone:</strong> +91-9876543210
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Events Participating In */}
           <div className="events-section">
             <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
-            <ul className="events-list">
-              {paymentInfo.participating_event_keys.map((key) => (
-                <li key={key}>{EVENT_NAMES[key] || key}</li>
-              ))}
-            </ul>
+            {paymentInfo.total_events === 0 ? (
+              <p className="empty-message">No events assigned yet</p>
+            ) : (
+              <ul className="events-list">
+                {paymentInfo.participating_event_keys.map((key) => (
+                  <li key={key}>{EVENT_NAMES[key] || key}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
-          {/* Payment Details */}
-          <div className="payment-details">
-            <h3>Payment Details</h3>
+          {/* Bank Details (Read-only) */}
+          <div className="bank-card">
+            <h3>Bank Account Details</h3>
             <p>
-              <strong>Amount Paid:</strong> ₹{paymentInfo.payment_status.amount_paid}
+              <strong>Account No:</strong> 123456789012
             </p>
             <p>
-              <strong>UTR / Reference Number:</strong> {paymentInfo.payment_status.utr_reference_number}
+              <strong>IFSC Code:</strong> SBIN0000456
             </p>
             <p>
-              <strong>Uploaded At:</strong>{" "}
-              {new Date(paymentInfo.payment_status.uploaded_at).toLocaleString()}
+              <strong>Name:</strong> VTU HABBA FEST FUND
             </p>
-            {paymentInfo.payment_status.admin_remarks && (
-              <div className="admin-remarks">
-                <strong>Admin Remarks:</strong>
-                <p>{paymentInfo.payment_status.admin_remarks}</p>
-              </div>
-            )}
+          </div>
+
+          <div className="fee-info">
+            <h3>Payment Amount</h3>
+            <p>
+              <strong>Total Events:</strong> {paymentInfo.total_events}
+            </p>
+            <p>
+              <strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}
+            </p>
           </div>
 
           <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/team-dashboard")}>
@@ -446,16 +428,96 @@ if (!paymentInfo?.can_upload) {
     );
   }
 
-  // CASE 3A: PRINCIPAL - Read-only empty state
-  if (isPrincipal) {
+  // CASE 2: can_upload === false - Show approval pending message (ALL ROLES)
+  if (!paymentInfo.can_upload) {
     return (
       <Layout>
         <div className="fee-container">
           <h2>Fee Payment</h2>
 
-          <div className="info-message">
-            <p>No payment has been submitted yet.</p>
+          <div className="info-message" style={{ padding: "20px", backgroundColor: "#fff3cd", border: "1px solid #ffc107", borderRadius: "8px", marginBottom: "20px" }}>
+            <p style={{ margin: 0, color: "#856404", fontWeight: "500" }}>
+              Final approval is pending. You can view payment details, but uploading payment proof will be enabled after approval.
+            </p>
           </div>
+
+          {/* Events Participating In */}
+          <div className="events-section">
+            <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
+            {paymentInfo.total_events === 0 ? (
+              <p className="empty-message">No events assigned yet</p>
+            ) : (
+              <ul className="events-list">
+                {paymentInfo.participating_event_keys.map((key) => (
+                  <li key={key}>{EVENT_NAMES[key] || key}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Bank Details */}
+          <div className="bank-card">
+            <h3>Bank Account Details</h3>
+            <p>
+              <strong>Account No:</strong> 123456789012
+            </p>
+            <p>
+              <strong>IFSC Code:</strong> SBIN0000456
+            </p>
+            <p>
+              <strong>Name:</strong> VTU HABBA FEST FUND
+            </p>
+          </div>
+
+          {/* Fee Calculation */}
+          <div className="fee-info">
+            <h3>Payment Details</h3>
+            <p>
+              <strong>Total Events Participating:</strong> {paymentInfo.total_events}
+            </p>
+            <p>
+              <strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}
+            </p>
+          </div>
+
+          {/* Category Selection (Read-only) */}
+          <div className="category-box">
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={paymentInfo.total_events < 10}
+                readOnly
+                disabled
+              />
+              <span>Participating less than 10 events — ₹8,000</span>
+            </label>
+
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={paymentInfo.total_events >= 10}
+                readOnly
+                disabled
+              />
+              <span>Participating more than 10 events — ₹25,000</span>
+            </label>
+          </div>
+
+          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/team-dashboard")}>
+            Back to Dashboard
+          </button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // CASE 3: can_upload === true - Split by role
+  // CASE 3A: PRINCIPAL - Read-only view
+  if (isPrincipal) {
+    return (
+      <Layout>
+        <div className="fee-container">
+          <h2>Fee Payment</h2>
 
           {/* Events Participating In */}
           <div className="events-section">
