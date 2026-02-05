@@ -216,7 +216,7 @@ export default function Dashboard() {
   );
 
   return (
-    <Layout>
+    <Layout hasApplication={dashboardData?.application !== null}>
       {priority1Notifications.length > 0 && (
         <div className="top-banner">
           <div className="qr-code-section">

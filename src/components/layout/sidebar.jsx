@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "../../styles/sidebar.css";
 
-export default function Sidebar({ role }) {
+export default function Sidebar({ role, hasApplication }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -19,8 +19,7 @@ export default function Sidebar({ role }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      {/* ================= STUDENT ================= */}
-      {role === "student" && (
+      {role === "student" && !hasApplication && (
         <div
           className={`sidebar-item ${isActive("/student-register") ? "active" : ""
             }`}
@@ -37,7 +36,6 @@ export default function Sidebar({ role }) {
 
       {(role === "principal") && (
         <>
-          {/* Dashboard */}
           <div
             className={`sidebar-item ${isActive("/principal-dashboard") ? "active" : ""
               }`}
@@ -51,7 +49,6 @@ export default function Sidebar({ role }) {
             <span className="label">Dashboard</span>
           </div>
 
-          {/* Approvals */}
           <div
             className={`sidebar-item ${isActive("/approvals") ? "active" : ""
               }`}
@@ -78,7 +75,6 @@ export default function Sidebar({ role }) {
             <span className="label">View Applications</span>
           </div>
 
-          {/* Assign Events */}
           <div
             className={`sidebar-item ${isActive("/assign-events") ? "active" : ""
               }`}
@@ -93,7 +89,6 @@ export default function Sidebar({ role }) {
             <span className="label">Assigned Events</span>
           </div>
 
-          {/* Accommodation */}
           <div
             className={`sidebar-item ${isActive("/accommodation") ? "active" : ""
               }`}
@@ -135,10 +130,8 @@ export default function Sidebar({ role }) {
         </>
       )}
 
-      {/* ================= PRINCIPAL / MANAGER ================= */}
       {(role === "manager") && (
         <>
-          {/* Dashboard */}
           <div
             className={`sidebar-item ${isActive("/principal-dashboard") ? "active" : ""
               }`}
@@ -152,7 +145,6 @@ export default function Sidebar({ role }) {
             <span className="label">Dashboard</span>
           </div>
 
-          {/* Approvals */}
           <div
             className={`sidebar-item ${isActive("/approvals") ? "active" : ""
               }`}
@@ -180,7 +172,6 @@ export default function Sidebar({ role }) {
           </div>
 
 
-          {/* Accompanist */}
           <div
             className={`sidebar-item ${isActive("/accompanist-form") ? "active" : ""
               }`}
@@ -194,7 +185,6 @@ export default function Sidebar({ role }) {
             <span className="label">Add Accompanist</span>
           </div>
 
-          {/* Assign Events */}
           <div
             className={`sidebar-item ${isActive("/assign-events") ? "active" : ""
               }`}
@@ -209,7 +199,6 @@ export default function Sidebar({ role }) {
             <span className="label">Assign Events</span>
           </div>
 
-          {/* Accommodation */}
           <div
             className={`sidebar-item ${isActive("/accommodation") ? "active" : ""
               }`}
@@ -223,7 +212,6 @@ export default function Sidebar({ role }) {
             <span className="label">Accommodation</span>
           </div>
 
-          {/* 💳 REGESTRATION (Label only changed) */}
           <div
             className={`sidebar-item ${isActive("/fee-payment") ? "active" : ""
               }`}
@@ -251,7 +239,6 @@ export default function Sidebar({ role }) {
         </>
       )}
 
-      {/* ================= RULES ================= */}
       <div
         className={`sidebar-item ${isActive("/rules") ? "active" : ""}`}
         onClick={() => navigate("/rules")}
