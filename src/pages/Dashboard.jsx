@@ -296,7 +296,7 @@ export default function Dashboard() {
 
   // Handle reapply
   const handleReapply = () => {
-    navigate("/submit-application");
+    navigate("/student-register");
   };
 
   // Handle view allocated events
