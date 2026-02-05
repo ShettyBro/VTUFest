@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "../../styles/sidebar.css";
 
-export default function Sidebar({ role, hasApplication }) {
+export default function Sidebar({ role, hasApplication = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);

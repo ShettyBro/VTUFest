@@ -2,7 +2,7 @@ import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import "../../styles/layout.css";
 
-export default function Layout({ children, hasApplication }) {
+export default function Layout({ children, hasApplication = false }) {
   const role = localStorage.getItem("role") || "student";
 
   return (
