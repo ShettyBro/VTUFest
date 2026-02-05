@@ -43,7 +43,6 @@ const EVENT_CATEGORIES = {
   ],
 };
 
-// Event-wise limits for participants and accompanists (MANDATORY)
 const EVENT_LIMITS = {
   classical_vocal_solo: { participants: 1, accompanists: 2 },
   classical_instrumental_percussion: { participants: 1, accompanists: 2 },
@@ -96,7 +95,6 @@ export default function AssignEvents() {
   const [selectedPersonType, setSelectedPersonType] = useState("student");
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
 
-  // Per-person loading state for Remove buttons
   const [removingPersonId, setRemovingPersonId] = useState(null);
 
   const [showFinalApprovalModal, setShowFinalApprovalModal] = useState(false);
@@ -172,8 +170,8 @@ export default function AssignEvents() {
     }
   };
 
-  const fetchEventData = async (eventSlug) => {
-    if (loadingEvents[eventSlug] || eventData[eventSlug]) return;
+  const fetchEventData = async (eventSlug, force = false) => {
+    if (!force && (loadingEvents[eventSlug] || eventData[eventSlug])) return;
 
     setLoadingEvents((prev) => ({ ...prev, [eventSlug]: true }));
 
@@ -232,7 +230,6 @@ export default function AssignEvents() {
   };
 
   const openAddModal = (eventSlug, mode) => {
-    // Check event-wise limits BEFORE opening modal
     const eventLimits = EVENT_LIMITS[eventSlug];
     const currentData = eventData[eventSlug];
     
@@ -253,7 +250,6 @@ export default function AssignEvents() {
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
     setSelectedPersonId("");
-    // CRITICAL: Force student type for participants, default to student for accompanists
     setSelectedPersonType(mode === "add_participant" ? "student" : "student");
     setShowModal(true);
   };
@@ -272,20 +268,17 @@ export default function AssignEvents() {
       return;
     }
 
-    // CRITICAL BUSINESS RULE: Participants MUST be students only
     if (modalMode === "add_participant" && selectedPersonType !== "student") {
       alert("Participants must be students only");
       return;
     }
 
-    // Get event limits
     const eventLimits = EVENT_LIMITS[currentEventSlug];
     if (!eventLimits) {
       alert("Event configuration not found");
       return;
     }
 
-    // Check event-wise limits BEFORE API call
     const currentData = eventData[currentEventSlug];
     if (modalMode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
@@ -333,18 +326,10 @@ export default function AssignEvents() {
       if (data.success) {
         alert(data.message);
         
-        // Refetch event data to get updated lists instantly
-        setEventData((prev) => {
-          const updated = { ...prev };
-          delete updated[currentEventSlug]; // Clear cache
-          return updated;
-        });
-        
-        // Fetch fresh data
-        await fetchEventData(currentEventSlug);
+        await fetchEventData(currentEventSlug, true);
         
         closeModal();
-        fetchDashboardData(); // Refresh to update event count
+        fetchDashboardData();
       } else {
         alert(data.error || "Failed to add assignment");
       }
@@ -361,7 +346,6 @@ export default function AssignEvents() {
       return;
     }
 
-    // Create unique key for this person
     const personKey = `${personType}-${personId}`;
 
     try {
@@ -393,17 +377,9 @@ export default function AssignEvents() {
       if (data.success) {
         alert(data.message);
         
-        // Refetch event data to get updated lists instantly
-        setEventData((prev) => {
-          const updated = { ...prev };
-          delete updated[eventSlug]; // Clear cache
-          return updated;
-        });
+        await fetchEventData(eventSlug, true);
         
-        // Fetch fresh data
-        await fetchEventData(eventSlug);
-        
-        fetchDashboardData(); // Refresh to update event count
+        fetchDashboardData();
       } else {
         alert(data.error || "Failed to remove assignment");
       }
@@ -457,7 +433,6 @@ export default function AssignEvents() {
     }
   };
 
-  // Helper function to check if add button should be disabled
   const isAddButtonDisabled = (eventSlug, type) => {
     const limits = EVENT_LIMITS[eventSlug];
     const currentData = eventData[eventSlug];
@@ -497,135 +472,86 @@ export default function AssignEvents() {
           <p className="subtitle">VTU HABBA 2026 — Event Assignment Management</p>
         </div>
 
-        {/* Events Quota Bar - matches College Quota styling */}
-        {dashboardData && (
-          <div
-            style={{
-              background: "transparent",
-              border: "2px solid #2563eb",
-              color: "#1e40af",
-              padding: "16px 24px",
-              borderRadius: "12px",
-              marginBottom: "24px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Events Assigned</h4>
-              <p style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: "700" }}>
-                {participatingCount} / 25
-              </p>
-              <small style={{ fontSize: "13px" }}>Remaining: {25 - participatingCount}</small>
-            </div>
+        <div className="events-quota-bar">
+          <div className="quota-info">
+            <span className="quota-label">Events Participating:</span>
+            <span className="quota-value">{participatingCount} / 25</span>
+          </div>
+          <div className="quota-progress">
+            <div
+              className="quota-progress-fill"
+              style={{ width: `${(participatingCount / 25) * 100}%` }}
+            ></div>
+          </div>
+        </div>
 
-            {/* Final Approval Button - only for Principal when conditions met */}
-            {showFinalApprovalButton && (
-              <button
-                onClick={() => setShowFinalApprovalModal(true)}
-                style={{
-                  background: "#2563eb",
-                  color: "#ffffff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "background 0.2s ease",
-                  width: "200px",
-                  marginTop: "0px",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = "#1d4ed8";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = "#2563eb";
-                }}
-              >
-                Submit Final Approval
-              </button>
-            )}
-
-            {/* Show approval status if already approved */}
-            {dashboardData?.is_final_approved && (
-              <div
-                style={{
-                  background: "#dcfce7",
-                  color: "#166534",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  border: "1px solid #86efac",
-                   width: "200px",
-                  marginTop: "0px",
-                }}
-              >
-                ✓ Final Approved
-                {dashboardData?.final_approved_at && (
-                  <div style={{ fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
-                    {new Date(dashboardData.final_approved_at).toLocaleString()}
-                  </div>
-                )}
-              </div>
-            )}
+        {showFinalApprovalButton && (
+          <div className="final-approval-section">
+            <button
+              className="final-approval-btn"
+              onClick={() => setShowFinalApprovalModal(true)}
+            >
+              🔒 Submit Final Approval
+            </button>
+            <p className="final-approval-note">
+              Submit final approval to lock all registrations and event assignments
+            </p>
           </div>
         )}
 
-        {/* Lock Banner */}
         {isLocked && (
-          <div className="lock-banner">
-            🔒 Final approval submitted. All event assignments are now locked and read-only.
+          <div className="lock-notice">
+            ⚠️ Your college has submitted final approval. No further modifications allowed.
           </div>
         )}
 
-        {/* Event Categories */}
         {Object.entries(EVENT_CATEGORIES).map(([category, events]) => (
-          <div key={category} className="event-category-section">
+          <div key={category} className="event-category">
             <h3 className="category-title">{category}</h3>
             {events.map((event) => (
-              <div key={event.slug} className="event-accordion">
+              <div key={event.slug} className="event-card">
                 <div
-                  className={`event-header ${expandedEvent === event.slug ? "expanded" : ""}`}
+                  className="event-header"
                   onClick={() => handleEventClick(event.slug)}
                 >
-                  <span className="event-name">{event.name}</span>
-                  <span className="event-arrow">
+                  <h4>{event.name}</h4>
+                  <div className="event-limits">
+                    <span className="limit-badge">
+                      P: {EVENT_LIMITS[event.slug]?.participants || 0}
+                    </span>
+                    <span className="limit-badge">
+                      A: {EVENT_LIMITS[event.slug]?.accompanists || 0}
+                    </span>
+                  </div>
+                  <span className="expand-icon">
                     {expandedEvent === event.slug ? "▼" : "▶"}
                   </span>
                 </div>
 
                 {expandedEvent === event.slug && (
-                  <div className="event-body">
+                  <div className="event-details">
                     {loadingEvents[event.slug] ? (
-                      <div className="loading-indicator">Loading event data...</div>
+                      <div className="loading-message">Loading event data...</div>
                     ) : eventData[event.slug] ? (
                       <>
-                        {/* Participants Section */}
-                        <div className="assignment-section">
+                        <div className="assignments-section">
                           <div className="section-header">
-                            <h4>Participants {eventData[event.slug].participants.length}/{EVENT_LIMITS[event.slug]?.participants || 0}</h4>
+                            <h5>
+                              Participants ({eventData[event.slug].participants?.length || 0} /{" "}
+                              {EVENT_LIMITS[event.slug]?.participants || 0})
+                            </h5>
                             {!isLocked && role === "manager" && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "add_participant")}
                                 disabled={isAddButtonDisabled(event.slug, "participant")}
-                                style={{
-                                  opacity: isAddButtonDisabled(event.slug, "participant") ? 0.5 : 1,
-                                  cursor: isAddButtonDisabled(event.slug, "participant") ? "not-allowed" : "pointer"
-                                }}
                               >
                                 + Add Participant
                               </button>
                             )}
                           </div>
-
-                          {eventData[event.slug].participants.length === 0 ? (
-                            <p className="empty-message">No participants assigned</p>
-                          ) : (
-                            <div className="person-list">
+                          {eventData[event.slug].participants?.length > 0 ? (
+                            <div className="people-list">
                               {eventData[event.slug].participants.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
@@ -667,32 +593,29 @@ export default function AssignEvents() {
                                 );
                               })}
                             </div>
+                          ) : (
+                            <div className="empty-message">No participants assigned</div>
                           )}
                         </div>
 
-                        {/* Accompanists Section */}
-                        <div className="assignment-section">
+                        <div className="assignments-section">
                           <div className="section-header">
-                            <h4>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
-                            {!isLocked && role === "manager" && (
+                            <h5>
+                              Accompanists ({eventData[event.slug].accompanists?.length || 0} /{" "}
+                              {EVENT_LIMITS[event.slug]?.accompanists || 0})
+                            </h5>
+                            {!isLocked && role === "manager" && EVENT_LIMITS[event.slug]?.accompanists > 0 && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "add_accompanist")}
                                 disabled={isAddButtonDisabled(event.slug, "accompanist")}
-                                style={{
-                                  opacity: isAddButtonDisabled(event.slug, "accompanist") ? 0.5 : 1,
-                                  cursor: isAddButtonDisabled(event.slug, "accompanist") ? "not-allowed" : "pointer"
-                                }}
                               >
                                 + Add Accompanist
                               </button>
                             )}
                           </div>
-
-                          {eventData[event.slug].accompanists.length === 0 ? (
-                            <p className="empty-message">No accompanists assigned</p>
-                          ) : (
-                            <div className="person-list">
+                          {eventData[event.slug].accompanists?.length > 0 ? (
+                            <div className="people-list">
                               {eventData[event.slug].accompanists.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
@@ -734,6 +657,12 @@ export default function AssignEvents() {
                                 );
                               })}
                             </div>
+                          ) : (
+                            <div className="empty-message">
+                              {EVENT_LIMITS[event.slug]?.accompanists === 0 
+                                ? "No accompanists allowed for this event"
+                                : "No accompanists assigned"}
+                            </div>
                           )}
                         </div>
                       </>
@@ -747,7 +676,6 @@ export default function AssignEvents() {
           </div>
         ))}
 
-        {/* Add Person Modal */}
         {showModal && (
           <div className="modal-overlay">
             <div className="modal-card">
@@ -755,7 +683,6 @@ export default function AssignEvents() {
                 {modalMode === "add_participant" ? "Add Participant" : "Add Accompanist"}
               </h3>
 
-              {/* Only show Person Type selector for accompanists */}
               {modalMode === "add_accompanist" && (
                 <>
                   <label>Person Type</label>
@@ -786,7 +713,6 @@ export default function AssignEvents() {
                 disabled={isSubmittingAdd}
               >
                 <option value="">-- Select --</option>
-                {/* For add_participant: ALWAYS show only students */}
                 {modalMode === "add_participant" &&
                   eventData[currentEventSlug]?.available_students?.map((student) => (
                     <option key={student.student_id} value={student.student_id}>
@@ -794,7 +720,6 @@ export default function AssignEvents() {
                     </option>
                   ))
                 }
-                {/* For add_accompanist: show based on selectedPersonType */}
                 {modalMode === "add_accompanist" && selectedPersonType === "student" &&
                   eventData[currentEventSlug]?.available_students?.map((student) => (
                     <option key={student.student_id} value={student.student_id}>
@@ -830,7 +755,6 @@ export default function AssignEvents() {
           </div>
         )}
 
-        {/* Final Approval Modal */}
         {showFinalApprovalModal && (
           <div className="modal-overlay">
             <div className="modal-card" style={{ maxWidth: "600px" }}>
