@@ -19,6 +19,19 @@ export default function Sidebar({ role, hasApplication = false }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
+      {role === "student" && (
+        <div
+          className={`sidebar-item ${isActive("/dashboard") ? "active" : ""}`}
+          onClick={() => navigate("/dashboard")}
+        >
+          <Icon>
+            <svg viewBox="0 0 24 24">
+              <path d="M3 3h18v18H3zM7 14h3v4H7zM11 10h3v8h-3zM15 6h3v12h-3z" />
+            </svg>
+          </Icon>
+          <span className="label">Dashboard</span>
+        </div>
+      )}
       {role === "student" && !hasApplication && (
         <div
           className={`sidebar-item ${isActive("/student-register") ? "active" : ""
@@ -33,6 +46,7 @@ export default function Sidebar({ role, hasApplication = false }) {
           <span className="label">Register</span>
         </div>
       )}
+      
 
       {(role === "principal") && (
         <>
