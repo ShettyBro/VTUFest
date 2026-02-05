@@ -333,21 +333,61 @@ export default function FeePayment() {
   }
 
   // CASE 1: Final approval not done
-  if (!paymentInfo?.can_upload) {
-    return (
-      <Layout>
-        <div className="fee-container">
-          <h2>Fee Payment</h2>
-          <div className="alert-box">
-            <p>{paymentInfo?.message || "Payment page is locked. Please complete final approval first."}</p>
-          </div>
-          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/team-dashboard")}>
-            Back to Dashboard
-          </button>
+  // CASE 1: Final approval NOT done — VIEW ONLY (Option B)
+if (!paymentInfo?.can_upload) {
+  return (
+    <Layout>
+      <div className="fee-container">
+        <h2>Fee Payment</h2>
+
+        <div className="alert-box warning">
+          <p>
+            Final approval is pending. You can view payment details below.
+            Uploading payment proof will be enabled after approval.
+          </p>
         </div>
-      </Layout>
-    );
-  }
+
+        {/* Events Participating In */}
+        <div className="events-section">
+          <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
+          {paymentInfo.total_events === 0 ? (
+            <p className="empty-message">No events assigned yet</p>
+          ) : (
+            <ul className="events-list">
+              {paymentInfo.participating_event_keys.map((key) => (
+                <li key={key}>{EVENT_NAMES[key] || key}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Bank Details (Read-only) */}
+        <div className="bank-card">
+          <h3>Bank Account Details</h3>
+          <p><strong>Account No:</strong> 123456789012</p>
+          <p><strong>IFSC Code:</strong> SBIN0000456</p>
+          <p><strong>Name:</strong> VTU HABBA FEST FUND</p>
+        </div>
+
+        {/* Fee Info */}
+        <div className="fee-info">
+          <h3>Payment Details</h3>
+          <p><strong>Total Events:</strong> {paymentInfo.total_events}</p>
+          <p><strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}</p>
+        </div>
+
+        {/* Upload Disabled Notice */}
+        <div className="info-message">
+          <p>🔒 Payment upload is disabled until final approval is completed.</p>
+        </div>
+
+        <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/team-dashboard")}>
+          Back to Dashboard
+        </button>
+      </div>
+    </Layout>
+  );
+}
 
   // CASE 2: Payment already exists (Read-only for ALL roles)
   if (paymentInfo.payment_status) {
