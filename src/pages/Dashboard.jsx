@@ -188,10 +188,6 @@ export default function Dashboard() {
     }
   }, [priority1Notifications.length]);
 
-  const handleRefresh = () => {
-    fetchDashboardData(true);
-  };
-
   const handleSubmitApplication = () => {
     navigate("/apply");
   };
@@ -243,12 +239,6 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      )}
-
-      {!loading && (
-        <button className="refresh-button" onClick={handleRefresh}>
-          🔄 Refresh Data
-        </button>
       )}
 
       {loading ? (
