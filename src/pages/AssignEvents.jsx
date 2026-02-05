@@ -201,10 +201,10 @@ export default function AssignEvents() {
         setEventData((prev) => ({
           ...prev,
           [eventSlug]: {
-            participants: data.data?.participants || [],
-            accompanists: data.data?.accompanists || [],
-            available_students: data.data?.available_students || [],
-            available_accompanists: data.data?.available_accompanists || [],
+            participants: data.data.participants || [],
+            accompanists: data.data.accompanists || [],
+            available_students: data.data.available_students || [],
+            available_accompanists: data.data.available_accompanists || [],
           },
         }));
       } else {
@@ -426,230 +426,288 @@ export default function AssignEvents() {
       alert("Final approval failed");
     } finally {
       setFinalApproving(false);
-      setTermsAccepted(false);
     }
+  };
+
+  const isAddButtonDisabled = (eventSlug, type) => {
+    const limits = EVENT_LIMITS[eventSlug];
+    const currentData = eventData[eventSlug];
+    
+    if (!limits || !currentData) return false;
+
+    if (type === "participant") {
+      const currentCount = currentData.participants?.length || 0;
+      return currentCount >= limits.participants;
+    } else if (type === "accompanist") {
+      const currentCount = currentData.accompanists?.length || 0;
+      return currentCount >= limits.accompanists;
+    }
+    
+    return false;
   };
 
   if (loading) {
     return (
       <Layout>
-        <div className="loading-container">Loading...</div>
+        <div className="loading-indicator">Loading...</div>
       </Layout>
     );
   }
 
-  const approvedCount = dashboardData?.approved_students || 0;
-
-  const totalEventsLimit = 25;
-  const assignedEventsCount = dashboardData?.assigned_events_count || 0;
-  const remainingEvents = totalEventsLimit - assignedEventsCount;
+  const participatingCount = dashboardData?.stats?.participating_event_count || 0;
+  const showFinalApprovalButton =
+    role === "principal" &&
+    participatingCount >= 1 &&
+    dashboardData?.is_final_approved === false;
 
   return (
     <Layout>
-      <div className="assign-events-page">
-        <div className="page-header">
-          <h1>Assign Events</h1>
-          {isLocked && (
-            <div className="lock-banner">
-              🔒 Final Approval Locked - No modifications allowed
+      <div className="assign-events-container">
+        <div className="assign-events-header">
+          <h2>Assign Events</h2>
+          <p className="subtitle">VTU HABBA 2026 — Event Assignment Management</p>
+        </div>
+
+        {dashboardData && (
+          <div
+            style={{
+              background: "transparent",
+              border: "2px solid #2563eb",
+              color: "#1e40af",
+              padding: "16px 24px",
+              borderRadius: "12px",
+              marginBottom: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Events Assigned</h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: "700" }}>
+                {participatingCount} / 25
+              </p>
+              <small style={{ fontSize: "13px" }}>Remaining: {25 - participatingCount}</small>
             </div>
-          )}
-          <p className="event-header-subtitle">VTU HABBA 2026 — Event Assignment Management</p>
-        </div>
 
-        <div className="dashboard-stats">
-          <div className="stat-card">
-            <h3>Events Assigned</h3>
-            <p className="stat-value">
-              {assignedEventsCount} / {totalEventsLimit}
-            </p>
-            <p className="stat-label">Remaining: {remainingEvents}</p>
+            {showFinalApprovalButton && (
+              <button
+                onClick={() => setShowFinalApprovalModal(true)}
+                style={{
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background 0.2s ease",
+                  width: "200px",
+                  marginTop: "0px",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#1d4ed8";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#2563eb";
+                }}
+              >
+                Submit Final Approval
+              </button>
+            )}
+
+            {dashboardData?.is_final_approved && (
+              <div
+                style={{
+                  background: "#dcfce7",
+                  color: "#166534",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  border: "1px solid #86efac",
+                   width: "200px",
+                  marginTop: "0px",
+                }}
+              >
+                ✓ Final Approved
+                {dashboardData?.final_approved_at && (
+                  <div style={{ fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
+                    {new Date(dashboardData.final_approved_at).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
-        {role === "principal" && !isLocked && (
-          <div className="final-approval-section">
-            <button
-              className="final-approval-btn"
-              onClick={() => setShowFinalApprovalModal(true)}
-            >
-              Submit Final Approval
-            </button>
-            <p className="final-approval-note">
-              ⚠️ This locks all assignments permanently
-            </p>
+        {isLocked && (
+          <div className="lock-banner">
+            🔒 Final approval submitted. All event assignments are now locked and read-only.
           </div>
         )}
 
         {Object.entries(EVENT_CATEGORIES).map(([category, events]) => (
-          <div key={category} className="event-category">
-            <h2 className="category-header">{category}</h2>
-
-            <div className="events-list">
-              {events.map((event) => (
-                <div key={event.slug} className="event-item">
-                  <div
-                    className={`event-header ${
-                      expandedEvent === event.slug ? "expanded" : ""
-                    }`}
-                    onClick={() => handleEventClick(event.slug)}
-                  >
-                    <span className="event-name">{event.name}</span>
-                    <span className="expand-icon">
-                      {expandedEvent === event.slug ? "▼" : "►"}
-                    </span>
-                  </div>
-
-                  {expandedEvent === event.slug && (
-                    <div className="event-details">
-                      {loadingEvents[event.slug] ? (
-                        <div className="loading-message">Loading event data...</div>
-                      ) : eventData[event.slug] ? (
-                        <>
-                          <div className="event-section">
-                            <div className="section-header">
-                              <h3>
-                                Participants ({eventData[event.slug]?.participants?.length || 0} /{" "}
-                                {EVENT_LIMITS[event.slug]?.participants || 0})
-                              </h3>
-                              {!isLocked && role === "manager" && (
-                                <button
-                                  className="add-btn"
-                                  onClick={() => openAddModal(event.slug, "add_participant")}
-                                  disabled={
-                                    (eventData[event.slug]?.participants?.length || 0) >=
-                                    (EVENT_LIMITS[event.slug]?.participants || 0)
-                                  }
-                                >
-                                  + Add Participant
-                                </button>
-                              )}
-                            </div>
-
-                            {eventData[event.slug]?.participants?.length > 0 ? (
-                              <div className="people-list">
-                                {eventData[event.slug].participants.map((person) => {
-                                  const personKey = `${person.person_type}-${person.person_id}`;
-                                  const isRemoving = removingPersonId === personKey;
-                                  
-                                  return (
-                                    <div key={personKey} className="person-card" style={{
-                                      opacity: isRemoving ? 0.6 : 1,
-                                      transition: "opacity 0.2s ease"
-                                    }}>
-                                      <div className="person-info">
-                                        <strong>{person.full_name}</strong>
-                                        <div className="person-details">
-                                          Phone: {person.phone} | Email: {person.email || "N/A"}
-                                        </div>
-                                        <span className="person-type">
-                                          {person.person_type === "student" ? "Student" : "Accompanist"}
-                                        </span>
-                                      </div>
-                                      {!isLocked && role === "manager" && (
-                                        <button
-                                          className="remove-btn"
-                                          onClick={() =>
-                                            handleRemove(
-                                              event.slug,
-                                              person.person_id,
-                                              person.person_type
-                                            )
-                                          }
-                                          disabled={isRemoving}
-                                          style={{
-                                            opacity: isRemoving ? 0.5 : 1,
-                                            cursor: isRemoving ? "not-allowed" : "pointer"
-                                          }}
-                                        >
-                                          {isRemoving ? "Removing..." : "Remove"}
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <div className="empty-message">No participants assigned</div>
-                            )}
-                          </div>
-
-                          <div className="event-section">
-                            <div className="section-header">
-                              <h3>
-                                Accompanists ({eventData[event.slug]?.accompanists?.length || 0} /{" "}
-                                {EVENT_LIMITS[event.slug]?.accompanists || 0})
-                              </h3>
-                              {!isLocked && role === "manager" && (
-                                <button
-                                  className="add-btn"
-                                  onClick={() => openAddModal(event.slug, "add_accompanist")}
-                                  disabled={
-                                    (eventData[event.slug]?.accompanists?.length || 0) >=
-                                    (EVENT_LIMITS[event.slug]?.accompanists || 0)
-                                  }
-                                >
-                                  + Add Accompanist
-                                </button>
-                              )}
-                            </div>
-
-                            {eventData[event.slug]?.accompanists?.length > 0 ? (
-                              <div className="people-list">
-                                {eventData[event.slug].accompanists.map((person) => {
-                                  const personKey = `${person.person_type}-${person.person_id}`;
-                                  const isRemoving = removingPersonId === personKey;
-                                  
-                                  return (
-                                    <div key={personKey} className="person-card" style={{
-                                      opacity: isRemoving ? 0.6 : 1,
-                                      transition: "opacity 0.2s ease"
-                                    }}>
-                                      <div className="person-info">
-                                        <strong>{person.full_name}</strong>
-                                        <div className="person-details">
-                                          Phone: {person.phone} | Email: {person.email || "N/A"}
-                                        </div>
-                                        <span className="person-type">
-                                          {person.person_type === "student" ? "Student" : "Accompanist"}
-                                        </span>
-                                      </div>
-                                      {!isLocked && role === "manager" && (
-                                        <button
-                                          className="remove-btn"
-                                          onClick={() =>
-                                            handleRemove(
-                                              event.slug,
-                                              person.person_id,
-                                              person.person_type
-                                            )
-                                          }
-                                          disabled={isRemoving}
-                                          style={{
-                                            opacity: isRemoving ? 0.5 : 1,
-                                            cursor: isRemoving ? "not-allowed" : "pointer"
-                                          }}
-                                        >
-                                          {isRemoving ? "Removing..." : "Remove"}
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <div className="empty-message">No accompanists assigned</div>
-                            )}
-                          </div>
-                        </>
-                      ) : (
-                        <div className="empty-message">No data available</div>
-                      )}
-                    </div>
-                  )}
+          <div key={category} className="event-category-section">
+            <h3 className="category-title">{category}</h3>
+            {events.map((event) => (
+              <div key={event.slug} className="event-accordion">
+                <div
+                  className={`event-header ${expandedEvent === event.slug ? "expanded" : ""}`}
+                  onClick={() => handleEventClick(event.slug)}
+                >
+                  <span className="event-name">{event.name}</span>
+                  <span className="event-arrow">
+                    {expandedEvent === event.slug ? "▼" : "▶"}
+                  </span>
                 </div>
-              ))}
-            </div>
+
+                {expandedEvent === event.slug && (
+                  <div className="event-body">
+                    {loadingEvents[event.slug] ? (
+                      <div className="loading-indicator">Loading event data...</div>
+                    ) : eventData[event.slug] ? (
+                      <>
+                        <div className="assignment-section">
+                          <div className="section-header">
+                            <h4>Participants {eventData[event.slug].participants.length}/{EVENT_LIMITS[event.slug]?.participants || 0}</h4>
+                            {!isLocked && role === "manager" && (
+                              <button
+                                className="add-btn"
+                                onClick={() => openAddModal(event.slug, "add_participant")}
+                                disabled={isAddButtonDisabled(event.slug, "participant")}
+                                style={{
+                                  opacity: isAddButtonDisabled(event.slug, "participant") ? 0.5 : 1,
+                                  cursor: isAddButtonDisabled(event.slug, "participant") ? "not-allowed" : "pointer"
+                                }}
+                              >
+                                + Add Participant
+                              </button>
+                            )}
+                          </div>
+
+                          {eventData[event.slug].participants.length === 0 ? (
+                            <p className="empty-message">No participants assigned</p>
+                          ) : (
+                            <div className="person-list">
+                              {eventData[event.slug].participants.map((person) => {
+                                const personKey = `${person.person_type}-${person.person_id}`;
+                                const isRemoving = removingPersonId === personKey;
+                                
+                                return (
+                                  <div key={personKey} className="person-card" style={{
+                                    opacity: isRemoving ? 0.6 : 1,
+                                    transition: "opacity 0.2s ease"
+                                  }}>
+                                    <div className="person-info">
+                                      <strong>{person.full_name}</strong>
+                                      <div className="person-details">
+                                        Phone: {person.phone} | Email: {person.email || "N/A"}
+                                      </div>
+                                      <span className="person-type">
+                                        {person.person_type === "student" ? "Student" : "Accompanist"}
+                                      </span>
+                                    </div>
+                                    {!isLocked && role === "manager" && (
+                                      <button
+                                        className="remove-btn"
+                                        onClick={() =>
+                                          handleRemove(
+                                            event.slug,
+                                            person.person_id,
+                                            person.person_type
+                                          )
+                                        }
+                                        disabled={isRemoving}
+                                        style={{
+                                          opacity: isRemoving ? 0.5 : 1,
+                                          cursor: isRemoving ? "not-allowed" : "pointer"
+                                        }}
+                                      >
+                                        {isRemoving ? "Removing..." : "Remove"}
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="assignment-section">
+                          <div className="section-header">
+                            <h4>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
+                            {!isLocked && role === "manager" && (
+                              <button
+                                className="add-btn"
+                                onClick={() => openAddModal(event.slug, "add_accompanist")}
+                                disabled={isAddButtonDisabled(event.slug, "accompanist")}
+                                style={{
+                                  opacity: isAddButtonDisabled(event.slug, "accompanist") ? 0.5 : 1,
+                                  cursor: isAddButtonDisabled(event.slug, "accompanist") ? "not-allowed" : "pointer"
+                                }}
+                              >
+                                + Add Accompanist
+                              </button>
+                            )}
+                          </div>
+
+                          {eventData[event.slug].accompanists.length === 0 ? (
+                            <p className="empty-message">No accompanists assigned</p>
+                          ) : (
+                            <div className="person-list">
+                              {eventData[event.slug].accompanists.map((person) => {
+                                const personKey = `${person.person_type}-${person.person_id}`;
+                                const isRemoving = removingPersonId === personKey;
+                                
+                                return (
+                                  <div key={personKey} className="person-card" style={{
+                                    opacity: isRemoving ? 0.6 : 1,
+                                    transition: "opacity 0.2s ease"
+                                  }}>
+                                    <div className="person-info">
+                                      <strong>{person.full_name}</strong>
+                                      <div className="person-details">
+                                        Phone: {person.phone} | Email: {person.email || "N/A"}
+                                      </div>
+                                      <span className="person-type">
+                                        {person.person_type === "student" ? "Student" : "Accompanist"}
+                                      </span>
+                                    </div>
+                                    {!isLocked && role === "manager" && (
+                                      <button
+                                        className="remove-btn"
+                                        onClick={() =>
+                                          handleRemove(
+                                            event.slug,
+                                            person.person_id,
+                                            person.person_type
+                                          )
+                                        }
+                                        disabled={isRemoving}
+                                        style={{
+                                          opacity: isRemoving ? 0.5 : 1,
+                                          cursor: isRemoving ? "not-allowed" : "pointer"
+                                        }}
+                                      >
+                                        {isRemoving ? "Removing..." : "Remove"}
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="empty-message">No data available</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         ))}
 
