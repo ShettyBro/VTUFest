@@ -105,6 +105,26 @@ export default function AssignEvents() {
 
   const [isLocked, setIsLocked] = useState(false);
 
+  // Custom Alert/Confirm Modals
+  const [alertModal, setAlertModal] = useState({ show: false, message: "", type: "info" });
+  const [confirmModal, setConfirmModal] = useState({ show: false, message: "", onConfirm: null });
+
+  const showAlert = (message, type = "info") => {
+    setAlertModal({ show: true, message, type });
+  };
+
+  const closeAlert = () => {
+    setAlertModal({ show: false, message: "", type: "info" });
+  };
+
+  const showConfirm = (message, onConfirm) => {
+    setConfirmModal({ show: true, message, onConfirm });
+  };
+
+  const closeConfirm = () => {
+    setConfirmModal({ show: false, message: "", onConfirm: null });
+  };
+
   useEffect(() => {
     if (!token) {
       navigate("/");
@@ -129,7 +149,7 @@ export default function AssignEvents() {
       );
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showAlert("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -157,7 +177,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showAlert("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -191,7 +211,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showAlert("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -210,11 +230,11 @@ export default function AssignEvents() {
           },
         }));
       } else {
-        alert(data.error || "Failed to load event data");
+        showAlert(data.error || "Failed to load event data", "error");
       }
     } catch (error) {
       console.error("Fetch event error:", error);
-      alert("Failed to load event data");
+      showAlert("Failed to load event data", "error");
     } finally {
       setLoadingEvents((prev) => ({ ...prev, [eventSlug]: false }));
     }
@@ -225,41 +245,87 @@ export default function AssignEvents() {
       setExpandedEvent(null);
     } else {
       setExpandedEvent(eventSlug);
-      fetchEventData(eventSlug);
+      if (!eventData[eventSlug]) {
+        fetchEventData(eventSlug);
+      }
     }
   };
 
-  const openModal = (eventSlug, mode) => {
+  const openAddModal = (eventSlug, mode) => {
+    // Check event-wise limits BEFORE opening modal
+    const eventLimits = EVENT_LIMITS[eventSlug];
+    const currentData = eventData[eventSlug];
+    
+    if (mode === "add_participant") {
+      const currentParticipants = currentData?.participants?.length || 0;
+      if (currentParticipants >= eventLimits?.participants) {
+        showAlert(`Maximum participants (${eventLimits.participants}) reached for this event`, "warning");
+        return;
+      }
+    } else if (mode === "add_accompanist") {
+      const currentAccompanists = currentData?.accompanists?.length || 0;
+      if (currentAccompanists >= eventLimits?.accompanists) {
+        showAlert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
+        return;
+      }
+    }
+    
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
-    setShowModal(true);
     setSelectedPersonId("");
-    setSelectedPersonType("student");
+    // CRITICAL: Force student type for participants, default to student for accompanists
+    setSelectedPersonType(mode === "add_participant" ? "student" : "student");
+    setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
-    setModalMode("");
     setCurrentEventSlug("");
+    setModalMode("");
     setSelectedPersonId("");
     setSelectedPersonType("student");
   };
 
   const handleAdd = async () => {
     if (!selectedPersonId) {
-      alert("Please select a person");
+      showAlert("Please select a person", "warning");
       return;
     }
 
-    // Determine event_type: "PARTICIPANT" or "ACCOMPANIST"
-    const event_type = modalMode === "add_participant" ? "PARTICIPANT" : "ACCOMPANIST";
+    // CRITICAL BUSINESS RULE: Participants MUST be students only
+    if (modalMode === "add_participant" && selectedPersonType !== "student") {
+      showAlert("Participants must be students only", "error");
+      return;
+    }
 
-    // For participants, always use "student" as person_type
-    const person_type = modalMode === "add_participant" ? "student" : selectedPersonType;
+    // Get event limits
+    const eventLimits = EVENT_LIMITS[currentEventSlug];
+    if (!eventLimits) {
+      showAlert("Event configuration not found", "error");
+      return;
+    }
 
-    setIsSubmittingAdd(true);
+    // Check event-wise limits BEFORE API call
+    const currentData = eventData[currentEventSlug];
+    if (modalMode === "add_participant") {
+      const currentParticipants = currentData?.participants?.length || 0;
+      if (currentParticipants >= eventLimits.participants) {
+        showAlert(`Maximum participants (${eventLimits.participants}) reached for this event`, "warning");
+        return;
+      }
+    } else if (modalMode === "add_accompanist") {
+      const currentAccompanists = currentData?.accompanists?.length || 0;
+      if (currentAccompanists >= eventLimits.accompanists) {
+        showAlert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
+        return;
+      }
+    }
 
     try {
+      setIsSubmittingAdd(true);
+
+      const eventType = modalMode === "add_participant" ? "PARTICIPANT" : "ACCOMPANIST";
+
       const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
         method: "POST",
         headers: {
@@ -270,13 +336,13 @@ export default function AssignEvents() {
           action: "add",
           event_slug: currentEventSlug,
           person_id: parseInt(selectedPersonId),
-          person_type: person_type,
-          event_type: event_type,
+          person_type: selectedPersonType,
+          event_type: eventType,
         }),
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showAlert("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -285,81 +351,191 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert("Assignment added successfully!");
+        showAlert(data.message || "Assignment added successfully", "success");
+        
+        // CRITICAL FIX: Update local state immediately after backend confirms success
+        // Find the person being added from available lists
+        let personToAdd = null;
+        
+        if (selectedPersonType === "student") {
+          personToAdd = currentData.available_students?.find(
+            (s) => s.student_id === parseInt(selectedPersonId)
+          );
+          if (personToAdd) {
+            // Transform student data to match backend format
+            personToAdd = {
+              person_id: personToAdd.student_id,
+              person_type: "student",
+              full_name: personToAdd.full_name,
+              phone: personToAdd.phone,
+              email: personToAdd.email || "",
+            };
+          }
+        } else if (selectedPersonType === "accompanist") {
+          personToAdd = currentData.available_accompanists?.find(
+            (a) => a.accompanist_id === parseInt(selectedPersonId)
+          );
+          if (personToAdd) {
+            // Transform accompanist data to match backend format
+            personToAdd = {
+              person_id: personToAdd.accompanist_id,
+              person_type: "accompanist",
+              full_name: personToAdd.full_name,
+              phone: personToAdd.phone,
+              email: personToAdd.email || "",
+            };
+          }
+        }
+
+        if (personToAdd) {
+          setEventData((prev) => {
+            const updated = { ...prev };
+            const eventState = { ...updated[currentEventSlug] };
+
+            if (modalMode === "add_participant") {
+              // Add to participants list
+              eventState.participants = [...eventState.participants, personToAdd];
+              // Remove from available students
+              eventState.available_students = eventState.available_students.filter(
+                (s) => s.student_id !== parseInt(selectedPersonId)
+              );
+            } else if (modalMode === "add_accompanist") {
+              // Add to accompanists list
+              eventState.accompanists = [...eventState.accompanists, personToAdd];
+              // Remove from appropriate available list
+              if (selectedPersonType === "student") {
+                eventState.available_students = eventState.available_students.filter(
+                  (s) => s.student_id !== parseInt(selectedPersonId)
+                );
+              } else {
+                eventState.available_accompanists = eventState.available_accompanists.filter(
+                  (a) => a.accompanist_id !== parseInt(selectedPersonId)
+                );
+              }
+            }
+
+            updated[currentEventSlug] = eventState;
+            return updated;
+          });
+        }
+
         closeModal();
-        // Refetch event data
-        setEventData((prev) => {
-          const updated = { ...prev };
-          delete updated[currentEventSlug];
-          return updated;
-        });
-        fetchEventData(currentEventSlug);
+        fetchDashboardData(); // Refresh to update event count
       } else {
-        alert(data.error || data.message || "Failed to add assignment");
+        showAlert(data.error || "Failed to add assignment", "error");
       }
     } catch (error) {
-      console.error("Add assignment error:", error);
-      alert("Failed to add assignment");
+      console.error("Add error:", error);
+      showAlert("Failed to add assignment", "error");
     } finally {
       setIsSubmittingAdd(false);
     }
   };
 
   const handleRemove = async (eventSlug, personId, personType) => {
-    if (!confirm("Are you sure you want to remove this assignment?")) {
-      return;
-    }
+    showConfirm("Are you sure you want to remove this assignment?", async () => {
+      // Create unique key for this person
+      const personKey = `${personType}-${personId}`;
 
-    const personKey = `${personType}-${personId}`;
-    setRemovingPersonId(personKey);
+      try {
+        setRemovingPersonId(personKey);
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "remove",
-          event_slug: eventSlug,
-          person_id: parseInt(personId),
-          person_type: personType,
-        }),
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert("Assignment removed successfully!");
-        // Refetch event data
-        setEventData((prev) => {
-          const updated = { ...prev };
-          delete updated[eventSlug];
-          return updated;
+        const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "remove",
+            event_slug: eventSlug,
+            person_id: personId,
+            person_type: personType,
+          }),
         });
-        fetchEventData(eventSlug);
-      } else {
-        alert(data.error || data.message || "Failed to remove assignment");
+
+        if (response.status === 401) {
+          showAlert("Session expired. Please login again.", "error");
+          localStorage.clear();
+          navigate("/");
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert(data.message || "Assignment removed successfully", "success");
+          
+          // CRITICAL FIX: Update local state immediately after backend confirms success
+          setEventData((prev) => {
+            const updated = { ...prev };
+            const eventState = { ...updated[eventSlug] };
+
+            // Find which list the person was in
+            const participantIndex = eventState.participants.findIndex(
+              (p) => p.person_id === personId && p.person_type === personType
+            );
+            const accompanistIndex = eventState.accompanists.findIndex(
+              (p) => p.person_id === personId && p.person_type === personType
+            );
+
+            let removedPerson = null;
+
+            if (participantIndex !== -1) {
+              // Remove from participants
+              removedPerson = eventState.participants[participantIndex];
+              eventState.participants = eventState.participants.filter(
+                (p) => !(p.person_id === personId && p.person_type === personType)
+              );
+            } else if (accompanistIndex !== -1) {
+              // Remove from accompanists
+              removedPerson = eventState.accompanists[accompanistIndex];
+              eventState.accompanists = eventState.accompanists.filter(
+                (p) => !(p.person_id === personId && p.person_type === personType)
+              );
+            }
+
+            // Add back to appropriate available list
+            if (removedPerson && personType === "student") {
+              const studentData = {
+                student_id: removedPerson.person_id,
+                full_name: removedPerson.full_name,
+                phone: removedPerson.phone,
+                email: removedPerson.email,
+                usn: "", // USN not available from assignment data
+              };
+              eventState.available_students = [...eventState.available_students, studentData];
+            } else if (removedPerson && personType === "accompanist") {
+              const accompanistData = {
+                accompanist_id: removedPerson.person_id,
+                full_name: removedPerson.full_name,
+                phone: removedPerson.phone,
+                email: removedPerson.email,
+                accompanist_type: "", // Type not available from assignment data
+              };
+              eventState.available_accompanists = [...eventState.available_accompanists, accompanistData];
+            }
+
+            updated[eventSlug] = eventState;
+            return updated;
+          });
+
+          fetchDashboardData(); // Refresh to update event count
+        } else {
+          showAlert(data.error || "Failed to remove assignment", "error");
+        }
+      } catch (error) {
+        console.error("Remove error:", error);
+        showAlert("Failed to remove assignment", "error");
+      } finally {
+        setRemovingPersonId(null);
       }
-    } catch (error) {
-      console.error("Remove assignment error:", error);
-      alert("Failed to remove assignment");
-    } finally {
-      setRemovingPersonId(null);
-    }
+    });
   };
 
   const handleFinalApproval = async () => {
     if (!termsAccepted) {
-      alert("Please accept the terms to proceed");
+      showAlert("Please accept the terms to proceed", "warning");
       return;
     }
 
@@ -375,7 +551,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showAlert("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -384,16 +560,16 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert("Final approval submitted successfully!");
+        showAlert("Final approval submitted successfully!", "success");
         setShowFinalApprovalModal(false);
         setIsLocked(true);
         window.location.reload();
       } else {
-        alert(data.error || data.message || "Failed to submit final approval");
+        showAlert(data.error || data.message || "Failed to submit final approval", "error");
       }
     } catch (error) {
       console.error("Final approval error:", error);
-      alert("Failed to submit final approval");
+      showAlert("Failed to submit final approval", "error");
     } finally {
       setFinalApproving(false);
     }
@@ -482,7 +658,7 @@ export default function AssignEvents() {
                                 (EVENT_LIMITS[event.slug]?.participants || 0) && (
                                 <button
                                   className="add-btn"
-                                  onClick={() => openModal(event.slug, "add_participant")}
+                                  onClick={() => openAddModal(event.slug, "add_participant")}
                                 >
                                   + Add Participant
                                 </button>
@@ -552,7 +728,7 @@ export default function AssignEvents() {
                                 (EVENT_LIMITS[event.slug]?.accompanists || 0) && (
                                 <button
                                   className="add-btn"
-                                  onClick={() => openModal(event.slug, "add_accompanist")}
+                                  onClick={() => openAddModal(event.slug, "add_accompanist")}
                                 >
                                   + Add Accompanist
                                 </button>
@@ -697,6 +873,60 @@ export default function AssignEvents() {
                   {isSubmittingAdd ? "Adding..." : "Add"}
                 </button>
                 <button onClick={closeModal} disabled={isSubmittingAdd}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Alert Modal */}
+        {alertModal.show && (
+          <div className="modal-overlay">
+            <div className="modal-card" style={{ maxWidth: "400px" }}>
+              <h3 style={{ 
+                color: alertModal.type === "error" ? "#dc2626" : 
+                       alertModal.type === "success" ? "#16a34a" : 
+                       alertModal.type === "warning" ? "#ea580c" : "#2563eb",
+                marginBottom: "20px" 
+              }}>
+                {alertModal.type === "error" ? "❌ Error" : 
+                 alertModal.type === "success" ? "✅ Success" : 
+                 alertModal.type === "warning" ? "⚠️ Warning" : "ℹ️ Information"}
+              </h3>
+              <p style={{ marginBottom: "24px", lineHeight: "1.6" }}>
+                {alertModal.message}
+              </p>
+              <div className="modal-actions">
+                <button onClick={closeAlert}>OK</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Confirm Modal */}
+        {confirmModal.show && (
+          <div className="modal-overlay">
+            <div className="modal-card" style={{ maxWidth: "400px" }}>
+              <h3 style={{ color: "#dc2626", marginBottom: "20px" }}>
+                ⚠️ Confirm Action
+              </h3>
+              <p style={{ marginBottom: "24px", lineHeight: "1.6" }}>
+                {confirmModal.message}
+              </p>
+              <div className="modal-actions">
+                <button 
+                  onClick={() => {
+                    if (confirmModal.onConfirm) {
+                      confirmModal.onConfirm();
+                    }
+                    closeConfirm();
+                  }}
+                  style={{ background: "#dc2626" }}
+                >
+                  Yes, Remove
+                </button>
+                <button onClick={closeConfirm}>
                   Cancel
                 </button>
               </div>
