@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/accompanist.css";
-import "../styles/approvals.css";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
@@ -235,13 +234,14 @@ export default function AccompanistForm() {
       const initData = await initResponse.json();
 
       if (!initData.success) {
-        alert(initData.error || "Failed to initialize session");
+        alert(initData.error || initData.message || "Failed to initialize session");
         return;
       }
 
-      setSessionData(initData);
+      setSessionData(initData.data || initData);
 
-      const expiresAt = new Date(initData.expires_at).getTime();
+      const expiresAtValue = (initData.data && initData.data.expires_at) || initData.expires_at;
+      const expiresAt = new Date(expiresAtValue).getTime();
       const now = Date.now();
       const remainingSeconds = Math.floor((expiresAt - now) / 1000);
       setTimer(remainingSeconds);
@@ -262,7 +262,8 @@ export default function AccompanistForm() {
       return;
     }
 
-    if (!sessionData?.upload_urls?.[key]) {
+    const uploadUrls = sessionData.upload_urls || (sessionData.data && sessionData.data.upload_urls);
+    if (!uploadUrls || !uploadUrls[key]) {
       alert("Session expired. Please restart.");
       return;
     }
@@ -270,7 +271,7 @@ export default function AccompanistForm() {
     try {
       setUploadProgress((prev) => ({ ...prev, [key]: "uploading" }));
 
-      const response = await fetch(sessionData.upload_urls[key], {
+      const response = await fetch(uploadUrls[key], {
         method: "PUT",
         headers: { "x-ms-blob-type": "BlockBlob" },
         body: uploadFiles[key],
@@ -298,6 +299,8 @@ export default function AccompanistForm() {
     try {
       setSubmitting(true);
 
+      const sessionIdValue = sessionData.session_id || (sessionData.data && sessionData.data.session_id);
+
       const finalizeResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
         method: "POST",
         headers: {
@@ -306,7 +309,7 @@ export default function AccompanistForm() {
         },
         body: JSON.stringify({
           action: "finalize_accompanist",
-          session_id: sessionData.session_id,
+          session_id: sessionIdValue,
         }),
       });
 
@@ -318,14 +321,16 @@ export default function AccompanistForm() {
       const finalizeData = await finalizeResponse.json();
 
       if (!finalizeData.success) {
-        alert(finalizeData.error || "Failed to finalize accompanist");
+        alert(finalizeData.error || finalizeData.message || "Failed to finalize accompanist");
         return;
       }
 
       alert("Accompanist registered successfully!");
 
+      const accompanistId = (finalizeData.data && finalizeData.data.accompanist_id) || finalizeData.accompanist_id;
+
       const newAccompanist = {
-        accompanist_id: finalizeData.accompanist_id || finalizeData.data?.accompanist_id,
+        accompanist_id: accompanistId,
         full_name: modalForm.full_name,
         phone: modalForm.phone,
         email: modalForm.email,
@@ -376,7 +381,7 @@ export default function AccompanistForm() {
       const data = await response.json();
 
       if (!data.success) {
-        alert(data.error || "Failed to remove accompanist");
+        alert(data.error || data.message || "Failed to remove accompanist");
         setRemovingId(null);
         return;
       }

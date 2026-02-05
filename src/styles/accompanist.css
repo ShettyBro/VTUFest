@@ -16,19 +16,18 @@
   background: #ffffff;
   border-radius: 14px;
   padding: 30px;
-  border-top: 6px solid #ff9933;   /* saffron accent */
+  border-top: 6px solid #ff9933;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
 }
 
 .accompanist-card h2 {
   text-align: center;
-  color: #1e40af;                 /* blue */
+  color: #1e40af;
 }
 
-/* Subtitle */
 .subtitle {
   text-align: center;
-  color: #ff9933;                 /* saffron */
+  color: #ff9933;
   margin-bottom: 25px;
   font-weight: 600;
 }
@@ -39,7 +38,7 @@
 .capacity-info {
   display: flex;
   justify-content: space-between;
-  background: #fff7ed;            /* light saffron tint */
+  background: #fff7ed;
   border: 1px solid #ff9933;
   padding: 12px 16px;
   border-radius: 10px;
@@ -49,126 +48,54 @@
 }
 
 /* =========================================================
-   FORM GRID
+   ADD SECTION
 ========================================================= */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+.add-section {
+  margin: 20px 0;
 }
 
-label {
-  font-size: 14px;
-  font-weight: 600;
-  display: block;
-  margin-bottom: 6px;
-  color: #1e40af;
-}
-
-input,
-select {
+.add-btn {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  outline: none;
-  box-sizing: border-box;
-  font-size: 14px;
-}
-
-input:focus,
-select:focus {
-  border-color: #ff9933;          /* saffron focus */
-  box-shadow: 0 0 0 2px rgba(255, 153, 51, 0.25);
-}
-
-/* =========================================================
-   DOCUMENT UPLOADS
-========================================================= */
-.documents {
-  margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-.btn-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-.submit-btn {
-  flex: 1;
-  padding: 12px;
-  background: #1e40af;            /* blue primary */
-  color: #ffffff;
+  padding: 14px;
+  background: #10b981;
+  color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
+  transition: all 0.2s ease;
 }
 
-.submit-btn.secondary {
-  background: #ff9933;            /* saffron secondary */
-  color: #ffffff;
-}
-
-.submit-btn:hover {
+.add-btn:hover:not(:disabled) {
+  background: #059669;
   transform: translateY(-1px);
-  opacity: 0.95;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.add-btn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* =========================================================
-   PREVIEW
+   SECTION
 ========================================================= */
-.preview {
-  margin-top: 25px;
-  background: #ffffff;
-  border-left: 5px solid #1e40af;
-  border-radius: 10px;
-  padding: 16px;
+.section {
+  margin-top: 30px;
 }
 
-.preview h4 {
-  margin-bottom: 10px;
-  color: #1e40af;
+.section-title {
+  font-size: 20px;
   font-weight: 700;
-}
-
-.preview ul {
-  padding-left: 18px;
-}
-
-.preview li {
-  font-size: 14px;
   color: #1e40af;
+  margin-bottom: 16px;
 }
 
 /* =========================================================
-   RESPONSIVE
+   ACCOMPANISTS LIST
 ========================================================= */
-@media (max-width: 768px) {
-  .form-grid,
-  .documents {
-    grid-template-columns: 1fr;
-  }
-
-  .btn-row {
-    flex-direction: column;
-  }
-
-  .accompanist-card {
-    padding: 22px;
-  }
-}
-
-/* Accompanists List Styling */
 .accompanists-list {
   margin-top: 20px;
 }
@@ -207,6 +134,7 @@ select:focus {
   gap: 8px;
   font-size: 14px;
   color: #666;
+  flex-wrap: wrap;
 }
 
 .accompanist-phone {
@@ -234,8 +162,8 @@ select:focus {
 }
 
 .remove-btn {
-  padding: 6px 16px;
-  background: #f44336;
+  padding: 8px 18px;
+  background: #ef4444;
   color: white;
   border: none;
   border-radius: 6px;
@@ -244,44 +172,212 @@ select:focus {
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  min-width: 90px;
+  min-width: 95px;
 }
 
 .remove-btn:hover:not(:disabled) {
-  background: #d32f2f;
+  background: #dc2626;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(244, 67, 54, 0.3);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .remove-btn:disabled {
-  background: #bdbdbd;
+  background: #d1d5db;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 .loading-indicator {
   text-align: center;
-  padding: 30px;
-  color: #666;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-size: 15px;
   font-style: italic;
 }
 
 .empty-message {
   text-align: center;
-  padding: 30px;
-  color: #999;
+  padding: 40px 20px;
+  color: #9ca3af;
+  font-size: 15px;
   font-style: italic;
 }
 
-.section-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1e40af;
-  margin-bottom: 16px;
+/* =========================================================
+   MODAL
+========================================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
 }
 
-/* Responsive Design */
+.modal-card {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 550px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.modal-card h3 {
+  color: #1e40af;
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-form label {
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.modal-form input,
+.modal-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  outline: none;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.modal-form input:focus,
+.modal-form select:focus {
+  border-color: #1e40af;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-actions button:first-child {
+  background: #1e40af;
+  color: white;
+}
+
+.modal-actions button:first-child:hover:not(:disabled) {
+  background: #1e3a8a;
+  transform: translateY(-1px);
+}
+
+.modal-actions button:last-child {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-actions button:last-child:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   UPLOAD SECTION
+========================================================= */
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.file-upload-item {
+  border: 2px dashed #d1d5db;
+  padding: 20px;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.file-upload-item label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.file-upload-item input[type="file"] {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+}
+
+.file-upload-item button {
+  width: 100%;
+  padding: 10px;
+  background: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-upload-item button:hover {
+  background: #1e3a8a;
+}
+
+.file-upload-item button:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 @media (max-width: 768px) {
+  .accompanist-container {
+    padding: 16px;
+  }
+
+  .accompanist-card {
+    padding: 20px;
+  }
+
   .accompanist-item {
     flex-direction: column;
     align-items: flex-start;
@@ -294,5 +390,13 @@ select:focus {
 
   .remove-btn {
     width: 100%;
+  }
+
+  .modal-card {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
   }
 }
