@@ -4,7 +4,6 @@ import Layout from "../components/layout/layout";
 import CampusMap from "../components/CampusMap";
 import "../styles/dashboard.css";
 
-// Import JSON data
 import collegesData from "../data/colleges.json";
 import settingsData from "../data/settings.json";
 import notificationsData from "../data/notifications.json";
@@ -15,20 +14,16 @@ const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/stude
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // State management
   const [loading, setLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const [dashboardData, setDashboardData] = useState(null);
   const [collegeName, setCollegeName] = useState("");
-  const [canRefresh, setCanRefresh] = useState(false);
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
 
-  // Filter and sort priority 1 notifications by date (most recent first)
   const priority1Notifications = notificationsData
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Filter and sort priority 2+ notifications (by priority first, then date)
   const priority2PlusNotifications = notificationsData
     .filter(n => n.priority >= 2)
     .sort((a, b) => {
@@ -38,7 +33,6 @@ export default function Dashboard() {
       return new Date(b.date) - new Date(a.date);
     });
 
-  /* ================= EVENT BLOCK DATA (READ-ONLY) ================= */
   const blockEvents = {
     left: [
       {
@@ -111,45 +105,6 @@ export default function Dashboard() {
     ],
   };
 
-  // // Check if 2 hours have passed (changed from 12 hours)
-  // const check2HoursPassed = () => {
-  //   const lastFetch = localStorage.getItem("last_dashboard_fetch_at");
-  //   if (!lastFetch) return true;
-
-  //   const lastFetchTime = new Date(lastFetch).getTime();
-  //   const now = new Date().getTime();
-  //   const hoursPassed = (now - lastFetchTime) / (1000 * 60 * 60);
-
-  //   return hoursPassed >= 2; // Changed from 12 to 2 hours
-  // };
-
-  // Load cached dashboard data from localStorage
-  const loadCachedData = () => {
-    try {
-      const cachedData = localStorage.getItem("dashboard_data");
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        setDashboardData(parsedData);
-        
-        // Get college name from JSON
-        const storedCollegeId = localStorage.getItem("college_id");
-        if (storedCollegeId) {
-          const college = collegesData.find(c => c.college_id === parseInt(storedCollegeId));
-          if (college) {
-            setCollegeName(`${college.college_name}, ${college.place}`);
-          }
-        }
-        
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Error loading cached data:", error);
-      return false;
-    }
-  };
-
-  // Fetch dashboard data
   const fetchDashboardData = async (isManualRefresh = false) => {
     const token = localStorage.getItem("vtufest_token");
 
@@ -172,22 +127,16 @@ export default function Dashboard() {
 
       const data = await response.json();
 
-      // Handle token expiry (401)
       if (response.status === 401 && data.redirect) {
         alert(data.message || "Session expired. Redirecting to login...");
         
         setTimeout(() => {
-          const lastFetch = localStorage.getItem("last_dashboard_fetch_at");
           localStorage.clear();
-          if (lastFetch) {
-            localStorage.setItem("last_dashboard_fetch_at", lastFetch);
-          }
           window.location.href = data.redirect;
         }, 2000);
         return;
       }
 
-      // Handle server error (500)
       if (!response.ok) {
         if (retryCount < 4) {
           setTimeout(() => {
@@ -200,18 +149,9 @@ export default function Dashboard() {
         return;
       }
 
-      // Success - store data
       setDashboardData(data.data);
       setRetryCount(0);
 
-      // Cache the dashboard data in localStorage
-      localStorage.setItem("dashboard_data", JSON.stringify(data.data));
-
-      // Store last fetch timestamp
-      const currentTime = new Date().toISOString();
-      localStorage.setItem("last_dashboard_fetch_at", currentTime);
-
-      // Get college name from JSON
       const storedCollegeId = localStorage.getItem("college_id");
       if (storedCollegeId) {
         const college = collegesData.find(c => c.college_id === parseInt(storedCollegeId));
@@ -220,117 +160,67 @@ export default function Dashboard() {
         }
       }
 
-      // Check if can refresh
-      setCanRefresh(false); // Reset after successful fetch
-
     } catch (error) {
-      console.error("Dashboard fetch error:", error);
-      
+      console.error("Error fetching dashboard:", error);
       if (retryCount < 4) {
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           fetchDashboardData(isManualRefresh);
         }, 2000);
       } else {
-        alert("Network error. Please refresh the page.");
+        alert("Network error. Please check your connection.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial load - only fetch if needed
   useEffect(() => {
-    // Check if we need to fetch or can use cached data
-    const shouldFetch = localStorage.getItem("should_fetch_dashboard");
-    
-    if (shouldFetch === "true") {
-      // Fetch fresh data (after login or submit application)
-      fetchDashboardData();
-      localStorage.removeItem("should_fetch_dashboard");
-    } else {
-      // Try to load from cache
-      const hasCachedData = loadCachedData();
-      
-      if (!hasCachedData) {
-        // No cached data, fetch fresh
-        fetchDashboardData();
-      } else {
-        // Using cached data
-        setLoading(false);
-      }
+    fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    if (priority1Notifications.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentPriority1Index((prev) => (prev + 1) % priority1Notifications.length);
+      }, 5000);
+      return () => clearInterval(interval);
     }
-
-    // Check if manual refresh should be available
-    setCanRefresh(check2HoursPassed());
-  }, []);
-
-  // Update canRefresh every minute
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCanRefresh(check2HoursPassed());
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Ticker animation for priority 1 notifications
-  useEffect(() => {
-    if (priority1Notifications.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentPriority1Index(prev => 
-        (prev + 1) % priority1Notifications.length
-      );
-    }, 20000); // 20 seconds per notification
-
-    return () => clearInterval(interval);
   }, [priority1Notifications.length]);
 
-  // Handle manual refresh
   const handleRefresh = () => {
-    if (canRefresh) {
-      fetchDashboardData(true);
-    }
+    fetchDashboardData(true);
   };
 
-  // Handle reapply
+  const handleSubmitApplication = () => {
+    navigate("/apply");
+  };
+
+  const handleCompleteApplication = () => {
+    navigate("/apply");
+  };
+
   const handleReapply = () => {
-    navigate("/student-register");
+    navigate("/apply");
   };
 
-  // Handle view allocated events
   const handleViewAllocatedEvents = () => {
     if (settingsData.allocated_events_visible) {
       navigate("/allocated-events");
     }
   };
 
-  // Handle submit application - mark that fresh data should be fetched
-  const handleSubmitApplication = () => {
-    localStorage.setItem("should_fetch_dashboard", "true");
-    navigate("/student-register");
-  };
-
-  // Handle complete application - mark that fresh data should be fetched
-  const handleCompleteApplication = () => {
-    localStorage.setItem("should_fetch_dashboard", "true");
-    navigate("/student-register");
-  };
-
-  // Skeleton loader component
   const SkeletonLoader = () => (
-    <div className="skeleton-loader">
-      <div className="skeleton-box" style={{ width: "100%", height: "50px", marginBottom: "20px" }}></div>
-      <div className="skeleton-box" style={{ width: "80%", height: "30px", marginBottom: "15px" }}></div>
-      <div className="skeleton-box" style={{ width: "60%", height: "30px", marginBottom: "15px" }}></div>
+    <div className="skeleton-container">
+      <div className="skeleton-box" style={{ width: "60%", height: "20px" }}></div>
+      <div className="skeleton-box" style={{ width: "80%", height: "20px" }}></div>
+      <div className="skeleton-box" style={{ width: "70%", height: "20px" }}></div>
       <div className="skeleton-box" style={{ width: "90%", height: "100px" }}></div>
     </div>
   );
 
   return (
     <Layout>
-      {/* ================= QR CODE + PRIORITY 1 TICKER ================= */}
       {priority1Notifications.length > 0 && (
         <div className="top-banner">
           <div className="qr-code-section">
@@ -355,14 +245,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ================= REFRESH BUTTON ================= */}
-      {canRefresh && !loading && (
+      {!loading && (
         <button className="refresh-button" onClick={handleRefresh}>
           🔄 Refresh Data
         </button>
       )}
 
-      {/* ================= LOADING STATE ================= */}
       {loading ? (
         <div className="dashboard-sections">
           <div className="info-card">
@@ -377,7 +265,6 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {/* ================= EVENT CALENDAR ================= */}
           <div className="calendar-card">
             <div className="calendar-header">
               <h3>VTU HABBA 2026 – Event Calendar</h3>
@@ -395,9 +282,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ================= DASHBOARD INFO CARDS ================= */}
           <div className="dashboard-sections">
-            {/* Registration Status Card */}
             <div className="info-card">
               <h4>Registration Status</h4>
 
@@ -480,7 +365,6 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Important Instructions Card */}
             <div className="info-card">
               <h4>Important Instructions</h4>
               <ul>
@@ -492,7 +376,6 @@ export default function Dashboard() {
               </ul>
             </div>
 
-            {/* Notifications Card */}
             <div className="info-card">
               <h4>Notifications</h4>
               <ul>
@@ -503,7 +386,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ================= CAMPUS MAP + BLOCK EVENTS ================= */}
           <div className="dashboard-map-wrapper">
             <div className="map-side left">
               {blockEvents.left.map((block, idx) => (
