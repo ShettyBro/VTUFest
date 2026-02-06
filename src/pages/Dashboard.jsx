@@ -189,15 +189,15 @@ export default function Dashboard() {
   }, [priority1Notifications.length]);
 
   const handleSubmitApplication = () => {
-    navigate("/student-register");
+    navigate("/apply");
   };
 
   const handleCompleteApplication = () => {
-    navigate("/student-register");
+    navigate("/apply");
   };
 
   const handleReapply = () => {
-    navigate("/student-register");
+    navigate("/apply");
   };
 
   const handleViewAllocatedEvents = () => {
