@@ -346,12 +346,12 @@ export default function SubmitApplication() {
   };
 
   return (
-    <div className="reg-container">
+    <div className="register-page">
       <h2>Submit Application</h2>
 
       {!showUploadSection ? (
         // STEP 1: Application Details Form
-        <form className="reg-card" onSubmit={handleNext}>
+        <form className="register-card" onSubmit={handleNext}>
           <label>USN / Registration Number</label>
           <input
             value={usn}
@@ -452,7 +452,7 @@ export default function SubmitApplication() {
         </form>
       ) : (
         // STEP 2: Document Upload
-        <form className="reg-card" onSubmit={handleSubmit}>
+        <form className="register-card" onSubmit={handleSubmit}>
           {timer !== null && !timerExpired && (
             <div
               style={{
