@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/register.css";
+import "../styles/StudentRegister.css";
 import collegesData from "../data/colleges.json";
 
 const API_BASE = {
