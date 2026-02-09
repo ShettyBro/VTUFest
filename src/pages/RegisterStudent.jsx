@@ -104,9 +104,9 @@ export default function RegisterStudent() {
     try {
       const response = await fetch(API_ENDPOINTS.colleges);
       const data = await response.json();
-      
+
       console.log("Colleges API response:", data); // Debug log
-      
+
       if (response.ok && data.success && data.data && data.data.colleges) {
         setColleges(data.data.colleges); // ✅ FIXED: Access nested colleges array
         setErrorMessage(""); // Clear any previous error
@@ -136,35 +136,37 @@ export default function RegisterStudent() {
       setUsnChecking(true);
       setUsnError("");
       setErrorMessage("");
-      
+
       const response = await fetch(API_ENDPOINTS.checkUsn, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          action: "check_usn", 
-          usn: usn.trim().toUpperCase() 
+        body: JSON.stringify({
+          action: "check_usn",
+          usn: usn.trim().toUpperCase()
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        if (data.exists) {
-          // ✅ USN already registered - disable form and hide colleges
+        if (data.data?.exists === true) {
+          // USN already registered → BLOCK FORM
           setUsnError("USN already registered");
           setUsnValid(false);
           setFormDisabled(true);
           setColleges([]);
+
           setTimeout(() => {
             navigate("/");
           }, 2000);
         } else {
-          // ✅ USN is valid and available - enable form and fetch colleges
+          // USN is valid → ALLOW FORM
           setUsnError("");
           setUsnValid(true);
           setFormDisabled(false);
-          await fetchColleges(); // Fetch colleges only now
+          await fetchColleges();
         }
+
       } else {
         console.error("USN check failed:", data);
         setUsnError("Failed to check USN. Please try again.");
@@ -344,7 +346,7 @@ export default function RegisterStudent() {
       setErrorMessage("");
 
       const uploadUrl = sessionData.upload_urls?.passport_photo;
-      
+
       if (!uploadUrl) {
         setErrorMessage("Upload URL not found. Please restart registration.");
         setUploadStatus("failed");
@@ -372,7 +374,7 @@ export default function RegisterStudent() {
       }
     } catch (error) {
       console.error("Photo upload error:", error);
-      
+
       const newRetries = uploadRetries + 1;
       setUploadRetries(newRetries);
 
@@ -383,7 +385,7 @@ export default function RegisterStudent() {
       } else {
         setErrorMessage(`Upload failed (Attempt ${newRetries}/3). Please try again.`);
       }
-      
+
       setUploadStatus("failed");
       setUploadProgress(0);
     }
@@ -450,7 +452,7 @@ export default function RegisterStudent() {
       localStorage.removeItem("upload_blocked_until");
 
       alert("Registration successful! You can now login with your credentials.");
-      
+
       setTimeout(() => {
         navigate("/");
       }, 1500);
@@ -618,9 +620,9 @@ export default function RegisterStudent() {
               <img
                 src={photoPreview}
                 alt="Preview"
-                style={{ 
-                  maxWidth: "150px", 
-                  maxHeight: "150px", 
+                style={{
+                  maxWidth: "150px",
+                  maxHeight: "150px",
                   borderRadius: "8px",
                   border: "2px solid #ddd"
                 }}
@@ -698,11 +700,11 @@ export default function RegisterStudent() {
               isUploadBlocked()
             }
             style={{
-              cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked()) 
-                ? "not-allowed" 
+              cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
+                ? "not-allowed"
                 : "pointer",
-              opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked()) 
-                ? 0.5 
+              opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
+                ? 0.5
                 : 1,
               transition: "opacity 0.2s ease"
             }}
