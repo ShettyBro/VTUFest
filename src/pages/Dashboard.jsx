@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import CampusMap from "../components/CampusMap";
+import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import "../styles/dashboard.css";
 
 import collegesData from "../data/colleges.json";
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [collegeName, setCollegeName] = useState("");
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
+  const [showAllocatedEventsModal, setShowAllocatedEventsModal] = useState(false);
 
   const priority1Notifications = notificationsData
     .filter(n => n.priority === 1)
@@ -202,8 +204,12 @@ export default function Dashboard() {
 
   const handleViewAllocatedEvents = () => {
     if (settingsData.allocated_events_visible) {
-      navigate("/allocated-events");
+      setShowAllocatedEventsModal(true);
     }
+  };
+
+  const handleCloseAllocatedEventsModal = () => {
+    setShowAllocatedEventsModal(false);
   };
 
   const SkeletonLoader = () => (
@@ -416,6 +422,10 @@ export default function Dashboard() {
             </div>
           </div>
         </>
+      )}
+
+      {showAllocatedEventsModal && (
+        <AllocatedEventsModal onClose={handleCloseAllocatedEventsModal} />
       )}
     </Layout>
   );

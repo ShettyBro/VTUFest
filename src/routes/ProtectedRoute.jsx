@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 
 /**
@@ -18,6 +19,7 @@ export default function ProtectedRoute({ children, allowedRoles, isResetPage = f
   
   const role = localStorage.getItem("role");
   const vtufest_token = localStorage.getItem("vtufest_token");
+
   
   // Extract reset parameters from URL (only relevant for ChangePassword)
   const resetToken = searchParams.get("token");

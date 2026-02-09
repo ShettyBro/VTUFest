@@ -1,0 +1,438 @@
+/* =========================================================
+   MODAL OVERLAY
+========================================================= */
+.allocated-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   MODAL CARD
+========================================================= */
+.allocated-modal-card {
+  background: #ffffff;
+  padding: 35px;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border-top: 6px solid #1e40af;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.allocated-modal-card h3 {
+  color: #1e40af;
+  margin-bottom: 25px;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* =========================================================
+   CLOSE BUTTON (TOP RIGHT)
+========================================================= */
+.allocated-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  color: #6b7280;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.allocated-modal-close:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  transform: rotate(90deg);
+}
+
+/* =========================================================
+   LOADING STATE
+========================================================= */
+.allocated-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 20px;
+}
+
+.allocated-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #e5e7eb;
+  border-top-color: #1e40af;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.allocated-loading p {
+  color: #6b7280;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   ERROR STATE
+========================================================= */
+.allocated-error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.allocated-error p {
+  color: #dc2626;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   NOT APPROVED STATE
+========================================================= */
+.allocated-not-approved {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.allocated-not-approved p {
+  color: #6b7280;
+  font-size: 16px;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   STUDENT INFO
+========================================================= */
+.allocated-student-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #eff6ff;
+  border-radius: 10px;
+  border-left: 5px solid #2563eb;
+}
+
+.allocated-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.allocated-info-item strong {
+  color: #1e40af;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.allocated-info-item span {
+  color: #374151;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.allocated-code {
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 8px 12px;
+  border-radius: 6px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+/* =========================================================
+   EVENTS SECTION
+========================================================= */
+.allocated-events-section {
+  margin-bottom: 30px;
+}
+
+.allocated-events-section h4 {
+  color: #1e40af;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid #e5e7eb;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+.allocated-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.allocated-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.allocated-table thead {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: #ffffff;
+}
+
+.allocated-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.allocated-table th:first-child {
+  width: 80px;
+  text-align: center;
+}
+
+.allocated-table th:last-child {
+  width: 120px;
+  text-align: center;
+}
+
+.allocated-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.2s ease;
+}
+
+.allocated-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.allocated-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.allocated-table td {
+  padding: 14px 16px;
+  font-size: 15px;
+  color: #374151;
+}
+
+.allocated-table td:first-child {
+  text-align: center;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.allocated-table td:nth-child(2) {
+  font-weight: 500;
+}
+
+.allocated-table td:last-child {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Attendance Status Colors */
+.allocated-table td:last-child {
+  color: #059669;
+}
+
+.allocated-table tbody tr:has(td:last-child:empty) td:last-child {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* =========================================================
+   NO EVENTS STATE
+========================================================= */
+.allocated-no-events {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 30px 20px !important;
+  font-size: 15px;
+}
+
+/* =========================================================
+   MODAL ACTIONS
+========================================================= */
+.allocated-modal-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 2px solid #e5e7eb;
+}
+
+.allocated-close-button {
+  padding: 12px 40px;
+  background: #1e40af;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.allocated-close-button:hover {
+  background: #1e3a8a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+.allocated-modal-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.allocated-modal-card::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.allocated-modal-card::-webkit-scrollbar-thumb {
+  background: #2563eb;
+  border-radius: 10px;
+}
+
+.allocated-modal-card::-webkit-scrollbar-thumb:hover {
+  background: #1e40af;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 768px) {
+  .allocated-modal-card {
+    padding: 25px 20px;
+    max-width: 95%;
+  }
+
+  .allocated-modal-card h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .allocated-student-info {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .allocated-info-item span {
+    font-size: 16px;
+  }
+
+  .allocated-events-section h4 {
+    font-size: 16px;
+  }
+
+  .allocated-table th,
+  .allocated-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .allocated-close-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .allocated-modal-card {
+    padding: 20px 15px;
+  }
+
+  .allocated-modal-card h3 {
+    font-size: 18px;
+  }
+
+  .allocated-modal-close {
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+  }
+
+  .allocated-student-info {
+    padding: 12px;
+  }
+
+  .allocated-info-item strong {
+    font-size: 12px;
+  }
+
+  .allocated-info-item span {
+    font-size: 14px;
+  }
+
+  .allocated-table th,
+  .allocated-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .allocated-table th:first-child,
+  .allocated-table td:first-child {
+    width: 50px;
+  }
+
+  .allocated-table th:last-child,
+  .allocated-table td:last-child {
+    width: 90px;
+  }
+}
