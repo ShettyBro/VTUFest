@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "../styles/AllocatedEventsModal.css";
+import "../styles/Allocatedeventsmodal.css";
 
 const API_URL = "https://vtu-festserver-production.up.railway.app/api/student/assigned-events";
 
