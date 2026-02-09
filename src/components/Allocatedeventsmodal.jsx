@@ -115,7 +115,10 @@ export default function AllocatedEventsModal({ onClose }) {
                         <tr key={event.slNo}>
                           <td>{event.slNo}</td>
                           <td>{event.eventName}</td>
-                          <td>{event.attendance || ""}</td>
+                          {/* ✅ FIXED: Display attendance as-is (empty string shows blank) */}
+                          <td className={event.attendance ? `attendance-${event.attendance.toLowerCase()}` : ''}>
+                            {event.attendance}
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -147,7 +150,10 @@ export default function AllocatedEventsModal({ onClose }) {
                         <tr key={event.slNo}>
                           <td>{event.slNo}</td>
                           <td>{event.eventName}</td>
-                          <td>{event.attendance || ""}</td>
+                          {/* ✅ FIXED: Display attendance as-is (empty string shows blank) */}
+                          <td className={event.attendance ? `attendance-${event.attendance.toLowerCase()}` : ''}>
+                            {event.attendance}
+                          </td>
                         </tr>
                       ))
                     ) : (

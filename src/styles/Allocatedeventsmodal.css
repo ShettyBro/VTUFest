@@ -281,13 +281,21 @@
   font-weight: 600;
 }
 
-/* Attendance Status Colors */
-.allocated-table td:last-child {
-  color: #059669;
+/* ✅ NEW: Attendance Status Colors with conditional classes */
+.allocated-table td.attendance-present {
+  color: #059669 !important;
+  font-weight: 700;
 }
 
-.allocated-table tbody tr:has(td:last-child:empty) td:last-child {
-  color: #6b7280;
+.allocated-table td.attendance-absent {
+  color: #dc2626 !important;
+  font-weight: 700;
+}
+
+/* Empty attendance (NULL/blank) - gray and italic */
+.allocated-table td:last-child:empty,
+.allocated-table td:last-child:not([class*="attendance-"]) {
+  color: #9ca3af;
   font-style: italic;
 }
 
