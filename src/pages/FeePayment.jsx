@@ -576,7 +576,7 @@ export default function FeePayment() {
               readOnly
               disabled
             />
-            <span>Participating less than 10 events — ₹8,000</span>
+            <span>Participating less than 10 events — ₹4,000</span>
           </label>
 
           <label className="checkbox">
@@ -586,7 +586,7 @@ export default function FeePayment() {
               readOnly
               disabled
             />
-            <span>Participating more than 10 events — ₹25,000</span>
+            <span>Participating more than 10 events — ₹8,000</span>
           </label>
         </div>
 
