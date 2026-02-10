@@ -246,13 +246,10 @@ export default function AccompanistForm() {
         return;
       }
 
-      const { session_id, upload_urls, expires_at } = initData.data;
-      const expiresTime = new Date(expires_at).getTime();
-      const nowTime = Date.now();
-      const remainingSeconds = Math.floor((expiresTime - nowTime) / 1000);
+      const { session_id, upload_urls, remaining_seconds } = initData.data;
 
       setSessionData({ session_id, upload_urls });
-      setTimer(remainingSeconds > 0 ? remainingSeconds : 0);
+      setTimer(remaining_seconds > 0 ? remaining_seconds : 0);
       setModalStep(2);
     } catch (error) {
       console.error("Init error:", error);
