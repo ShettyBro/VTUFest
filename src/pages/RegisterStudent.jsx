@@ -88,8 +88,14 @@ export default function RegisterStudent() {
       if (now < expiresAt) {
         setSessionData(data);
         setShowUploadSection(true);
-        const remainingSeconds = Math.floor((expiresAt - now) / 1000);
-        setTimer(remainingSeconds);
+        if (data.remaining_seconds !== undefined) {
+          const elapsed = Math.floor((now - data.savedAt) / 1000);
+          const remaining = Math.max(0, data.remaining_seconds - elapsed);
+          setTimer(remaining);
+        } else {
+          const remainingSeconds = Math.floor((expiresAt - now) / 1000);
+          setTimer(remainingSeconds);
+        }
         setForm((prev) => ({ ...prev, ...data.formData }));
       } else {
         localStorage.removeItem("registration_session");
@@ -307,16 +313,14 @@ export default function RegisterStudent() {
         session_id: data.session_id,
         upload_urls: data.upload_urls,
         expires_at: data.expires_at,
+        remaining_seconds: data.remaining_seconds,
         formData: form,
       };
 
       setSessionData(sessionInfo);
       saveSessionToStorage(sessionInfo);
 
-      const expiresAt = new Date(data.expires_at).getTime();
-      const now = Date.now();
-      const remainingSeconds = Math.floor((expiresAt - now) / 1000);
-      setTimer(remainingSeconds);
+      setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
 
       setShowUploadSection(true);
     } catch (error) {

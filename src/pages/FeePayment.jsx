@@ -184,10 +184,7 @@ export default function FeePayment() {
       setUploadSession(data);
 
       // Set timer
-      const expiresAt = new Date(data.expires_at).getTime();
-      const now = Date.now();
-      const remainingSeconds = Math.floor((expiresAt - now) / 1000);
-      setTimer(remainingSeconds);
+      setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
       setTimerExpired(false);
 
       // Reset upload states
