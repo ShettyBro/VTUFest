@@ -586,7 +586,7 @@ export default function RegisterStudent() {
           {timer !== null && !timerExpired && (
             <div style={{
               textAlign: "center",
-              color: timer < 300 ? "#d32f2f" : "#2e7d32",
+              color: timer < 30 ? "#d32f2f" : "#2e7d32",
               fontWeight: "bold",
               marginBottom: "15px",
               fontSize: "16px"

@@ -457,7 +457,7 @@ export default function SubmitApplication() {
             <div
               style={{
                 textAlign: "center",
-                color: timer < 300 ? "red" : "green",
+                color: timer < 30 ? "red" : "green",
                 fontWeight: "bold",
                 marginBottom: "15px",
               }}
