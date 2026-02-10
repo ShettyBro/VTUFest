@@ -247,9 +247,19 @@ export default function AccompanistForm() {
       }
 
       const { session_id, upload_urls, expires_at } = initData.data;
-      const expiresTime = new Date(expires_at).getTime();
-      const nowTime = Date.now();
-      const remainingSeconds = Math.floor((expiresTime - nowTime) / 1000);
+      const expiresUTC = new Date(expires_at).getTime();
+      const nowUTC = Date.now();
+
+      // compensate backend timezone skew
+      const timezoneOffsetSeconds = new Date().getTimezoneOffset() * 60;
+
+      const remainingSeconds = Math.max(
+        0,
+        Math.floor((expiresUTC - nowUTC) / 1000 - timezoneOffsetSeconds)
+      );
+
+      setTimer(remainingSeconds);
+
 
       setSessionData({ session_id, upload_urls });
       setTimer(remainingSeconds > 0 ? remainingSeconds : 0);
@@ -403,14 +413,14 @@ export default function AccompanistForm() {
           <p className="subtitle">VTU HABBA 2026 – Accompanist Registration</p>
 
           {isLocked && (
-            <div style={{ 
-              padding: "12px", 
-              marginBottom: "20px", 
-              backgroundColor: "#fff3cd", 
-              border: "1px solid #ffc107", 
-              borderRadius: "4px", 
-              color: "#856404", 
-              textAlign: "center" 
+            <div style={{
+              padding: "12px",
+              marginBottom: "20px",
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "4px",
+              color: "#856404",
+              textAlign: "center"
             }}>
               Final approval has been completed. Edits are not allowed.
             </div>
