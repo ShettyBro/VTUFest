@@ -285,7 +285,7 @@ export default function SubmitApplication() {
       }
 
       setUploadStatus((prev) => ({ ...prev, [docType]: "success" }));
-      alert(`${docType} uploaded successfully`);
+      
 
     } catch (error) {
       console.error("Upload error:", error);
@@ -363,9 +363,9 @@ export default function SubmitApplication() {
 
           {studentInfo?.college && (
             <>
-              <label>College (Auto-detected)</label>
+              <label>College </label>
               <input
-                value={`${studentInfo.college.college_code}, ${studentInfo.college.college_name}, ${studentInfo.college.place}`}
+                value={`${studentInfo.college.college_name}, ${studentInfo.college.place}`}
                 disabled
                 style={{ backgroundColor: "#f0f0f0" }}
               />
