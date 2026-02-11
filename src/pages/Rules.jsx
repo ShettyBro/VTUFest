@@ -1,40 +1,9 @@
-import { useState, useEffect } from "react";
 import Layout from "../components/layout/layout";
 import "../styles/rules.css";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student/dashboard";
-
 export default function Rules() {
-  const [hasApplication, setHasApplication] = useState(false);
-
-  useEffect(() => {
-    const fetchApplicationStatus = async () => {
-      const token = localStorage.getItem("vtufest_token");
-      if (!token) return;
-
-      try {
-        const response = await fetch(API_BASE_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setHasApplication(data.data?.application !== null);
-        }
-      } catch (error) {
-        console.error("Error fetching application status:", error);
-      }
-    };
-
-    fetchApplicationStatus();
-  }, []);
-
   return (
-    <Layout hasApplication={hasApplication}>
+    <Layout>
       <div className="rules-container">
         <h2>INSTRUCTIONS</h2>
         <p className="rules-subtitle">
