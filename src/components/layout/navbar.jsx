@@ -41,35 +41,38 @@ export default function Navbar() {
 
   /* ================= COLLEGE DATA ================= */
 
-  useEffect(() => {
-    const storedCollegeId = localStorage.getItem("college_id");
-    if (!storedCollegeId) return;
+useEffect(() => {
+  const storedCollegeId = localStorage.getItem("college_id");
+  if (!storedCollegeId) return;
 
-    const fetchCollege = async () => {
-      try {
-        const response = await fetch(
-          `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
-        );
+  const fetchCollege = async () => {
+    try {
+      const response = await fetch(
+        `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
+      );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch college");
-        }
-
-        const data = await response.json();
-
-        if (data.college) {
-          setCollegeName(
-            `${data.college.college_name}, ${data.college.place}`
-          );
-        }
-
-      } catch (err) {
-        console.error("Error loading college:", err);
+      if (!response.ok) {
+        throw new Error("Failed to fetch college");
       }
-    };
 
-    fetchCollege();
-  }, []);
+      const result = await response.json();
+
+      // 👇 Correct path
+      const college = result?.data?.college;
+
+      if (college) {
+        setCollegeName(
+          `${college.college_name}, ${college.place}`
+        );
+      }
+
+    } catch (err) {
+      console.error("Error loading college:", err);
+    }
+  };
+
+  fetchCollege();
+}, []);
 
 
 
