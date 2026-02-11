@@ -533,7 +533,7 @@ export default function RegisterStudent() {
             <option value="">Select College</option>
             {colleges.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.college_code} - {c.college_name}, {c.place || "N/A"}
+                {c.college_name}, {c.place || "N/A"}
               </option>
             ))}
           </select>
