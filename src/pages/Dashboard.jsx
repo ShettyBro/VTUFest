@@ -5,7 +5,6 @@ import CampusMap from "../components/CampusMap";
 import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import "../styles/dashboard.css";
 
-import collegesData from "../data/colleges.json";
 import settingsData from "../data/settings.json";
 import notificationsData from "../data/notifications.json";
 import eventsCalendarData from "../data/events-calendar.json";
@@ -18,7 +17,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const [dashboardData, setDashboardData] = useState(null);
-  const [collegeName, setCollegeName] = useState("");
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [showAllocatedEventsModal, setShowAllocatedEventsModal] = useState(false);
 
@@ -154,14 +152,6 @@ export default function Dashboard() {
       setDashboardData(data.data);
       setRetryCount(0);
 
-      const storedCollegeId = localStorage.getItem("college_id");
-      if (storedCollegeId) {
-        const college = collegesData.find(c => c.college_id === parseInt(storedCollegeId));
-        if (college) {
-          setCollegeName(`${college.college_name}, ${college.place}`);
-        }
-      }
-
     } catch (error) {
       console.error("Error fetching dashboard:", error);
       if (retryCount < 4) {
@@ -221,6 +211,10 @@ export default function Dashboard() {
     </div>
   );
 
+  const collegeDisplay = dashboardData?.college 
+    ? `${dashboardData.college.college_name}, ${dashboardData.college.place}`
+    : "Loading...";
+
   return (
     <Layout hasApplication={dashboardData?.application !== null}>
       {priority1Notifications.length > 0 && (
@@ -263,7 +257,7 @@ export default function Dashboard() {
         <>
           <div className="calendar-card">
             <div className="calendar-header">
-              <h3>VTU HABBA 2026 – Event Calendar</h3>
+              <h3>VTU HABBA 2026 â€" Event Calendar</h3>
             </div>
 
             <div className="calendar-grid">
@@ -283,13 +277,13 @@ export default function Dashboard() {
               <h4>Registration Status</h4>
 
               <p>
-                <strong>Name:</strong> {localStorage.getItem("name") || "N/A"}
+                <strong>Name:</strong> {dashboardData?.student?.full_name || "N/A"}
               </p>
               <p>
-                <strong>USN:</strong> {localStorage.getItem("usn") || "N/A"}
+                <strong>USN:</strong> {dashboardData?.student?.usn || "N/A"}
               </p>
               <p>
-                <strong>College:</strong> {collegeName || "Loading..."}
+                <strong>College:</strong> {collegeDisplay}
               </p>
 
               <hr style={{ margin: "15px 0" }} />
@@ -338,7 +332,7 @@ export default function Dashboard() {
                 </>
               ) : dashboardData.application.status === "APPROVED" ? (
                 <>
-                  <p>Status: <strong className="status-approved">Approved ✓</strong></p>
+                  <p>Status: <strong className="status-approved">Approved âœ"</strong></p>
                   <p className="status-info">Your application has been approved! Event allocation in progress.</p>
                 </>
               ) : null}
@@ -391,7 +385,7 @@ export default function Dashboard() {
                   </h4>
                   {block.events.map((e, i) => (
                     <p key={i}>
-                      • {e.name} – Room {e.room} ({e.day})
+                      â€¢ {e.name} â€" Room {e.room} ({e.day})
                     </p>
                   ))}
                 </div>
@@ -414,7 +408,7 @@ export default function Dashboard() {
                   </h4>
                   {block.events.map((e, i) => (
                     <p key={i}>
-                      • {e.name} – Room {e.room} ({e.day})
+                      â€¢ {e.name} â€" Room {e.room} ({e.day})
                     </p>
                   ))}
                 </div>

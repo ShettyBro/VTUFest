@@ -10,7 +10,6 @@ const API_BASE = {
 export default function SubmitApplication() {
   const navigate = useNavigate();
 
-  // Form state
   const [form, setForm] = useState({
     bloodGroup: "",
     address: "",
@@ -19,17 +18,12 @@ export default function SubmitApplication() {
     semester: "",
   });
 
-  // College state
-  const [collegeInfo, setCollegeInfo] = useState(null);
-  const [usn, setUsn] = useState("");
-
-  // UI state
+  const [studentInfo, setStudentInfo] = useState(null);
   const [showUploadSection, setShowUploadSection] = useState(false);
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
 
-  // Document upload state
   const [documents, setDocuments] = useState({
     aadhaar: null,
     collegeId: null,
@@ -48,65 +42,58 @@ export default function SubmitApplication() {
     marksCard: "",
   });
 
-  // Session state
   const [sessionData, setSessionData] = useState(null);
-
-  // JWT token
   const [token, setToken] = useState("");
 
   useEffect(() => {
     const storedToken = localStorage.getItem("vtufest_token");
-    const storedUsn = localStorage.getItem("usn");
 
-    if (!storedToken || !storedUsn) {
+    if (!storedToken) {
       alert("Please login first");
       navigate("/");
       return;
     }
 
     setToken(storedToken);
-    setUsn(storedUsn);
 
-    // Fetch college info from backend using authenticated endpoint
-    const fetchCollege = async () => {
+    const fetchStudentInfo = async () => {
       try {
-        const storedCollegeId = localStorage.getItem("college_id");
-        if (!storedCollegeId) {
-          alert("College information not found. Please login again.");
-          navigate("/");
-          return;
-        }
-
         const response = await fetch(
-          `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
+          "https://vtu-festserver-production.up.railway.app/api/student/dashboard",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${storedToken}`,
+            },
+          }
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch college info");
+          throw new Error("Failed to fetch student info");
         }
 
         const result = await response.json();
-        const college = result?.data?.college;
-
-        if (college) {
-          setCollegeInfo(college);
-        } else {
-          alert("College information not found. Please contact support.");
+        
+        if (result.data) {
+          setStudentInfo({
+            usn: result.data.student.usn,
+            full_name: result.data.student.full_name,
+            college: result.data.college,
+          });
         }
 
       } catch (err) {
-        console.error("Error fetching college:", err);
-        alert("Unable to load college information.");
+        console.error("Error fetching student info:", err);
+        alert("Unable to load student information. Please login again.");
+        navigate("/");
       }
     };
 
-    fetchCollege();
-
-
+    fetchStudentInfo();
     loadSessionFromStorage();
   }, [navigate]);
 
-  // Countdown timer
   useEffect(() => {
     if (timer && timer > 0 && !timerExpired) {
       const interval = setInterval(() => {
@@ -122,7 +109,6 @@ export default function SubmitApplication() {
     }
   }, [timer, timerExpired]);
 
-  // Save session to localStorage
   const saveSessionToStorage = (data) => {
     localStorage.setItem("application_session", JSON.stringify({
       ...data,
@@ -130,7 +116,6 @@ export default function SubmitApplication() {
     }));
   };
 
-  // Load session from localStorage
   const loadSessionFromStorage = () => {
     try {
       const saved = localStorage.getItem("application_session");
@@ -160,13 +145,11 @@ export default function SubmitApplication() {
     }
   };
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle document selection
   const handleDocumentChange = (docType) => (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -194,14 +177,12 @@ export default function SubmitApplication() {
     }
   };
 
-  // Format timer display
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
   };
 
-  // Handle Next button (init application)
   const handleNext = async (e) => {
     e.preventDefault();
 
@@ -264,69 +245,67 @@ export default function SubmitApplication() {
         formData: form,
       };
 
-      setSessionData(sessionInfo);
       saveSessionToStorage(sessionInfo);
-
-      setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
-
+      setSessionData(sessionInfo);
+      setTimer(data.remaining_seconds);
       setShowUploadSection(true);
+
     } catch (error) {
       console.error("Error initializing application:", error);
-      alert("Something went wrong. Please try again.");
+      alert("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Upload single document
-  const uploadDocument = async (docType, urlKey) => {
+  const uploadDocument = async (docType, blobType) => {
     const file = documents[docType];
-    if (!file) {
-      alert(`Please select ${docType} file`);
-      return;
-    }
+    if (!file || !sessionData) return;
 
-    if (!sessionData?.upload_urls?.[urlKey]) {
-      alert("Session expired. Please restart.");
+    const uploadUrl = sessionData.upload_urls[blobType];
+    if (!uploadUrl) {
+      alert("Upload URL not found. Please refresh the page.");
       return;
     }
 
     try {
       setUploadStatus((prev) => ({ ...prev, [docType]: "uploading" }));
 
-      const sasUrl = sessionData.upload_urls[urlKey];
-
-      const response = await fetch(sasUrl, {
+      const response = await fetch(uploadUrl, {
         method: "PUT",
         headers: {
           "x-ms-blob-type": "BlockBlob",
+          "Content-Type": file.type,
         },
         body: file,
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status}`);
+        throw new Error(`Upload failed: ${response.statusText}`);
       }
 
       setUploadStatus((prev) => ({ ...prev, [docType]: "success" }));
+      alert(`${docType} uploaded successfully`);
+
     } catch (error) {
-      console.error(`Error uploading ${docType}:`, error);
-      setUploadStatus((prev) => ({ ...prev, [docType]: "failed" }));
+      console.error("Upload error:", error);
+      setUploadStatus((prev) => ({ ...prev, [docType]: "" }));
       alert(`Failed to upload ${docType}. Please try again.`);
     }
   };
 
-  // Handle final submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const allUploaded =
-      uploadStatus.aadhaar === "success" &&
-      uploadStatus.collegeId === "success" &&
-      uploadStatus.marksCard === "success";
+    if (uploadStatus.aadhaar !== "success" || 
+        uploadStatus.collegeId !== "success" || 
+        uploadStatus.marksCard !== "success") {
+      alert("Please upload all required documents first");
+      return;
+    }
 
-    if (!allUploaded) {
-      alert("Please upload all 3 required documents");
+    if (!sessionData?.session_id) {
+      alert("Session expired. Please restart the application process.");
       return;
     }
 
@@ -353,24 +332,17 @@ export default function SubmitApplication() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Submission failed");
+        alert(data.error || "Failed to submit application");
         return;
       }
 
-      localStorage.setItem("application_status", "SUBMITTED");
-      localStorage.setItem("application_id", data.application_id);
-      localStorage.setItem("application_submitted_at", new Date().toISOString());
-
+      alert(data.message || "Application submitted successfully!");
       localStorage.removeItem("application_session");
+      navigate("/dashboard");
 
-      alert("Application submitted successfully! Redirecting to dashboard...");
-
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Something went wrong. Please try again.");
+      alert("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -381,20 +353,19 @@ export default function SubmitApplication() {
       <h2>Submit Application</h2>
 
       {!showUploadSection ? (
-        // STEP 1: Application Details Form
         <form className="register-card" onSubmit={handleNext}>
           <label>USN / Registration Number</label>
           <input
-            value={usn}
+            value={studentInfo?.usn || "Loading..."}
             disabled
             style={{ backgroundColor: "#f0f0f0" }}
           />
 
-          {collegeInfo && (
+          {studentInfo?.college && (
             <>
               <label>College (Auto-detected)</label>
               <input
-                value={`${collegeInfo.college_code}, ${collegeInfo.college_name}, ${collegeInfo.place}`}
+                value={`${studentInfo.college.college_code}, ${studentInfo.college.college_name}, ${studentInfo.college.place}`}
                 disabled
                 style={{ backgroundColor: "#f0f0f0" }}
               />
@@ -473,7 +444,7 @@ export default function SubmitApplication() {
             ))}
           </select>
 
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading || !studentInfo}>
             {loading ? "Processing..." : "Next"}
           </button>
 
@@ -482,7 +453,6 @@ export default function SubmitApplication() {
           </p>
         </form>
       ) : (
-        // STEP 2: Document Upload
         <form className="register-card" onSubmit={handleSubmit}>
           {timer !== null && !timerExpired && (
             <div
@@ -510,7 +480,6 @@ export default function SubmitApplication() {
             </div>
           )}
 
-          {/* Aadhaar Card */}
           <label>Aadhaar Card * (PNG/JPG/PDF, max 5MB)</label>
           <input
             type="file"
@@ -541,7 +510,6 @@ export default function SubmitApplication() {
             <p style={{ color: "green", fontSize: "14px" }}>✓ Aadhaar uploaded</p>
           )}
 
-          {/* College ID Card */}
           <label>College ID Card * (PNG/JPG/PDF, max 5MB)</label>
           <input
             type="file"
@@ -572,7 +540,6 @@ export default function SubmitApplication() {
             <p style={{ color: "green", fontSize: "14px" }}>✓ College ID uploaded</p>
           )}
 
-          {/* 10th Marks Card */}
           <label>10th Marks Card * (PNG/JPG/PDF, max 5MB)</label>
           <input
             type="file"
