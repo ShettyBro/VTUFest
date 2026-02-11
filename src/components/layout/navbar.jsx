@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/navbar.css";
-import collegesData from "../../data/colleges.json";
+
 import notificationsData from "../../data/notifications.json";
 
 export default function Navbar() {
