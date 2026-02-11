@@ -41,38 +41,38 @@ export default function Navbar() {
 
   /* ================= COLLEGE DATA ================= */
 
-useEffect(() => {
-  const storedCollegeId = localStorage.getItem("college_id");
-  if (!storedCollegeId) return;
+  useEffect(() => {
+    const storedCollegeId = localStorage.getItem("college_id");
+    if (!storedCollegeId) return;
 
-  const fetchCollege = async () => {
-    try {
-      const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch college");
-      }
-
-      const result = await response.json();
-
-      // 👇 Correct path
-      const college = result?.data?.college;
-
-      if (college) {
-        setCollegeName(
-          `${college.college_name}, ${college.place}`
+    const fetchCollege = async () => {
+      try {
+        const response = await fetch(
+          `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch college");
+        }
+
+        const result = await response.json();
+
+        // 👇 Correct path
+        const college = result?.data?.college;
+
+        if (college) {
+          setCollegeName(
+            `${college.college_name}, ${college.place}`
+          );
+        }
+
+      } catch (err) {
+        console.error("Error loading college:", err);
       }
+    };
 
-    } catch (err) {
-      console.error("Error loading college:", err);
-    }
-  };
-
-  fetchCollege();
-}, []);
+    fetchCollege();
+  }, []);
 
 
 
@@ -109,7 +109,7 @@ useEffect(() => {
       {(role === "principal" || role === "manager" || role === "admin") && (
         <div className="navbar-center">
           <span className="college-code">
-            College Code: <strong>{collegeCode}</strong>
+            <strong>{collegeName}</strong>
           </span>
         </div>
       )}
