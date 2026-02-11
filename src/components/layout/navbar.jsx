@@ -106,13 +106,13 @@ export default function Navbar() {
       </div>
 
       {/* CENTER – COLLEGE CODE */}
-      {(role === "principal" || role === "manager" || role === "admin") && (
+      {
         <div className="navbar-center">
           <span className="college-code">
             <strong>{collegeName}</strong>
           </span>
         </div>
-      )}
+      }
 
       {/* RIGHT ACTIONS */}
       <div className="navbar-right">
