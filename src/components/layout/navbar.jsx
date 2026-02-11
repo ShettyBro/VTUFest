@@ -40,21 +40,38 @@ export default function Navbar() {
   }, []);
 
   /* ================= COLLEGE DATA ================= */
+
   useEffect(() => {
     const storedCollegeId = localStorage.getItem("college_id");
     if (!storedCollegeId) return;
 
-    const college = collegesData.find(
-      c => c.college_id === parseInt(storedCollegeId)
-    );
+    const fetchCollege = async () => {
+      try {
+        const response = await fetch(
+          `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
+        );
 
-    if (college) {
-      setCollegeName(`${college.college_name}, ${college.place}`);
-      const code = `${college.college_name}-${college.college_code}`;
-      setCollegeCode(code);
-      localStorage.setItem("college_code", code);
-    }
+        if (!response.ok) {
+          throw new Error("Failed to fetch college");
+        }
+
+        const data = await response.json();
+
+        if (data.college) {
+          setCollegeName(
+            `${data.college.college_name}, ${data.college.place}`
+          );
+        }
+
+      } catch (err) {
+        console.error("Error loading college:", err);
+      }
+    };
+
+    fetchCollege();
   }, []);
+
+
 
   /* ================= CLOSE DROPDOWNS ON OUTSIDE CLICK ================= */
   useEffect(() => {
@@ -120,8 +137,8 @@ export default function Navbar() {
             <div className="notif-dropdown">
               {sortedNotifications.length > 0 ? (
                 sortedNotifications.map(notification => (
-                  <div 
-                    key={notification.id} 
+                  <div
+                    key={notification.id}
                     className={`notif-item priority-${notification.priority}`}
                   >
                     {notification.message}
