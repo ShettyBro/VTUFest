@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/StudentRegister.css";
-import collegesData from "../data/colleges.json";
+
 
 const API_BASE = {
   submitApplication: "https://vtu-festserver-production.up.railway.app/api/student/submit-application"
@@ -56,10 +56,9 @@ export default function SubmitApplication() {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("vtufest_token");
-    const storedCollegeId = localStorage.getItem("college_id");
     const storedUsn = localStorage.getItem("usn");
 
-    if (!storedToken || !storedCollegeId || !storedUsn) {
+    if (!storedToken || !storedUsn) {
       alert("Please login first");
       navigate("/");
       return;
@@ -68,13 +67,41 @@ export default function SubmitApplication() {
     setToken(storedToken);
     setUsn(storedUsn);
 
-    // Find college info from local JSON
-    const college = collegesData.find(c => c.college_id === parseInt(storedCollegeId));
-    if (college) {
-      setCollegeInfo(college);
-    } else {
-      alert("College information not found. Please contact support.");
-    }
+    // Fetch college info from backend using authenticated endpoint
+    const fetchCollege = async () => {
+      try {
+        const storedCollegeId = localStorage.getItem("college_id");
+        if (!storedCollegeId) {
+          alert("College information not found. Please login again.");
+          navigate("/");
+          return;
+        }
+
+        const response = await fetch(
+          `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch college info");
+        }
+
+        const result = await response.json();
+        const college = result?.data?.college;
+
+        if (college) {
+          setCollegeInfo(college);
+        } else {
+          alert("College information not found. Please contact support.");
+        }
+
+      } catch (err) {
+        console.error("Error fetching college:", err);
+        alert("Unable to load college information.");
+      }
+    };
+
+    fetchCollege();
+
 
     loadSessionFromStorage();
   }, [navigate]);
