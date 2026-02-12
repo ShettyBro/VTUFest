@@ -153,7 +153,6 @@ export default function Dashboard() {
       setRetryCount(0);
 
     } catch (error) {
-      console.error("Error fetching dashboard:", error);
       if (retryCount < 4) {
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
@@ -215,8 +214,10 @@ export default function Dashboard() {
     ? `${dashboardData.college.college_name}, ${dashboardData.college.place}`
     : "Loading...";
 
+  const isCollegeLocked = dashboardData?.college?.is_locked === true;
+
   return (
-    <Layout hasApplication={dashboardData?.application !== null}>
+    <Layout hasApplication={dashboardData?.application !== null} collegeLocked={isCollegeLocked}>
       {priority1Notifications.length > 0 && (
         <div className="top-banner">
           <div className="qr-code-section">
@@ -257,7 +258,7 @@ export default function Dashboard() {
         <>
           <div className="calendar-card">
             <div className="calendar-header">
-              <h3>VTU HABBA 2026 â€" Event Calendar</h3>
+              <h3>VTU HABBA 2026 — Event Calendar</h3>
             </div>
 
             <div className="calendar-grid">
@@ -288,10 +289,20 @@ export default function Dashboard() {
 
               <hr style={{ margin: "15px 0" }} />
 
+              {isCollegeLocked && (
+                <div className="college-locked-message">
+                  <p className="locked-text">Applications are closed for your college.</p>
+                </div>
+              )}
+
               {!dashboardData?.application ? (
                 <>
                   <p>Status: <strong className="status-pending">No Application Submitted</strong></p>
-                  <button className="submit-button" onClick={handleSubmitApplication}>
+                  <button 
+                    className="submit-button" 
+                    onClick={handleSubmitApplication}
+                    disabled={isCollegeLocked}
+                  >
                     Submit Application
                   </button>
                 </>
@@ -308,7 +319,11 @@ export default function Dashboard() {
               ) : dashboardData.application.status === "IN_PROGRESS" ? (
                 <>
                   <p>Status: <strong className="status-progress">Application In Progress</strong></p>
-                  <button className="submit-button" onClick={handleCompleteApplication}>
+                  <button 
+                    className="submit-button" 
+                    onClick={handleCompleteApplication}
+                    disabled={isCollegeLocked}
+                  >
                     Complete Application
                   </button>
                 </>
@@ -321,7 +336,11 @@ export default function Dashboard() {
                     </p>
                   )}
                   {dashboardData.reapply_count < 2 ? (
-                    <button className="reapply-button" onClick={handleReapply}>
+                    <button 
+                      className="reapply-button" 
+                      onClick={handleReapply}
+                      disabled={isCollegeLocked}
+                    >
                       Reapply
                     </button>
                   ) : (
@@ -332,7 +351,7 @@ export default function Dashboard() {
                 </>
               ) : dashboardData.application.status === "APPROVED" ? (
                 <>
-                  <p>Status: <strong className="status-approved">Approved âœ"</strong></p>
+                  <p>Status: <strong className="status-approved">Approved ✓</strong></p>
                   <p className="status-info">Your application has been approved! Event allocation in progress.</p>
                 </>
               ) : null}
@@ -385,7 +404,7 @@ export default function Dashboard() {
                   </h4>
                   {block.events.map((e, i) => (
                     <p key={i}>
-                      â€¢ {e.name} â€" Room {e.room} ({e.day})
+                      • {e.name} — Room {e.room} ({e.day})
                     </p>
                   ))}
                 </div>
@@ -408,7 +427,7 @@ export default function Dashboard() {
                   </h4>
                   {block.events.map((e, i) => (
                     <p key={i}>
-                      â€¢ {e.name} â€" Room {e.room} ({e.day})
+                      • {e.name} — Room {e.room} ({e.day})
                     </p>
                   ))}
                 </div>

@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "../../styles/sidebar.css";
 
-export default function Sidebar({ role, hasApplication = false }) {
+export default function Sidebar({ role, hasApplication = false, collegeLocked = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function Sidebar({ role, hasApplication = false }) {
           <span className="label">Dashboard</span>
         </div>
       )}
-      {role === "student" && !hasApplication && (
+      {role === "student" && !hasApplication && !collegeLocked && (
         <div
           className={`sidebar-item ${isActive("/student-register") ? "active" : ""
             }`}

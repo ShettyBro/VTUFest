@@ -520,3 +520,32 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+.college-locked-message {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 12px 15px;
+  margin-bottom: 15px;
+}
+
+.lock-warning {
+  color: #856404;
+  font-weight: 600;
+  margin: 0;
+  font-size: 14px;
+}
+
+.submit-button:disabled,
+.reapply-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.submit-button:disabled:hover,
+.reapply-button:disabled:hover {
+  background-color: #cccccc;
+  transform: none;
+}

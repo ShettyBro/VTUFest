@@ -5,14 +5,20 @@ import "../../styles/layout.css";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student/dashboard";
 
-export default function Layout({ children, hasApplication: hasApplicationProp }) {
+export default function Layout({ children, hasApplication: hasApplicationProp, collegeLocked: collegeLockedProp }) {
   const role = localStorage.getItem("role") || "student";
   const [hasApplication, setHasApplication] = useState(null);
+  const [collegeLocked, setCollegeLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (hasApplicationProp !== undefined) {
       setHasApplication(hasApplicationProp);
+    }
+    if (collegeLockedProp !== undefined) {
+      setCollegeLocked(collegeLockedProp);
+    }
+    if (hasApplicationProp !== undefined && collegeLockedProp !== undefined) {
       setIsLoading(false);
       return;
     }
@@ -41,21 +47,21 @@ export default function Layout({ children, hasApplication: hasApplicationProp })
         if (response.ok) {
           const data = await response.json();
           setHasApplication(data.data?.application !== null);
+          setCollegeLocked(data.data?.college?.is_locked === true);
         }
       } catch (error) {
-        console.error("Error fetching application status:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchApplicationStatus();
-  }, [role, hasApplicationProp]);
+  }, [role, hasApplicationProp, collegeLockedProp]);
 
   return (
     <div className="layout">
       <Navbar role={role} />
-      {!isLoading && <Sidebar role={role} hasApplication={hasApplication || false} />}
+      {!isLoading && <Sidebar role={role} hasApplication={hasApplication || false} collegeLocked={collegeLocked} />}
       <main className="content">
         {children}
       </main>
