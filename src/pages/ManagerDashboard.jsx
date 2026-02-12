@@ -20,12 +20,10 @@ export default function ManagerDashboard() {
   const [lockStatus, setLockStatus] = useState(null);
    const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
 
-  // Filter and sort priority 1 notifications by date (most recent first)
   const priority1Notifications = notificationsData
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Filter and sort priority 2+ notifications (by priority first, then date)
   const priority2PlusNotifications = notificationsData
     .filter(n => n.priority >= 2)
     .sort((a, b) => {
@@ -47,7 +45,6 @@ export default function ManagerDashboard() {
     checkLockStatus();
   }, []);
 
-  // Ticker animation for priority 1 notifications
   useEffect(() => {
     if (priority1Notifications.length === 0) return;
 
@@ -55,7 +52,7 @@ export default function ManagerDashboard() {
       setCurrentPriority1Index(prev => 
         (prev + 1) % priority1Notifications.length
       );
-    }, 20000); // 20 seconds per notification
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [priority1Notifications.length]);
@@ -141,7 +138,8 @@ export default function ManagerDashboard() {
 
       if (data.success) {
         setLockStatus(data);
-        if (data.is_locked) {
+        const isLocked = data.is_locked || data.registration_lock;
+        if (isLocked) {
           setShowFinalApprovalOverlay(true);
         }
       }
@@ -313,6 +311,7 @@ export default function ManagerDashboard() {
         <FinalApprovalOverlay
           paymentStatus={lockStatus.payment_status}
           paymentRemarks={lockStatus.payment_remarks}
+          isRegistrationLock={lockStatus.registration_lock}
         />
       )} */}
     </Layout>

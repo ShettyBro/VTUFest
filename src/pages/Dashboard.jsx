@@ -214,7 +214,7 @@ export default function Dashboard() {
     ? `${dashboardData.college.college_name}, ${dashboardData.college.place}`
     : "Loading...";
 
-  const isCollegeLocked = dashboardData?.college?.is_locked === true;
+  const isCollegeLocked = dashboardData?.college?.is_locked || dashboardData?.college?.registration_lock || false;
 
   return (
     <Layout hasApplication={dashboardData?.application !== null} collegeLocked={isCollegeLocked}>
@@ -258,7 +258,7 @@ export default function Dashboard() {
         <>
           <div className="calendar-card">
             <div className="calendar-header">
-              <h3>VTU HABBA 2026 — Event Calendar</h3>
+              <h3>VTU HABBA 2026 – Event Calendar</h3>
             </div>
 
             <div className="calendar-grid">
@@ -404,7 +404,7 @@ export default function Dashboard() {
                   </h4>
                   {block.events.map((e, i) => (
                     <p key={i}>
-                      • {e.name} — Room {e.room} ({e.day})
+                      • {e.name} – Room {e.room} ({e.day})
                     </p>
                   ))}
                 </div>
@@ -427,7 +427,7 @@ export default function Dashboard() {
                   </h4>
                   {block.events.map((e, i) => (
                     <p key={i}>
-                      • {e.name} — Room {e.room} ({e.day})
+                      • {e.name} – Room {e.room} ({e.day})
                     </p>
                   ))}
                 </div>

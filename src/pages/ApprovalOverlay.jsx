@@ -1,14 +1,23 @@
 import { useNavigate } from "react-router-dom";
 import "../styles/FinalApprovalOverlay.css";
 
-export default function FinalApprovalOverlay({ paymentStatus, paymentRemarks }) {
+export default function FinalApprovalOverlay({ paymentStatus, paymentRemarks, isRegistrationLock }) {
   const navigate = useNavigate();
 
   return (
     <div className="final-approval-overlay">
       <div className="overlay-content">
-        <h2>✅ Final Approval Submitted</h2>
-        <p>All registrations are now locked. No further edits are allowed.</p>
+        {isRegistrationLock ? (
+          <>
+            <h2>🚫 Registrations Closed</h2>
+            <p>Registrations have been closed by admin. No modifications are allowed.</p>
+          </>
+        ) : (
+          <>
+            <h2>✅ Final Approval Submitted</h2>
+            <p>All registrations are now locked. No further edits are allowed.</p>
+          </>
+        )}
 
         {!paymentStatus && (
           <div className="payment-section">

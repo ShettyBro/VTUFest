@@ -115,7 +115,8 @@ export default function PrincipalDashboard() {
 
       if (data.success) {
         setLockStatus(data);
-        if (data.is_locked) {
+        const isLocked = data.is_locked || data.registration_lock;
+        if (isLocked) {
           setShowFinalApprovalOverlay(true);
         }
       }
@@ -233,7 +234,6 @@ export default function PrincipalDashboard() {
           <h2>Principal Dashboard</h2>
           <p>VTU HABBA 2026 — Principal Administration Panel</p>
 
-          {/* Show "Assign Manager" button ONLY IF manager does NOT exist */}
           {dashboardData && !dashboardData.has_team_manager && (
             <button
               className="assign-manager-btn"
@@ -294,7 +294,6 @@ export default function PrincipalDashboard() {
             )}
           </div>
 
-          {/* College Quota Card with "View Events" button inside */}
           <div className="stat-card">
             <h4>College Quota</h4>
             <p>
@@ -303,7 +302,6 @@ export default function PrincipalDashboard() {
             </p>
             <small>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
             
-            {/* View Assigned Events button - shown if participating_event_count >= 1 */}
             {showViewEventsButton && (
               <button
                 onClick={() => navigate("/assign-events")}
@@ -409,6 +407,7 @@ export default function PrincipalDashboard() {
         <FinalApprovalOverlay
           paymentStatus={lockStatus.payment_status}
           paymentRemarks={lockStatus.payment_remarks}
+          isRegistrationLock={lockStatus.registration_lock}
         />
       )} */}
     </Layout>
