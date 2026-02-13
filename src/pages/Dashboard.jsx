@@ -236,15 +236,16 @@ export default function Dashboard() {
             <h1>Welcome, {dashboardData?.student?.full_name?.split(' ')[0] || "Student"}</h1>
             {/* <p>Dashboard Overview</p> */}
           </div>
-          {/* QR CODE - CENTERED ABSOLUTELY */}
-          <div className="qr-badge-centered">
+
+          {/* QR CODE - RIGHT SIDE */}
+          <div className="qr-badge-right">
             <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem', textAlign: 'center' }}>
               {dashboardData?.qr_code ? "Your QR Code:" : "Your QR Code:"}
             </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
               dashboardData?.qr_code ? (
-                <div style={{ background: 'rgba(255,255,255,0.1)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
-                  <span style={{ color: 'var(--neon-green)', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                <div style={{ background: 'rgba(102,126,234,0.1)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
+                  <span style={{ color: 'var(--accent-purple)', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
                     {dashboardData.qr_code}
                   </span>
                 </div>
@@ -255,9 +256,6 @@ export default function Dashboard() {
               )
             }
           </div>
-
-          {/* Empty div to balance flex if needed, but absolute positioning handles centering better */}
-          <div className="header-spacer"></div>
         </div>
 
         {/* --- TICKER --- */}

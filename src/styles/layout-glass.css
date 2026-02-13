@@ -5,21 +5,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    /* --- VIBRANT AUTH THEME (Restored) --- */
-    --glass-nav-bg: rgba(255, 255, 255, 0.25);
-    /* Light frosted nav */
-    --glass-sidebar-bg: rgba(255, 255, 255, 0.15);
-    /* Light frosted sidebar */
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --neon-blue: #a8edea;
-    /* Soft teal */
-    --neon-purple: #ffb7b2;
-    /* Soft pink */
-    --neon-green: #96f2d7;
-    /* Soft mint */
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.9);
+    /* --- PROFESSIONAL LIGHT THEME --- */
+    --glass-nav-bg: rgba(255, 255, 255, 0.95);
+    /* Light professional nav */
+    --glass-sidebar-bg: #1a1d29;
+    /* Dark sidebar */
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --accent-blue: #4a5568;
+    --accent-purple: #667eea;
+    --accent-green: #48bb78;
+    --text-primary: #2d3748;
+    /* Dark text for light elements */
+    --text-secondary: #718096;
     --text-on-dark: #ffffff;
+    /* White text for dark sidebar */
+    --sidebar-text: #e2e8f0;
+    /* Light gray text for dark sidebar */
 }
 
 /* =========================================
@@ -76,16 +77,15 @@ body,
     height: 70px;
     width: 100%;
     background: var(--glass-nav-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 30px;
     z-index: 1000;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    /* Subtle shadow */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Logos */
@@ -121,23 +121,23 @@ body,
 }
 
 .college-code {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--neon-purple);
-    color: var(--neon-blue);
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--glass-border);
+    color: var(--accent-blue);
     padding: 8px 20px;
     border-radius: 50px;
     font-size: 0.95rem;
     font-weight: 600;
     letter-spacing: 0.5px;
-    box-shadow: 0 0 10px rgba(188, 19, 254, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s;
     backdrop-filter: blur(5px);
 }
 
 .college-code:hover {
-    background: rgba(188, 19, 254, 0.2);
-    box-shadow: 0 0 20px rgba(188, 19, 254, 0.5);
-    color: white;
+    background: rgba(102, 126, 234, 0.1);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+    color: var(--accent-purple);
     cursor: pointer;
 }
 
@@ -169,21 +169,21 @@ body,
 }
 
 .notif-icon:hover {
-    color: var(--neon-blue);
-    filter: drop-shadow(0 0 5px var(--neon-blue));
+    color: var(--accent-purple);
+    filter: drop-shadow(0 0 3px var(--accent-purple));
 }
 
 .notif-badge {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: var(--neon-purple);
+    background: var(--accent-purple);
     color: white;
     font-size: 10px;
     font-weight: bold;
     padding: 2px 6px;
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--neon-purple);
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
 }
 
 /* Notification Dropdown (Glass) */
@@ -192,11 +192,11 @@ body,
     top: 50px;
     right: -10px;
     width: 320px;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(25px);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     z-index: 1500;
     animation: fadeIn 0.2s ease-out;
@@ -205,15 +205,15 @@ body,
 .notif-item {
     padding: 15px;
     font-size: 0.9rem;
-    color: var(--text-secondary);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--glass-border);
     transition: background 0.2s;
     cursor: pointer;
 }
 
 .notif-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(102, 126, 234, 0.05);
+    color: var(--text-primary);
 }
 
 .notif-item.priority-1 {
@@ -222,12 +222,12 @@ body,
 
 /* Critical */
 .notif-item.priority-2 {
-    border-left: 3px solid var(--neon-purple);
+    border-left: 3px solid var(--accent-purple);
 }
 
 /* High */
 .notif-item.priority-3 {
-    border-left: 3px solid var(--neon-blue);
+    border-left: 3px solid var(--accent-blue);
 }
 
 /* Medium */
@@ -271,14 +271,14 @@ body,
     width: 38px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--neon-blue);
-    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+    border: 2px solid var(--accent-purple);
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 }
 
 .username {
     font-size: 0.95rem;
     font-weight: 500;
-    color: white;
+    color: var(--text-primary);
 }
 
 .usn-tooltip {
@@ -286,8 +286,8 @@ body,
     top: 120%;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--neon-blue);
-    color: #000;
+    background: var(--accent-purple);
+    color: white;
     font-weight: bold;
     padding: 4px 10px;
     border-radius: 6px;
@@ -296,7 +296,7 @@ body,
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
-    box-shadow: 0 0 10px var(--neon-blue);
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
 }
 
 .profile-trigger:hover .usn-tooltip {
@@ -309,11 +309,11 @@ body,
     top: 60px;
     right: 0;
     width: 200px;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(25px);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     z-index: 1500;
     animation: fadeIn 0.2s ease-out;
@@ -322,7 +322,7 @@ body,
 .menu-item {
     padding: 12px 20px;
     font-size: 0.95rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
@@ -331,10 +331,9 @@ body,
 }
 
 .menu-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--accent-purple);
     padding-left: 25px;
-    /* Slide effect */
 }
 
 .menu-item.logout {
@@ -353,37 +352,32 @@ body,
 .sidebar {
     position: fixed;
     top: 70px;
-    /* Below Navbar */
     left: 0;
     height: calc(100vh - 70px);
     width: 70px;
     background: var(--glass-sidebar-bg);
-    /* Frosted Background */
-    backdrop-filter: blur(20px);
-    /* Frosted glass */
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
     transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     overflow: hidden;
     z-index: 900;
     display: flex;
     flex-direction: column;
     padding-top: 20px;
-    box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar.open {
     width: 260px;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-item {
     display: flex;
     align-items: center;
     padding: 15px 22px;
-    /* Center icon when collapsed (70px width -> ~22px padding side) */
     cursor: pointer;
-    color: var(--text-secondary);
-    /* White text for Vibrant Theme */
+    color: var(--sidebar-text);
     transition: all 0.3s;
     position: relative;
     white-space: nowrap;
@@ -391,16 +385,14 @@ body,
 }
 
 .sidebar-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
 }
 
 .sidebar-item.active {
-    background: rgba(168, 237, 234, 0.2);
-    /* Soft Teal Gradient */
-    color: var(--neon-blue);
-    /* Neon Blue Text */
-    border-left: 3px solid var(--neon-blue);
+    background: rgba(102, 126, 234, 0.15);
+    color: var(--accent-purple);
+    border-left: 3px solid var(--accent-purple);
 }
 
 /* Sidebar Icons */
