@@ -460,7 +460,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                 <label>USN *</label>
                                                 <input
                                                     value={regForm.usn}
-                                                    onChange={e => checkUSN(e.target.value)}
+                                                    onChange={e => setRegForm({ ...regForm, usn: e.target.value.toUpperCase() })}
+                                                    onBlur={e => checkUSN(e.target.value)}
                                                     placeholder="VTU2026CS001"
                                                 />
                                                 {usnStatus === "checking" && <small>Checking...</small>}
@@ -472,6 +473,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                 <input
                                                     value={regForm.fullName}
                                                     onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
+                                                    disabled={usnStatus !== "valid"}
+                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
                                                 />
                                             </div>
@@ -481,6 +484,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                 <select
                                                     value={regForm.collegeId}
                                                     onChange={e => setRegForm({ ...regForm, collegeId: e.target.value })}
+                                                    disabled={usnStatus !== "valid"}
+                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
                                                 >
                                                     <option value="">Select College</option>
@@ -498,6 +503,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                     type="email"
                                                     value={regForm.email}
                                                     onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                                                    disabled={usnStatus !== "valid"}
+                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
                                                 />
                                             </div>
@@ -508,6 +515,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                     value={regForm.phone}
                                                     maxLength={10}
                                                     onChange={e => setRegForm({ ...regForm, phone: e.target.value.replace(/\D/g, '') })}
+                                                    disabled={usnStatus !== "valid"}
+                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
                                                 />
                                             </div>
@@ -517,6 +526,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                 <select
                                                     value={regForm.gender}
                                                     onChange={e => setRegForm({ ...regForm, gender: e.target.value })}
+                                                    disabled={usnStatus !== "valid"}
+                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
                                                 >
                                                     <option value="">Select Gender</option>
