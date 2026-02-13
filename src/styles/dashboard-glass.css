@@ -1,31 +1,46 @@
 /* =========================================
-   GLASSMORPHISM DASHBOARD STYLES
+   DASHBOARD 2.0 - DARK GLASS & NEON
    ========================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    --primary-color: #ffffff;
-    --accent-color: #a8edea;
-    --text-color: #ffffff;
-    --card-bg: rgba(255, 255, 255, 0.1);
-    /* Glass card background */
-    --card-hover-bg: rgba(255, 255, 255, 0.15);
+    --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    --glass-bg: rgba(0, 0, 0, 0.4);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.05);
+    --neon-blue: #00f2ff;
+    --neon-purple: #bc13fe;
+    --neon-green: #0aff60;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-/* --- OVERRIDE LAYOUT BACKGROUND --- */
-/* We need to target the layout container to apply the animated gradient */
-.layout,
-.content,
+/* --- GLOBAL RESET & SCROLL FIX --- */
+* {
+    box-sizing: border-box;
+}
+
 body,
 html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-primary);
+    overflow: hidden;
+    /* Prevent body scroll, handle in wrapper */
+}
+
+/* Override Layout Background */
+.layout,
+.content {
     background: transparent !important;
 }
 
-/* Apply the animated background to a fixed wrapper or the body */
+/* Animated Background Layer */
 body::before {
     content: "";
     position: fixed;
@@ -33,39 +48,55 @@ body::before {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background: var(--bg-gradient);
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
     z-index: -2;
-    /* Behind everything */
 }
 
-/* Add floating shapes */
+/* Floating Glow Orbs */
 body::after {
     content: "";
     position: fixed;
-    top: -10%;
-    left: -10%;
-    width: 500px;
-    height: 500px;
-    background: #ff00cc;
-    border-radius: 50%;
+    bottom: -10%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(188, 19, 254, 0.3) 0%, transparent 70%);
     filter: blur(80px);
-    opacity: 0.4;
-    animation: float 8s ease-in-out infinite;
     z-index: -1;
+    animation: float 10s ease-in-out infinite;
 }
 
+/* Main Dashboard Wrapper - This handles scrolling */
 .dashboard-glass-wrapper {
-    position: relative;
     width: 100%;
     height: 100%;
     overflow-y: auto;
+    /* Enable vertical scroll */
     overflow-x: hidden;
-    color: white;
-    font-family: 'Poppins', sans-serif;
+    padding: 20px;
+    padding-bottom: 50px;
+
+    /* Scrollbar Styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-purple) rgba(0, 0, 0, 0.3);
 }
 
+.dashboard-glass-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dashboard-glass-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-glass-wrapper::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, var(--neon-blue), var(--neon-purple));
+    border-radius: 4px;
+}
+
+/* --- ANIMATIONS --- */
 @keyframes gradientBG {
     0% {
         background-position: 0% 50%;
@@ -88,190 +119,349 @@ body::after {
     }
 
     50% {
-        transform: translate(30px, -30px);
+        transform: translate(-30px, -30px);
     }
 }
 
-/* --- GLASS CARDS --- */
+@keyframes glowPulse {
+    0% {
+        box-shadow: 0 0 5px rgba(0, 242, 255, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+    }
+
+    100% {
+        box-shadow: 0 0 5px rgba(0, 242, 255, 0.2);
+    }
+}
+
+/* --- HEADER SECTION --- */
+.dashboard-header {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.welcome-text h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(to right, #fff, var(--neon-blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.welcome-text p {
+    margin: 5px 0 0;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* --- NOTIFICATION TICKER (Floating Pill) --- */
+.glass-banner {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--neon-purple);
+    border-radius: 50px;
+    padding: 10px 25px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    box-shadow: 0 0 15px rgba(188, 19, 254, 0.3);
+    overflow: hidden;
+}
+
+.ticker-label {
+    background: var(--neon-purple);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 15px;
+    white-space: nowrap;
+    box-shadow: 0 0 10px rgba(188, 19, 254, 0.6);
+}
+
+.ticker-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    height: 24px;
+}
+
+.ticker-text {
+    display: inline-block;
+    white-space: nowrap;
+    animation: ticker 15s linear infinite;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+@keyframes ticker {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* --- MAIN GRID LAYOUT --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* --- GLASS CARDS (Modern) --- */
 .glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
     border-radius: 20px;
     padding: 25px;
-    margin-bottom: 25px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    color: white;
+    color: var(--text-primary);
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 .glass-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+}
+
+.glass-card:hover::before {
+    opacity: 1;
 }
 
 .glass-card h3,
 .glass-card h4 {
-    color: white !important;
     margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: var(--neon-blue);
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 10px;
 }
 
-.glass-card p,
-.glass-card li,
-.glass-card strong {
-    color: rgba(255, 255, 255, 0.9) !important;
+/* --- CALENDAR LIST --- */
+.calendar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* --- TOP BANNER --- */
-.glass-banner {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 15px;
-    padding: 15px 25px;
+.calendar-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 12px;
+    border-left: 3px solid var(--neon-blue);
+    transition: all 0.2s;
+}
+
+.calendar-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.cal-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.cal-title {
+    font-weight: 600;
+    font-size: 1rem;
+    display: block;
+}
+
+.cal-loc {
+    font-size: 0.8rem;
+    color: var(--neon-green);
+}
+
+/* --- HERO CARD (Status) --- */
+.hero-card {
+    text-align: center;
+    padding: 40px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.2));
+}
+
+.status-badge-lg {
+    display: inline-block;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 20px 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.status-badge-lg.pending {
+    background: rgba(255, 152, 0, 0.2);
+    color: #FFA726;
+    border: 1px solid #FFA726;
+    box-shadow: 0 0 15px rgba(255, 167, 38, 0.3);
+}
+
+.status-badge-lg.submitted {
+    background: rgba(33, 150, 243, 0.2);
+    color: #42A5F5;
+    border: 1px solid #42A5F5;
+    box-shadow: 0 0 15px rgba(66, 165, 245, 0.3);
+}
+
+.status-badge-lg.approved {
+    background: rgba(76, 175, 80, 0.2);
+    color: #66BB6A;
+    border: 1px solid #66BB6A;
+    box-shadow: 0 0 15px rgba(102, 187, 106, 0.3);
+}
+
+.status-badge-lg.rejected {
+    background: rgba(244, 67, 54, 0.2);
+    color: #EF5350;
+    border: 1px solid #EF5350;
+    box-shadow: 0 0 15px rgba(239, 83, 80, 0.3);
+}
+
+.detail-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.detail-row span:first-child {
+    color: var(--text-secondary);
+}
+
+.detail-row span:last-child {
+    font-weight: 600;
     color: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* --- CALENDAR --- */
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.glass-event {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    padding: 15px;
-    transition: all 0.3s ease;
-}
-
-.glass-event:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.02);
-}
-
-.glass-event strong {
-    display: block;
-    font-size: 1.1rem;
-    margin-bottom: 5px;
-    color: #a8edea !important;
-}
-
-.glass-event .event-time,
-.glass-event .event-loc {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.8) !important;
-}
-
-/* --- MAP BLOCKS --- */
-.block-card {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: all 0.3s ease;
-}
-
-.block-card:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: #a8edea;
-}
-
-.block-card h4 {
-    color: #a8edea !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-/* --- BUTTONS --- */
-.glass-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    color: white;
-    padding: 12px 24px;
+/* --- ACTION BUTTONS --- */
+.neon-btn {
+    background: transparent;
+    border: 2px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 12px 30px;
     border-radius: 50px;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     text-transform: uppercase;
     letter-spacing: 1px;
+    transition: all 0.3s;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
     width: 100%;
-    margin-top: 15px;
+    margin-top: 20px;
 }
 
-.glass-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    filter: brightness(1.1);
+.neon-btn:hover:not(:disabled) {
+    background: var(--neon-blue);
+    color: #000;
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.6);
 }
 
-.glass-btn:disabled {
-    opacity: 0.6;
+.neon-btn:disabled {
+    border-color: #555;
+    color: #555;
     cursor: not-allowed;
-    background: #555;
+    box-shadow: none;
 }
 
-.glass-btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
+/* --- INSTRUCTIONS & MAP --- */
+.instruction-list {
+    padding-left: 20px;
 }
 
-.glass-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.25);
+.instruction-list li {
+    margin-bottom: 10px;
+    color: var(--text-secondary);
 }
 
-/* --- STATUS BADGES --- */
-.status-badge {
-    padding: 5px 12px;
+.map-container-full {
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.map-card {
+    background: rgba(0, 0, 0, 0.3);
     border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: inline-block;
-    margin-left: 10px;
+    padding: 10px;
+    border: 1px solid var(--glass-border);
 }
 
-.status-pending {
-    background: rgba(255, 152, 0, 0.2);
-    color: #ffcc80 !important;
-    border: 1px solid rgba(255, 152, 0, 0.3);
-}
-
-.status-submitted {
-    background: rgba(33, 150, 243, 0.2);
-    color: #90caf9 !important;
-    border: 1px solid rgba(33, 150, 243, 0.3);
-}
-
-.status-approved {
-    background: rgba(76, 175, 80, 0.2);
-    color: #a5d6a7 !important;
-    border: 1px solid rgba(76, 175, 80, 0.3);
-}
-
-.status-rejected {
-    background: rgba(244, 67, 54, 0.2);
-    color: #ef9a9a !important;
-    border: 1px solid rgba(244, 67, 54, 0.3);
-}
-
-/* --- MAP CONTAINER --- */
-.map-center {
+.block-item {
     background: rgba(255, 255, 255, 0.05);
-    /* Very subtle background for map area */
-    border-radius: 20px;
-    padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+}
+
+.block-item:hover {
+    border-color: var(--neon-purple);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1100px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .calendar-card {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-card {
+        grid-column: span 1;
+    }
+
+    .map-container-full {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
 }
