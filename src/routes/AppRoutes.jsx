@@ -42,9 +42,9 @@ export default function AppRoutes() {
       <Route path="/assign-events" element={<AssignEvents />} />
 
       {/* ================= NEW LOGIN PAGES ================= */}
-      <Route path="/admin-login" element={<AdminLogin />} />
-      <Route path="/event-manager-login" element={<EventManagerLogin />} />
-      <Route path="/volunteer-login" element={<VolunteerLogin />} />
+      <Route path="/admin" element={<AdminLogin />} />
+      <Route path="/manager" element={<EventManagerLogin />} />
+      <Route path="/volunteer" element={<VolunteerLogin />} />
 
       {/* ================= NEW DASHBOARDS (PLACEHOLDERS) ================= */}
       {/* Note: In a real app, these would be protected routes */}
