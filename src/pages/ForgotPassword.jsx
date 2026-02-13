@@ -1,30 +1,25 @@
 // ForgotPassword.jsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth.css"; // Using Auth CSS for redesign
+import "../styles/auth.css";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
 
-const ALLOWED_ROLES = ['student', 'manager', 'principal', 'admin', 'sub_admin'];
+// Explicit roles as per backend requirement
+const ROLES = [
+  { value: 'student', label: 'Student' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'principal', label: 'Principal' },
+  // { value: 'admin', label: 'Admin' }, // Typically admins have a different flow, but if needed can be added
+];
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState("student"); // Default to student
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-
-  useEffect(() => {
-    // Check role on mount
-    const role = localStorage.getItem("role");
-
-    // Strict validation: If missing or invalid, redirect
-    if (!role || !ALLOWED_ROLES.includes(role.toLowerCase())) {
-      // Fallback: If invalid but present, maybe clear it? 
-      // For now, strict redirect to match original logic intent
-      window.location.href = "https://vtufest2026.acharyahabba.com/";
-    }
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,19 +31,8 @@ export default function ForgotPassword() {
       return;
     }
 
-    // Get role again
-    let role = localStorage.getItem("role");
-
-    // Safety check
     if (!role) {
-      window.location.href = "https://vtufest2026.acharyahabba.com/";
-      return;
-    }
-
-    // Normalize role
-    role = role.toLowerCase();
-    if (!ALLOWED_ROLES.includes(role)) {
-      setErrorMsg("Invalid user role. Please login again.");
+      setErrorMsg("Please select your role");
       return;
     }
 
@@ -93,11 +77,27 @@ export default function ForgotPassword() {
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 'bold' }}>Forgot Password</h3>
           <p style={{ color: '#e0f7fa', fontSize: '0.9rem' }}>
-            Enter your registered email address. We will send you a password reset link.
+            Select your role and enter your registered email.
           </p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} style={{ width: '100%' }}>
+
+          <div className="input-group">
+            <label>I am a:</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              disabled={loading}
+              style={{ width: '100%', padding: '12px 15px', background: 'var(--input-bg)', border: '1px solid var(--glass-border)', borderRadius: '10px', color: 'white', outline: 'none' }}
+            >
+              {ROLES.map(r => (
+                <option key={r.value} value={r.value} style={{ background: '#333', color: 'white' }}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="input-group">
             <label>Email Address</label>
