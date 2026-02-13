@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import CampusMap from "../components/CampusMap";
 import AllocatedEventsModal from "../components/Allocatedeventsmodal";
-import "../styles/dashboard.css";
+import "../styles/dashboard-glass.css"; // UPDATED IMPORT
 
 import settingsData from "../data/settings.json";
 import notificationsData from "../data/notifications.json";
@@ -129,7 +129,7 @@ export default function Dashboard() {
 
       if (response.status === 401 && data.redirect) {
         alert(data.message || "Session expired. Redirecting to login...");
-        
+
         setTimeout(() => {
           localStorage.clear();
           window.location.href = data.redirect;
@@ -202,15 +202,14 @@ export default function Dashboard() {
   };
 
   const SkeletonLoader = () => (
-    <div className="skeleton-container">
-      <div className="skeleton-box" style={{ width: "60%", height: "20px" }}></div>
-      <div className="skeleton-box" style={{ width: "80%", height: "20px" }}></div>
-      <div className="skeleton-box" style={{ width: "70%", height: "20px" }}></div>
-      <div className="skeleton-box" style={{ width: "90%", height: "100px" }}></div>
+    <div className="glass-card">
+      <div className="skeleton-box" style={{ width: "60%", height: "20px", marginBottom: "10px", background: "rgba(255,255,255,0.2)" }}></div>
+      <div className="skeleton-box" style={{ width: "80%", height: "20px", marginBottom: "10px", background: "rgba(255,255,255,0.2)" }}></div>
+      <div className="skeleton-box" style={{ width: "70%", height: "20px", background: "rgba(255,255,255,0.2)" }}></div>
     </div>
   );
 
-  const collegeDisplay = dashboardData?.college 
+  const collegeDisplay = dashboardData?.college
     ? `${dashboardData.college.college_name}, ${dashboardData.college.place}`
     : "Loading...";
 
@@ -218,228 +217,221 @@ export default function Dashboard() {
 
   return (
     <Layout hasApplication={dashboardData?.application !== null} collegeLocked={isCollegeLocked}>
-      {priority1Notifications.length > 0 && (
-        <div className="top-banner">
-          <div className="qr-code-section">
-            <strong>8 Digit Code:</strong>{" "}
-            {loading ? (
-              <span className="loading-text">Loading...</span>
-            ) : dashboardData?.qr_code ? (
-              <span className="qr-code-value">{dashboardData.qr_code}</span>
-            ) : (
-              <span className="qr-code-not-alloted">Not Allotted</span>
-            )}
-          </div>
-
-          <div className="priority-ticker">
-            <span className="ticker-label">IMP Notification:</span>
-            <div className="ticker-wrapper">
-              <span className="ticker-text">
-                {priority1Notifications[currentPriority1Index]?.message}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="dashboard-sections">
-          <div className="info-card">
-            <SkeletonLoader />
-          </div>
-          <div className="info-card">
-            <SkeletonLoader />
-          </div>
-          <div className="info-card">
-            <SkeletonLoader />
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="calendar-card">
-            <div className="calendar-header">
-              <h3>VTU HABBA 2026 – Event Calendar</h3>
-            </div>
-
-            <div className="calendar-grid">
-              {eventsCalendarData.calendarEvents.map((event, idx) => (
-                <div key={idx} className={`event ${event.type}`}>
-                  <strong>{event.title}</strong>
-                  <p>{event.place}</p>
-                  <p>{event.time}</p>
-                  <p className="event-date">{new Date(event.date).toLocaleDateString("en-IN")}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="dashboard-sections">
-            <div className="info-card">
-              <h4>Registration Status</h4>
-
-              <p>
-                <strong>Name:</strong> {dashboardData?.student?.full_name || "N/A"}
-              </p>
-              <p>
-                <strong>USN:</strong> {dashboardData?.student?.usn || "N/A"}
-              </p>
-              <p>
-                <strong>College:</strong> {collegeDisplay}
-              </p>
-
-              <hr style={{ margin: "15px 0" }} />
-
-              {isCollegeLocked && (
-                <div className="college-locked-message">
-                  <p className="locked-text">Applications are closed for your college.</p>
-                </div>
+      <div className="dashboard-glass-wrapper">
+        {priority1Notifications.length > 0 && (
+          <div className="glass-banner">
+            <div className="qr-code-section">
+              <strong>QrCode:</strong>{" "}
+              {loading ? (
+                <span className="loading-text">Loading...</span>
+              ) : dashboardData?.qr_code ? (
+                <span className="qr-code-value">{dashboardData.qr_code}</span>
+              ) : (
+                <span className="qr-code-not-alloted">Not Allotted</span>
               )}
+            </div>
 
-              {!dashboardData?.application ? (
-                <>
-                  <p>Status: <strong className="status-pending">No Application Submitted</strong></p>
-                  <button 
-                    className="submit-button" 
-                    onClick={handleSubmitApplication}
-                    disabled={isCollegeLocked}
-                  >
-                    Submit Application
-                  </button>
-                </>
-              ) : dashboardData.application.status === "SUBMITTED" ? (
-                <>
-                  <p>Status: <strong className="status-submitted">Submitted - Under Review</strong></p>
-                  <p className="status-info">Your application is being reviewed by the admin.</p>
-                </>
-              ) : dashboardData.application.status === "UNDER_REVIEW" ? (
-                <>
-                  <p>Status: <strong className="status-review">Under Review</strong></p>
-                  <p className="status-info">Admin is currently reviewing your application.</p>
-                </>
-              ) : dashboardData.application.status === "IN_PROGRESS" ? (
-                <>
-                  <p>Status: <strong className="status-progress">Application In Progress</strong></p>
-                  <button 
-                    className="submit-button" 
-                    onClick={handleCompleteApplication}
-                    disabled={isCollegeLocked}
-                  >
-                    Complete Application
-                  </button>
-                </>
-              ) : dashboardData.application.status === "REJECTED" ? (
-                <>
-                  <p>Status: <strong className="status-rejected">Rejected</strong></p>
-                  {dashboardData.application.rejected_reason && (
-                    <p className="rejection-reason">
-                      <strong>Reason:</strong> {dashboardData.application.rejected_reason}
-                    </p>
-                  )}
-                  {dashboardData.reapply_count < 2 ? (
-                    <button 
-                      className="reapply-button" 
-                      onClick={handleReapply}
+            <div className="priority-ticker" style={{ flex: 1, marginLeft: '20px' }}>
+              <span className="ticker-label" style={{ background: 'rgba(255,0,0,0.6)' }}>IMP:</span>
+              <div className="ticker-wrapper">
+                <span className="ticker-text">
+                  {priority1Notifications[currentPriority1Index]?.message}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="dashboard-sections">
+            <SkeletonLoader />
+            <SkeletonLoader />
+            <SkeletonLoader />
+          </div>
+        ) : (
+          <>
+            <div className="glass-card">
+              <div className="calendar-header">
+                <h3>VTU HABBA 2026 – Event Calendar</h3>
+              </div>
+
+              <div className="calendar-grid">
+                {eventsCalendarData.calendarEvents.map((event, idx) => (
+                  <div key={idx} className="glass-event">
+                    <strong>{event.title}</strong>
+                    <p>{event.place}</p>
+                    <p className="event-time">{event.time}</p>
+                    <p className="event-date" style={{ marginTop: '5px', fontWeight: 'bold' }}>{new Date(event.date).toLocaleDateString("en-IN")}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="dashboard-sections">
+              <div className="glass-card">
+                <h4>Registration Status</h4>
+
+                <p>
+                  <strong>Name:</strong> {dashboardData?.student?.full_name || "N/A"}
+                </p>
+                <p>
+                  <strong>USN:</strong> {dashboardData?.student?.usn || "N/A"}
+                </p>
+                <p>
+                  <strong>College:</strong> {collegeDisplay}
+                </p>
+
+                <hr style={{ margin: "15px 0", borderColor: "rgba(255,255,255,0.2)" }} />
+
+                {isCollegeLocked && (
+                  <div className="college-locked-message" style={{ background: "rgba(255, 193, 7, 0.2)", color: "#ffc107", border: "1px solid rgba(255, 193, 7, 0.3)" }}>
+                    <p className="locked-text" style={{ margin: 0 }}>Applications are closed for your college.</p>
+                  </div>
+                )}
+
+                {!dashboardData?.application ? (
+                  <>
+                    <p>Status: <strong className="status-badge status-pending">No Application Submitted</strong></p>
+                    <button
+                      className="glass-btn"
+                      onClick={handleSubmitApplication}
                       disabled={isCollegeLocked}
                     >
-                      Reapply
+                      Submit Application
                     </button>
-                  ) : (
-                    <p className="max-attempts">
-                      Maximum reapplication limit reached (2 rejections). Cannot reapply.
-                    </p>
-                  )}
-                </>
-              ) : dashboardData.application.status === "APPROVED" ? (
-                <>
-                  <p>Status: <strong className="status-approved">Approved ✓</strong></p>
-                  <p className="status-info">Your application has been approved! Event allocation in progress.</p>
-                </>
-              ) : null}
+                  </>
+                ) : dashboardData.application.status === "SUBMITTED" ? (
+                  <>
+                    <p>Status: <strong className="status-badge status-submitted">Submitted - Under Review</strong></p>
+                    <p className="status-info">Your application is being reviewed by the admin.</p>
+                  </>
+                ) : dashboardData.application.status === "UNDER_REVIEW" ? (
+                  <>
+                    <p>Status: <strong className="status-badge status-submitted">Under Review</strong></p>
+                    <p className="status-info">Admin is currently reviewing your application.</p>
+                  </>
+                ) : dashboardData.application.status === "IN_PROGRESS" ? (
+                  <>
+                    <p>Status: <strong className="status-badge status-pending">Application In Progress</strong></p>
+                    <button
+                      className="glass-btn"
+                      onClick={handleCompleteApplication}
+                      disabled={isCollegeLocked}
+                    >
+                      Complete Application
+                    </button>
+                  </>
+                ) : dashboardData.application.status === "REJECTED" ? (
+                  <>
+                    <p>Status: <strong className="status-badge status-rejected">Rejected</strong></p>
+                    {dashboardData.application.rejected_reason && (
+                      <p className="rejection-reason" style={{ background: 'rgba(244, 67, 54, 0.1)', borderLeft: '4px solid #f44336' }}>
+                        <strong>Reason:</strong> {dashboardData.application.rejected_reason}
+                      </p>
+                    )}
+                    {dashboardData.reapply_count < 2 ? (
+                      <button
+                        className="glass-btn"
+                        style={{ background: 'linear-gradient(135deg, #ff9966 0%, #ff5e62 100%)' }}
+                        onClick={handleReapply}
+                        disabled={isCollegeLocked}
+                      >
+                        Reapply
+                      </button>
+                    ) : (
+                      <p className="max-attempts" style={{ background: 'rgba(255, 152, 0, 0.1)', color: '#ff9800' }}>
+                        Maximum reapplication limit reached (2 rejections). Cannot reapply.
+                      </p>
+                    )}
+                  </>
+                ) : dashboardData.application.status === "APPROVED" ? (
+                  <>
+                    <p>Status: <strong className="status-badge status-approved">Approved ✓</strong></p>
+                    <p className="status-info">Your application has been approved! Event allocation in progress.</p>
+                  </>
+                ) : null}
 
-              <hr style={{ margin: "15px 0" }} />
+                <hr style={{ margin: "15px 0", borderColor: "rgba(255,255,255,0.2)" }} />
 
-              <button
-                className={`allocated-events-button ${!settingsData.allocated_events_visible ? "disabled" : ""}`}
-                onClick={handleViewAllocatedEvents}
-                disabled={!settingsData.allocated_events_visible}
-              >
-                {settingsData.allocated_events_visible 
-                  ? "View My Allocated Events" 
-                  : "View Allocated Events (Available after registration closes)"}
-              </button>
-              {!settingsData.allocated_events_visible && (
-                <p className="events-info">
-                  You can see your allocated events after the registration date ends.
-                </p>
-              )}
+                <button
+                  className={`glass-btn-secondary ${!settingsData.allocated_events_visible ? "disabled" : ""}`}
+                  onClick={handleViewAllocatedEvents}
+                  disabled={!settingsData.allocated_events_visible}
+                  style={{ width: '100%', padding: '10px', borderRadius: '10px' }}
+                >
+                  {settingsData.allocated_events_visible
+                    ? "View My Allocated Events"
+                    : "View Allocated Events (Available after registration closes)"}
+                </button>
+              </div>
+
+              <div className="glass-card">
+                <h4>Important Instructions</h4>
+                <ul>
+                  <li>Carry College ID during all events</li>
+                  <li>Report 30 minutes before event time</li>
+                  <li>Follow VTU HABBA guidelines strictly</li>
+                  <li>Respect event coordinators and volunteers</li>
+                  <li>Mobile phones must be on silent during events</li>
+                </ul>
+              </div>
+
+              <div className="glass-card">
+                <h4>Notifications</h4>
+                <ul>
+                  {priority2PlusNotifications.map(notification => (
+                    <li key={notification.id}>{notification.message}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
-            <div className="info-card">
-              <h4>Important Instructions</h4>
-              <ul>
-                <li>Carry College ID during all events</li>
-                <li>Report 30 minutes before event time</li>
-                <li>Follow VTU HABBA guidelines strictly</li>
-                <li>Respect event coordinators and volunteers</li>
-                <li>Mobile phones must be on silent during events</li>
-              </ul>
-            </div>
-
-            <div className="info-card">
-              <h4>Notifications</h4>
-              <ul>
-                {priority2PlusNotifications.map(notification => (
-                  <li key={notification.id}>{notification.message}</li>
+            <div className="dashboard-map-wrapper">
+              <div className="map-side left">
+                {blockEvents.left.map((block, idx) => (
+                  <div className="block-card" key={idx}>
+                    <h4>
+                      {block.blockNo}. {block.blockName}
+                    </h4>
+                    {block.events.map((e, i) => (
+                      <p key={i}>
+                        • {e.name} – Room {e.room} ({e.day})
+                      </p>
+                    ))}
+                  </div>
                 ))}
-              </ul>
-            </div>
-          </div>
+              </div>
 
-          <div className="dashboard-map-wrapper">
-            <div className="map-side left">
-              {blockEvents.left.map((block, idx) => (
-                <div className="block-card" key={idx}>
-                  <h4>
-                    {block.blockNo}. {block.blockName}
-                  </h4>
-                  {block.events.map((e, i) => (
-                    <p key={i}>
-                      • {e.name} – Room {e.room} ({e.day})
-                    </p>
-                  ))}
-                </div>
-              ))}
-            </div>
+              <div className="map-center">
+                <h3 className="section-title" style={{ color: '#a8edea' }}>Campus Map & Event Locations</h3>
+                <p className="section-subtitle" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  Click on any numbered pin to open the exact location in Google Maps
+                </p>
+                <CampusMap />
+              </div>
 
-            <div className="map-center">
-              <h3 className="section-title">Campus Map & Event Locations</h3>
-              <p className="section-subtitle">
-                Click on any numbered pin to open the exact location in Google Maps
-              </p>
-              <CampusMap />
+              <div className="map-side right">
+                {blockEvents.right.map((block, idx) => (
+                  <div className="block-card" key={idx}>
+                    <h4>
+                      {block.blockNo}. {block.blockName}
+                    </h4>
+                    {block.events.map((e, i) => (
+                      <p key={i}>
+                        • {e.name} – Room {e.room} ({e.day})
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
+          </>
+        )}
 
-            <div className="map-side right">
-              {blockEvents.right.map((block, idx) => (
-                <div className="block-card" key={idx}>
-                  <h4>
-                    {block.blockNo}. {block.blockName}
-                  </h4>
-                  {block.events.map((e, i) => (
-                    <p key={i}>
-                      • {e.name} – Room {e.room} ({e.day})
-                    </p>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      {showAllocatedEventsModal && (
-        <AllocatedEventsModal onClose={handleCloseAllocatedEventsModal} />
-      )}
+        {showAllocatedEventsModal && (
+          <AllocatedEventsModal onClose={handleCloseAllocatedEventsModal} />
+        )}
+      </div>
     </Layout>
   );
 }
