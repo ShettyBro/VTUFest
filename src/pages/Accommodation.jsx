@@ -9,6 +9,8 @@ export default function Accommodation() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
   const userRole = localStorage.getItem("vtufest_role");
+  const [registrationLock, setRegistrationLock] = useState(false);
+
 
   const [loading, setLoading] = useState(true);
   const [existingAccommodation, setExistingAccommodation] = useState(null);
@@ -26,8 +28,44 @@ export default function Accommodation() {
       navigate("/");
       return;
     }
-    fetchAccommodationStatus();
+    initializeData();
   }, []);
+
+  const initializeData = async () => {
+    await checkLockStatus();
+    await fetchAccommodationStatus();
+  };
+
+  const checkLockStatus = async () => {
+    try {
+      const response = await fetch(
+        `https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setRegistrationLock(data.registration_lock); // global only
+      }
+
+    } catch (error) {
+      console.error("Lock check error:", error);
+    }
+  };
+
+  const isReadOnlyMode = registrationLock;
+
 
   const fetchAccommodationStatus = async () => {
     try {
@@ -232,6 +270,12 @@ export default function Accommodation() {
       <Layout>
         <div className="form-container">
           <h2>Accommodation Details</h2>
+          {registrationLock && (
+            <div className="lock-banner">
+              🚫 Registrations are closed by admin. No modifications are allowed.
+            </div>
+          )}
+
 
           <div className="info-message">
             <p>No accommodation request has been submitted yet.</p>
@@ -264,11 +308,46 @@ export default function Accommodation() {
   }
 
   // CASE A: MANAGER - Can submit (only once)
+   if (registrationLock) {
   return (
     <Layout>
       <div className="form-container">
         <h2>Accommodation Details</h2>
 
+        <div className="lock-banner">
+          🚫 Registrations are closed by admin. No modifications are allowed.
+        </div>
+
+        <div className="form-readonly">
+          <label>No. of Girls</label>
+          <input type="number" disabled />
+
+          <label>No. of Boys</label>
+          <input type="number" disabled />
+
+          <label>Contact Person Name</label>
+          <input disabled />
+
+          <label>Contact Mobile Number</label>
+          <input disabled />
+
+          <label>Special Requirements</label>
+          <textarea disabled rows="4" />
+        </div>
+
+        <button onClick={() => navigate('/team-dashboard')}>
+          Back to Dashboard
+        </button>
+      </div>
+    </Layout>
+  );
+}
+
+  return (
+    <Layout>
+      <div className="form-container">
+        <h2>Accommodation Details</h2>
+        
         <form onSubmit={handleSubmit}>
           <label>No. of Girls *</label>
           <input

@@ -102,6 +102,8 @@ export default function AssignEvents() {
   const [finalApproving, setFinalApproving] = useState(false);
 
   const [isLocked, setIsLocked] = useState(false);
+  const [registrationLock, setRegistrationLock] = useState(false); // global lock
+
 
   useEffect(() => {
     if (!token) {
@@ -162,13 +164,17 @@ export default function AssignEvents() {
       }
 
       const data = await response.json();
-      if (data.success && data.is_locked) {
-        setIsLocked(true);
+      if (data.success && data.data) {
+        setIsLocked(!!data.is_locked); // college final lock
+        setRegistrationLock(!!data.registration_lock); // global lock
       }
+
     } catch (error) {
       console.error("Lock status check error:", error);
     }
   };
+  const isReadOnlyMode = isLocked || registrationLock;
+
 
   const fetchEventData = async (eventSlug, forceRefresh = false) => {
     if (!forceRefresh && (loadingEvents[eventSlug] || eventData[eventSlug])) return;
@@ -232,7 +238,7 @@ export default function AssignEvents() {
   const openAddModal = (eventSlug, mode) => {
     const eventLimits = EVENT_LIMITS[eventSlug];
     const currentData = eventData[eventSlug];
-    
+
     if (mode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
       if (currentParticipants >= eventLimits?.participants) {
@@ -246,7 +252,7 @@ export default function AssignEvents() {
         return;
       }
     }
-    
+
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
     setSelectedPersonId("");
@@ -432,7 +438,7 @@ export default function AssignEvents() {
   const isAddButtonDisabled = (eventSlug, type) => {
     const limits = EVENT_LIMITS[eventSlug];
     const currentData = eventData[eventSlug];
-    
+
     if (!limits || !currentData) return false;
 
     if (type === "participant") {
@@ -442,7 +448,7 @@ export default function AssignEvents() {
       const currentCount = currentData.accompanists?.length || 0;
       return currentCount >= limits.accompanists;
     }
-    
+
     return false;
   };
 
@@ -527,7 +533,7 @@ export default function AssignEvents() {
                   fontSize: "14px",
                   fontWeight: "600",
                   border: "1px solid #86efac",
-                   width: "200px",
+                  width: "200px",
                   marginTop: "0px",
                 }}
               >
@@ -545,6 +551,11 @@ export default function AssignEvents() {
         {isLocked && (
           <div className="lock-banner">
             🔒 Final approval submitted. All event assignments are now locked and read-only.
+          </div>
+        )}
+        {registrationLock && (
+          <div className="lock-banner">
+            🔒 Registration is currently locked. All actions are read-only.
           </div>
         )}
 
@@ -572,7 +583,7 @@ export default function AssignEvents() {
                         <div className="assignment-section">
                           <div className="section-header">
                             <h4>Participants {eventData[event.slug].participants.length}/{EVENT_LIMITS[event.slug]?.participants || 0}</h4>
-                            {!isLocked && role === "manager" && (
+                            {!isReadOnlyMode && role === "manager" && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "add_participant")}
@@ -594,7 +605,7 @@ export default function AssignEvents() {
                               {eventData[event.slug].participants.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
-                                
+
                                 return (
                                   <div key={personKey} className="person-card" style={{
                                     opacity: isRemoving ? 0.6 : 1,
@@ -609,7 +620,7 @@ export default function AssignEvents() {
                                         {person.person_type === "student" ? "Student" : "Accompanist"}
                                       </span>
                                     </div>
-                                    {!isLocked && role === "manager" && (
+                                    {!isReadOnlyMode && role === "manager" && (
                                       <button
                                         className="remove-btn"
                                         onClick={() =>
@@ -638,7 +649,7 @@ export default function AssignEvents() {
                         <div className="assignment-section">
                           <div className="section-header">
                             <h4>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
-                            {!isLocked && role === "manager" && (
+                            {!isReadOnlyMode && role === "manager" && (
                               <button
                                 className="add-btn"
                                 onClick={() => openAddModal(event.slug, "add_accompanist")}
@@ -660,7 +671,7 @@ export default function AssignEvents() {
                               {eventData[event.slug].accompanists.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
-                                
+
                                 return (
                                   <div key={personKey} className="person-card" style={{
                                     opacity: isRemoving ? 0.6 : 1,
@@ -675,7 +686,7 @@ export default function AssignEvents() {
                                         {person.person_type === "student" ? "Student" : "Accompanist"}
                                       </span>
                                     </div>
-                                    {!isLocked && role === "manager" && (
+                                    {!isReadOnlyMode && role === "manager" && (
                                       <button
                                         className="remove-btn"
                                         onClick={() =>
@@ -736,10 +747,10 @@ export default function AssignEvents() {
               )}
 
               <label>
-                {modalMode === "add_participant" 
+                {modalMode === "add_participant"
                   ? "Select Student"
-                  : selectedPersonType === "student" 
-                    ? "Select Student" 
+                  : selectedPersonType === "student"
+                    ? "Select Student"
                     : "Select Accompanist"}
               </label>
               <select
@@ -772,8 +783,8 @@ export default function AssignEvents() {
               </select>
 
               <div className="modal-actions">
-                <button 
-                  onClick={handleAdd} 
+                <button
+                  onClick={handleAdd}
                   disabled={isSubmittingAdd}
                   style={{
                     opacity: isSubmittingAdd ? 0.5 : 1,

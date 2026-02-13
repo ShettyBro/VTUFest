@@ -2,19 +2,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 
-// ✅ FIXED: Use environment variable with fallback
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
 
 const API_ENDPOINTS = {
   registration: `${API_BASE_URL}/api/student/register`,
   colleges: `${API_BASE_URL}/api/shared/college-and-usn/colleges`,
-  checkUsn: `${API_BASE_URL}/api/shared/college-and-usn/check-usn`
+  checkUsn: `${API_BASE_URL}/api/shared/college-and-usn/check-usn`,
+  checkLock: `${API_BASE_URL}/api/shared/check-lock-status`
 };
 
 export default function RegisterStudent() {
   const navigate = useNavigate();
 
-  // Form state
   const [colleges, setColleges] = useState([]);
   const [form, setForm] = useState({
     usn: "",
@@ -27,14 +26,13 @@ export default function RegisterStudent() {
     confirmPassword: "",
   });
 
-  // UI state
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [usnError, setUsnError] = useState("");
   const [usnChecking, setUsnChecking] = useState(false);
-  const [usnValid, setUsnValid] = useState(false); // ✅ NEW: Track if USN is valid and not registered
-  const [formDisabled, setFormDisabled] = useState(true); // ✅ Start disabled until USN is validated
+  const [usnValid, setUsnValid] = useState(false);
+  const [formDisabled, setFormDisabled] = useState(true);
   const [showUploadSection, setShowUploadSection] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -42,16 +40,22 @@ export default function RegisterStudent() {
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  // Session state
   const [sessionData, setSessionData] = useState(null);
+  const [registrationLocked, setRegistrationLocked] = useState(false);
+  const [lockCheckLoading, setLockCheckLoading] = useState(true);
 
-  // ✅ REMOVED: Don't fetch colleges on mount
+  const isLocked = registrationLocked === true;
+
   useEffect(() => {
-    loadSessionFromStorage();
+    checkRegistrationLock();
   }, []);
 
-  // Countdown timer
+  useEffect(() => {
+    if (!isLocked) {
+      loadSessionFromStorage();
+    }
+  }, [isLocked]);
+
   useEffect(() => {
     if (timer && timer > 0 && !timerExpired) {
       const interval = setInterval(() => {
@@ -67,16 +71,36 @@ export default function RegisterStudent() {
     }
   }, [timer, timerExpired]);
 
-  // Save session to localStorage
+  const checkRegistrationLock = async () => {
+    try {
+      setLockCheckLoading(true);
+      const response = await fetch(API_ENDPOINTS.checkLock, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setRegistrationLocked(data.registration_lock === true);
+      }
+    } catch (error) {
+      console.error("Lock check error:", error);
+    } finally {
+      setLockCheckLoading(false);
+    }
+  };
+
   const saveSessionToStorage = (data) => {
+    if (isLocked) return;
     localStorage.setItem("registration_session", JSON.stringify({
       ...data,
       savedAt: Date.now(),
     }));
   };
 
-  // Load session from localStorage
   const loadSessionFromStorage = () => {
+    if (isLocked) return;
     try {
       const saved = localStorage.getItem("registration_session");
       if (!saved) return;
@@ -105,17 +129,17 @@ export default function RegisterStudent() {
     }
   };
 
-  // ✅ FIXED: Fetch colleges only after USN is validated
   const fetchColleges = async () => {
+    if (isLocked) return;
     try {
       const response = await fetch(API_ENDPOINTS.colleges);
       const data = await response.json();
 
-      console.log("Colleges API response:", data); // Debug log
+      console.log("Colleges API response:", data);
 
       if (response.ok && data.success && data.data && data.data.colleges) {
-        setColleges(data.data.colleges); // ✅ FIXED: Access nested colleges array
-        setErrorMessage(""); // Clear any previous error
+        setColleges(data.data.colleges);
+        setErrorMessage("");
       } else {
         console.error("Failed to fetch colleges:", data);
         setErrorMessage("Failed to load colleges. Please try again.");
@@ -128,8 +152,8 @@ export default function RegisterStudent() {
     }
   };
 
-  // ✅ FIXED: Check USN and fetch colleges if valid
   const checkUSN = async (usn) => {
+    if (isLocked) return;
     if (!usn.trim()) {
       setUsnError("");
       setUsnValid(false);
@@ -156,7 +180,6 @@ export default function RegisterStudent() {
 
       if (response.ok) {
         if (data.data?.exists === true) {
-          // USN already registered → BLOCK FORM
           setUsnError("USN already registered");
           setUsnValid(false);
           setFormDisabled(true);
@@ -166,7 +189,6 @@ export default function RegisterStudent() {
             navigate("/");
           }, 2000);
         } else {
-          // USN is valid → ALLOW FORM
           setUsnError("");
           setUsnValid(true);
           setFormDisabled(false);
@@ -191,7 +213,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -207,8 +228,8 @@ export default function RegisterStudent() {
     setErrorMessage("");
   };
 
-  // Handle photo selection
   const handlePhotoChange = (e) => {
+    if (isLocked) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -233,16 +254,15 @@ export default function RegisterStudent() {
     reader.readAsDataURL(file);
   };
 
-  // Format timer display
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
   };
 
-  // Handle Next button (init registration)
   const handleNext = async (e) => {
     e.preventDefault();
+    if (isLocked) return;
     setErrorMessage("");
 
     if (!form.usn.trim()) {
@@ -251,38 +271,27 @@ export default function RegisterStudent() {
     }
 
     if (!usnValid) {
-      setErrorMessage("Please enter a valid USN that is not already registered");
+      setErrorMessage("Please enter a valid USN that hasn't been registered");
       return;
     }
 
-    if (!form.fullName.trim()) {
-      setErrorMessage("Full name is required");
+    if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim() || !form.gender || !form.collegeId) {
+      setErrorMessage("All fields are required");
       return;
     }
 
-    if (!form.email.trim() || !form.email.includes("@")) {
-      setErrorMessage("Valid email is required");
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) {
+      setErrorMessage("Invalid email format");
       return;
     }
 
-    if (form.phone.length !== 10) {
-      setErrorMessage("Mobile number must be exactly 10 digits");
-      return;
-    }
-
-    if (!form.gender) {
-      setErrorMessage("Please select gender");
-      return;
-    }
-
-    if (!form.collegeId) {
-      setErrorMessage("Please select college");
+    if (!/^\d{10}$/.test(form.phone)) {
+      setErrorMessage("Phone must be 10 digits");
       return;
     }
 
     try {
       setLoading(true);
-
       const response = await fetch(API_ENDPOINTS.registration, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -290,127 +299,114 @@ export default function RegisterStudent() {
           action: "init",
           usn: form.usn.trim().toUpperCase(),
           full_name: form.fullName.trim(),
-          email: form.email.trim().toLowerCase(),
+          email: form.email.trim(),
           phone: form.phone.trim(),
           gender: form.gender,
-          college_id: parseInt(form.collegeId),
+          college_id: parseInt(form.collegeId, 10),
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setErrorMessage(data.error || "Registration initialization failed. Please try again.");
-        return;
+      if (response.ok && data.success) {
+        const sessionInfo = {
+          session_id: data.session_id,
+          expires_at: data.expires_at,
+          remaining_seconds: data.remaining_seconds,
+          formData: form,
+        };
+
+        setSessionData(sessionInfo);
+        saveSessionToStorage(sessionInfo);
+        setShowUploadSection(true);
+        setTimer(data.remaining_seconds);
+        setErrorMessage("");
+      } else {
+        setErrorMessage(data.error || "Registration initialization failed");
       }
-
-      if (!data.session_id || !data.upload_urls || !data.expires_at) {
-        setErrorMessage("Invalid server response. Please try again.");
-        return;
-      }
-
-      const sessionInfo = {
-        session_id: data.session_id,
-        upload_urls: data.upload_urls,
-        expires_at: data.expires_at,
-        remaining_seconds: data.remaining_seconds,
-        formData: form,
-      };
-
-      setSessionData(sessionInfo);
-      saveSessionToStorage(sessionInfo);
-
-      setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
-
-      setShowUploadSection(true);
     } catch (error) {
-      console.error("Error initializing registration:", error);
-      setErrorMessage("Network error. Please check your connection and try again.");
+      console.error("Init error:", error);
+      setErrorMessage("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const uploadPhoto = async () => {
-    if (!photoFile || !sessionData) {
-      setErrorMessage("Please select a photo first");
+    if (isLocked) return;
+    if (!photoFile || !sessionData?.session_id) {
+      setErrorMessage("No photo or session found");
       return;
     }
 
-    if (isUploadBlocked()) {
-      const blockUntil = localStorage.getItem("upload_blocked_until");
-      const remainingMinutes = Math.ceil((parseInt(blockUntil) - Date.now()) / 60000);
-      setErrorMessage(`Upload temporarily blocked. Please wait ${remainingMinutes} minutes.`);
+    if (uploadRetries >= 3) {
+      setErrorMessage("Maximum upload attempts reached. Please refresh and try again.");
       return;
     }
 
     try {
       setUploadStatus("uploading");
       setUploadProgress(0);
-      setErrorMessage("");
 
-      const uploadUrl = sessionData.upload_urls?.passport_photo;
+      const formData = new FormData();
+      formData.append("action", "upload_photo");
+      formData.append("session_id", sessionData.session_id);
+      formData.append("photo", photoFile);
 
-      if (!uploadUrl) {
-        setErrorMessage("Upload URL not found. Please restart registration.");
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success) {
+            setUploadStatus("success");
+            setUploadProgress(100);
+            setErrorMessage("");
+          } else {
+            setUploadStatus("failed");
+            setUploadRetries((prev) => prev + 1);
+            setErrorMessage(data.error || "Upload failed");
+          }
+        } else {
+          setUploadStatus("failed");
+          setUploadRetries((prev) => prev + 1);
+          setErrorMessage("Upload failed. Please try again.");
+        }
+      };
+
+      xhr.onerror = () => {
         setUploadStatus("failed");
-        return;
-      }
+        setUploadRetries((prev) => prev + 1);
+        setErrorMessage("Network error during upload");
+      };
 
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-          "Content-Type": photoFile.type,
-        },
-        body: photoFile,
-      });
+      xhr.open("POST", API_ENDPOINTS.registration);
+      xhr.send(formData);
 
-      if (uploadResponse.ok || uploadResponse.status === 201) {
-        setUploadStatus("success");
-        setUploadProgress(100);
-        setUploadRetries(0);
-        localStorage.removeItem("upload_blocked_until");
-      } else {
-        const errorText = await uploadResponse.text();
-        console.error("Upload failed:", uploadResponse.status, errorText);
-        throw new Error(`Upload failed with status: ${uploadResponse.status}`);
-      }
     } catch (error) {
-      console.error("Photo upload error:", error);
-
-      const newRetries = uploadRetries + 1;
-      setUploadRetries(newRetries);
-
-      if (newRetries >= 3) {
-        const blockUntil = Date.now() + 30 * 60 * 1000;
-        localStorage.setItem("upload_blocked_until", blockUntil.toString());
-        setErrorMessage("Upload failed 3 times. Please try again after 30 minutes.");
-      } else {
-        setErrorMessage(`Upload failed (Attempt ${newRetries}/3). Please try again.`);
-      }
-
+      console.error("Upload error:", error);
       setUploadStatus("failed");
-      setUploadProgress(0);
-    }
-  };
-
-  const isUploadBlocked = () => {
-    const blockUntil = localStorage.getItem("upload_blocked_until");
-    if (!blockUntil) return false;
-
-    const blockTime = parseInt(blockUntil);
-    if (Date.now() < blockTime) {
-      return true;
-    } else {
-      localStorage.removeItem("upload_blocked_until");
-      return false;
+      setUploadRetries((prev) => prev + 1);
+      setErrorMessage("Upload failed. Please try again.");
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (isLocked) return;
     setErrorMessage("");
+
+    if (uploadStatus !== "success") {
+      setErrorMessage("Please upload your photo first");
+      return;
+    }
 
     if (!form.password || form.password.length < 8) {
       setErrorMessage("Password must be at least 8 characters");
@@ -422,11 +418,6 @@ export default function RegisterStudent() {
       return;
     }
 
-    if (uploadStatus !== "success") {
-      setErrorMessage("Please upload your photo first");
-      return;
-    }
-
     if (!sessionData?.session_id) {
       setErrorMessage("Session expired. Please restart registration.");
       return;
@@ -434,7 +425,6 @@ export default function RegisterStudent() {
 
     try {
       setLoading(true);
-
       const response = await fetch(API_ENDPOINTS.registration, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -447,21 +437,15 @@ export default function RegisterStudent() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setErrorMessage(data.error || data.message || "Registration failed. Please try again.");
-        return;
-      }
-
-      localStorage.removeItem("registration_session");
-      localStorage.removeItem("upload_blocked_until");
-
-      alert("Registration successful! You can now login with your credentials.");
-
-      setTimeout(() => {
+      if (response.ok && data.success) {
+        localStorage.removeItem("registration_session");
+        alert("Registration successful! Please wait for approval.");
         navigate("/");
-      }, 1500);
+      } else {
+        setErrorMessage(data.error || "Registration failed");
+      }
     } catch (error) {
-      console.error("Error finalizing registration:", error);
+      console.error("Finalize error:", error);
       setErrorMessage("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -469,265 +453,383 @@ export default function RegisterStudent() {
   };
 
   const isUploadComplete = uploadStatus === "success";
+  const isUploadBlocked = () => uploadRetries >= 3;
+
+  if (lockCheckLoading) {
+    return (
+      <div className="register-page" style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      }}>
+        <div style={{ 
+          color: "white", 
+          fontSize: "18px", 
+          fontWeight: "500" 
+        }}>
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="register-page">
-      <h2>Student Registration</h2>
-
-      {errorMessage && (
-        <div style={{
-          backgroundColor: "#ffebee",
-          color: "#c62828",
-          padding: "12px 20px",
-          borderRadius: "8px",
-          marginBottom: "20px",
-          textAlign: "center",
-          border: "1px solid #ef5350",
-          fontSize: "14px",
-          fontWeight: "500"
-        }}>
-          ⚠️ {errorMessage}
-        </div>
-      )}
-
-      {!showUploadSection ? (
-        <form className="register-card" onSubmit={handleNext}>
-          <label>USN / Registration Number *</label>
-          <input
-            name="usn"
-            value={form.usn}
-            onChange={handleChange}
-            onBlur={(e) => checkUSN(e.target.value)}
-            placeholder="e.g., VTU2026CS001 (alphanumeric only)"
-            disabled={loading}
-            required
-          />
-          {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
-          {usnError && (
-            <p style={{ color: "red", fontSize: "12px" }}>
-              {usnError}
-              {usnError.includes("already registered") && " Redirecting to login..."}
-            </p>
-          )}
-
-          <label>Full Name *</label>
-          <input
-            name="fullName"
-            value={form.fullName}
-            onChange={handleChange}
-            placeholder="Enter your full name"
-            disabled={formDisabled || loading}
-            style={{ opacity: formDisabled ? 0.5 : 1 }}
-            required
-          />
-
-          <label>College *</label>
-          <select
-            name="collegeId"
-            value={form.collegeId}
-            onChange={handleChange}
-            disabled={formDisabled || loading}
-            style={{ opacity: formDisabled ? 0.5 : 1 }}
-            required
-          >
-            <option value="">Select College</option>
-            {colleges.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.college_name}, {c.place || "N/A"}
-              </option>
-            ))}
-          </select>
-
-          <label>Email Address *</label>
-          <input
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-            disabled={formDisabled || loading}
-            style={{ opacity: formDisabled ? 0.5 : 1 }}
-            required
-          />
-
-          <label>Mobile Number *</label>
-          <input
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            placeholder="e.g., 9876543210 (10 digits)"
-            maxLength="10"
-            disabled={formDisabled || loading}
-            style={{ opacity: formDisabled ? 0.5 : 1 }}
-            required
-          />
-
-          <label>Gender *</label>
-          <select
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-            disabled={formDisabled || loading}
-            style={{ opacity: formDisabled ? 0.5 : 1 }}
-            required
-          >
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-
-          <button type="submit" disabled={formDisabled || loading || usnChecking}>
-            {loading ? "Processing..." : "Next →"}
-          </button>
-
-          <p className="back-link" onClick={() => navigate("/")}>
-            ← Back to Login
-          </p>
-        </form>
-      ) : (
-        <form className="register-card" onSubmit={handleRegister}>
-          {timer !== null && !timerExpired && (
-            <div style={{
-              textAlign: "center",
-              color: timer < 30 ? "#d32f2f" : "#2e7d32",
-              fontWeight: "bold",
-              marginBottom: "15px",
-              fontSize: "16px"
-            }}>
-              ⏱️ Session expires in: {formatTimer(timer)}
-            </div>
-          )}
-
-          {timerExpired && (
-            <div style={{
-              textAlign: "center",
-              color: "#d32f2f",
-              fontWeight: "bold",
-              marginBottom: "15px",
-              fontSize: "16px"
-            }}>
-              ⚠️ Registration session expired. Please restart.
-            </div>
-          )}
-
-          <label>Passport Size Photo * (PNG/JPG, max 5MB)</label>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg"
-            onChange={handlePhotoChange}
-            disabled={timerExpired || uploadStatus === "success"}
-          />
-
-          {photoPreview && (
-            <div style={{ textAlign: "center", margin: "15px 0" }}>
-              <img
-                src={photoPreview}
-                alt="Preview"
-                style={{
-                  maxWidth: "150px",
-                  maxHeight: "150px",
-                  borderRadius: "8px",
-                  border: "2px solid #ddd"
-                }}
-              />
-            </div>
-          )}
-
-          {photoFile && uploadStatus !== "success" && (
-            <button
-              type="button"
-              onClick={uploadPhoto}
-              disabled={timerExpired || loading || uploadStatus === "uploading"}
-              style={{ marginTop: "10px" }}
-            >
-              {uploadStatus === "uploading"
-                ? `Uploading... ${uploadProgress}%`
-                : "📤 Upload Photo"}
-            </button>
-          )}
-
-          {uploadStatus === "success" && (
-            <p style={{ color: "#2e7d32", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
-              ✓ Photo uploaded successfully
-            </p>
-          )}
-
-          {uploadStatus === "failed" && uploadRetries < 3 && (
-            <p style={{ color: "#d32f2f", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
-              ✗ Upload failed. Please try again (Attempt {uploadRetries}/3)
-            </p>
-          )}
-
-          <label>Create Password * (min 8 characters)</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Enter password"
-            disabled={timerExpired || loading}
-            required
-          />
-
-          <label>Confirm Password *</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            placeholder="Confirm password"
-            disabled={timerExpired || loading}
-            required
-          />
-
-          {!isUploadComplete && !timerExpired && (
-            <p style={{
-              color: "#d32f2f",
-              fontSize: "13px",
-              textAlign: "center",
-              marginTop: "10px",
-              marginBottom: "5px",
-              fontWeight: "500"
-            }}>
-              ⚠️ Please upload your photo to proceed
-            </p>
-          )}
-
-          <button
-            type="submit"
-            title={!isUploadComplete ? "Upload Photo to proceed" : ""}
-            disabled={
-              timerExpired ||
-              loading ||
-              !isUploadComplete ||
-              isUploadBlocked()
-            }
-            style={{
-              cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
-                ? "not-allowed"
-                : "pointer",
-              opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
-                ? 0.5
-                : 1,
-              transition: "opacity 0.2s ease"
-            }}
-          >
-            {loading ? "Registering..." : "✓ Complete Registration"}
-          </button>
-
-          <p className="back-link" onClick={() => {
-            setShowUploadSection(false);
-            setSessionData(null);
-            setUploadStatus("");
-            setPhotoFile(null);
-            setPhotoPreview("");
-            localStorage.removeItem("registration_session");
+    <div className="register-page" style={{ position: "relative" }}>
+      {isLocked && (
+        <>
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            zIndex: 9998
+          }} />
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            animation: "fadeIn 0.4s ease-in-out"
           }}>
-            ← Back to Form
-          </p>
-        </form>
+            <div style={{
+              background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
+              borderRadius: "24px",
+              padding: "60px 50px",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(102, 126, 234, 0.1)",
+              textAlign: "center",
+              maxWidth: "480px",
+              width: "90%",
+              animation: "scaleIn 0.4s ease-out",
+              border: "1px solid rgba(255, 255, 255, 0.3)"
+            }}>
+              <div style={{
+                fontSize: "72px",
+                marginBottom: "24px",
+                animation: "bounce 2s ease-in-out infinite"
+              }}>
+                🔒
+              </div>
+              <h2 style={{
+                fontSize: "32px",
+                fontWeight: "700",
+                color: "#1a202c",
+                marginBottom: "16px",
+                letterSpacing: "-0.5px"
+              }}>
+                Registrations Are Closed
+              </h2>
+              <p style={{
+                fontSize: "16px",
+                color: "#718096",
+                lineHeight: "1.6",
+                fontWeight: "400"
+              }}>
+                Please contact administration for further details.
+              </p>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+            @keyframes scaleIn {
+              from {
+                opacity: 0;
+                transform: scale(0.9);
+              }
+              to {
+                opacity: 1;
+                transform: scale(1);
+              }
+            }
+            @keyframes bounce {
+              0%, 100% {
+                transform: translateY(0);
+              }
+              50% {
+                transform: translateY(-10px);
+              }
+            }
+          `}</style>
+        </>
       )}
+
+      <div style={{ filter: isLocked ? "blur(8px)" : "none", pointerEvents: isLocked ? "none" : "auto" }}>
+        <h2 className="register-title">Student Registration</h2>
+
+        {errorMessage && (
+          <div style={{
+            backgroundColor: "#ffebee",
+            color: "#c62828",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            textAlign: "center",
+            border: "1px solid #ef5350",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}>
+            ⚠️ {errorMessage}
+          </div>
+        )}
+
+        {!showUploadSection ? (
+          <form className="register-card" onSubmit={handleNext}>
+            <label>USN / Registration Number *</label>
+            <input
+              name="usn"
+              value={form.usn}
+              onChange={handleChange}
+              onBlur={(e) => checkUSN(e.target.value)}
+              placeholder="e.g., VTU2026CS001 (alphanumeric only)"
+              disabled={loading || isLocked}
+              required
+            />
+            {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
+            {usnError && (
+              <p style={{ color: "red", fontSize: "12px" }}>
+                {usnError}
+                {usnError.includes("already registered") && " Redirecting to login..."}
+              </p>
+            )}
+
+            <label>Full Name *</label>
+            <input
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+              disabled={formDisabled || loading || isLocked}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
+
+            <label>College *</label>
+            <select
+              name="collegeId"
+              value={form.collegeId}
+              onChange={handleChange}
+              disabled={formDisabled || loading || isLocked}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            >
+              <option value="">Select College</option>
+              {colleges.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.college_name}, {c.place || "N/A"}
+                </option>
+              ))}
+            </select>
+
+            <label>Email Address *</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              disabled={formDisabled || loading || isLocked}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
+
+            <label>Mobile Number *</label>
+            <input
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="e.g., 9876543210 (10 digits)"
+              maxLength="10"
+              disabled={formDisabled || loading || isLocked}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
+
+            <label>Gender *</label>
+            <select
+              name="gender"
+              value={form.gender}
+              onChange={handleChange}
+              disabled={formDisabled || loading || isLocked}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <button type="submit" disabled={formDisabled || loading || usnChecking || isLocked}>
+              {loading ? "Processing..." : "Next →"}
+            </button>
+
+            <p className="back-link" onClick={() => !isLocked && navigate("/")}>
+              ← Back to Login
+            </p>
+          </form>
+        ) : (
+          <form className="register-card" onSubmit={handleRegister}>
+            {timer !== null && !timerExpired && (
+              <div style={{
+                textAlign: "center",
+                color: timer < 30 ? "#d32f2f" : "#2e7d32",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                fontSize: "16px"
+              }}>
+                ⏱️ Session expires in: {formatTimer(timer)}
+              </div>
+            )}
+
+            {timerExpired && (
+              <div style={{
+                textAlign: "center",
+                color: "#d32f2f",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                fontSize: "16px"
+              }}>
+                ⚠️ Registration session expired. Please restart.
+              </div>
+            )}
+
+            <label>Passport Size Photo * (PNG/JPG, max 5MB)</label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handlePhotoChange}
+              disabled={timerExpired || uploadStatus === "success" || isLocked}
+            />
+
+            {photoPreview && (
+              <div style={{ textAlign: "center", margin: "15px 0" }}>
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  style={{
+                    maxWidth: "150px",
+                    maxHeight: "150px",
+                    borderRadius: "8px",
+                    border: "2px solid #ddd"
+                  }}
+                />
+              </div>
+            )}
+
+            {photoFile && uploadStatus !== "success" && (
+              <button
+                type="button"
+                onClick={uploadPhoto}
+                disabled={timerExpired || loading || uploadStatus === "uploading" || isLocked}
+                style={{ marginTop: "10px" }}
+              >
+                {uploadStatus === "uploading"
+                  ? `Uploading... ${uploadProgress}%`
+                  : "📤 Upload Photo"}
+              </button>
+            )}
+
+            {uploadStatus === "success" && (
+              <p style={{ color: "#2e7d32", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
+                ✓ Photo uploaded successfully
+              </p>
+            )}
+
+            {uploadStatus === "failed" && uploadRetries < 3 && (
+              <p style={{ color: "#d32f2f", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
+                ✗ Upload failed. Please try again (Attempt {uploadRetries}/3)
+              </p>
+            )}
+
+            <label>Create Password * (min 8 characters)</label>
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Enter password"
+              disabled={timerExpired || loading || isLocked}
+              required
+            />
+
+            <label>Confirm Password *</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm password"
+              disabled={timerExpired || loading || isLocked}
+              required
+            />
+
+            {!isUploadComplete && !timerExpired && (
+              <p style={{
+                color: "#d32f2f",
+                fontSize: "13px",
+                textAlign: "center",
+                marginTop: "10px",
+                marginBottom: "5px",
+                fontWeight: "500"
+              }}>
+                ⚠️ Please upload your photo to proceed
+              </p>
+            )}
+
+            <button
+              type="submit"
+              title={!isUploadComplete ? "Upload Photo to proceed" : ""}
+              disabled={
+                timerExpired ||
+                loading ||
+                !isUploadComplete ||
+                isUploadBlocked() ||
+                isLocked
+              }
+              style={{
+                cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked() || isLocked)
+                  ? "not-allowed"
+                  : "pointer",
+                opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked() || isLocked)
+                  ? 0.5
+                  : 1,
+                transition: "opacity 0.2s ease"
+              }}
+            >
+              {loading ? "Registering..." : "✓ Complete Registration"}
+            </button>
+
+            <p className="back-link" onClick={() => {
+              if (isLocked) return;
+              setShowUploadSection(false);
+              setSessionData(null);
+              setUploadStatus("");
+              setPhotoFile(null);
+              setPhotoPreview("");
+              localStorage.removeItem("registration_session");
+            }}>
+              ← Back to Form
+            </p>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

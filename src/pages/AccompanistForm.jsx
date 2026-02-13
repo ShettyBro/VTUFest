@@ -12,6 +12,7 @@ export default function AccompanistForm() {
   const [loading, setLoading] = useState(true);
   const [quotaUsed, setQuotaUsed] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
+  const [registrationLock, setRegistrationLock] = useState(false); // global lock
 
   const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState(1);
@@ -116,14 +117,17 @@ export default function AccompanistForm() {
       if (data.success && data.data && data.data.accompanists) {
         setAccompanists(data.data.accompanists);
         setAccompanistsLoaded(true);
-        if (data.data.is_locked !== undefined) {
+        if (data.success && data.data) {
           setIsLocked(data.data.is_locked);
+          setRegistrationLock(data.data.registration_lock);
         }
+
       }
     } catch (error) {
       console.error("Fetch accompanists error:", error);
     }
   };
+  const isReadOnlyMode = isLocked || registrationLock;
 
   const handleSessionExpired = () => {
     alert("Session expired. Please login again.");
@@ -140,7 +144,7 @@ export default function AccompanistForm() {
   };
 
   const openModal = () => {
-    if (isLocked) {
+    if (isReadOnlyMode) {
       return;
     }
 
@@ -333,7 +337,7 @@ export default function AccompanistForm() {
   };
 
   const removeAccompanist = async (accompanist_id) => {
-    if (isLocked) {
+    if (isReadOnlyMode) {
       return;
     }
 
@@ -400,18 +404,31 @@ export default function AccompanistForm() {
           <p className="subtitle">VTU HABBA 2026 – Accompanist Registration</p>
 
           {isLocked && (
-            <div style={{ 
-              padding: "12px", 
-              marginBottom: "20px", 
-              backgroundColor: "#fff3cd", 
-              border: "1px solid #ffc107", 
-              borderRadius: "4px", 
-              color: "#856404", 
-              textAlign: "center" 
+            <div style={{
+              padding: "12px",
+              marginBottom: "20px",
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "4px",
+              color: "#856404",
+              textAlign: "center"
             }}>
               Final approval has been completed. Edits are not allowed.
             </div>
           )}
+          {registrationLock && (
+           <div style={{
+              padding: "12px",
+              marginBottom: "20px",
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "4px",
+              color: "#856404",
+              textAlign: "center"
+            }}>
+              Registration is currently locked. Edits are not allowed.
+            </div>
+            )}
 
           <div className="capacity-info">
             <span>
@@ -423,7 +440,7 @@ export default function AccompanistForm() {
           </div>
 
           <div className="add-section">
-            <button className="add-btn" onClick={openModal} disabled={remainingSlots <= 0 || isLocked}>
+            <button className="add-btn" onClick={openModal} disabled={remainingSlots <= 0 || isReadOnlyMode}>
               + Add Accompanist
             </button>
           </div>
@@ -456,7 +473,7 @@ export default function AccompanistForm() {
                     <button
                       className="remove-btn"
                       onClick={() => removeAccompanist(accompanist.accompanist_id)}
-                      disabled={removingId === accompanist.accompanist_id || isLocked}
+                      disabled={removingId === accompanist.accompanist_id || isReadOnlyMode}
                     >
                       {removingId === accompanist.accompanist_id ? "Removing..." : "Remove"}
                     </button>
