@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth.css"; // SWITCHED TO AUTH CSS
+import "../styles/register.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
 
@@ -473,330 +473,289 @@ export default function RegisterStudent() {
   const isUploadComplete = uploadStatus === "success";
   const isUploadBlocked = () => uploadRetries >= 3 && uploadStatus !== "success";
 
-  // Loading State
   if (!lockCheckComplete) {
     return (
-      <div className="auth-page">
-        <div style={{ color: "white", fontSize: "1.2rem" }}>Checking registration status...</div>
+      <div className="register-page">
+        <div style={{ marginTop: "120px", fontWeight: "600" }}>
+          Checking registration status...
+        </div>
       </div>
     );
   }
 
+
   return (
-    <div className="auth-page">
-      {/* Animated Background Shapes */}
-      <div className="shape shape-1"></div>
-      <div className="shape shape-2"></div>
-
-      <div className="auth-container">
-        {/* --- LEFT PANEL: BRANDING --- */}
-        <div className="auth-info-panel">
-          <div className="auth-brand">
-            <img src="/main.webp" alt="VTU Fest Logos" style={{ height: 'auto', maxWidth: '100%', maxHeight: '120px' }} />
-          </div>
-          <div className="brand-text">
-            <h3>Acharya VTU HABBA 2026</h3>
-            <span>Visvesvaraya Technological University</span>
-          </div>
-          <button className="toggle-btn" onClick={() => navigate("/")}>
-            Already Registered? Login
-          </button>
-        </div>
-
-        {/* --- RIGHT PANEL: FORM --- */}
-        <div className="auth-form-panel">
-
-          {/* LOCKED STATE */}
-          {isLocked ? (
-            <div style={{ textAlign: "center", color: "white" }}>
-              <div style={{ fontSize: "3rem", marginBottom: "20px" }}>🔒</div>
-              <h2 style={{ fontSize: "1.8rem", marginBottom: "10px" }}>Registrations Closed</h2>
-              <p>Please contact administration for further details.</p>
+    <div className="register-page">
+      {isLocked && (
+        <>
+          <div className="reg-lock-backdrop"></div>
+          <div className="reg-lock-container">
+            <div className="reg-lock-modal">
+              <div className="reg-lock-icon">🔒</div>
+              <h2 className="reg-lock-title">Registrations Are Closed</h2>
+              <p className="reg-lock-text">Please contact administration for further details.</p>
             </div>
-          ) : (
-            <>
-              {/* Error Message */}
-              {errorMessage && (
-                <div style={{
-                  backgroundColor: "rgba(239, 83, 80, 0.2)",
-                  color: "#ffcdd2",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  marginBottom: "20px",
-                  textAlign: "center",
-                  border: "1px solid rgba(239, 83, 80, 0.5)",
-                  fontSize: "0.9rem"
-                }}>
-                  ⚠️ {errorMessage}
-                </div>
-              )}
+          </div>
+        </>
+      )}
 
-              {/* STEP 1: INITIAL DETAILS */}
-              {!showUploadSection ? (
-                <form className="auth-form" onSubmit={handleNext}>
-                  <h2 className="form-title">Student Registration</h2>
+      <div className={isLocked ? "reg-content-locked" : ""}>
+        <h2 className="register-title">Student Registration</h2>
 
-                  <div className="input-group">
-                    <label>USN / Registration Number *</label>
-                    <input
-                      name="usn"
-                      value={form.usn}
-                      onChange={handleChange}
-                      onBlur={(e) => checkUSN(e.target.value)}
-                      placeholder="e.g., VTU2026CS001"
-                      disabled={loading}
-                      required
-                    />
-                    {usnChecking && <small style={{ color: "#90caf9" }}>Checking USN...</small>}
-                    {usnError && (
-                      <small style={{ color: "#ef9a9a" }}>
-                        {usnError}
-                        {usnError.includes("already registered") && " Redirecting..."}
-                      </small>
-                    )}
-                  </div>
+        {errorMessage && (
+          <div style={{
+            backgroundColor: "#ffebee",
+            color: "#c62828",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            textAlign: "center",
+            border: "1px solid #ef5350",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}>
+            ⚠️ {errorMessage}
+          </div>
+        )}
 
-                  <div className="input-group">
-                    <label>Full Name *</label>
-                    <input
-                      name="fullName"
-                      value={form.fullName}
-                      onChange={handleChange}
-                      placeholder="Enter full name"
-                      disabled={formDisabled || loading}
-                      style={{ opacity: formDisabled ? 0.5 : 1 }}
-                      required
-                    />
-                  </div>
+        {!showUploadSection ? (
+          <form className="register-card" onSubmit={handleNext}>
+            <label>USN / Registration Number *</label>
+            <input
+              name="usn"
+              value={form.usn}
+              onChange={handleChange}
+              onBlur={(e) => checkUSN(e.target.value)}
+              placeholder="e.g., VTU2026CS001 (alphanumeric only)"
+              disabled={loading}
+              required
+            />
+            {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
+            {usnError && (
+              <p style={{ color: "red", fontSize: "12px" }}>
+                {usnError}
+                {usnError.includes("already registered") && " Redirecting to login..."}
+              </p>
+            )}
 
-                  <div className="input-group">
-                    <label>College *</label>
-                    <select
-                      name="collegeId"
-                      value={form.collegeId}
-                      onChange={handleChange}
-                      disabled={formDisabled || loading}
-                      style={{ opacity: formDisabled ? 0.5 : 1 }}
-                      required
-                    >
-                      <option value="">Select College</option>
-                      {colleges.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.college_name}, {c.place || "N/A"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            <label>Full Name *</label>
+            <input
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
 
-                  <div className="input-group">
-                    <label>Email Address *</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="Enter email"
-                      disabled={formDisabled || loading}
-                      style={{ opacity: formDisabled ? 0.5 : 1 }}
-                      required
-                    />
-                  </div>
+            <label>College *</label>
+            <select
+              name="collegeId"
+              value={form.collegeId}
+              onChange={handleChange}
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            >
+              <option value="">Select College</option>
+              {colleges.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.college_name}, {c.place || "N/A"}
+                </option>
+              ))}
+            </select>
 
-                  <div className="input-group">
-                    <label>Mobile Number *</label>
-                    <input
-                      name="phone"
-                      value={form.phone}
-                      onChange={handleChange}
-                      placeholder="10 digit number"
-                      maxLength="10"
-                      disabled={formDisabled || loading}
-                      style={{ opacity: formDisabled ? 0.5 : 1 }}
-                      required
-                    />
-                  </div>
+            <label>Email Address *</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
 
-                  <div className="input-group">
-                    <label>Gender *</label>
-                    <select
-                      name="gender"
-                      value={form.gender}
-                      onChange={handleChange}
-                      disabled={formDisabled || loading}
-                      style={{ opacity: formDisabled ? 0.5 : 1 }}
-                      required
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
+            <label>Mobile Number *</label>
+            <input
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="e.g., 9876543210 (10 digits)"
+              maxLength="10"
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
 
-                  <button
-                    className="auth-btn" /* Using auth-btn from auth.css if available, else style inline */
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      background: "var(--btn-bg, linear-gradient(135deg, #667eea 0%, #764ba2 100%))",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "30px",
-                      fontWeight: "600",
-                      cursor: (formDisabled || loading || usnChecking) ? "not-allowed" : "pointer",
-                      opacity: (formDisabled || loading || usnChecking) ? 0.7 : 1,
-                      marginTop: "10px"
-                    }}
-                    disabled={formDisabled || loading || usnChecking}
-                  >
-                    {loading ? "Processing..." : "Next Step"}
-                  </button>
-                </form>
-              ) : (
-                /* STEP 2: PHOTO & PASSWORD */
-                <form className="auth-form" onSubmit={handleRegister}>
-                  <h2 className="form-title">Complete Registration</h2>
+            <label>Gender *</label>
+            <select
+              name="gender"
+              value={form.gender}
+              onChange={handleChange}
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
 
-                  {timer !== null && !timerExpired && (
-                    <div className="timer-display" style={{ textAlign: "center", marginBottom: "15px", fontWeight: "600", color: "#a8edea" }}>
-                      Draft expires in: {formatTimer(timer).replace(" remaining", "")}
-                    </div>
-                  )}
+            <button type="submit" disabled={formDisabled || loading || usnChecking}>
+              {loading ? "Processing..." : "Next →"}
+            </button>
 
-                  {timerExpired && (
-                    <div style={{ textAlign: "center", color: "#ef9a9a", marginBottom: "15px" }}>
-                      Session expired. Please restart.
-                    </div>
-                  )}
+            <p className="back-link" onClick={() => navigate("/")}>
+              ← Back to Login
+            </p>
+          </form>
+        ) : (
+          <form className="register-card" onSubmit={handleRegister}>
+            {timer !== null && !timerExpired && (
+              <div style={{
+                textAlign: "center",
+                color: timer < 30 ? "#d32f2f" : "#2e7d32",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                fontSize: "16px"
+              }}>
+                ⏱️ Session expires in: {formatTimer(timer)}
+              </div>
+            )}
 
-                  {/* PHOTO UPLOAD SECTION - MATCHING AUTHPAGE UI */}
-                  <div className="file-upload-wrapper">
-                    <div className="preview-container">
-                      {photoPreview ? (
-                        <img src={photoPreview} alt="Preview" className="preview-img" />
-                      ) : (
-                        <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📷</div>
-                      )}
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <label htmlFor="file-upload" className="custom-file-upload">
-                        <span style={{ marginRight: '10px' }}>📁</span>
-                        {photoFile ? "Change Photo" : "Choose Photo"}
-                      </label>
-                      <input
-                        id="file-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoChange}
-                        disabled={timerExpired || uploadStatus === "success"}
-                      />
-                      {photoFile && (
-                        <div className="file-name-display">
-                          {photoFile.name}
-                        </div>
-                      )}
-                    </div>
+            {timerExpired && (
+              <div style={{
+                textAlign: "center",
+                color: "#d32f2f",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                fontSize: "16px"
+              }}>
+                ⚠️ Registration session expired. Please restart.
+              </div>
+            )}
 
-                    {/* Upload Trigger Button */}
-                    {photoFile && uploadStatus !== "success" && (
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={uploadPhoto}
-                        disabled={timerExpired || loading || uploadStatus === "uploading"}
-                        style={{
-                          marginTop: '20px',
-                          borderRadius: '50px',
-                          padding: '10px 25px',
-                          background: 'rgba(255,255,255,0.1)',
-                          border: "1px solid rgba(255,255,255,0.2)",
-                          color: "white",
-                          cursor: "pointer"
-                        }}
-                      >
-                        {uploadStatus === "uploading" ? `Uploading ${uploadProgress}%` : "Upload Now"}
-                      </button>
-                    )}
+            <label>Passport Size Photo * (PNG/JPG, max 5MB)</label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handlePhotoChange}
+              disabled={timerExpired || uploadStatus === "success"}
+            />
 
-                    {uploadStatus === "success" && <div style={{ color: "#a5d6a7", marginTop: "10px", fontWeight: "500" }}>✓ Photo Uploaded</div>}
-                    {uploadStatus === "failed" && <div style={{ color: "#ef9a9a", marginTop: "10px" }}>✗ Upload Failed</div>}
-                  </div>
+            {photoPreview && (
+              <div style={{ textAlign: "center", margin: "15px 0" }}>
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  style={{
+                    maxWidth: "150px",
+                    maxHeight: "150px",
+                    borderRadius: "8px",
+                    border: "2px solid #ddd"
+                  }}
+                />
+              </div>
+            )}
 
-                  <div className="input-group" style={{ marginTop: "20px" }}>
-                    <label>Create Password *</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={form.password}
-                      onChange={handleChange}
-                      disabled={timerExpired || loading}
-                      required
-                    />
-                  </div>
+            {photoFile && uploadStatus !== "success" && (
+              <button
+                type="button"
+                onClick={uploadPhoto}
+                disabled={timerExpired || loading || uploadStatus === "uploading"}
+                style={{ marginTop: "10px" }}
+              >
+                {uploadStatus === "uploading"
+                  ? `Uploading... ${uploadProgress}%`
+                  : "📤 Upload Photo"}
+              </button>
+            )}
 
-                  <div className="input-group">
-                    <label>Confirm Password *</label>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={form.confirmPassword}
-                      onChange={handleChange}
-                      disabled={timerExpired || loading}
-                      required
-                    />
-                  </div>
+            {uploadStatus === "success" && (
+              <p style={{ color: "#2e7d32", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
+                ✓ Photo uploaded successfully
+              </p>
+            )}
 
-                  <button
-                    className="auth-btn"
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      background: "var(--btn-bg, linear-gradient(135deg, #667eea 0%, #764ba2 100%))",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "30px",
-                      fontWeight: "600",
-                      cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked()) ? "not-allowed" : "pointer",
-                      opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked()) ? 0.7 : 1,
-                      marginTop: "10px"
-                    }}
-                    disabled={
-                      timerExpired ||
-                      loading ||
-                      !isUploadComplete ||
-                      isUploadBlocked()
-                    }
-                  >
-                    {loading ? "Registering..." : "Complete Registration"}
-                  </button>
+            {uploadStatus === "failed" && uploadRetries < 3 && (
+              <p style={{ color: "#d32f2f", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
+                ✗ Upload failed. Please try again (Attempt {uploadRetries}/3)
+              </p>
+            )}
 
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={() => {
-                      setShowUploadSection(false);
-                      setSessionData(null);
-                      setUploadStatus("");
-                      setPhotoFile(null);
-                      setPhotoPreview("");
-                      localStorage.removeItem("registration_session");
-                    }}
-                    style={{
-                      background: "transparent",
-                      color: "rgba(255,255,255,0.7)",
-                      border: "none",
-                      marginTop: "15px",
-                      cursor: "pointer",
-                      textDecoration: "underline"
-                    }}
-                  >
-                    Back to Form
-                  </button>
-                </form>
-              )}
-            </>
-          )}
-        </div>
+            <label>Create Password * (min 8 characters)</label>
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Enter password"
+              disabled={timerExpired || loading}
+              required
+            />
+
+            <label>Confirm Password *</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm password"
+              disabled={timerExpired || loading}
+              required
+            />
+
+            {!isUploadComplete && !timerExpired && (
+              <p style={{
+                color: "#d32f2f",
+                fontSize: "13px",
+                textAlign: "center",
+                marginTop: "10px",
+                marginBottom: "5px",
+                fontWeight: "500"
+              }}>
+                ⚠️ Please upload your photo to proceed
+              </p>
+            )}
+
+            <button
+              type="submit"
+              title={!isUploadComplete ? "Upload Photo to proceed" : ""}
+              disabled={
+                timerExpired ||
+                loading ||
+                !isUploadComplete ||
+                isUploadBlocked()
+              }
+              style={{
+                cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
+                  ? "not-allowed"
+                  : "pointer",
+                opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
+                  ? 0.5
+                  : 1,
+                transition: "opacity 0.2s ease"
+              }}
+            >
+              {loading ? "Registering..." : "✓ Complete Registration"}
+            </button>
+
+            <p className="back-link" onClick={() => {
+              setShowUploadSection(false);
+              setSessionData(null);
+              setUploadStatus("");
+              setPhotoFile(null);
+              setPhotoPreview("");
+              localStorage.removeItem("registration_session");
+            }}>
+              ← Back to Form
+            </p>
+          </form>
+        )}
       </div>
     </div>
   );
