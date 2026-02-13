@@ -259,7 +259,10 @@ export default function AuthPage({ initialView = "login" }) {
 
             // Backend returns session_id directly on success
             if (res.ok && data.session_id) {
-                setRegSession({ session_id: data.session_id });
+                setRegSession({
+                    session_id: data.session_id,
+                    upload_urls: data.upload_urls
+                });
                 setRegTimer(data.remaining_seconds);
                 setRegStep(2);
             } else {
@@ -273,37 +276,44 @@ export default function AuthPage({ initialView = "login" }) {
     };
 
     const handlePhotoUpload = async () => {
-        if (!photoFile || !regSession) return;
+        if (!photoFile || !regSession || !regSession.upload_urls?.passport_photo) return;
         setUploadStatus("uploading");
 
-        const formData = new FormData();
-        formData.append("photo", photoFile);
-        formData.append("session_id", regSession.session_id);
+        try {
+            const sasUrl = regSession.upload_urls.passport_photo;
 
-        const xhr = new XMLHttpRequest();
-        xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                const data = JSON.parse(xhr.responseText);
-                // Backend might return { success: true } or just a message? 
-                // The provided backend code for upload is NOT shown, but usually it's standard.
-                // Assuming upload endpoint returns success: true based entirely on previous context or assuming standard.
-                // If it fails, user will report. But for register.js, we saw code.
-                if (data.success || data.message) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", sasUrl, true);
+            xhr.setRequestHeader("x-ms-blob-type", "BlockBlob");
+            xhr.setRequestHeader("Content-Type", photoFile.type); // e.g. image/jpeg
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    setUploadProgress(Math.round((e.loaded / e.total) * 100));
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200 || xhr.status === 201) {
                     setUploadStatus("success");
-                    setGlobalSuccess("Photo uploaded!");
+                    setGlobalSuccess("Photo uploaded successfully!");
                 } else {
                     setUploadStatus("error");
-                    setGlobalError(data.message || "Upload failed");
+                    setGlobalError("Upload failed: " + xhr.statusText);
                 }
-            } else {
+            };
+
+            xhr.onerror = () => {
                 setUploadStatus("error");
-            }
-        };
-        xhr.open("POST", API_ENDPOINTS.uploadPhoto);
-        xhr.send(formData);
+                setGlobalError("Network error during upload");
+            };
+
+            xhr.send(photoFile);
+
+        } catch (e) {
+            setUploadStatus("error");
+            setGlobalError("Upload error: " + e.message);
+        }
     };
 
     const handleRegFinalize = async (e) => {
