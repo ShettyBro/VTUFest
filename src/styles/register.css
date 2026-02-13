@@ -25,8 +25,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 40px 16px 60px;  /* bottom space ensures scroll */
+  justify-content: center;   /* Center vertically */
+  min-height: 100vh;         /* Full viewport height */
+  padding: 40px 16px;
   box-sizing: border-box;
 }
 
