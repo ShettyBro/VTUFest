@@ -8,7 +8,7 @@ const API_ENDPOINTS = {
   registration: `${API_BASE_URL}/api/student/register`,
   colleges: `${API_BASE_URL}/api/shared/college-and-usn/colleges`,
   checkUsn: `${API_BASE_URL}/api/shared/college-and-usn/check-usn`,
-  lockStatus: `${API_BASE_URL}/api/shared/check-lock-status`
+  lockStatus: `${API_BASE_URL}/api/shared/college-and-usn/check-lock-status`
 };
 
 export default function RegisterStudent() {
