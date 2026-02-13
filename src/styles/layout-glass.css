@@ -5,24 +5,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --glass-nav-bg: rgba(255, 255, 255, 0.85);
-    /* High opacity white/glass */
-    --glass-sidebar-bg: #0f172a;
-    /* Deep Slate/Navy (Dark) */
-    --glass-border: rgba(226, 232, 240, 0.6);
-    /* Light border */
-    --neon-blue: #2563eb;
-    /* Professional Royal Blue */
-    --neon-purple: #7c3aed;
-    /* Professional Violet */
-    --neon-green: #059669;
-    /* Professional Emerald */
-    --text-primary: #1e293b;
-    /* Dark Slate Text for Light Backgrounds */
-    --text-secondary: #64748b;
-    /* Slate Gray Text */
-    --text-on-dark: #f8fafc;
-    /* White/Light Text for Sidebar */
+    /* --- VIBRANT AUTH THEME (Restored) --- */
+    --glass-nav-bg: rgba(255, 255, 255, 0.25);
+    /* Light frosted nav */
+    --glass-sidebar-bg: rgba(255, 255, 255, 0.15);
+    /* Light frosted sidebar */
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --neon-blue: #a8edea;
+    /* Soft teal */
+    --neon-purple: #ffb7b2;
+    /* Soft pink */
+    --neon-green: #96f2d7;
+    /* Soft mint */
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.9);
+    --text-on-dark: #ffffff;
 }
 
 /* =========================================
@@ -202,7 +199,7 @@ body,
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     z-index: 1500;
-    animation: fadeIn 0.2sease-out;
+    animation: fadeIn 0.2s ease-out;
 }
 
 .notif-item {
@@ -361,9 +358,9 @@ body,
     height: calc(100vh - 70px);
     width: 70px;
     background: var(--glass-sidebar-bg);
-    /* Dark Background */
-    backdrop-filter: none;
-    /* Solid dark color */
+    /* Frosted Background */
+    backdrop-filter: blur(20px);
+    /* Frosted glass */
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     overflow: hidden;
@@ -385,8 +382,8 @@ body,
     padding: 15px 22px;
     /* Center icon when collapsed (70px width -> ~22px padding side) */
     cursor: pointer;
-    color: #94a3b8;
-    /* Light Slate text for Dark Sidebar */
+    color: var(--text-secondary);
+    /* White text for Vibrant Theme */
     transition: all 0.3s;
     position: relative;
     white-space: nowrap;
@@ -399,11 +396,11 @@ body,
 }
 
 .sidebar-item.active {
-    background: linear-gradient(90deg, rgba(37, 99, 235, 0.2), transparent);
-    /* Royal Blue Gradient */
-    color: #60a5fa;
-    /* Lighter Blue for active text */
-    border-left: 3px solid #60a5fa;
+    background: rgba(168, 237, 234, 0.2);
+    /* Soft Teal Gradient */
+    color: var(--neon-blue);
+    /* Neon Blue Text */
+    border-left: 3px solid var(--neon-blue);
 }
 
 /* Sidebar Icons */

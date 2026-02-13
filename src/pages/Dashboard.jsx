@@ -236,7 +236,6 @@ export default function Dashboard() {
             <h1>Welcome, {dashboardData?.student?.full_name?.split(' ')[0] || "Student"}</h1>
             {/* <p>Dashboard Overview</p> */}
           </div>
-
           {/* QR CODE - CENTERED ABSOLUTELY */}
           <div className="qr-badge-centered">
             <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem', textAlign: 'center' }}>

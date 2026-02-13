@@ -1,28 +1,27 @@
 /* =========================================
-   DASHBOARD 2.0 - DARK GLASS & NEON
+   DASHBOARD 2.0 - VIBRANT GLASS (Auth Theme)
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    /* --- PROFESSIONAL LIGHT THEME --- */
-    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    /* Static Light Gray */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    /* High opacity white */
-    --glass-border: rgba(226, 232, 240, 0.8);
-    --glass-highlight: rgba(255, 255, 255, 0.9);
-    --neon-blue: #2563eb;
-    /* Royal Blue */
-    --neon-purple: #7c3aed;
-    /* Violet */
-    --neon-green: #059669;
-    /* Emerald */
-    --text-primary: #1e293b;
-    /* Dark Slate */
-    --text-secondary: #64748b;
-    /* Slate Gray */
-    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* --- VIBRANT AUTH THEME (Restored) --- */
+    --bg-gradient: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    --glass-bg: rgba(255, 255, 255, 0.25);
+    /* More transparent/frosted */
+    --glass-sidebar-bg: rgba(255, 255, 255, 0.15);
+    /* Light Glass Sidebar */
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-highlight: rgba(255, 255, 255, 0.6);
+    --neon-blue: #a8edea;
+    /* Soft teal */
+    --neon-purple: #ffb7b2;
+    /* Soft pink */
+    --neon-green: #96f2d7;
+    /* Soft mint */
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.9);
+    --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
 }
 
 /* --- GLOBAL RESET & SCROLL FIX --- */
@@ -43,7 +42,6 @@ html {
 }
 
 /* Override Layout Background */
-/* Override Layout Background */
 .layout,
 .content,
 .layout-container,
@@ -61,17 +59,25 @@ body::before {
     top: 0;
     left: 0;
     width: 100vw;
-    width: 100vw;
     height: 100vh;
     background: var(--bg-gradient);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     z-index: -2;
-    /* No animation for professional look */
 }
 
-/* Floating Glow Orbs */
-/* Floating Shapes REMOVED for professional look */
+/* Floating Shapes matching Auth Page */
 body::after {
-    display: none;
+    content: "";
+    position: fixed;
+    bottom: -10%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    filter: blur(60px);
+    z-index: -1;
+    animation: float 10s ease-in-out infinite;
 }
 
 /* Main Dashboard Wrapper - This handles scrolling */
@@ -176,8 +182,9 @@ body::after {
     font-size: 2.2rem;
     font-weight: 700;
     margin: 0;
-    color: #1e293b;
-    /* Solid dark color instead of gradient text */
+    /* White text with subtle shadow for readability on vibrant bg */
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .welcome-text p {
@@ -277,9 +284,10 @@ body::after {
 
 .glass-card:hover {
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.4);
+    /* Slightly simplified hover */
     border-color: var(--neon-blue);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px -3px rgba(31, 38, 135, 0.3);
 }
 
 .glass-card:hover::before {
@@ -304,7 +312,7 @@ body::after {
 }
 
 .calendar-item {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.1);
     padding: 12px;
     border-radius: 12px;
     border-left: 3px solid var(--neon-blue);
@@ -312,7 +320,7 @@ body::after {
 }
 
 .calendar-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     transform: translateX(5px);
 }
 
@@ -338,7 +346,8 @@ body::after {
 .hero-card {
     text-align: center;
     padding: 40px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.2));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--glass-border);
 }
 
 .status-badge-lg {
@@ -455,14 +464,14 @@ body::after {
 }
 
 .map-card {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 10px;
     border: 1px solid var(--glass-border);
 }
 
 .block-item {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.1);
     padding: 15px;
     border-radius: 12px;
     margin-bottom: 15px;
@@ -472,7 +481,7 @@ body::after {
 
 .block-item:hover {
     border-color: var(--neon-purple);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* --- RESPONSIVE --- */
