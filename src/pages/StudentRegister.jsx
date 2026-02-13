@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth.css"; // Using auth.css as requested
-
+import "../styles/auth.css";
+import { usePopup } from "../context/PopupContext"; // Imported usePopup
 
 const API_BASE = {
   submitApplication: "https://vtu-festserver-production.up.railway.app/api/student/submit-application"
@@ -74,6 +74,7 @@ const FileUploadField = ({ label, docType, blobType, accept, title, documents, d
 
 export default function SubmitApplication() {
   const navigate = useNavigate();
+  const { showPopup } = usePopup(); // Using hook
 
   const [form, setForm] = useState({
     bloodGroup: "",
@@ -114,7 +115,7 @@ export default function SubmitApplication() {
     const storedToken = localStorage.getItem("vtufest_token");
 
     if (!storedToken) {
-      alert("Please login first");
+      showPopup("Please login first", "error");
       navigate("/");
       return;
     }
@@ -150,14 +151,14 @@ export default function SubmitApplication() {
 
       } catch (err) {
         console.error("Error fetching student info:", err);
-        alert("Unable to load student information. Please login again.");
+        showPopup("Unable to load student information. Please login again.", "error");
         navigate("/");
       }
     };
 
     fetchStudentInfo();
     loadSessionFromStorage();
-  }, [navigate]);
+  }, [navigate, showPopup]);
 
   useEffect(() => {
     if (timer && timer > 0 && !timerExpired) {
@@ -220,12 +221,12 @@ export default function SubmitApplication() {
     if (!file) return;
 
     if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
-      alert("Only PNG, JPG, or PDF files allowed");
+      showPopup("Only PNG, JPG, or PDF files allowed", "warning");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File must be less than 5MB");
+      showPopup("File must be less than 5MB", "warning");
       return;
     }
 
@@ -252,27 +253,27 @@ export default function SubmitApplication() {
     e.preventDefault();
 
     if (!form.bloodGroup) {
-      alert("Blood group is required");
+      showPopup("Blood group is required", "warning");
       return;
     }
 
     if (!form.address.trim()) {
-      alert("Address is required");
+      showPopup("Address is required", "warning");
       return;
     }
 
     if (!form.department) {
-      alert("Department is required");
+      showPopup("Department is required", "warning");
       return;
     }
 
     if (!form.yearOfStudy) {
-      alert("Year of study is required");
+      showPopup("Year of study is required", "warning");
       return;
     }
 
     if (!form.semester) {
-      alert("Semester is required");
+      showPopup("Semester is required", "warning");
       return;
     }
 
@@ -298,7 +299,7 @@ export default function SubmitApplication() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Failed to initialize application");
+        showPopup(data.error || "Failed to initialize application", "error");
         return;
       }
 
@@ -317,7 +318,7 @@ export default function SubmitApplication() {
 
     } catch (error) {
       console.error("Error initializing application:", error);
-      alert("Network error. Please try again.");
+      showPopup("Network error. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -329,7 +330,7 @@ export default function SubmitApplication() {
 
     const uploadUrl = sessionData.upload_urls[blobType];
     if (!uploadUrl) {
-      alert("Upload URL not found. Please refresh the page.");
+      showPopup("Upload URL not found. Please refresh the page.", "error");
       return;
     }
 
@@ -355,7 +356,7 @@ export default function SubmitApplication() {
     } catch (error) {
       console.error("Upload error:", error);
       setUploadStatus((prev) => ({ ...prev, [docType]: "" }));
-      alert(`Failed to upload ${docType}. Please try again.`);
+      showPopup(`Failed to upload ${docType}. Please try again.`, "error");
     }
   };
 
@@ -365,12 +366,12 @@ export default function SubmitApplication() {
     if (uploadStatus.aadhaar !== "success" ||
       uploadStatus.collegeId !== "success" ||
       uploadStatus.marksCard !== "success") {
-      alert("Please upload all required documents first");
+      showPopup("Please upload all required documents first", "warning");
       return;
     }
 
     if (!sessionData?.session_id) {
-      alert("Session expired. Please restart the application process.");
+      showPopup("Session expired. Please restart the application process.", "error");
       return;
     }
 
@@ -397,17 +398,17 @@ export default function SubmitApplication() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.error || "Failed to submit application");
+        showPopup(data.error || "Failed to submit application", "error");
         return;
       }
 
-      alert(data.message || "Application submitted successfully!");
+      showPopup(data.message || "Application submitted successfully!", "success");
       localStorage.removeItem("application_session");
-      navigate("/dashboard");
+      setTimeout(() => navigate("/dashboard"), 1500);
 
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Network error. Please try again.");
+      showPopup("Network error. Please try again.", "error");
     } finally {
       setLoading(false);
     }

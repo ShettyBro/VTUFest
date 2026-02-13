@@ -1,10 +1,13 @@
 import { BrowserRouter } from 'react-router-dom'
 import AppRoutes from './routes/AppRoutes'
+import { PopupProvider } from './context/PopupContext'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <PopupProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </PopupProvider>
   )
 }
