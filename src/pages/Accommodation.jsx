@@ -1,26 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/Accommodation.css";
-
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
+import "../styles/dashboard-glass.css"; // UPDATED CSS
 
 export default function Accommodation() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
-  const userRole = localStorage.getItem("vtufest_role");
+
+  // Lock states
+  const [isLocked, setIsLocked] = useState(false);
   const [registrationLock, setRegistrationLock] = useState(false);
 
-
   const [loading, setLoading] = useState(true);
-  const [existingAccommodation, setExistingAccommodation] = useState(null);
-  const [consentChecked, setConsentChecked] = useState(false);
-  const [form, setForm] = useState({
-    girls: "",
-    boys: "",
-    contactName: "",
-    contactPhone: "",
-    specialRequirements: "",
+  const [submitting, setSubmitting] = useState(false);
+  const [existingRequest, setExistingRequest] = useState(null);
+
+  const [formData, setFormData] = useState({
+    total_girls: "",
+    total_boys: "",
+    arrival_date: "",
+    arrival_time: "",
   });
 
   useEffect(() => {
@@ -28,10 +27,10 @@ export default function Accommodation() {
       navigate("/");
       return;
     }
-    initializeData();
+    fetchInitialData();
   }, []);
 
-  const initializeData = async () => {
+  const fetchInitialData = async () => {
     await checkLockStatus();
     await fetchAccommodationStatus();
   };
@@ -48,49 +47,42 @@ export default function Accommodation() {
           },
         }
       );
-
-      if (response.status === 401) {
-        handleSessionExpired();
-        return;
-      }
-
       const data = await response.json();
       if (data.success) {
-        setRegistrationLock(data.registration_lock); // global only
+        setIsLocked(data.is_locked);
+        setRegistrationLock(data.registration_lock);
       }
-
     } catch (error) {
       console.error("Lock check error:", error);
     }
   };
 
-  const isReadOnlyMode = registrationLock;
-
+  const isReadOnlyMode = isLocked || registrationLock;
 
   const fetchAccommodationStatus = async () => {
     try {
       setLoading(true);
-
-      const response = await fetch(`${API_BASE_URL}/manager/accommodation`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action: "get_accommodation_status" }),
-      });
+      const response = await fetch(
+        `https://vtu-festserver-production.up.railway.app/api/manager/accommodation`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: "status" }),
+        }
+      );
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
+        alert("Session expired");
         navigate("/");
         return;
       }
 
       const data = await response.json();
-
-      if (data.success && data.data && data.data.accommodation) {
-        setExistingAccommodation(data.data.accommodation);
+      if (data.success && data.data) {
+        setExistingRequest(data.data);
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -99,325 +91,223 @@ export default function Accommodation() {
     }
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isReadOnlyMode) return;
+    if (existingRequest) return; // double check
 
-    if (!form.girls || !form.boys || !form.contactName || !form.contactPhone) {
-      alert("Please fill all required fields");
-      return;
-    }
-
-    if (!consentChecked) {
-      alert("Please confirm the consent before submitting");
+    if (!formData.total_girls || !formData.total_boys || !formData.arrival_date || !formData.arrival_time) {
+      alert("Please fill all fields");
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/manager/accommodation`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "submit_accommodation",
-          total_boys: parseInt(form.boys),
-          total_girls: parseInt(form.girls),
-          contact_person_name: form.contactName,
-          contact_person_phone: form.contactPhone,
-          special_requirements: form.specialRequirements || null,
-        }),
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
+      setSubmitting(true);
+      const response = await fetch(
+        `https://vtu-festserver-production.up.railway.app/api/manager/accommodation`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "create",
+            ...formData,
+          }),
+        }
+      );
 
       const data = await response.json();
-
       if (data.success) {
-        alert("Accommodation request submitted successfully");
-        // Immediately switch to read-only view
-        await fetchAccommodationStatus();
+        alert("Accommodation request submitted successfully!");
+        fetchAccommodationStatus();
       } else {
         alert(data.error || "Submission failed");
       }
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Failed to submit accommodation");
+      alert("Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "12px",
+    borderRadius: "8px",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid var(--glass-border)",
+    color: "white",
+    fontSize: "0.95rem",
+    marginTop: "5px"
+  };
+
+  const labelStyle = {
+    display: "block",
+    color: "var(--text-secondary)",
+    fontSize: "0.9rem",
+    marginBottom: "5px",
+    marginTop: "15px"
   };
 
   if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <h3>Loading...</h3>
+        <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
+          <h3>Loading Accommodation Status...</h3>
         </div>
       </Layout>
     );
   }
 
-  // CASE B: Accommodation already exists (ALL ROLES)
-  if (existingAccommodation) {
-    return (
-      <Layout>
-        <div className="form-container">
-          <h2>Accommodation Status</h2>
+  return (
+    <Layout>
+      <div className="dashboard-glass-wrapper">
+        <div className="dashboard-header">
+          <div className="welcome-text">
+            <h1>Accommodation</h1>
+            <p>Request Accommodation for Team & Accompanists</p>
+          </div>
+        </div>
 
-          <div className="status-card">
-            <div className={`status-badge ${existingAccommodation.status.toLowerCase()}`}>
-              {existingAccommodation.status}
-            </div>
+        {isLocked && (
+          <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Final approval submitted. This page is read-only.
+          </div>
+        )}
+        {registrationLock && (
+          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Registration is currently locked. All actions are read-only.
+          </div>
+        )}
 
-            <h3>Submitted Details</h3>
-            <p>
-              <strong>Total Boys:</strong> {existingAccommodation.total_boys}
-            </p>
-            <p>
-              <strong>Total Girls:</strong> {existingAccommodation.total_girls}
-            </p>
-            <p>
-              <strong>Contact Person:</strong> {existingAccommodation.contact_person_name}
-            </p>
-            <p>
-              <strong>Contact Phone:</strong> {existingAccommodation.contact_person_phone}
-            </p>
-            {existingAccommodation.special_requirements && (
-              <p>
-                <strong>Special Requirements:</strong>{" "}
-                {existingAccommodation.special_requirements}
+        {/* CONTENT */}
+        <div className="glass-card" style={{ maxWidth: "600px", margin: "0 auto" }}>
+          {existingRequest ? (
+            // EXISTING REQUEST VIEW
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <h2 style={{ color: "var(--academic-gold)", marginBottom: "30px" }}>Accommodation Request Status</h2>
+
+              <div className="status-badge-lg"
+                style={{
+                  background: existingRequest.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                  color: existingRequest.status === 'approved' ? '#10b981' : '#f59e0b',
+                  border: `1px solid ${existingRequest.status === 'approved' ? '#10b981' : '#f59e0b'}`,
+                  display: "inline-block",
+                  padding: "10px 20px",
+                  borderRadius: "50px",
+                  marginBottom: "30px",
+                  textTransform: "uppercase",
+                  fontWeight: "bold"
+                }}>
+                {existingRequest.status}
+              </div>
+
+              <div style={{ textAlign: "left", background: "rgba(255,255,255,0.03)", padding: "20px", borderRadius: "12px" }}>
+                <div className="detail-row">
+                  <span>Boys Count:</span>
+                  <span>{existingRequest.total_boys}</span>
+                </div>
+                <div className="detail-row">
+                  <span>Girls Count:</span>
+                  <span>{existingRequest.total_girls}</span>
+                </div>
+                <div className="detail-row">
+                  <span>Arrival Date:</span>
+                  <span>{new Date(existingRequest.arrival_date).toLocaleDateString()}</span>
+                </div>
+                <div className="detail-row">
+                  <span>Arrival Time:</span>
+                  <span>{existingRequest.arrival_time}</span>
+                </div>
+              </div>
+
+              <p style={{ marginTop: "20px", color: "var(--text-secondary)", fontSize: "0.9rem" }}>
+                For any changes, please contact the fest coordinator directly.
               </p>
-            )}
+            </div>
+          ) : (
+            // NEW REQUEST FORM
+            <div>
+              <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
+                Submit Request
+              </h3>
+              <form onSubmit={handleSubmit}>
+                <div>
+                  <label style={labelStyle}>Total Boys *</label>
+                  <input
+                    type="number"
+                    name="total_boys"
+                    value={formData.total_boys}
+                    onChange={handleInputChange}
+                    style={inputStyle}
+                    min="0"
+                    placeholder="0"
+                    required
+                    disabled={isReadOnlyMode}
+                  />
+                </div>
 
-            {existingAccommodation.admin_remarks && (
-              <div className="admin-remarks">
-                <strong>Admin Remarks:</strong>
-                <p>{existingAccommodation.admin_remarks}</p>
-              </div>
-            )}
+                <div>
+                  <label style={labelStyle}>Total Girls *</label>
+                  <input
+                    type="number"
+                    name="total_girls"
+                    value={formData.total_girls}
+                    onChange={handleInputChange}
+                    style={inputStyle}
+                    min="0"
+                    placeholder="0"
+                    required
+                    disabled={isReadOnlyMode}
+                  />
+                </div>
 
-            {existingAccommodation.status === 'REJECTED' && (
-              <div className="contact-details">
-                <h4>Contact Details</h4>
-                <p><strong>Email:</strong> example@email.com</p>
-                <p><strong>Phone:</strong> +91-XXXXXXXXXX</p>
-              </div>
-            )}
-          </div>
+                <div>
+                  <label style={labelStyle}>Expected Arrival Date *</label>
+                  <input
+                    type="date"
+                    name="arrival_date"
+                    value={formData.arrival_date}
+                    onChange={handleInputChange}
+                    style={inputStyle}
+                    required
+                    disabled={isReadOnlyMode}
+                  />
+                </div>
 
-          {/* Read-only form view */}
-          <div className="form-readonly">
-            <h3>Form Details (Read-Only)</h3>
+                <div>
+                  <label style={labelStyle}>Expected Arrival Time *</label>
+                  <input
+                    type="time"
+                    name="arrival_time"
+                    value={formData.arrival_time}
+                    onChange={handleInputChange}
+                    style={inputStyle}
+                    required
+                    disabled={isReadOnlyMode}
+                  />
+                </div>
 
-            <label>No. of Girls</label>
-            <input
-              type="number"
-              value={existingAccommodation.total_girls}
-              disabled
-            />
-
-            <label>No. of Boys</label>
-            <input
-              type="number"
-              value={existingAccommodation.total_boys}
-              disabled
-            />
-
-            <label>Contact Person Name</label>
-            <input
-              value={existingAccommodation.contact_person_name}
-              disabled
-            />
-
-            <label>Contact Mobile Number</label>
-            <input
-              value={existingAccommodation.contact_person_phone}
-              disabled
-            />
-
-            {existingAccommodation.special_requirements && (
-              <>
-                <label>Special Requirements</label>
-                <textarea
-                  value={existingAccommodation.special_requirements}
-                  disabled
-                  rows="4"
-                />
-              </>
-            )}
-          </div>
-
-          <button onClick={() => navigate(userRole === 'PRINCIPAL' || userRole === 'principal' ? '/principal-dashboard' : '/team-dashboard')}>
-            Back to Dashboard
-          </button>
-        </div>
-      </Layout>
-    );
-  }
-
-  // CASE A: No accommodation exists
-  // PRINCIPAL: Always read-only (empty form)
-  if (userRole === 'PRINCIPAL' || userRole === 'principal') {
-    return (
-      <Layout>
-        <div className="form-container">
-          <h2>Accommodation Details</h2>
-          {registrationLock && (
-            <div className="lock-banner">
-              🚫 Registrations are closed by admin. No modifications are allowed.
+                <button
+                  type="submit"
+                  className="neon-btn"
+                  disabled={submitting || isReadOnlyMode}
+                >
+                  {submitting ? "Submitting..." : "Submit Request"}
+                </button>
+              </form>
             </div>
           )}
-
-
-          <div className="info-message">
-            <p>No accommodation request has been submitted yet.</p>
-          </div>
-
-          {/* Empty read-only form for Principal */}
-          <div className="form-readonly">
-            <label>No. of Girls</label>
-            <input type="number" disabled />
-
-            <label>No. of Boys</label>
-            <input type="number" disabled />
-
-            <label>Contact Person Name</label>
-            <input disabled />
-
-            <label>Contact Mobile Number</label>
-            <input disabled />
-
-            <label>Special Requirements (Optional)</label>
-            <textarea disabled rows="4" />
-          </div>
-
-          <button onClick={() => navigate('/principal-dashboard')}>
-            Back to Dashboard
-          </button>
-        </div>
-      </Layout>
-    );
-  }
-
-  // CASE A: MANAGER - Can submit (only once)
-   if (registrationLock) {
-  return (
-    <Layout>
-      <div className="form-container">
-        <h2>Accommodation Details</h2>
-
-        <div className="lock-banner">
-          🚫 Registrations are closed by admin. No modifications are allowed.
         </div>
 
-        <div className="form-readonly">
-          <label>No. of Girls</label>
-          <input type="number" disabled />
-
-          <label>No. of Boys</label>
-          <input type="number" disabled />
-
-          <label>Contact Person Name</label>
-          <input disabled />
-
-          <label>Contact Mobile Number</label>
-          <input disabled />
-
-          <label>Special Requirements</label>
-          <textarea disabled rows="4" />
-        </div>
-
-        <button onClick={() => navigate('/team-dashboard')}>
-          Back to Dashboard
-        </button>
-      </div>
-    </Layout>
-  );
-}
-
-  return (
-    <Layout>
-      <div className="form-container">
-        <h2>Accommodation Details</h2>
-        
-        <form onSubmit={handleSubmit}>
-          <label>No. of Girls *</label>
-          <input
-            type="number"
-            name="girls"
-            value={form.girls}
-            onChange={handleChange}
-            required
-          />
-
-          <label>No. of Boys *</label>
-          <input
-            type="number"
-            name="boys"
-            value={form.boys}
-            onChange={handleChange}
-            required
-          />
-
-          <label>Contact Person Name *</label>
-          <input
-            name="contactName"
-            placeholder="Full Name"
-            value={form.contactName}
-            onChange={handleChange}
-            required
-          />
-
-          <label>Contact Mobile Number *</label>
-          <input
-            type="tel"
-            name="contactPhone"
-            placeholder="10-digit mobile number"
-            value={form.contactPhone}
-            onChange={handleChange}
-            required
-          />
-
-          <label>Special Requirements (Optional)</label>
-          <textarea
-            name="specialRequirements"
-            placeholder="Any special accommodation requirements..."
-            value={form.specialRequirements}
-            onChange={handleChange}
-            rows="5"
-          />
-
-          <div className="consent-box">
-            <label className="consent-row">
-              <input
-                type="checkbox"
-                checked={consentChecked}
-                onChange={(e) => setConsentChecked(e.target.checked)}
-              />
-              <span>
-                I understand that this accommodation application can be submitted only once
-                and cannot be edited or re-applied.
-              </span>
-            </label>
-          </div>
-
-
-          <button
-            type="submit"
-            disabled={!consentChecked}
-
-          >
-            Submit Accommodation
-          </button>
-        </form>
       </div>
     </Layout>
   );

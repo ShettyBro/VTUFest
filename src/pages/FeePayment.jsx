@@ -1,718 +1,307 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/FeePayment.css";
-
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student";
-
-// ============================================================================
-// EVENT NAME MAPPING (Frontend Only) - CORRECTED KEYS
-// ============================================================================
-const EVENT_NAMES = {
-  'event_classical_vocal_solo': 'Classical Vocal Solo (Hindustani/Carnatic)',
-  'event_light_vocal_solo': 'Light Vocal Solo (Indian)',
-  'event_western_vocal_solo': 'Western Vocal Solo',
-  'event_classical_instr_percussion': 'Classical Instrumental Solo (Percussion Tala Vadya)',
-  'event_classical_instr_non_percussion': 'Classical Instrumental Solo (Non-Percussion Swara Vadya)',
-  'event_folk_orchestra': 'Folk Orchestra',
-  'event_group_song_indian': 'Group Song (Indian)',
-  'event_group_song_western': 'Group Song (Western)',
-  'event_folk_dance': 'Folk / Tribal Dance',
-  'event_classical_dance_solo': 'Classical Dance Solo',
-  'event_mime': 'Mime',
-  'event_mimicry': 'Mimicry',
-  'event_one_act_play': 'One-Act Play',
-  'event_skits': 'Skits',
-  'event_debate': 'Debate',
-  'event_elocution': 'Elocution',
-  'event_quiz': 'Quiz',
-  'event_cartooning': 'Cartooning',
-  'event_clay_modelling': 'Clay Modelling',
-  'event_collage_making': 'Collage Making',
-  'event_installation': 'Installation',
-  'event_on_spot_painting': 'On Spot Painting',
-  'event_poster_making': 'Poster Making',
-  'event_rangoli': 'Rangoli',
-  'event_spot_photography': 'Spot Photography',
-};
+import "../styles/dashboard-glass.css"; // UPDATED CSS
 
 export default function FeePayment() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
-  const userRole = localStorage.getItem("vtufest_role");
 
-  const isManager = userRole === "MANAGER" || userRole === "manager";
-  const isPrincipal = userRole === "PRINCIPAL" || userRole === "principal";
+  // Lock states
+  const [isFactoryLocked, setIsFactoryLocked] = useState(false); // from principal check
+  const [isRegistrationLocked, setIsRegistrationLocked] = useState(false);
 
   const [loading, setLoading] = useState(true);
-  const [paymentInfo, setPaymentInfo] = useState(null);
-
-  // Form state (Manager only)
-  const [utrNumber, setUtrNumber] = useState("");
-  const [consentChecked, setConsentChecked] = useState(false);
-
-  // Upload modal state
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadFile, setUploadFile] = useState(null);
-  const [uploadSession, setUploadSession] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState(""); // '', 'uploading', 'uploaded', 'failed'
-  const [uploadMessage, setUploadMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Timer state
-  const [timer, setTimer] = useState(null);
-  const [timerExpired, setTimerExpired] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [paymentDetails, setPaymentDetails] = useState(null);
 
-  // Processing state for main button
-  const [initializing, setInitializing] = useState(false);
+  const [utrNumber, setUtrNumber] = useState("");
+  const [proofFile, setProofFile] = useState(null);
 
   useEffect(() => {
     if (!token) {
       navigate("/");
       return;
     }
-    fetchPaymentInfo();
+    fetchInitialData();
   }, []);
 
-  // Timer countdown
-  useEffect(() => {
-    if (timer && timer > 0 && !timerExpired) {
-      const interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            setTimerExpired(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer, timerExpired]);
+  const fetchInitialData = async () => {
+    await checkLockStatus();
+    await fetchPaymentStatus();
+  };
 
-  const fetchPaymentInfo = async () => {
+  const checkLockStatus = async () => {
+    try {
+      const response = await fetch(
+        `https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setIsFactoryLocked(data.is_locked);
+        setIsRegistrationLocked(data.registration_lock);
+      }
+    } catch (error) {
+      console.error("Lock check error:", error);
+    }
+  };
+
+  // Payment is locked if approved or if global/factory lock is active
+  const isReadOnly = (paymentStatus === 'approved') || isFactoryLocked || isRegistrationLocked;
+
+  const fetchPaymentStatus = async () => {
     try {
       setLoading(true);
-
-      const response = await fetch(`${API_BASE_URL}/payment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action: "get_payment_info" }),
-      });
+      const response = await fetch(
+        `https://vtu-festserver-production.up.railway.app/api/student/payment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: "status" }),
+        }
+      );
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
+        alert("Session expired");
         navigate("/");
         return;
       }
 
-      const result = await response.json();
-
-      if (result.success) {
-        // ✅ FIXED: Backend wraps response in 'data' object
-        setPaymentInfo(result.data);
-      } else {
-        alert(result.error || "Failed to fetch payment info");
+      const data = await response.json();
+      if (data.success) {
+        setPaymentStatus(data.status); // 'pending', 'submitted', 'approved', 'rejected'
+        setPaymentDetails(data.data);
+        if (data.data) {
+          setUtrNumber(data.data.utr_number || "");
+        }
       }
     } catch (error) {
       console.error("Fetch error:", error);
-      alert("Failed to fetch payment info");
     } finally {
       setLoading(false);
     }
   };
 
-  const formatTimer = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  const handleFileChange = (e) => {
+    setProofFile(e.target.files[0]);
   };
 
-  // ============================================================================
-  // STEP 1: Initialize Upload Session (Called when "Upload Payment Proof" clicked)
-  // ============================================================================
-  const openUploadModal = async () => {
-    if (!utrNumber.trim()) {
-      alert("Please enter UTR / Reference Number");
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isReadOnly && paymentStatus !== 'rejected') return;
 
-    if (!consentChecked) {
-      alert("Please accept the terms and conditions");
-      return;
-    }
-
-    try {
-      setInitializing(true);
-
-      const response = await fetch(`${API_BASE_URL}/payment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "init_payment_upload",
-          amount_paid: paymentInfo.amount_to_pay,
-          utr_reference_number: utrNumber.trim(),
-        }),
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
-        alert(result.error || "Failed to initialize upload");
-        setInitializing(false);
-        return;
-      }
-
-      // ✅ FIXED: Backend wraps response in 'data' object
-      const data = result.data;
-
-      // Store session data
-      setUploadSession(data);
-
-      // Set timer
-      setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
-      setTimerExpired(false);
-
-      // Reset upload states
-      setUploadFile(null);
-      setUploadStatus("");
-      setUploadMessage("");
-
-      // Open modal
-      setShowUploadModal(true);
-    } catch (error) {
-      console.error("Init error:", error);
-      alert("Failed to initialize upload");
-    } finally {
-      setInitializing(false);
-    }
-  };
-
-  const closeUploadModal = () => {
-    setShowUploadModal(false);
-    setUploadFile(null);
-    setUploadSession(null);
-    setUploadStatus("");
-    setUploadMessage("");
-    setTimer(null);
-    setTimerExpired(false);
-    setSubmitting(false);
-  };
-
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only PNG, JPG, or PDF files allowed");
-      return;
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File must be less than 5MB");
-      return;
-    }
-
-    setUploadFile(file);
-    setUploadStatus(""); // Reset status when new file selected
-    setUploadMessage("");
-  };
-
-  // ============================================================================
-  // STEP 2: Upload File to Azure Blob (ONLY uploads, does NOT finalize)
-  // ============================================================================
-  const uploadToBlob = async () => {
-    if (!uploadFile) {
-      alert("Please select a file");
-      return;
-    }
-
-    if (!uploadSession?.upload_url) {
-      alert("Upload session expired. Please restart.");
-      return;
-    }
-
-    try {
-      setUploadStatus("uploading");
-      setUploadMessage("Uploading file to Azure Blob Storage...");
-
-      // Upload using PUT request with x-ms-blob-type header
-      const uploadResponse = await fetch(uploadSession.upload_url, {
-        method: "PUT",
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-          "Content-Type": uploadFile.type,
-        },
-        body: uploadFile,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
-      }
-
-      setUploadStatus("uploaded");
-      setUploadMessage("File uploaded successfully! Now click 'Submit Payment' to finalize.");
-    } catch (error) {
-      console.error("Upload error:", error);
-      setUploadStatus("failed");
-      setUploadMessage("Upload failed. Please try again.");
-    }
-  };
-
-  // ============================================================================
-  // STEP 3: Finalize Payment (After file is uploaded)
-  // ============================================================================
-  const handleSubmit = async () => {
-    if (uploadStatus !== "uploaded") {
-      alert("Please upload the file first");
-      return;
-    }
-
-    if (!uploadSession?.session_id) {
-      alert("Invalid session. Please restart.");
+    if (!utrNumber || (!proofFile && !paymentDetails)) {
+      alert("Please provide UTR number and proof file");
       return;
     }
 
     try {
       setSubmitting(true);
-
-      const response = await fetch(`${API_BASE_URL}/payment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "finalize_payment",
-          session_id: uploadSession.session_id,
-        }),
-      });
-
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
+      const formData = new FormData();
+      formData.append("action", "submit");
+      formData.append("utr_number", utrNumber);
+      if (proofFile) {
+        formData.append("payment_proof", proofFile);
       }
 
-      const result = await response.json();
+      const response = await fetch(
+        `https://vtu-festserver-production.up.railway.app/api/student/payment`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
-      if (result.success) {
-        alert("Payment submitted successfully! Waiting for admin verification.");
-        closeUploadModal();
-        fetchPaymentInfo(); // Refresh to show updated status
+      const data = await response.json();
+      if (data.success) {
+        alert("Payment details submitted successfully!");
+        fetchPaymentStatus();
       } else {
-        alert(result.error || "Failed to submit payment");
+        alert(data.error || "Submission failed");
       }
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Failed to submit payment");
+      alert("Something went wrong");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ============================================================================
-  // RENDER LOGIC
-  // ============================================================================
+  const inputStyle = {
+    width: "100%",
+    padding: "12px",
+    borderRadius: "8px",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid var(--glass-border)",
+    color: "white",
+    fontSize: "0.95rem",
+    marginTop: "5px"
+  };
+
+  const labelStyle = {
+    display: "block",
+    color: "var(--text-secondary)",
+    fontSize: "0.9rem",
+    marginBottom: "5px",
+    marginTop: "15px"
+  };
 
   if (loading) {
     return (
       <Layout>
-        <div className="fee-container">
-          <h2>Loading payment information...</h2>
+        <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
+          <h3>Loading Payment Status...</h3>
         </div>
       </Layout>
     );
   }
-
-  if (!paymentInfo) {
-    return (
-      <Layout>
-        <div className="fee-container">
-          <h2>Failed to load payment information</h2>
-          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/manager-dashboard")}>
-            Back to Dashboard
-          </button>
-        </div>
-      </Layout>
-    );
-  }
-
-  // ============================================================================
-  // CASE 1: Final Approval Not Done Yet (can_upload = false)
-  // ============================================================================
-  if (paymentInfo.can_upload === false) {
-    return (
-      <Layout>
-        <div className="fee-container">
-          <h2>Fee Payment</h2>
-
-          <div className="alert-box">
-            <p>{paymentInfo.message || "Final approval not done yet. Payment is locked."}</p>
-          </div>
-
-          <div className="info-message">
-            <p>
-              Payment can only be uploaded after final approval is completed by the principal.
-              Please check back later or contact your administrator.
-            </p>
-          </div>
-
-          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/manager-dashboard")}>
-            Back to Dashboard
-          </button>
-        </div>
-      </Layout>
-    );
-  }
-
-  // ============================================================================
-  // CASE 2: Payment Already Uploaded - Show Status
-  // ============================================================================
-  if (paymentInfo.payment_status) {
-    const ps = paymentInfo.payment_status;
-
-    return (
-      <Layout>
-        <div className="fee-container">
-          <h2>Fee Payment Status</h2>
-
-          {/* Status Badge */}
-          <div className={`status-badge ${ps.status}`}>
-            {ps.status === "waiting_for_verification" && "⏳ Waiting for Verification"}
-            {ps.status === "payment_approved" && "✅ Payment Approved"}
-            {ps.status === "verification_failed" && "❌ Verification Failed"}
-          </div>
-
-          {/* Payment Details */}
-          <div className="payment-details">
-            <h3>Payment Information</h3>
-            <p>
-              <strong>Amount Paid:</strong> ₹{ps.amount_paid}
-            </p>
-            <p>
-              <strong>UTR Reference:</strong> {ps.utr_reference_number}
-            </p>
-            <p>
-              <strong>Uploaded At:</strong>{" "}
-              {new Date(ps.uploaded_at).toLocaleString("en-IN", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
-            </p>
-            {ps.receipt_url && (
-              <p>
-                <strong>Receipt:</strong>{" "}
-                <a href={ps.receipt_url} target="_blank" rel="noopener noreferrer">
-                  View Receipt
-                </a>
-              </p>
-            )}
-
-            {/* Admin Remarks (if verification failed) */}
-            {ps.admin_remarks && (
-              <div className="admin-remarks">
-                <strong>Admin Remarks:</strong>
-                <p>{ps.admin_remarks}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Events Participating In */}
-          <div className="events-section">
-            <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
-            {paymentInfo.total_events === 0 ? (
-              <p className="empty-message">No events assigned yet</p>
-            ) : (
-              <ul className="events-list">
-                {paymentInfo.participating_event_keys.map((key) => (
-                  <li key={key}>{EVENT_NAMES[key] || key}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <button onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/manager-dashboard")}>
-            Back to Dashboard
-          </button>
-        </div>
-      </Layout>
-    );
-  }
-
-  // ============================================================================
-  // CASE 3A: PRINCIPAL - Read-Only View (No Upload Capability)
-  // ============================================================================
-  if (isPrincipal) {
-    return (
-      <Layout>
-        <div className="fee-container">
-          <h2>Fee Payment (Read-Only)</h2>
-
-          <div className="info-message">
-            <p>Only managers can upload payment proofs. Principals can view this information.</p>
-          </div>
-
-          {/* Events Participating In */}
-          <div className="events-section">
-            <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
-            {paymentInfo.total_events === 0 ? (
-              <p className="empty-message">No events assigned yet</p>
-            ) : (
-              <ul className="events-list">
-                {paymentInfo.participating_event_keys.map((key) => (
-                  <li key={key}>{EVENT_NAMES[key] || key}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Bank Details (Read-only) */}
-          <div className="bank-card">
-            <h3>Bank Account Details</h3>
-            <p>
-              <strong>Account No:</strong> 123456789012
-            </p>
-            <p>
-              <strong>IFSC Code:</strong> SBIN0000456
-            </p>
-            <p>
-              <strong>Name:</strong> VTU HABBA FEST FUND
-            </p>
-          </div>
-
-          <div className="fee-info">
-            <h3>Payment Amount</h3>
-            <p>
-              <strong>Total Events:</strong> {paymentInfo.total_events}
-            </p>
-            <p>
-              <strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}
-            </p>
-          </div>
-
-          <button onClick={() => navigate("/principal-dashboard")}>Back to Dashboard</button>
-        </div>
-      </Layout>
-    );
-  }
-
-  // ============================================================================
-  // CASE 3B: MANAGER - Can upload payment
-  // ============================================================================
-  const isUploadDisabled = !consentChecked || !utrNumber.trim() || initializing;
 
   return (
     <Layout>
-      <div className="fee-container">
-        <h2>Fee Payment</h2>
-
-        {/* Events Participating In */}
-        <div className="events-section">
-          <h3>Events your college is participating in ({paymentInfo.total_events} / 25)</h3>
-          {paymentInfo.total_events === 0 ? (
-            <p className="empty-message">No events assigned yet</p>
-          ) : (
-            <ul className="events-list">
-              {paymentInfo.participating_event_keys.map((key) => (
-                <li key={key}>{EVENT_NAMES[key] || key}</li>
-              ))}
-            </ul>
-          )}
+      <div className="dashboard-glass-wrapper">
+        <div className="dashboard-header">
+          <div className="welcome-text">
+            <h1>Fee Payment</h1>
+            <p>Submit Fee Payment Details & Proof</p>
+          </div>
         </div>
 
-        {/* Bank Details */}
-        <div className="bank-card">
-          <h3>Bank Account Details</h3>
-          <p>
-            <strong>Account No:</strong> 123456789012
-          </p>
-          <p>
-            <strong>IFSC Code:</strong> SBIN0000456
-          </p>
-          <p>
-            <strong>Name:</strong> VTU HABBA FEST FUND
-          </p>
-        </div>
+        {isFactoryLocked && (
+          <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Final approval submitted. This page is read-only.
+          </div>
+        )}
+        {isRegistrationLocked && (
+          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Registration is currently locked. All actions are read-only.
+          </div>
+        )}
 
-        {/* Fee Calculation */}
-        <div className="fee-info">
-          <h3>Payment Details</h3>
-          <p>
-            <strong>Total Events Participating:</strong> {paymentInfo.total_events}
-          </p>
-          <p>
-            <strong>Amount to Pay:</strong> ₹{paymentInfo.amount_to_pay}
-          </p>
-        </div>
-
-        {/* Category Selection (Read-only) */}
-        <div className="category-box">
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={paymentInfo.total_events < 10}
-              readOnly
-              disabled
-            />
-            <span>Participating less than 10 events — ₹4,000</span>
-          </label>
-
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={paymentInfo.total_events >= 10}
-              readOnly
-              disabled
-            />
-            <span>Participating more than 10 events — ₹8,000</span>
-          </label>
-        </div>
-
-        {/* UTR / Reference Number */}
-        <div className="fee-section">
-          <label>UTR / Reference Number *</label>
-          <input
-            type="text"
-            placeholder="Enter UTR or Reference Number"
-            value={utrNumber}
-            onChange={(e) => setUtrNumber(e.target.value)}
-            className="utr-input"
-          />
-        </div>
-
-        {/* Consent Checkbox */}
-        <div className="consent-box">
-          <label className="consent-row">
-            <input
-              type="checkbox"
-              checked={consentChecked}
-              onChange={(e) => setConsentChecked(e.target.checked)}
-            />
-            <span>
-              I confirm that the payment details above are correct and I have transferred the
-              amount to the specified bank account. I understand that this payment can only be
-              uploaded once and cannot be modified later.
-            </span>
-          </label>
-        </div>
-
-        {/* Upload Button */}
-        <button
-          className={`submit-btn ${isUploadDisabled ? "disabled" : ""}`}
-          onClick={openUploadModal}
-          disabled={isUploadDisabled}
-        >
-          {initializing ? "Processing..." : "Upload Payment Proof"}
-        </button>
-      </div>
-
-      {/* Upload Modal */}
-      {showUploadModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Upload Payment Proof</h3>
-
-            {/* Timer */}
-            {timer !== null && !timerExpired && (
-              <div
-                className="timer-display"
-                style={{
-                  color: timer < 30 ? "red" : "green",
-                  fontWeight: "bold",
-                  marginBottom: "15px",
-                }}
-              >
-                Session expires in: {formatTimer(timer)}
-              </div>
-            )}
-
-            {timerExpired && (
-              <div className="error-message">
-                Session expired. Please close and restart.
-              </div>
-            )}
-
-            {/* Upload Section */}
-            {!timerExpired && (
-              <>
-                <div className="file-upload-item">
-                  <label>Payment Proof (PNG/JPG/PDF, max 5MB) *</label>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg,application/pdf"
-                    onChange={handleFileSelect}
-                    disabled={uploadStatus === "uploaded" || uploadStatus === "uploading"}
-                  />
-                </div>
-
-                {uploadFile && uploadStatus !== "uploaded" && (
-                  <div className="file-info">
-                    Selected: {uploadFile.name} ({(uploadFile.size / 1024).toFixed(2)} KB)
-                  </div>
-                )}
-
-                {uploadMessage && (
-                  <p className={uploadStatus === "failed" ? "error-message" : uploadStatus === "uploaded" ? "success-message" : "info-message"}>
-                    {uploadMessage}
-                  </p>
-                )}
-
-                {/* Upload File Button */}
-                {uploadStatus !== "uploaded" && (
-                  <button
-                    className="upload-btn"
-                    onClick={uploadToBlob}
-                    disabled={!uploadFile || uploadStatus === "uploading"}
-                    style={{ width: "100%", marginTop: "15px", marginBottom: "10px" }}
-                  >
-                    {uploadStatus === "uploading" ? "Uploading..." : "Upload File"}
-                  </button>
-                )}
-              </>
-            )}
-
-            {/* Action Buttons */}
-            <div className="modal-actions">
-              {!timerExpired && (
-                <>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={uploadStatus !== "uploaded" || submitting}
-                  >
-                    {submitting ? "Submitting..." : "Submit Payment"}
-                  </button>
-                  <button onClick={closeUploadModal} disabled={submitting}>
-                    Cancel
-                  </button>
-                </>
-              )}
-
-              {timerExpired && (
-                <button onClick={closeUploadModal}>Close</button>
-              )}
+        {/* BANK DETAILS */}
+        <div className="glass-card" style={{ marginBottom: "25px", borderLeft: "4px solid var(--academic-gold)" }}>
+          <h3 style={{ color: "var(--academic-gold)", borderBottomColor: "var(--glass-border)" }}>Bank Account Details</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginTop: "20px" }}>
+            <div>
+              <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Account Name</label>
+              <div style={{ fontSize: "1.1rem", fontWeight: "600" }}>VTU FEST 2026</div>
+            </div>
+            <div>
+              <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Account Number</label>
+              <div style={{ fontSize: "1.1rem", fontWeight: "600", fontFamily: "monospace" }}>64012345678</div>
+            </div>
+            <div>
+              <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Bank Name</label>
+              <div style={{ fontSize: "1.1rem", fontWeight: "600" }}>State Bank of India</div>
+            </div>
+            <div>
+              <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>IFSC Code</label>
+              <div style={{ fontSize: "1.1rem", fontWeight: "600", fontFamily: "monospace" }}>SBIN0040123</div>
+            </div>
+            <div>
+              <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Branch</label>
+              <div style={{ fontSize: "1.1rem", fontWeight: "600" }}>Belagavi Main Branch</div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* PAYMENT STATUS & FORM */}
+        <div className="glass-card" style={{ maxWidth: "600px", margin: "0 auto" }}>
+          <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
+            Upload Payment Details
+          </h3>
+
+          {paymentStatus && paymentStatus !== 'pending' && (
+            <div style={{ textAlign: "center", marginBottom: "30px" }}>
+              <div className="status-badge-lg"
+                style={{
+                  background: paymentStatus === 'approved' ? 'rgba(16, 185, 129, 0.2)' :
+                    paymentStatus === 'rejected' ? 'rgba(239, 68, 68, 0.2)' :
+                      'rgba(33, 150, 243, 0.2)',
+                  color: paymentStatus === 'approved' ? '#10b981' :
+                    paymentStatus === 'rejected' ? '#ef4444' :
+                      '#2196f3',
+                  border: `1px solid ${paymentStatus === 'approved' ? '#10b981' :
+                      paymentStatus === 'rejected' ? '#ef4444' :
+                        '#2196f3'}`,
+                  display: "inline-block",
+                  padding: "10px 20px",
+                  borderRadius: "50px",
+                  textTransform: "uppercase",
+                  fontWeight: "bold"
+                }}>
+                {paymentStatus}
+              </div>
+              {paymentStatus === 'rejected' && paymentDetails?.remarks && (
+                <div style={{ color: "#ef4444", marginTop: "10px", fontWeight: "500" }}>
+                  Reason: {paymentDetails.remarks}
+                </div>
+              )}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label style={labelStyle}>UTR / Reference Number *</label>
+              <input
+                type="text"
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value)}
+                style={inputStyle}
+                placeholder="Enter UTR Number"
+                required
+                disabled={isReadOnly && paymentStatus !== 'rejected'}
+              />
+            </div>
+
+            <div style={{ marginTop: "20px", padding: "15px", background: "rgba(255,255,255,0.03)", borderRadius: "8px" }}>
+              <label style={{ ...labelStyle, marginTop: 0 }}>
+                Payment Proof (Screenshot/Receipt) {paymentDetails ? "(Leave empty to keep existing)" : "*"}
+              </label>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleFileChange}
+                style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}
+                required={!paymentDetails}
+                disabled={isReadOnly && paymentStatus !== 'rejected'}
+              />
+              {paymentDetails?.proof_url && (
+                <div style={{ marginTop: "10px" }}>
+                  <a href={paymentDetails.proof_url} target="_blank" rel="noreferrer" style={{ color: "var(--accent-info)", textDecoration: "underline" }}>
+                    View Uploaded Proof
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {(!isReadOnly || paymentStatus === 'rejected') && (
+              <button
+                type="submit"
+                className="neon-btn"
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : paymentStatus === 'rejected' ? "Resubmit Payment" : "Submit Payment"}
+              </button>
+            )}
+          </form>
+        </div>
+
+      </div>
     </Layout>
   );
 }

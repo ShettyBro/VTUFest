@@ -257,8 +257,8 @@ export default function Dashboard() {
             </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
               dashboardData?.qr_code ? (
-                <div style={{ background: 'rgba(102,126,234,0.1)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
-                  <span style={{ color: 'var(--accent-purple)', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
+                  <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
                     {dashboardData.qr_code}
                   </span>
                 </div>

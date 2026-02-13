@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/assignEvents.css";
+import "../styles/dashboard-glass.css"; // UPDATED CSS
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
@@ -146,35 +146,35 @@ export default function AssignEvents() {
     }
   };
 
-const checkLockStatus = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/principal/check-lock-status`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  const checkLockStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/principal/check-lock-status`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (response.status === 401) {
-      alert("Session expired. Please login again.");
-      localStorage.clear();
-      navigate("/");
-      return;
+      if (response.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.clear();
+        navigate("/");
+        return;
+      }
+
+      const data = await response.json();
+
+      // ✅ FIXED: remove .data
+      if (data.success) {
+        setIsLocked(!!data.is_locked);
+        setRegistrationLock(!!data.registration_lock);
+      }
+
+    } catch (error) {
+      console.error("Lock status check error:", error);
     }
-
-    const data = await response.json();
-
-    // ✅ FIXED: remove .data
-    if (data.success) {
-      setIsLocked(!!data.is_locked);
-      setRegistrationLock(!!data.registration_lock);
-    }
-
-  } catch (error) {
-    console.error("Lock status check error:", error);
-  }
-};
+  };
 
   const isReadOnlyMode = isLocked || registrationLock;
 
@@ -458,7 +458,9 @@ const checkLockStatus = async () => {
   if (loading) {
     return (
       <Layout>
-        <div className="loading-indicator">Loading...</div>
+        <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
+          <h3>Loading Assignments...</h3>
+        </div>
       </Layout>
     );
   }
@@ -471,56 +473,29 @@ const checkLockStatus = async () => {
 
   return (
     <Layout>
-      <div className="assign-events-container">
-        <div className="assign-events-header">
-          <h2>Assign Events</h2>
-          <p className="subtitle">VTU HABBA 2026 — Event Assignment Management</p>
+      <div className="dashboard-glass-wrapper">
+        <div className="dashboard-header">
+          <div className="welcome-text">
+            <h1>Assign Events</h1>
+            <p>VTU HABBA 2026 — Event Assignment Management</p>
+          </div>
         </div>
 
         {dashboardData && (
-          <div
-            style={{
-              background: "transparent",
-              border: "2px solid #2563eb",
-              color: "#1e40af",
-              padding: "16px 24px",
-              borderRadius: "12px",
-              marginBottom: "24px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="glass-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
             <div>
-              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>Events Assigned</h4>
-              <p style={{ margin: "4px 0 0 0", fontSize: "24px", fontWeight: "700" }}>
+              <span className="ticker-label">Events Assigned</span>
+              <span style={{ fontSize: "1.5rem", fontWeight: "700", color: "var(--academic-gold)", margin: "0 15px" }}>
                 {participatingCount} / 25
-              </p>
-              <small style={{ fontSize: "13px" }}>Remaining: {25 - participatingCount}</small>
+              </span>
+              <small style={{ color: "var(--text-secondary)" }}>Remaining: {25 - participatingCount}</small>
             </div>
 
             {showFinalApprovalButton && (
               <button
+                className="neon-btn"
+                style={{ width: "auto", margin: 0, fontSize: "0.9rem", padding: "10px 20px" }}
                 onClick={() => setShowFinalApprovalModal(true)}
-                style={{
-                  background: "#2563eb",
-                  color: "#ffffff",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "background 0.2s ease",
-                  width: "200px",
-                  marginTop: "0px",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = "#1d4ed8";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = "#2563eb";
-                }}
               >
                 Submit Final Approval
               </button>
@@ -529,15 +504,13 @@ const checkLockStatus = async () => {
             {dashboardData?.is_final_approved && (
               <div
                 style={{
-                  background: "#dcfce7",
-                  color: "#166534",
+                  background: "rgba(16, 185, 129, 0.2)",
+                  color: "#10b981",
                   padding: "10px 20px",
                   borderRadius: "6px",
                   fontSize: "14px",
                   fontWeight: "600",
-                  border: "1px solid #86efac",
-                  width: "200px",
-                  marginTop: "0px",
+                  border: "1px solid #10b981",
                 }}
               >
                 ✓ Final Approved
@@ -552,49 +525,61 @@ const checkLockStatus = async () => {
         )}
 
         {isLocked && (
-          <div className="lock-banner">
+          <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
             🔒 Final approval submitted. All event assignments are now locked and read-only.
           </div>
         )}
         {registrationLock && (
-          <div className="lock-banner">
+          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
             🔒 Registration is currently locked. All actions are read-only.
           </div>
         )}
 
         {Object.entries(EVENT_CATEGORIES).map(([category, events]) => (
-          <div key={category} className="event-category-section">
-            <h3 className="category-title">{category}</h3>
+          <div key={category} className="glass-card" style={{ marginBottom: "25px" }}>
+            <h3 style={{ color: "var(--academic-gold)", marginBottom: "20px", borderBottomColor: "var(--glass-border)" }}>{category}</h3>
             {events.map((event) => (
-              <div key={event.slug} className="event-accordion">
+              <div key={event.slug} style={{ marginBottom: "15px" }}>
                 <div
-                  className={`event-header ${expandedEvent === event.slug ? "expanded" : ""}`}
+                  className="block-item"
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    background: expandedEvent === event.slug ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+                    borderLeft: expandedEvent === event.slug ? "3px solid var(--academic-gold)" : "3px solid transparent"
+                  }}
                   onClick={() => handleEventClick(event.slug)}
                 >
-                  <span className="event-name">{event.name}</span>
-                  <span className="event-arrow">
+                  <span style={{ fontWeight: "600", fontSize: "1.05rem" }}>{event.name}</span>
+                  <span style={{ color: "var(--academic-gold)" }}>
                     {expandedEvent === event.slug ? "▼" : "▶"}
                   </span>
                 </div>
 
                 {expandedEvent === event.slug && (
-                  <div className="event-body">
+                  <div style={{ padding: "20px", background: "rgba(0,0,0,0.2)", borderRadius: "0 0 12px 12px", marginTop: "-12px", border: "1px solid var(--glass-border)", borderTop: "none" }}>
                     {loadingEvents[event.slug] ? (
-                      <div className="loading-indicator">Loading event data...</div>
+                      <div style={{ color: "var(--text-secondary)", textAlign: "center" }}>Loading event data...</div>
                     ) : eventData[event.slug] ? (
                       <>
-                        <div className="assignment-section">
-                          <div className="section-header">
-                            <h4>Participants {eventData[event.slug].participants.length}/{EVENT_LIMITS[event.slug]?.participants || 0}</h4>
+                        <div style={{ marginBottom: "25px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                            <h4 style={{ margin: 0, color: "var(--text-primary)" }}>Participants {eventData[event.slug].participants.length}/{EVENT_LIMITS[event.slug]?.participants || 0}</h4>
                             {!isReadOnlyMode && role === "manager" && (
                               <button
-                                className="add-btn"
-                                onClick={() => openAddModal(event.slug, "add_participant")}
-                                disabled={isAddButtonDisabled(event.slug, "participant")}
+                                className="neon-btn"
                                 style={{
+                                  width: "auto",
+                                  fontSize: "0.8rem",
+                                  padding: "8px 16px",
+                                  margin: 0,
                                   opacity: isAddButtonDisabled(event.slug, "participant") ? 0.5 : 1,
                                   cursor: isAddButtonDisabled(event.slug, "participant") ? "not-allowed" : "pointer"
                                 }}
+                                onClick={() => openAddModal(event.slug, "add_participant")}
+                                disabled={isAddButtonDisabled(event.slug, "participant")}
                               >
                                 + Add Participant
                               </button>
@@ -602,30 +587,52 @@ const checkLockStatus = async () => {
                           </div>
 
                           {eventData[event.slug].participants.length === 0 ? (
-                            <p className="empty-message">No participants assigned</p>
+                            <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No participants assigned</p>
                           ) : (
-                            <div className="person-list">
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "15px" }}>
                               {eventData[event.slug].participants.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
 
                                 return (
-                                  <div key={personKey} className="person-card" style={{
+                                  <div key={personKey} style={{
+                                    background: "rgba(255,255,255,0.05)",
+                                    padding: "15px",
+                                    borderRadius: "8px",
+                                    border: "1px solid var(--glass-border)",
                                     opacity: isRemoving ? 0.6 : 1,
-                                    transition: "opacity 0.2s ease"
+                                    transition: "all 0.2s ease"
                                   }}>
-                                    <div className="person-info">
-                                      <strong>{person.full_name}</strong>
-                                      <div className="person-details">
-                                        Phone: {person.phone} | Email: {person.email || "N/A"}
+                                    <div style={{ marginBottom: "10px" }}>
+                                      <strong style={{ display: "block", color: "var(--text-primary)" }}>{person.full_name}</strong>
+                                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                                        {person.phone} <br /> {person.email || "N/A"}
                                       </div>
-                                      <span className="person-type">
+                                      <span style={{
+                                        display: "inline-block",
+                                        fontSize: "0.7rem",
+                                        padding: "2px 8px",
+                                        background: "rgba(255,255,255,0.1)",
+                                        borderRadius: "4px",
+                                        marginTop: "8px",
+                                        color: "#cbd5e1"
+                                      }}>
                                         {person.person_type === "student" ? "Student" : "Accompanist"}
                                       </span>
                                     </div>
                                     {!isReadOnlyMode && role === "manager" && (
                                       <button
-                                        className="remove-btn"
+                                        style={{
+                                          background: "rgba(239, 68, 68, 0.15)",
+                                          color: "#ef4444",
+                                          border: "1px solid #ef4444",
+                                          padding: "6px 12px",
+                                          borderRadius: "4px",
+                                          cursor: "pointer",
+                                          width: "100%",
+                                          fontSize: "0.85rem",
+                                          transition: "background 0.2s"
+                                        }}
                                         onClick={() =>
                                           handleRemove(
                                             event.slug,
@@ -634,10 +641,6 @@ const checkLockStatus = async () => {
                                           )
                                         }
                                         disabled={isRemoving}
-                                        style={{
-                                          opacity: isRemoving ? 0.5 : 1,
-                                          cursor: isRemoving ? "not-allowed" : "pointer"
-                                        }}
                                       >
                                         {isRemoving ? "Removing..." : "Remove"}
                                       </button>
@@ -649,18 +652,22 @@ const checkLockStatus = async () => {
                           )}
                         </div>
 
-                        <div className="assignment-section">
-                          <div className="section-header">
-                            <h4>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
+                        <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "20px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                            <h4 style={{ margin: 0, color: "var(--text-primary)" }}>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
                             {!isReadOnlyMode && role === "manager" && (
                               <button
-                                className="add-btn"
-                                onClick={() => openAddModal(event.slug, "add_accompanist")}
-                                disabled={isAddButtonDisabled(event.slug, "accompanist")}
+                                className="neon-btn"
                                 style={{
+                                  width: "auto",
+                                  fontSize: "0.8rem",
+                                  padding: "8px 16px",
+                                  margin: 0,
                                   opacity: isAddButtonDisabled(event.slug, "accompanist") ? 0.5 : 1,
                                   cursor: isAddButtonDisabled(event.slug, "accompanist") ? "not-allowed" : "pointer"
                                 }}
+                                onClick={() => openAddModal(event.slug, "add_accompanist")}
+                                disabled={isAddButtonDisabled(event.slug, "accompanist")}
                               >
                                 + Add Accompanist
                               </button>
@@ -668,30 +675,52 @@ const checkLockStatus = async () => {
                           </div>
 
                           {eventData[event.slug].accompanists.length === 0 ? (
-                            <p className="empty-message">No accompanists assigned</p>
+                            <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No accompanists assigned</p>
                           ) : (
-                            <div className="person-list">
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "15px" }}>
                               {eventData[event.slug].accompanists.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
 
                                 return (
-                                  <div key={personKey} className="person-card" style={{
+                                  <div key={personKey} style={{
+                                    background: "rgba(255,255,255,0.05)",
+                                    padding: "15px",
+                                    borderRadius: "8px",
+                                    border: "1px solid var(--glass-border)",
                                     opacity: isRemoving ? 0.6 : 1,
-                                    transition: "opacity 0.2s ease"
+                                    transition: "all 0.2s ease"
                                   }}>
-                                    <div className="person-info">
-                                      <strong>{person.full_name}</strong>
-                                      <div className="person-details">
-                                        Phone: {person.phone} | Email: {person.email || "N/A"}
+                                    <div style={{ marginBottom: "10px" }}>
+                                      <strong style={{ display: "block", color: "var(--text-primary)" }}>{person.full_name}</strong>
+                                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                                        {person.phone} <br /> {person.email || "N/A"}
                                       </div>
-                                      <span className="person-type">
+                                      <span style={{
+                                        display: "inline-block",
+                                        fontSize: "0.7rem",
+                                        padding: "2px 8px",
+                                        background: "rgba(255,255,255,0.1)",
+                                        borderRadius: "4px",
+                                        marginTop: "8px",
+                                        color: "#cbd5e1"
+                                      }}>
                                         {person.person_type === "student" ? "Student" : "Accompanist"}
                                       </span>
                                     </div>
                                     {!isReadOnlyMode && role === "manager" && (
                                       <button
-                                        className="remove-btn"
+                                        style={{
+                                          background: "rgba(239, 68, 68, 0.15)",
+                                          color: "#ef4444",
+                                          border: "1px solid #ef4444",
+                                          padding: "6px 12px",
+                                          borderRadius: "4px",
+                                          cursor: "pointer",
+                                          width: "100%",
+                                          fontSize: "0.85rem",
+                                          transition: "background 0.2s"
+                                        }}
                                         onClick={() =>
                                           handleRemove(
                                             event.slug,
@@ -700,10 +729,6 @@ const checkLockStatus = async () => {
                                           )
                                         }
                                         disabled={isRemoving}
-                                        style={{
-                                          opacity: isRemoving ? 0.5 : 1,
-                                          cursor: isRemoving ? "not-allowed" : "pointer"
-                                        }}
                                       >
                                         {isRemoving ? "Removing..." : "Remove"}
                                       </button>
@@ -716,7 +741,7 @@ const checkLockStatus = async () => {
                         </div>
                       </>
                     ) : (
-                      <div className="empty-message">No data available</div>
+                      <div style={{ color: "var(--text-secondary)" }}>No data available</div>
                     )}
                   </div>
                 )}
@@ -726,16 +751,36 @@ const checkLockStatus = async () => {
         ))}
 
         {showModal && (
-          <div className="modal-overlay">
-            <div className="modal-card">
-              <h3>
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000
+          }}>
+            <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+              <h3 style={{ marginTop: 0, color: "var(--academic-gold)" }}>
                 {modalMode === "add_participant" ? "Add Participant" : "Add Accompanist"}
               </h3>
 
               {modalMode === "add_accompanist" && (
-                <>
-                  <label>Person Type</label>
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ display: "block", marginBottom: "8px", color: "var(--text-secondary)" }}>Person Type</label>
                   <select
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid var(--glass-border)",
+                      borderRadius: "8px",
+                      color: "white"
+                    }}
                     value={selectedPersonType}
                     onChange={(e) => {
                       setSelectedPersonType(e.target.value);
@@ -746,57 +791,69 @@ const checkLockStatus = async () => {
                     <option value="student">Student</option>
                     <option value="accompanist">Accompanist</option>
                   </select>
-                </>
+                </div>
               )}
 
-              <label>
-                {modalMode === "add_participant"
-                  ? "Select Student"
-                  : selectedPersonType === "student"
+              <div style={{ marginBottom: "25px" }}>
+                <label style={{ display: "block", marginBottom: "8px", color: "var(--text-secondary)" }}>
+                  {modalMode === "add_participant"
                     ? "Select Student"
-                    : "Select Accompanist"}
-              </label>
-              <select
-                value={selectedPersonId}
-                onChange={(e) => setSelectedPersonId(e.target.value)}
-                disabled={isSubmittingAdd}
-              >
-                <option value="">-- Select --</option>
-                {modalMode === "add_participant" &&
-                  eventData[currentEventSlug]?.available_students?.map((student) => (
-                    <option key={student.student_id} value={student.student_id}>
-                      {student.full_name} ({student.usn})
-                    </option>
-                  ))
-                }
-                {modalMode === "add_accompanist" && selectedPersonType === "student" &&
-                  eventData[currentEventSlug]?.available_students?.map((student) => (
-                    <option key={student.student_id} value={student.student_id}>
-                      {student.full_name} ({student.usn})
-                    </option>
-                  ))
-                }
-                {modalMode === "add_accompanist" && selectedPersonType === "accompanist" &&
-                  eventData[currentEventSlug]?.available_accompanists?.map((acc) => (
-                    <option key={acc.accompanist_id} value={acc.accompanist_id}>
-                      {acc.full_name} ({acc.accompanist_type})
-                    </option>
-                  ))
-                }
-              </select>
+                    : selectedPersonType === "student"
+                      ? "Select Student"
+                      : "Select Accompanist"}
+                </label>
+                <select
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid var(--glass-border)",
+                    borderRadius: "8px",
+                    color: "white"
+                  }}
+                  value={selectedPersonId}
+                  onChange={(e) => setSelectedPersonId(e.target.value)}
+                  disabled={isSubmittingAdd}
+                >
+                  <option value="">-- Select --</option>
+                  {modalMode === "add_participant" &&
+                    eventData[currentEventSlug]?.available_students?.map((student) => (
+                      <option key={student.student_id} value={student.student_id}>
+                        {student.full_name} ({student.usn})
+                      </option>
+                    ))
+                  }
+                  {modalMode === "add_accompanist" && selectedPersonType === "student" &&
+                    eventData[currentEventSlug]?.available_students?.map((student) => (
+                      <option key={student.student_id} value={student.student_id}>
+                        {student.full_name} ({student.usn})
+                      </option>
+                    ))
+                  }
+                  {modalMode === "add_accompanist" && selectedPersonType === "accompanist" &&
+                    eventData[currentEventSlug]?.available_accompanists?.map((acc) => (
+                      <option key={acc.accompanist_id} value={acc.accompanist_id}>
+                        {acc.full_name} ({acc.accompanist_type})
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
 
-              <div className="modal-actions">
+              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
                 <button
+                  className="neon-btn"
+                  style={{ margin: 0 }}
                   onClick={handleAdd}
                   disabled={isSubmittingAdd}
-                  style={{
-                    opacity: isSubmittingAdd ? 0.5 : 1,
-                    cursor: isSubmittingAdd ? "not-allowed" : "pointer"
-                  }}
                 >
                   {isSubmittingAdd ? "Adding..." : "Add"}
                 </button>
-                <button onClick={closeModal} disabled={isSubmittingAdd}>
+                <button
+                  className="neon-btn"
+                  style={{ margin: 0, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }}
+                  onClick={closeModal}
+                  disabled={isSubmittingAdd}>
                   Cancel
                 </button>
               </div>
@@ -805,66 +862,59 @@ const checkLockStatus = async () => {
         )}
 
         {showFinalApprovalModal && (
-          <div className="modal-overlay">
-            <div className="modal-card" style={{ maxWidth: "600px" }}>
-              <h3 style={{ color: "#dc2626", marginBottom: "20px" }}>
-                ⚠️ Submit Final Approval
-              </h3>
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000
+          }}>
+            <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+              <h3 style={{ marginTop: 0, color: "var(--academic-gold)" }}>Final Approval</h3>
+              <p style={{ color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                By submitting final approval, you confirm that all event assignments are strict and final.
+                Once approved, <strong>no further changes</strong> can be made to participants or accompanists.
+              </p>
 
-              <div style={{ marginBottom: "24px", lineHeight: "1.6" }}>
-                <p style={{ fontWeight: "600", marginBottom: "12px" }}>
-                  WARNING: This action is irreversible!
-                </p>
-                <ul style={{ paddingLeft: "20px", color: "#374151" }}>
-                  <li>All student registrations will be locked</li>
-                  <li>Event assignments cannot be modified</li>
-                  <li>Accompanist details cannot be changed</li>
-                  <li>You can still manage accommodation and payment</li>
-                </ul>
+              <div style={{ margin: "20px 0", padding: "15px", background: "rgba(245, 158, 11, 0.1)", border: "1px solid var(--accent-warning)", borderRadius: "8px" }}>
+                <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", color: "#f59e0b" }}>
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    style={{ marginTop: "4px" }}
+                  />
+                  <span>I accept that this action is irreversible and locks all assignments.</span>
+                </label>
               </div>
 
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "16px",
-                  background: "#f9fafb",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  marginBottom: "24px",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                  disabled={finalApproving}
-                  style={{ width: "20px", height: "20px", cursor: "pointer" }}
-                />
-                <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                  I understand and want to proceed with final approval
-                </span>
-              </label>
-
-              <div className="modal-actions">
+              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
                 <button
+                  className="neon-btn"
+                  style={{ margin: 0 }}
                   onClick={handleFinalApproval}
-                  disabled={!termsAccepted || finalApproving}
-                  style={{
-                    background: termsAccepted ? "#dc2626" : "#9ca3af",
-                    cursor: termsAccepted && !finalApproving ? "pointer" : "not-allowed",
-                  }}
+                  disabled={finalApproving || !termsAccepted}
                 >
-                  {finalApproving ? "Submitting..." : "Submit Final Approval"}
+                  {finalApproving ? "Submitting..." : "Confirm Final Approval"}
                 </button>
-                <button onClick={() => setShowFinalApprovalModal(false)} disabled={finalApproving}>
+                <button
+                  className="neon-btn"
+                  style={{ margin: 0, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }}
+                  onClick={() => setShowFinalApprovalModal(false)}
+                  disabled={finalApproving}>
                   Cancel
                 </button>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </Layout>
   );

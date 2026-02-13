@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/approvals.css";
+import "../styles/dashboard-glass.css"; // UPDATED CSS
 
 export default function Approvals() {
   const navigate = useNavigate();
@@ -621,17 +621,19 @@ export default function Approvals() {
   // ============================================================================
 
   const renderStudentDetails = (student, isEditing, editForm, setEditForm) => (
-    <div className="student-details">
+    <div style={{ padding: "15px", background: "rgba(0,0,0,0.2)", borderRadius: "8px", marginTop: "10px" }}>
       <div className="detail-row">
-        <label>Full Name:</label>
+        <span>Full Name:</span>
         {isEditing ? (
           <input
+            className="glass-input"
             type="text"
             value={editForm.full_name}
             onChange={(e) =>
               setEditForm({ ...editForm, full_name: e.target.value })
             }
             disabled={savingEdit}
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.full_name}</span>
@@ -639,12 +641,12 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>USN:</label>
+        <span>USN:</span>
         <span>{student.usn}</span>
       </div>
 
       <div className="detail-row">
-        <label>Email:</label>
+        <span>Email:</span>
         {isEditing ? (
           <input
             type="email"
@@ -653,6 +655,7 @@ export default function Approvals() {
               setEditForm({ ...editForm, email: e.target.value })
             }
             disabled={savingEdit}
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.email}</span>
@@ -660,7 +663,7 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>Phone:</label>
+        <span>Phone:</span>
         {isEditing ? (
           <input
             type="text"
@@ -669,6 +672,7 @@ export default function Approvals() {
               setEditForm({ ...editForm, phone: e.target.value })
             }
             disabled={savingEdit}
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.phone}</span>
@@ -676,7 +680,7 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>Gender:</label>
+        <span>Gender:</span>
         {isEditing ? (
           <select
             value={editForm.gender}
@@ -684,10 +688,11 @@ export default function Approvals() {
               setEditForm({ ...editForm, gender: e.target.value })
             }
             disabled={savingEdit}
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           >
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
+            <option value="Male" style={{ color: "black" }}>Male</option>
+            <option value="Female" style={{ color: "black" }}>Female</option>
+            <option value="Other" style={{ color: "black" }}>Other</option>
           </select>
         ) : (
           <span>{student.gender}</span>
@@ -695,7 +700,7 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>Blood Group:</label>
+        <span>Blood Group:</span>
         {isEditing ? (
           <input
             type="text"
@@ -704,6 +709,7 @@ export default function Approvals() {
               setEditForm({ ...editForm, blood_group: e.target.value })
             }
             disabled={savingEdit}
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.blood_group}</span>
@@ -711,7 +717,7 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>Address:</label>
+        <span>Address:</span>
         {isEditing ? (
           <textarea
             value={editForm.address}
@@ -720,6 +726,7 @@ export default function Approvals() {
             }
             disabled={savingEdit}
             rows="2"
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.address}</span>
@@ -727,7 +734,7 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>Department:</label>
+        <span>Department:</span>
         {isEditing ? (
           <input
             type="text"
@@ -736,6 +743,7 @@ export default function Approvals() {
               setEditForm({ ...editForm, department: e.target.value })
             }
             disabled={savingEdit}
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.department}</span>
@@ -743,7 +751,7 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>Year of Study:</label>
+        <span>Year of Study:</span>
         {isEditing ? (
           <input
             type="number"
@@ -757,6 +765,7 @@ export default function Approvals() {
             disabled={savingEdit}
             min="1"
             max="4"
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.year_of_study}</span>
@@ -764,7 +773,7 @@ export default function Approvals() {
       </div>
 
       <div className="detail-row">
-        <label>Semester:</label>
+        <span>Semester:</span>
         {isEditing ? (
           <input
             type="number"
@@ -775,6 +784,7 @@ export default function Approvals() {
             disabled={savingEdit}
             min="1"
             max="8"
+            style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (
           <span>{student.semester}</span>
@@ -786,8 +796,7 @@ export default function Approvals() {
   if (loading) {
     return (
       <Layout>
-        <div className="loading-container">
-          <div className="spinner"></div>
+        <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
           <h3>Loading Applications...</h3>
         </div>
       </Layout>
@@ -799,336 +808,315 @@ export default function Approvals() {
 
   return (
     <Layout>
-      <div className="approvals-container">
-        <div className="approvals-header">
-          <h2>Student Applications</h2>
-          <p className="subtitle">
-            VTU HABBA 2026
-          </p>
-
-          {/* Read-Only Banner for Principal
-          {isReadOnly && (
-            <div className="readonly-banner" style={{
-              padding: "12px 20px",
-              margin: "15px 0",
-              backgroundColor: "#fef3c7",
-              border: "2px solid #f59e0b",
-              borderRadius: "8px",
-              color: "#92400e",
-              fontWeight: "600",
-              textAlign: "center"
-            }}>
-              👁️ VIEW 
-            </div>
-          )} */}
-
-          {/* Quota Display */}
-          <div className="quota-info" style={{
-            padding: "12px 20px",
-            margin: "15px 0",
-            backgroundColor: isQuotaExhausted ? "#fee" : "#f0f9ff",
-            border: `2px solid ${isQuotaExhausted ? "#dc2626" : "#3b82f6"}`,
-            borderRadius: "8px",
-            fontSize: "16px",
-            fontWeight: "600",
-            color: isQuotaExhausted ? "#dc2626" : "#1e40af"
-          }}>
-            College Quota: {quota.used} / {quota.max} — Remaining: {quota.remaining}
+      <div className="dashboard-glass-wrapper">
+        <div className="dashboard-header">
+          <div className="welcome-text">
+            <h1>Student Approvals</h1>
+            <p>VTU HABBA 2026 – Review & Approve Applications</p>
           </div>
-
-          {isQuotaExhausted && !isReadOnly && (
-            <div className="quota-warning" style={{
-              padding: "12px 20px",
-              margin: "10px 0",
-              backgroundColor: "#fee2e2",
-              border: "2px solid #dc2626",
-              borderRadius: "8px",
-              color: "#991b1b",
-              fontWeight: "600",
-              textAlign: "center"
-            }}>
-              ⚠️ College quota exhausted. No further approvals allowed.
-            </div>
-          )}
-
-          {isLocked && (
-            <div className="lock-banner">
-              🔒 Final approval submitted. All actions are locked (read-only).
-            </div>
-          )}
-          {registrationLock && (
-            <div className="lock-banner">
-              🔒 Registration is currently locked. All actions are read-only.
-            </div>
-          )}
         </div>
 
-        {/* ============================================================================ */}
-        {/* SECTION 1: PENDING APPROVALS */}
-        {/* ============================================================================ */}
-        <div className="section pending-section">
-          <h3 className="section-title">
-            Pending Approvals ({pendingStudents.length})
-          </h3>
+        {/* Quota Banner */}
+        <div className="glass-banner" style={{ justifyContent: "space-around", marginBottom: "30px" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Quota Used</div>
+            <div style={{ fontSize: "1.8rem", fontWeight: "bold", color: "var(--accent-info)" }}>{quota.used}</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Remaining</div>
+            <div style={{ fontSize: "1.8rem", fontWeight: "bold", color: isQuotaExhausted ? "#ef4444" : "var(--accent-success)" }}>{quota.remaining}</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Max Quota</div>
+            <div style={{ fontSize: "1.8rem", fontWeight: "bold", color: "white" }}>{quota.max}</div>
+          </div>
+        </div>
+
+        {isLocked && (
+          <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Final approval submitted. All lists are now read-only.
+          </div>
+        )}
+        {registrationLock && (
+          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Registration is currently locked. All actions are read-only.
+          </div>
+        )}
+
+        {/* PENDING APPLICATIONS */}
+        <div className="glass-card" style={{ marginBottom: "25px", borderLeft: "4px solid var(--accent-warning)" }}>
+          <h3 style={{ color: "var(--accent-warning)", borderColor: "rgba(245, 158, 11, 0.3)" }}>Pending Applications ({pendingStudents.length})</h3>
 
           {pendingStudents.length === 0 ? (
-            <p className="empty-message">No pending applications</p>
+            <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No pending applications</p>
           ) : (
-            pendingStudents.map((student) => (
-              <div key={student.application_id} className="student-card">
-                <div
-                  className="student-header"
-                  onClick={() => handlePendingClick(student.application_id)}
-                >
-                  <div className="student-name">{student.full_name}</div>
-                  <div className="student-usn">{student.usn}</div>
-                  <div className="expand-icon">
-                    {expandedPending === student.application_id ? "▼" : "▶"}
-                  </div>
-                </div>
-                {expandedPending === student.application_id && (
-                  <div className="student-body">
-                    {renderStudentDetails(
-                      student,
-                      editingPending === student.application_id,
-                      editFormPending,
-                      setEditFormPending
-                    )}
-
-                    <div className="action-buttons">
-                      {!isReadOnlyMode && !isReadOnly && (
-                        <>
-                          {editingPending === student.application_id ? (
-                            <>
-                              <button
-                                className="btn-save"
-                                onClick={() =>
-                                  saveEditPending(student.application_id)
-                                }
-                                disabled={savingEdit}
-                              >
-                                {savingEdit ? "Saving..." : "Save"}
-                              </button>
-                              <button
-                                className="btn-cancel"
-                                onClick={cancelEditPending}
-                                disabled={savingEdit}
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                className="btn-edit"
-                                onClick={() => startEditPending(student)}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className="btn-approve"
-                                onClick={() => approvePendingStudent(student)}
-                                disabled={processingAction || isQuotaExhausted}
-                                style={isQuotaExhausted ? { opacity: 0.5, cursor: "not-allowed" } : {}}
-                              >
-                                {processingAction ? "Approving..." : "Approve"}
-                              </button>
-                              <button
-                                className="btn-reject"
-                                onClick={() => rejectPendingStudent(student)}
-                                disabled={processingAction}
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                        </>
-                      )}
+            <div className="student-list">
+              {pendingStudents.map((student) => (
+                <div key={student.application_id} style={{ marginBottom: "15px" }}>
+                  <div
+                    className="block-item"
+                    style={{
+                      cursor: "pointer",
+                      background: expandedPending === student.application_id ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+                      borderLeft: expandedPending === student.application_id ? "3px solid var(--accent-warning)" : "3px solid transparent",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                    onClick={() => handlePendingClick(student.application_id)}
+                  >
+                    <div>
+                      <strong style={{ color: "var(--text-primary)" }}>{student.full_name}</strong>
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{student.usn}</div>
                     </div>
+                    <span style={{ fontSize: "0.8rem", color: "var(--accent-warning)" }}>
+                      {expandedPending === student.application_id ? "Close" : "Review"}
+                    </span>
                   </div>
-                )}
-              </div>
-            ))
+
+                  {expandedPending === student.application_id && (
+                    <div style={{ padding: "0 10px 10px 10px" }}>
+                      {renderStudentDetails(
+                        student,
+                        editingPending === student.application_id,
+                        editFormPending,
+                        setEditFormPending
+                      )}
+
+                      <div style={{ display: "flex", gap: "10px", marginTop: "15px", flexWrap: "wrap" }}>
+                        {!isReadOnly && !isReadOnlyMode && (
+                          <>
+                            {editingPending === student.application_id ? (
+                              <>
+                                <button className="neon-btn" style={{ fontSize: "0.8rem", padding: "8px", flex: 1 }} onClick={() => saveEditPending(student.application_id)} disabled={savingEdit}>
+                                  {savingEdit ? "Saving..." : "Save Changes"}
+                                </button>
+                                <button className="neon-btn" style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }} onClick={cancelEditPending} disabled={savingEdit}>
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <button className="neon-btn" style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "var(--accent-info)", color: "var(--accent-info)" }} onClick={() => startEditPending(student)}>
+                                Edit Details
+                              </button>
+                            )}
+
+                            <button
+                              className="neon-btn"
+                              style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "var(--accent-success)", color: "var(--accent-success)" }}
+                              onClick={() => approvePendingStudent(student)}
+                              disabled={editingPending === student.application_id || isQuotaExhausted}
+                            >
+                              Approve
+                            </button>
+
+                            <button
+                              className="neon-btn"
+                              style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "#ef4444", color: "#ef4444" }}
+                              onClick={() => rejectPendingStudent(student)}
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* ============================================================================ */}
-        {/* SECTION 2: APPROVED STUDENTS */}
-        {/* ============================================================================ */}
-        <div className="section approved-section">
+
+        {/* APPROVED STUDENTS */}
+        <div className="glass-card" style={{ marginBottom: "25px", borderLeft: "4px solid var(--accent-success)" }}>
           <div
-            className="section-toggle"
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
             onClick={toggleApprovedSection}
           >
-            <h3 className="section-title">
-              Approved Students
-              {approvedLoaded && ` (${approvedStudents.length})`}
-            </h3>
-            <div className="toggle-icon">
-              {showApprovedSection ? "▼" : "▶"}
-            </div>
+            <h3 style={{ margin: 0, border: "none", color: "var(--accent-success)" }}>Approved Students</h3>
+            <span style={{ color: "var(--accent-success)" }}>{showApprovedSection ? "▼" : "▶"}</span>
           </div>
 
           {showApprovedSection && (
-            <>
+            <div style={{ marginTop: "20px", borderTop: "1px solid var(--glass-border)", paddingTop: "15px" }}>
               {!approvedLoaded ? (
-                <div className="loading-indicator">Loading approved students...</div>
+                <div style={{ color: "var(--text-secondary)", textAlign: "center" }}>Loading approved students...</div>
               ) : approvedStudents.length === 0 ? (
-                <p className="empty-message">No approved students yet</p>
+                <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No approved students</p>
               ) : (
-                approvedStudents.map((student) => (
-                  <div key={student.student_id} className="student-card">
-                    <div
-                      className="student-header"
-                      onClick={() => handleApprovedClick(student.student_id)}
-                    >
-                      <div className="student-name">{student.full_name}</div>
-                      <div className="student-usn">{student.usn}</div>
-                      <div className="expand-icon">
-                        {expandedApproved === student.student_id ? "▼" : "▶"}
-                      </div>
-                    </div>
-
-                    {expandedApproved === student.student_id && (
-                      <div className="student-body">
-                        {renderStudentDetails(
-                          student,
-                          editingApproved === student.student_id,
-                          editFormApproved,
-                          setEditFormApproved
-                        )}
-
-                        <div className="action-buttons">
-                          {!isReadOnlyMode && !isReadOnly && (
-                            <>
-                              {editingApproved === student.student_id ? (
-                                <>
-                                  <button
-                                    className="btn-save"
-                                    onClick={() =>
-                                      saveEditApproved(student.student_id)
-                                    }
-                                    disabled={savingEdit}
-                                  >
-                                    {savingEdit ? "Saving..." : "Save"}
-                                  </button>
-                                  <button
-                                    className="btn-cancel"
-                                    onClick={cancelEditApproved}
-                                    disabled={savingEdit}
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    className="btn-edit"
-                                    onClick={() => startEditApproved(student)}
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    className="btn-reject"
-                                    onClick={() =>
-                                      moveApprovedToRejected(student)
-                                    }
-                                  >
-                                    Move to Rejected
-                                  </button>
-                                </>
-                              )}
-                            </>
-                          )}
+                <div className="student-list">
+                  {approvedStudents.map((student) => (
+                    <div key={student.student_id} style={{ marginBottom: "15px" }}>
+                      <div
+                        className="block-item"
+                        style={{
+                          cursor: "pointer",
+                          background: expandedApproved === student.student_id ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
+                          borderLeft: expandedApproved === student.student_id ? "3px solid var(--accent-success)" : "3px solid transparent",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}
+                        onClick={() => handleApprovedClick(student.student_id)}
+                      >
+                        <div>
+                          <strong style={{ color: "var(--text-primary)" }}>{student.full_name}</strong>
+                          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{student.usn}</div>
                         </div>
+                        <span style={{ fontSize: "0.8rem", color: "var(--accent-success)" }}>
+                          {expandedApproved === student.student_id ? "Close" : "Details"}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </>
-          )}
-        </div>
 
-        {/* ============================================================================ */}
-        {/* SECTION 3: REJECTED STUDENTS */}
-        {/* ============================================================================ */}
-        <div className="section rejected-section">
-          <div
-            className="section-toggle"
-            onClick={toggleRejectedSection}
-          >
-            <h3 className="section-title">
-              Rejected Students
-              {rejectedLoaded && ` (${rejectedStudents.length})`}
-            </h3>
-            <div className="toggle-icon">
-              {showRejectedSection ? "▼" : "▶"}
-            </div>
-          </div>
+                      {expandedApproved === student.student_id && (
+                        <div style={{ padding: "0 10px 10px 10px" }}>
+                          {renderStudentDetails(
+                            student,
+                            editingApproved === student.student_id,
+                            editFormApproved,
+                            setEditFormApproved
+                          )}
 
-          {showRejectedSection && (
-            <>
-              {!rejectedLoaded ? (
-                <div className="loading-indicator">Loading rejected students...</div>
-              ) : rejectedStudents.length === 0 ? (
-                <p className="empty-message">No rejected students</p>
-              ) : (
-                <div className="rejected-table">
-                  <div className="table-header">
-                    <span>Name</span>
-                    <span>USN</span>
-                    <span>Reason</span>
-                  </div>
-                  {rejectedStudents.map((student) => (
-                    <div key={student.student_id} className="table-row">
-                      <span>{student.full_name}</span>
-                      <span>{student.usn}</span>
-                      <span className="reason">
-                        {student.rejected_reason || "N/A"}
-                      </span>
+                          <div style={{ display: "flex", gap: "10px", marginTop: "15px", flexWrap: "wrap" }}>
+                            {!isReadOnly && !isReadOnlyMode && (
+                              <>
+                                {editingApproved === student.student_id ? (
+                                  <>
+                                    <button className="neon-btn" style={{ fontSize: "0.8rem", padding: "8px", flex: 1 }} onClick={() => saveEditApproved(student.student_id)} disabled={savingEdit}>
+                                      {savingEdit ? "Saving..." : "Save Changes"}
+                                    </button>
+                                    <button className="neon-btn" style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }} onClick={cancelEditApproved} disabled={savingEdit}>
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button className="neon-btn" style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "var(--accent-info)", color: "var(--accent-info)" }} onClick={() => startEditApproved(student)}>
+                                    Edit Details
+                                  </button>
+                                )}
+
+                                <button
+                                  className="neon-btn"
+                                  style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "#ef4444", color: "#ef4444" }}
+                                  onClick={() => moveApprovedToRejected(student)}
+                                >
+                                  Move to Rejected
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* ============================================================================ */}
-      {/* REJECTION MODAL */}
-      {/* ============================================================================ */}
-      {showRejectModal && !isReadOnlyMode && !isReadOnly && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Reject Student</h3>
-            <p>Student: {rejectTarget?.data.full_name}</p>
-            <label>Rejection Reason</label>
-            <textarea
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason..."
-              rows="4"
-              disabled={processingAction}
-            />
-            <div className="modal-actions">
-              <button
-                onClick={confirmReject}
-                disabled={processingAction}
-              >
-                {processingAction ? "Processing..." : "Confirm Reject"}
-              </button>
-              <button
-                onClick={closeRejectModal}
-                disabled={processingAction}
-              >
-                Cancel
-              </button>
+
+        {/* REJECTED STUDENTS */}
+        <div className="glass-card" style={{ marginBottom: "25px", borderLeft: "4px solid #ef4444" }}>
+          <div
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+            onClick={toggleRejectedSection}
+          >
+            <h3 style={{ margin: 0, border: "none", color: "#ef4444" }}>Rejected Students</h3>
+            <span style={{ color: "#ef4444" }}>{showRejectedSection ? "▼" : "▶"}</span>
+          </div>
+
+          {showRejectedSection && (
+            <div style={{ marginTop: "20px", borderTop: "1px solid var(--glass-border)", paddingTop: "15px" }}>
+              {!rejectedLoaded ? (
+                <div style={{ color: "var(--text-secondary)", textAlign: "center" }}>Loading rejected students...</div>
+              ) : rejectedStudents.length === 0 ? (
+                <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No rejected students</p>
+              ) : (
+                <div className="student-list">
+                  {rejectedStudents.map((student) => (
+                    <div key={student.student_id || student.application_id} className="block-item" style={{ marginBottom: "10px", display: "block" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <strong style={{ color: "var(--text-primary)" }}>{student.full_name}</strong>
+                        <span style={{ color: "#ef4444", fontSize: "0.8rem", border: "1px solid #ef4444", padding: "2px 6px", borderRadius: "4px" }}>Rejected</span>
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px" }}>{student.usn}</div>
+                      {student.rejection_reason && (
+                        <div style={{ marginTop: "8px", fontSize: "0.85rem", color: "#fca5a5" }}>
+                          Reason: {student.rejection_reason}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* REJECTION MODAL */}
+        {showRejectModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000
+          }}>
+            <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+              <h3 style={{ marginTop: 0, color: "#ef4444" }}>Reject Application</h3>
+              <p style={{ color: "var(--text-secondary)" }}>
+                Please provide a reason for rejection. This will be visible to the admin.
+              </p>
+
+              <textarea
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid var(--glass-border)",
+                  color: "white",
+                  marginTop: "10px",
+                  resize: "vertical"
+                }}
+                rows="4"
+                placeholder="Reason for rejection..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+              />
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+                <button
+                  className="neon-btn"
+                  style={{ margin: 0, borderColor: "#ef4444", color: "#ef4444" }}
+                  onClick={confirmReject}
+                  disabled={processingAction}
+                >
+                  {processingAction ? "Processing..." : "Confirm Rejection"}
+                </button>
+                <button
+                  className="neon-btn"
+                  style={{ margin: 0, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }}
+                  onClick={closeRejectModal}
+                  disabled={processingAction}>
+                  Cancel
+                </button>
+              </div>
+
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </Layout>
   );
 }
