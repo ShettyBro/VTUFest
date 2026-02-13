@@ -88,14 +88,19 @@ export default function RegisterStudent() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setRegistrationLocked(data.registration_lock === true);
+        // ✅ FIX: read from data.data
+        setRegistrationLocked(data.data?.registration_lock === true);
+      } else {
+        setRegistrationLocked(false);
       }
     } catch (error) {
       console.error("Lock status check error:", error);
+      setRegistrationLocked(false);
     } finally {
       setLockCheckComplete(true);
     }
   };
+
 
   const saveSessionToStorage = (data) => {
     if (isLocked) return;
@@ -467,6 +472,17 @@ export default function RegisterStudent() {
 
   const isUploadComplete = uploadStatus === "success";
   const isUploadBlocked = () => uploadRetries >= 3 && uploadStatus !== "success";
+  
+  if (!lockCheckComplete) {
+  return (
+    <div className="register-page">
+      <div style={{ marginTop: "120px", fontWeight: "600" }}>
+        Checking registration status...
+      </div>
+    </div>
+  );
+}
+
 
   return (
     <div className="register-page">
