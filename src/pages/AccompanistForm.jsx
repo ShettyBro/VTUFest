@@ -1,141 +1,276 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import { BlobServiceClient } from "@azure/storage-blob";
 import "../styles/dashboard-glass.css";
+
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
 export default function AccompanistForm() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
 
-  // Lock states
-  const [isLocked, setIsLocked] = useState(false);
-  const [registrationLock, setRegistrationLock] = useState(false);
-
-  const [accompanists, setAccompanists] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [quotaUsed, setQuotaUsed] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [registrationLock, setRegistrationLock] = useState(false); // global lock
 
-  // Form State
-  const [formData, setFormData] = useState({
+  const [showModal, setShowModal] = useState(false);
+  const [modalStep, setModalStep] = useState(1);
+  const [modalForm, setModalForm] = useState({
     full_name: "",
     phone: "",
     email: "",
-    accompanist_type: "Professional", // Default
+    accompanist_type: "faculty",
   });
 
-  const [passportPhoto, setPassportPhoto] = useState(null);
-  const [idProof, setIdProof] = useState(null);
+  const [sessionData, setSessionData] = useState(null);
+  const [uploadFiles, setUploadFiles] = useState({
+    government_id_proof: null,
+    passport_photo: null,
+  });
+  const [uploadStatus, setUploadStatus] = useState({
+    government_id_proof: "",
+    passport_photo: "",
+  });
+  const [uploadProgress, setUploadProgress] = useState({
+    government_id_proof: "",
+    passport_photo: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-  // Edit Mode
-  const [editingId, setEditingId] = useState(null);
+  const [timer, setTimer] = useState(null);
+  const [timerExpired, setTimerExpired] = useState(false);
+
+  const [accompanists, setAccompanists] = useState([]);
+  const [accompanistsLoaded, setAccompanistsLoaded] = useState(false);
+  const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
     if (!token) {
       navigate("/");
       return;
     }
-    fetchInitialData();
+    fetchQuota();
+    fetchAccompanists();
   }, []);
 
-  const fetchInitialData = async () => {
-    await checkLockStatus();
-    await fetchAccompanists();
-  };
-
-  const checkLockStatus = async () => {
-    try {
-      const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        setIsLocked(data.is_locked);
-        setRegistrationLock(data.registration_lock);
-      }
-    } catch (error) {
-      console.error("Lock check error:", error);
+  useEffect(() => {
+    if (timer && timer > 0 && !timerExpired) {
+      const interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setTimerExpired(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
     }
-  };
+  }, [timer, timerExpired]);
 
-  const isReadOnlyMode = isLocked || registrationLock;
-
-  const fetchAccompanists = async () => {
+  const fetchQuota = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/manage-accompanists`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ action: "get_accompanists" }),
-        }
-      );
 
-      if (response.status === 401) {
-        alert("Session expired");
-        navigate("/");
+      const dashResponse = await fetch(`${API_BASE_URL}/manager/dashboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (dashResponse.status === 401) {
+        handleSessionExpired();
         return;
       }
 
-      const data = await response.json();
-      if (data.success) {
-        setAccompanists(data.data.accompanists);
+      const dashData = await dashResponse.json();
+      if (dashData.success) {
+        setQuotaUsed(dashData.data.stats.quota_used);
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Fetch quota error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const fetchAccompanists = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ action: "get_accompanists" }),
+      });
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.data && data.data.accompanists) {
+        setAccompanists(data.data.accompanists);
+        setAccompanistsLoaded(true);
+        if (data.success && data.data) {
+          setIsLocked(data.data.is_locked);
+          setRegistrationLock(data.data.registration_lock);
+        }
+
+      }
+    } catch (error) {
+      console.error("Fetch accompanists error:", error);
+    }
+  };
+  const isReadOnlyMode = isLocked || registrationLock;
+
+  const handleSessionExpired = () => {
+    alert("Session expired. Please login again.");
+    localStorage.clear();
+    navigate("/");
   };
 
-  const handleFileChange = (e, type) => {
-    const file = e.target.files[0];
-    if (type === "passport_photo") setPassportPhoto(file);
-    if (type === "id_proof") setIdProof(file);
+  const remainingSlots = 45 - quotaUsed;
+
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const resetForm = () => {
-    setFormData({
+  const openModal = () => {
+    if (isReadOnlyMode) {
+      return;
+    }
+
+    if (remainingSlots <= 0) {
+      alert("Maximum capacity 45 reached. Remove existing participants before adding new ones.");
+      return;
+    }
+
+    setShowModal(true);
+    setModalStep(1);
+    setModalForm({
       full_name: "",
       phone: "",
       email: "",
-      accompanist_type: "Professional",
+      accompanist_type: "faculty",
     });
-    setPassportPhoto(null);
-    setIdProof(null);
-    setEditingId(null);
+    setSessionData(null);
+    setUploadFiles({
+      government_id_proof: null,
+      passport_photo: null,
+    });
+    setUploadStatus({
+      government_id_proof: "",
+      passport_photo: "",
+    });
+    setUploadProgress({
+      government_id_proof: "",
+      passport_photo: "",
+    });
+    setTimer(null);
+    setTimerExpired(false);
   };
 
-  const uploadToBlob = async (file, sasUrl) => {
+  const closeModal = () => {
+    setShowModal(false);
+    setModalStep(1);
+    setSessionData(null);
+    setTimer(null);
+    setTimerExpired(false);
+  };
+
+  const handleModalFormChange = (e) => {
+    const { name, value } = e.target;
+    setModalForm({ ...modalForm, [name]: value });
+  };
+
+  const handleFileChange = (e, key) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+      alert("Only PNG, JPG, or PDF files allowed");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File must be less than 5MB");
+      return;
+    }
+
+    setUploadFiles((prev) => ({ ...prev, [key]: file }));
+  };
+
+  const handleNext = async () => {
+    if (!modalForm.full_name || !modalForm.phone) {
+      alert("Name and Phone are required");
+      return;
+    }
+
+    if (!["faculty", "professional"].includes(modalForm.accompanist_type)) {
+      alert("Accompanist type must be either 'faculty' or 'professional'");
+      return;
+    }
+
     try {
-      const blobClient = new BlobServiceClient(sasUrl).getContainerClient("student-documents").getBlockBlobClient(file.name);
-      // We actually need to use the SAS URL directly as it includes the blob name and signature
-      // The provided SAS URL is a full URL to the blob resource with SAS token
+      setSubmitting(true);
 
-      // Creating a BlockBlobClient directly from the SAS URL
-      const blockBlobClient = new BlobServiceClient(sasUrl).getContainerClient("").getBlobClient("").getBlockBlobClient();
+      const initResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "init_accompanist",
+          full_name: modalForm.full_name,
+          phone: modalForm.phone,
+          email: modalForm.email || null,
+          accompanist_type: modalForm.accompanist_type,
+          student_id: null,
+        }),
+      });
 
-      // Wait, the SAS URL provided by backend is `https://.../container/blob?sas`
-      // We can just PUT to this URL
+      if (initResponse.status === 401) {
+        handleSessionExpired();
+        return;
+      }
 
-      const response = await fetch(sasUrl, {
+      const initData = await initResponse.json();
+
+      if (!initData.success) {
+        alert(initData.message || "Failed to initialize session");
+        return;
+      }
+
+      const { session_id, upload_urls, remaining_seconds } = initData.data;
+
+      setSessionData({ session_id, upload_urls });
+      setTimer(remaining_seconds > 0 ? remaining_seconds : 0);
+      setModalStep(2);
+    } catch (error) {
+      console.error("Init error:", error);
+      alert("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const uploadFile = async (key) => {
+    const file = uploadFiles[key];
+    if (!file || !sessionData?.upload_urls?.[key]) return;
+
+    try {
+      setUploadProgress((prev) => ({ ...prev, [key]: "uploading" }));
+
+      const uploadResponse = await fetch(sessionData.upload_urls[key], {
         method: "PUT",
         headers: {
           "x-ms-blob-type": "BlockBlob",
@@ -144,225 +279,142 @@ export default function AccompanistForm() {
         body: file,
       });
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
+      if (uploadResponse.ok) {
+        setUploadStatus((prev) => ({ ...prev, [key]: "done" }));
+        setUploadProgress((prev) => ({ ...prev, [key]: "done" }));
+      } else {
+        setUploadProgress((prev) => ({ ...prev, [key]: "failed" }));
       }
-      return true;
     } catch (error) {
-      console.error("Blob upload error:", error);
-      return false;
+      console.error("Upload error:", error);
+      setUploadProgress((prev) => ({ ...prev, [key]: "failed" }));
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isReadOnlyMode) return;
-
-    // Validate
-    if (!formData.full_name || !formData.phone || !formData.accompanist_type) {
-      alert("Please fill required fields");
+  const handleSubmit = async () => {
+    if (!sessionData?.session_id) {
+      alert("Session not initialized");
       return;
     }
 
-    // For new accompanist, files are required
-    if (!editingId && (!passportPhoto || !idProof)) {
-      alert("Passport photo and ID proof are required for new registration");
-      return;
-    }
-
-    if (editingId) {
-      // Handle Edit (Update Details Only)
-      try {
-        setSubmitting(true);
-        const response = await fetch(
-          `https://vtu-festserver-production.up.railway.app/api/manager/manage-accompanists`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              action: "update_accompanist_details",
-              accompanist_id: editingId,
-              ...formData
-            }),
-          }
-        );
-
-        const data = await response.json();
-        if (data.success) {
-          alert("Updated successfully");
-          resetForm();
-          fetchAccompanists();
-        } else {
-          alert(data.error || "Update failed");
-        }
-      } catch (error) {
-        console.error(error);
-        alert("Update failed");
-      } finally {
-        setSubmitting(false);
-      }
-      return;
-    }
-
-    // Handle Add (New Registration with SAS Upload)
     try {
       setSubmitting(true);
 
-      // 1. Init Accompanist
-      const initResponse = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/manage-accompanists`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            action: "init_accompanist",
-            ...formData,
-            // student_id is optional and used for internal linking if needed, typically null for external
-            student_id: null
-          }),
-        }
-      );
+      const finalizeResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "finalize_accompanist",
+          session_id: sessionData.session_id,
+        }),
+      });
 
-      const initData = await initResponse.json();
-      if (!initData.success) {
-        alert(initData.error || "Initialization failed");
-        setSubmitting(false);
+      if (finalizeResponse.status === 401) {
+        handleSessionExpired();
         return;
       }
-
-      const { session_id, upload_urls } = initData.data;
-
-      // 2. Upload Files
-      setUploading(true);
-
-      // Upload Passport Photo
-      try {
-        const photoUpload = await fetch(upload_urls.passport_photo, {
-          method: "PUT",
-          headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": passportPhoto.type },
-          body: passportPhoto
-        });
-        if (!photoUpload.ok) throw new Error("Passport photo upload failed");
-
-        // Upload ID Proof
-        const idUpload = await fetch(upload_urls.government_id_proof, {
-          method: "PUT",
-          headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": idProof.type },
-          body: idProof
-        });
-        if (!idUpload.ok) throw new Error("ID Proof upload failed");
-
-      } catch (uploadError) {
-        console.error(uploadError);
-        alert("File upload failed. Please try again.");
-        setSubmitting(false);
-        setUploading(false);
-        return;
-      }
-
-      setUploading(false);
-
-      // 3. Finalize Accompanist
-      const finalizeResponse = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/manage-accompanists`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            action: "finalize_accompanist",
-            session_id: session_id
-          }),
-        }
-      );
 
       const finalizeData = await finalizeResponse.json();
-      if (finalizeData.success) {
-        alert("Accompanist registered successfully!");
-        resetForm();
-        fetchAccompanists();
-      } else {
-        alert(finalizeData.error || "Finalization failed");
+
+      if (!finalizeData.success) {
+        alert(finalizeData.message || "Failed to add accompanist");
+        return;
       }
 
+      alert("Accompanist added successfully");
+      closeModal();
+      await fetchQuota();
+      await fetchAccompanists();
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Something went wrong");
+      alert("Network error. Please try again.");
     } finally {
       setSubmitting(false);
-      setUploading(false);
     }
   };
 
-  const handleEdit = (acc) => {
-    if (isReadOnlyMode) return;
-    setEditingId(acc.accompanist_id);
-    setFormData({
-      full_name: acc.full_name,
-      email: acc.email || "",
-      phone: acc.phone,
-      accompanist_type: acc.accompanist_type,
-    });
-    setPassportPhoto(null);
-    setIdProof(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const removeAccompanist = async (accompanist_id) => {
+    if (isReadOnlyMode) {
+      return;
+    }
 
-  const handleDelete = async (id) => {
-    if (isReadOnlyMode) return;
-    if (!confirm("Are you sure you want to delete this accompanist?")) return;
+    if (!confirm("Are you sure you want to remove this accompanist?")) {
+      return;
+    }
 
     try {
-      const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/manage-accompanists`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ action: "delete_accompanist", accompanist_id: id }),
-        }
-      );
+      setRemovingId(accompanist_id);
+
+      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "delete_accompanist",
+          accompanist_id,
+        }),
+      });
+
+      if (response.status === 401) {
+        handleSessionExpired();
+        return;
+      }
 
       const data = await response.json();
-      if (data.success) {
-        // Remove from list
-        fetchAccompanists();
-      } else {
-        alert(data.error || "Delete failed");
+
+      if (!data.success) {
+        alert(data.message || "Failed to remove accompanist");
+        setRemovingId(null);
+        return;
       }
+
+      setAccompanists(accompanists.filter((acc) => acc.accompanist_id !== accompanist_id));
+      setQuotaUsed(quotaUsed - 1);
+      alert("Accompanist removed successfully");
     } catch (error) {
-      console.error("Delete error:", error);
+      console.error("Remove error:", error);
+      alert("Failed to remove accompanist");
+    } finally {
+      setRemovingId(null);
     }
   };
 
+  // Glassmorphism Stlyes
   const inputStyle = {
     width: "100%",
-    padding: "10px",
-    borderRadius: "6px",
+    padding: "12px",
+    borderRadius: "8px",
     background: "rgba(255,255,255,0.05)",
     border: "1px solid var(--glass-border)",
     color: "white",
-    fontSize: "0.9rem",
-    marginTop: "4px"
+    fontSize: "0.95rem",
+    marginTop: "5px"
   };
 
   const labelStyle = {
     display: "block",
     color: "var(--text-secondary)",
-    fontSize: "0.85rem",
-    marginBottom: "4px",
-    marginTop: "12px"
+    fontSize: "0.9rem",
+    marginBottom: "5px",
+    marginTop: "15px"
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
+          <h3>Loading Accompanists...</h3>
+        </div>
+      </Layout>
+    );
+  }
+
+  const allUploaded = uploadStatus.government_id_proof === "done" && uploadStatus.passport_photo === "done";
 
   return (
     <Layout>
@@ -370,199 +422,289 @@ export default function AccompanistForm() {
         <div className="dashboard-header">
           <div className="welcome-text">
             <h1>Manage Accompanists</h1>
-            <p>Register Professionals & Faculty</p>
+            <p>Register Professionals & Faculty (with SAS Upload)</p>
           </div>
         </div>
 
         {isLocked && (
           <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 Final approval submitted. Read-only mode.
+            🔒 Final approval has been completed. Edits are not allowed.
+          </div>
+        )}
+        {registrationLock && (
+          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Registration is currently locked. Edits are not allowed.
           </div>
         )}
 
-        <div className="dashboard-grid" style={{ gridTemplateColumns: "minmax(300px, 400px) 1fr", gap: "20px", alignItems: 'start' }}>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '20px' }}>
+          <div className="glass-card" style={{ padding: '15px 25px', display: 'inline-block' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Quota Used:</span>
+            <strong style={{ color: 'white', fontSize: '1.2rem', marginLeft: '10px' }}>{quotaUsed}</strong>
+          </div>
+          <div className="glass-card" style={{ padding: '15px 25px', display: 'inline-block' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Remaining Slots:</span>
+            <strong style={{ color: 'var(--academic-gold)', fontSize: '1.2rem', marginLeft: '10px' }}>{remainingSlots}</strong>
+          </div>
+        </div>
 
-          {/* --- FORM SECTION (Smaller Width) --- */}
-          <div className="glass-card">
-            <h3 style={{ color: "var(--academic-gold)", borderBottomColor: "var(--glass-border)", paddingBottom: '10px', marginBottom: '15px' }}>
-              {editingId ? "Edit Details" : "New Registration"}
+        <div style={{ marginBottom: '30px' }}>
+          <button
+            className="neon-btn"
+            onClick={openModal}
+            disabled={remainingSlots <= 0 || isReadOnlyMode}
+            style={{ maxWidth: '300px' }}
+          >
+            + Add Accompanist
+          </button>
+        </div>
+
+        <div className="glass-card">
+          <h3 style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px' }}>
+            Added Accompanists ({accompanists.length})
+          </h3>
+
+          {!accompanistsLoaded ? (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>Loading accompanists...</div>
+          ) : accompanists.length === 0 ? (
+            <p style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>No accompanists added yet</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '15px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+              {accompanists.map((accompanist) => (
+                <div key={accompanist.accompanist_id} className="block-item" style={{ position: 'relative' }}>
+                  <div className="accompanist-info">
+                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'white' }}>{accompanist.full_name}</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
+                      <span style={{ display: 'block' }}>{accompanist.phone}</span>
+                      <span style={{ display: 'block', color: 'var(--accent-info)', marginTop: '2px' }}>{accompanist.email}</span>
+                      <span style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px', marginTop: '5px', fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--academic-gold)' }}>
+                        {accompanist.accompanist_type}
+                      </span>
+                    </div>
+                  </div>
+
+                  {!isReadOnlyMode && (
+                    <button
+                      style={{
+                        position: 'absolute', top: '15px', right: '15px',
+                        background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444',
+                        color: '#ef4444', borderRadius: '4px', padding: '4px 10px',
+                        cursor: 'pointer', fontSize: '0.85rem'
+                      }}
+                      onClick={() => removeAccompanist(accompanist.accompanist_id)}
+                      disabled={removingId === accompanist.accompanist_id || isReadOnlyMode}
+                    >
+                      {removingId === accompanist.accompanist_id ? "Removing..." : "Remove"}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="glass-card" style={{ width: '90%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', background: '#0f172a', border: '1px solid var(--academic-gold)' }}>
+            <h3 style={{ color: 'var(--academic-gold)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', marginTop: 0 }}>
+              {modalStep === 1 ? "Add Accompanist Details" : "Upload Documents"}
             </h3>
 
-            <form onSubmit={handleSubmit}>
-              <div>
-                <label style={labelStyle}>Full Name *</label>
-                <input
-                  type="text"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleInputChange}
-                  style={inputStyle}
-                  placeholder="Enter full name"
-                  required
-                  disabled={isReadOnlyMode}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Phone Number *</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  style={inputStyle}
-                  placeholder="10-digit mobile"
-                  required
-                  disabled={isReadOnlyMode}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Email (Optional)</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  style={inputStyle}
-                  placeholder="email@example.com"
-                  disabled={isReadOnlyMode}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Accompanist Type *</label>
-                <select
-                  name="accompanist_type"
-                  value={formData.accompanist_type}
-                  onChange={handleInputChange}
-                  style={inputStyle}
-                  disabled={isReadOnlyMode}
-                >
-                  <option value="Professional" style={{ color: "black" }}>Professional</option>
-                  <option value="Faculty" style={{ color: "black" }}>Faculty</option>
-                </select>
-              </div>
-
-              {/* File Uploads - Only show for new registration */}
-              {!editingId && (
-                <>
-                  <div style={{ marginTop: "15px", padding: "10px", background: "rgba(255,255,255,0.03)", borderRadius: "6px" }}>
-                    <label style={{ ...labelStyle, marginTop: 0 }}>Passport Photo *</label>
+            {modalStep === 1 ? (
+              <>
+                <div style={{ marginBottom: '20px' }}>
+                  <div>
+                    <label style={labelStyle}>Full Name *</label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, "passport_photo")}
-                      style={{ color: "var(--text-secondary)", fontSize: "0.85rem", width: '100%' }}
+                      name="full_name"
+                      value={modalForm.full_name}
+                      onChange={handleModalFormChange}
                       required
-                      disabled={isReadOnlyMode}
+                      style={inputStyle}
+                      placeholder="Enter Full Name"
                     />
                   </div>
 
-                  <div style={{ marginTop: "10px", padding: "10px", background: "rgba(255,255,255,0.03)", borderRadius: "6px" }}>
-                    <label style={{ ...labelStyle, marginTop: 0 }}>Govt ID Proof *</label>
+                  <div>
+                    <label style={labelStyle}>Phone *</label>
                     <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      onChange={(e) => handleFileChange(e, "id_proof")}
-                      style={{ color: "var(--text-secondary)", fontSize: "0.85rem", width: '100%' }}
+                      name="phone"
+                      value={modalForm.phone}
+                      onChange={handleModalFormChange}
                       required
-                      disabled={isReadOnlyMode}
+                      style={inputStyle}
+                      placeholder="10-digit Mobile"
                     />
                   </div>
-                </>
-              )}
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-                {!isReadOnlyMode && (
-                  <button
-                    type="submit"
-                    className="neon-btn"
-                    style={{ margin: 0, width: '100%' }}
-                    disabled={submitting || uploading}
-                  >
-                    {uploading ? "Uploading..." : submitting ? "Processing..." : editingId ? "Update" : "Register"}
+                  <div>
+                    <label style={labelStyle}>Email (Optional)</label>
+                    <input
+                      name="email"
+                      value={modalForm.email}
+                      onChange={handleModalFormChange}
+                      style={inputStyle}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Accompanist Type *</label>
+                    <select
+                      name="accompanist_type"
+                      value={modalForm.accompanist_type}
+                      onChange={handleModalFormChange}
+                      style={inputStyle}
+                    >
+                      <option value="faculty">Faculty</option>
+                      <option value="professional">Professional</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button className="neon-btn" onClick={handleNext} disabled={submitting}>
+                    {submitting ? "Processing..." : "Next →"}
                   </button>
-                )}
-
-                {editingId && (
                   <button
-                    type="button"
                     className="neon-btn"
-                    style={{ margin: 0, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }}
-                    onClick={resetForm}
+                    onClick={closeModal}
                     disabled={submitting}
+                    style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}
                   >
                     Cancel
                   </button>
-                )}
-              </div>
-
-            </form>
-          </div>
-
-          {/* --- LIST SECTION --- */}
-          <div className="glass-card">
-            <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", paddingBottom: '10px', marginBottom: '15px' }}>
-              Registered Accompanists
-            </h3>
-
-            {loading ? (
-              <div style={{ textAlign: "center", color: "var(--text-secondary)", padding: "20px" }}>Loading...</div>
-            ) : accompanists.length === 0 ? (
-              <div style={{ textAlign: "center", color: "var(--text-secondary)", padding: "20px", fontStyle: "italic" }}>
-                No accompanists registered yet.
-              </div>
+                </div>
+              </>
             ) : (
-              <div style={{ maxHeight: "600px", overflowY: "auto", paddingRight: "5px" }}>
-                {accompanists.map((acc) => (
-                  <div key={acc.accompanist_id} className="block-item" style={{ position: "relative", marginBottom: '10px', padding: '15px' }} >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                        {/* Photo Thumbnail */}
-                        {acc.passport_photo_url && (
-                          <img
-                            src={acc.passport_photo_url}
-                            alt="Profile"
-                            style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--academic-gold)' }}
-                          />
-                        )}
-                        <div>
-                          <strong style={{ fontSize: "1.05rem", color: "var(--text-primary)" }}>{acc.full_name}</strong>
-                          <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px" }}>
-                            {acc.phone} • {acc.email || "No Email"} <br />
-                            <span style={{ color: "var(--academic-gold)", textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                              {acc.accompanist_type}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+              <>
+                {timer !== null && !timerExpired && (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      color: timer < 30 ? "#ef4444" : "#10b981",
+                      fontWeight: "bold",
+                      marginBottom: "15px",
+                      padding: "10px",
+                      background: "rgba(255,255,255,0.05)",
+                      borderRadius: "8px"
+                    }}
+                  >
+                    Session expires in: {formatTimer(timer)}
+                  </div>
+                )}
 
-                      {!isReadOnlyMode && !acc.is_team_manager && (
-                        <div style={{ display: "flex", flexDirection: 'column', gap: "5px" }}>
-                          <button
-                            onClick={() => handleEdit(acc)}
-                            style={{ background: "rgba(33, 150, 243, 0.1)", border: "1px solid var(--accent-info)", color: "var(--accent-info)", borderRadius: "4px", padding: "4px 10px", cursor: "pointer", fontSize: "0.8rem" }}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(acc.accompanist_id)}
-                            style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid #ef4444", color: "#ef4444", borderRadius: "4px", padding: "4px 10px", cursor: "pointer", fontSize: "0.8rem" }}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                {timerExpired && (
+                  <div
+                    style={{
+                      textAlign: "center",
+                      color: "#ef4444",
+                      fontWeight: "bold",
+                      marginBottom: "15px",
+                      padding: "10px",
+                      background: "rgba(239, 68, 68, 0.1)",
+                      borderRadius: "8px"
+                    }}
+                  >
+                    Session expired. Please close and restart.
+                  </div>
+                )}
+
+                {!timerExpired && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                    {/* ID Proof Upload */}
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
+                      <label style={{ ...labelStyle, marginTop: 0 }}>Government ID Proof * (Max 5MB)</label>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,application/pdf"
+                        onChange={(e) => handleFileChange(e, "government_id_proof")}
+                        disabled={uploadStatus.government_id_proof === "done"}
+                        style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', width: '100%', marginBottom: '10px' }}
+                      />
+
+                      {uploadFiles.government_id_proof && uploadStatus.government_id_proof !== "done" && (
+                        <button
+                          className="neon-btn"
+                          type="button"
+                          onClick={() => uploadFile("government_id_proof")}
+                          style={{ padding: '8px 16px', fontSize: '0.9rem', marginTop: '5px' }}
+                        >
+                          {uploadProgress.government_id_proof === "uploading"
+                            ? "Uploading..."
+                            : "Upload ID Proof"}
+                        </button>
+                      )}
+
+                      {uploadStatus.government_id_proof === "done" && (
+                        <p style={{ color: "#10b981", margin: '5px 0', fontWeight: 'bold' }}>✓ Uploaded Successfully</p>
+                      )}
+                      {uploadProgress.government_id_proof === "failed" && (
+                        <p style={{ color: "#ef4444", margin: '5px 0', fontWeight: 'bold' }}>✗ Upload Failed - Try Again</p>
+                      )}
+                    </div>
+
+                    {/* Passport Photo Upload */}
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '8px' }}>
+                      <label style={{ ...labelStyle, marginTop: 0 }}>Passport Photo * (Max 5MB)</label>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,application/pdf"
+                        onChange={(e) => handleFileChange(e, "passport_photo")}
+                        disabled={uploadStatus.passport_photo === "done"}
+                        style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', width: '100%', marginBottom: '10px' }}
+                      />
+
+                      {uploadFiles.passport_photo && uploadStatus.passport_photo !== "done" && (
+                        <button
+                          className="neon-btn"
+                          type="button"
+                          onClick={() => uploadFile("passport_photo")}
+                          style={{ padding: '8px 16px', fontSize: '0.9rem', marginTop: '5px' }}
+                        >
+                          {uploadProgress.passport_photo === "uploading" ? "Uploading..." : "Upload Photo"}
+                        </button>
+                      )}
+
+                      {uploadStatus.passport_photo === "done" && (
+                        <p style={{ color: "#10b981", margin: '5px 0', fontWeight: 'bold' }}>✓ Uploaded Successfully</p>
+                      )}
+                      {uploadProgress.passport_photo === "failed" && (
+                        <p style={{ color: "#ef4444", margin: '5px 0', fontWeight: 'bold' }}>✗ Upload Failed - Try Again</p>
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '25px' }}>
+                  <button
+                    className="neon-btn"
+                    onClick={handleSubmit}
+                    disabled={!allUploaded || submitting || timerExpired}
+                    style={{ opacity: (!allUploaded || submitting || timerExpired) ? 0.5 : 1 }}
+                  >
+                    {submitting ? "Submitting..." : "Submit Registration"}
+                  </button>
+                  <button
+                    className="neon-btn"
+                    onClick={closeModal}
+                    disabled={submitting}
+                    style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
             )}
           </div>
-
         </div>
-      </div>
+      )}
     </Layout>
   );
 }
