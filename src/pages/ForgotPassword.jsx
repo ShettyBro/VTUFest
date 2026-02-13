@@ -3,10 +3,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 
-// Remove the trailing slash from base to avoid double slash issues, and append /api manually to match AuthPage pattern
-const API_DOMAIN = "https://vtu-festserver-production.up.railway.app";
+// Restore exact constant from original code
+const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
 
-// Explicit roles as per backend requirement
+// Explicit roles
 const ROLES = [
   { value: 'student', label: 'Student' },
   { value: 'manager', label: 'Manager' },
@@ -36,27 +36,26 @@ export default function ForgotPassword() {
       return;
     }
 
-    // STRICT CLEANING
+    // Clean inputs
     const cleanRole = role.trim().toLowerCase();
     const cleanEmail = email.trim().toLowerCase();
-
-    // Verify against allowed list immediately
-    const allowed = ['student', 'manager', 'principal'];
-    if (!allowed.includes(cleanRole)) {
-      setErrorMsg("Selected role is invalid.");
-      return;
-    }
 
     try {
       setLoading(true);
 
-      const url = `${API_DOMAIN}/api/auth/forgot-password/${cleanRole}`;
-      console.log("Requesting Password Reset:", url); // Debug log
+      // Construct URL exactly as in original code logic
+      const url = `${API_BASE_URL}auth/forgot-password/${cleanRole}`;
 
+      console.log("Sending Password Reset Request:", url);
+
+      // Added role to body as well, per user request, just in case
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail }),
+        body: JSON.stringify({
+          email: cleanEmail,
+          role: cleanRole
+        }),
       }
       );
 
@@ -69,6 +68,7 @@ export default function ForgotPassword() {
       }
 
       setSuccessMsg(data.message);
+      // Don't clear email immediately in case of error, but here success.
       setEmail("");
     } catch (err) {
       console.error(err);
