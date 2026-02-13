@@ -113,6 +113,30 @@ body,
     font-weight: 300;
 }
 
+/* Logo Glass Wrappers */
+.logo-wrapper {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    padding: 10px 14px;
+    border-radius: 14px;
+    box-shadow: 0 0 22px var(--gold-glow);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-wrapper:hover {
+    box-shadow: 0 0 28px var(--gold-glow-strong);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.logo-wrapper img {
+    height: 50px;
+    width: auto;
+    display: block;
+}
+
 /* Center College Code Pill */
 .navbar-center {
     position: absolute;
@@ -122,20 +146,20 @@ body,
 
 .college-code {
     background: var(--gold-glow);
-    border: 1px solid var(--academic-gold);
-    color: var(--academic-gold);
+    border: 1px solid var(--gold-solid);
+    color: var(--gold-solid);
     padding: 8px 18px;
     border-radius: 10px;
     font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px var(--gold-glow);
+    box-shadow: 0 2px 8px var(--gold-glow), 0 0 22px var(--gold-glow);
     transition: all 0.2s;
 }
 
 .college-code:hover {
     background: rgba(212, 175, 55, 0.15);
-    box-shadow: 0 4px 12px var(--gold-glow);
+    box-shadow: 0 4px 12px var(--gold-glow), 0 0 28px var(--gold-glow-strong);
     border-color: var(--gold-light);
     transform: translateY(-1px);
     color: var(--gold-light);
@@ -169,7 +193,7 @@ body,
 }
 
 .notif-icon:hover {
-    color: var(--academic-gold);
+    color: var(--gold-solid);
     filter: drop-shadow(0 0 6px var(--gold-light));
 }
 
@@ -183,7 +207,7 @@ body,
     font-weight: bold;
     padding: 2px 6px;
     border-radius: 50%;
-    box-shadow: 0 2px 8px var(--gold-glow);
+    box-shadow: 0 2px 8px var(--gold-glow), 0 0 20px var(--gold-glow);
 }
 
 /* Notification Dropdown (Glass) */
@@ -222,7 +246,7 @@ body,
 
 /* Critical */
 .notif-item.priority-2 {
-    border-left: 3px solid var(--academic-gold);
+    border-left: 3px solid var(--gold-solid);
 }
 
 /* High */
@@ -271,8 +295,8 @@ body,
     width: 38px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--academic-gold);
-    box-shadow: 0 2px 8px var(--gold-glow);
+    border: 2px solid var(--gold-solid);
+    box-shadow: 0 2px 8px var(--gold-glow), 0 0 20px var(--gold-glow);
     transition: all 0.2s;
 }
 
@@ -333,7 +357,7 @@ body,
 
 .menu-item:hover {
     background: var(--gold-glow);
-    color: var(--academic-gold);
+    color: var(--gold-solid);
     padding-left: 25px;
 }
 
@@ -365,7 +389,7 @@ body,
     display: flex;
     flex-direction: column;
     padding-top: 20px;
-    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3), inset -1px 0 0 rgba(255, 255, 255, 0.03);
 }
 
 .sidebar.open {
@@ -392,8 +416,8 @@ body,
 
 .sidebar-item.active {
     background: var(--gold-glow);
-    color: var(--academic-gold);
-    border-left: 3px solid var(--academic-gold);
+    color: var(--gold-solid);
+    border-left: 3px solid var(--gold-solid);
     font-weight: 600;
 }
 

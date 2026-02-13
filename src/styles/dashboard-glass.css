@@ -21,12 +21,15 @@
     --glass-highlight: rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 
-    /* Gold Accents */
-    --academic-gold: #d4af37;
-    /* Muted institutional gold */
+    /* Gold Accents - GRADIENT METALLIC */
+    --academic-gold: linear-gradient(135deg, #d4af37, #f5d76e);
+    /* Muted institutional gold gradient */
+    --gold-solid: #d4af37;
+    /* For borders */
     --gold-light: #fbbf24;
     /* Soft amber for hover */
-    --gold-glow: rgba(212, 175, 55, 0.2);
+    --gold-glow: rgba(212, 175, 55, 0.25);
+    --gold-glow-strong: rgba(212, 175, 55, 0.35);
 
     /* Supporting Colors */
     --accent-success: #10b981;
@@ -199,6 +202,26 @@ body::after {
     }
 }
 
+/* Subtle Radial Depth Behind Dashboard */
+.dashboard-glass-container {
+    position: relative;
+}
+
+.dashboard-glass-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 600px;
+    background: radial-gradient(circle at 50% 20%,
+            rgba(212, 175, 55, 0.08),
+            transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
 /* --- HEADER SECTION --- */
 .dashboard-header {
     margin-bottom: 30px;
@@ -257,7 +280,7 @@ body::after {
     white-space: nowrap;
     letter-spacing: 1px;
     text-transform: uppercase;
-    box-shadow: 0 2px 8px var(--gold-glow);
+    box-shadow: 0 2px 8px var(--gold-glow), 0 0 22px var(--gold-glow);
 }
 
 .ticker-single {
@@ -309,7 +332,9 @@ body::after {
     border-radius: 16px;
     padding: 26px;
     color: var(--text-primary);
-    box-shadow: var(--glass-shadow);
+    box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -322,7 +347,7 @@ body::after {
     left: 0;
     width: 100%;
     height: 3px;
-    background: linear-gradient(90deg, var(--academic-gold), var(--gold-light));
+    background: var(--academic-gold);
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -330,8 +355,11 @@ body::after {
 .glass-card:hover {
     transform: translateY(-3px);
     background: rgba(255, 255, 255, 0.08);
-    border-color: var(--academic-gold);
-    box-shadow: var(--card-shadow-hover), 0 0 30px var(--gold-glow);
+    border-color: var(--gold-solid);
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 0 30px var(--gold-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .glass-card:hover::before {
@@ -359,8 +387,9 @@ body::after {
     background: rgba(255, 255, 255, 0.04);
     padding: 14px;
     border-radius: 12px;
-    border-left: 3px solid var(--academic-gold);
+    border-left: 3px solid var(--gold-solid);
     transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .calendar-item:hover {
@@ -465,8 +494,8 @@ body::after {
 /* --- ACTION BUTTONS --- */
 .neon-btn {
     background: transparent;
-    border: 2px solid var(--academic-gold);
-    color: var(--academic-gold);
+    border: 2px solid var(--gold-solid);
+    color: var(--gold-solid);
     padding: 14px 32px;
     border-radius: 12px;
     font-size: 1rem;
@@ -478,12 +507,30 @@ body::after {
     box-shadow: 0 4px 12px var(--gold-glow);
     width: 100%;
     margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.neon-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--academic-gold);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+}
+
+.neon-btn:hover:not(:disabled)::before {
+    opacity: 1;
 }
 
 .neon-btn:hover:not(:disabled) {
-    background: var(--academic-gold);
     color: var(--navy-dark);
-    box-shadow: 0 6px 20px var(--gold-glow), 0 0 40px var(--gold-glow);
+    box-shadow: 0 6px 20px var(--gold-glow), 0 0 40px var(--gold-glow-strong);
     transform: translateY(-2px);
     border-color: var(--gold-light);
 }
