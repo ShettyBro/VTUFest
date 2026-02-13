@@ -610,3 +610,16 @@ body::after {
         gap: 15px;
     }
 }
+
+/* Glass-friendly Select Options */
+select option {
+    background-color: var(--navy-dark);
+    color: white;
+    padding: 10px;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--gold-solid);
+    box-shadow: 0 0 10px var(--gold-glow);
+}
