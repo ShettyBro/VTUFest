@@ -165,9 +165,10 @@ export default function AssignEvents() {
 
       const data = await response.json();
       if (data.success && data.data) {
-        setIsLocked(!!data.is_locked); // college final lock
-        setRegistrationLock(!!data.registration_lock); // global lock
+        setIsLocked(!!data.data.is_locked);
+        setRegistrationLock(!!data.data.registration_lock);
       }
+
 
     } catch (error) {
       console.error("Lock status check error:", error);

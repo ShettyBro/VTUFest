@@ -169,137 +169,151 @@ body {
 .register-card {
   background: #ffffff !important;
 }
+
 /* ============================================================================ */
-/* REGISTRATION LOCK OVERLAY STYLES */
-/* Append this to your existing register.css file */
+/* REGISTRATION LOCK OVERLAY STYLES - APPEND TO register.css */
+/* All class names are prefixed with "reg-lock-" to avoid conflicts */
 /* ============================================================================ */
 
-/* Keyframe animations for lock overlay */
-@keyframes lockFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes lockSlideUp {
-  from {
-    transform: translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes lockPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-/* Lock overlay container */
-.registration-lock-overlay {
+/* Backdrop blur layer */
+.reg-lock-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.85);
+  background-color: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  z-index: 9999;
+  z-index: 9998;
+  animation: regLockFadeIn 0.4s ease-out;
+}
+
+/* Lock overlay container */
+.reg-lock-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: lockFadeIn 0.4s ease-out;
+  z-index: 9999;
+  animation: regLockFadeIn 0.4s ease-out;
 }
 
-/* Lock card */
-.registration-lock-card {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  border-radius: 20px;
+/* Lock modal card */
+.reg-lock-modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 24px;
   padding: 60px 50px;
-  max-width: 500px;
+  max-width: 480px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  animation: lockSlideUp 0.5s ease-out;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: regLockScaleIn 0.4s ease-out;
 }
 
 /* Lock icon */
-.registration-lock-icon {
-  font-size: 80px;
-  margin-bottom: 20px;
-  animation: lockPulse 2s ease-in-out infinite;
+.reg-lock-icon {
+  font-size: 72px;
+  margin-bottom: 24px;
+  animation: regLockBounce 2s ease-in-out infinite;
 }
 
-/* Lock heading */
-.registration-lock-heading {
-  color: #ffffff;
+/* Lock title */
+.reg-lock-title {
   font-size: 32px;
   font-weight: 700;
-  margin-bottom: 15px;
-  letter-spacing: 0.5px;
+  color: #1a202c;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+  margin-top: 0;
 }
 
-/* Lock subtext */
-.registration-lock-subtext {
-  color: rgba(255, 255, 255, 0.8);
+/* Lock description text */
+.reg-lock-text {
   font-size: 16px;
+  color: #718096;
   line-height: 1.6;
   font-weight: 400;
+  margin: 0;
 }
 
-/* Blurred background content */
-.registration-content-blurred {
+/* Blurred content when locked */
+.reg-content-locked {
   filter: blur(8px);
   pointer-events: none;
 }
 
+/* Animations */
+@keyframes regLockFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes regLockScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes regLockBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 /* Responsive design for mobile */
 @media (max-width: 768px) {
-  .registration-lock-card {
+  .reg-lock-modal {
     padding: 40px 30px;
     max-width: 90%;
   }
 
-  .registration-lock-icon {
+  .reg-lock-icon {
     font-size: 60px;
   }
 
-  .registration-lock-heading {
+  .reg-lock-title {
     font-size: 24px;
   }
 
-  .registration-lock-subtext {
+  .reg-lock-text {
     font-size: 14px;
   }
 }
 
 @media (max-width: 480px) {
-  .registration-lock-card {
+  .reg-lock-modal {
     padding: 30px 20px;
   }
 
-  .registration-lock-icon {
+  .reg-lock-icon {
     font-size: 50px;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
   }
 
-  .registration-lock-heading {
+  .reg-lock-title {
     font-size: 20px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
-  .registration-lock-subtext {
+  .reg-lock-text {
     font-size: 13px;
   }
 }

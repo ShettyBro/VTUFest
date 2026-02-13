@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 
-// ✅ FIXED: Use environment variable with fallback
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
 
 const API_ENDPOINTS = {
@@ -19,7 +18,6 @@ export default function RegisterStudent() {
   const [registrationLocked, setRegistrationLocked] = useState(false);
   const [lockCheckComplete, setLockCheckComplete] = useState(false);
 
-  // Form state
   const [colleges, setColleges] = useState([]);
   const [form, setForm] = useState({
     usn: "",
@@ -32,7 +30,6 @@ export default function RegisterStudent() {
     confirmPassword: "",
   });
 
-  // UI state
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,8 +44,6 @@ export default function RegisterStudent() {
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  // Session state
   const [sessionData, setSessionData] = useState(null);
 
   const isLocked = registrationLocked === true;
@@ -58,14 +53,13 @@ export default function RegisterStudent() {
     checkLockStatus();
   }, []);
 
-  // Load session only after lock check is complete
+  // Load session only after lock check completes and if not locked
   useEffect(() => {
     if (lockCheckComplete && !isLocked) {
       loadSessionFromStorage();
     }
   }, [lockCheckComplete, isLocked]);
 
-  // Countdown timer
   useEffect(() => {
     if (timer && timer > 0 && !timerExpired) {
       const interval = setInterval(() => {
@@ -103,7 +97,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Save session to localStorage
   const saveSessionToStorage = (data) => {
     if (isLocked) return;
     localStorage.setItem("registration_session", JSON.stringify({
@@ -112,7 +105,6 @@ export default function RegisterStudent() {
     }));
   };
 
-  // Load session from localStorage
   const loadSessionFromStorage = () => {
     if (isLocked) return;
     try {
@@ -143,7 +135,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Fetch colleges only after USN is validated
   const fetchColleges = async () => {
     if (isLocked) return;
     try {
@@ -167,7 +158,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Check USN and fetch colleges if valid
   const checkUSN = async (usn) => {
     if (isLocked) return;
     if (!usn.trim()) {
@@ -229,7 +219,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -245,7 +234,6 @@ export default function RegisterStudent() {
     setErrorMessage("");
   };
 
-  // Handle photo selection
   const handlePhotoChange = (e) => {
     if (isLocked) return;
     const file = e.target.files?.[0];
@@ -272,14 +260,12 @@ export default function RegisterStudent() {
     reader.readAsDataURL(file);
   };
 
-  // Format timer display
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
   };
 
-  // Handle Next button (init registration)
   const handleNext = async (e) => {
     e.preventDefault();
     if (isLocked) return;
@@ -369,7 +355,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Upload photo
   const uploadPhoto = async () => {
     if (isLocked) return;
     if (!photoFile || !sessionData?.session_id) return;
@@ -431,7 +416,6 @@ export default function RegisterStudent() {
     }
   };
 
-  // Handle final registration
   const handleRegister = async (e) => {
     e.preventDefault();
     if (isLocked) return;
@@ -487,89 +471,19 @@ export default function RegisterStudent() {
   return (
     <div className="register-page">
       {isLocked && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.85)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          zIndex: 9999,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          animation: "lockFadeIn 0.4s ease-out"
-        }}>
-          <div style={{
-            background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
-            borderRadius: "20px",
-            padding: "60px 50px",
-            maxWidth: "500px",
-            width: "90%",
-            textAlign: "center",
-            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
-            animation: "lockSlideUp 0.5s ease-out",
-            border: "1px solid rgba(255, 255, 255, 0.1)"
-          }}>
-            <div style={{
-              fontSize: "80px",
-              marginBottom: "20px",
-              animation: "lockPulse 2s ease-in-out infinite"
-            }}>
-              🔒
+        <>
+          <div className="reg-lock-backdrop"></div>
+          <div className="reg-lock-container">
+            <div className="reg-lock-modal">
+              <div className="reg-lock-icon">🔒</div>
+              <h2 className="reg-lock-title">Registrations Are Closed</h2>
+              <p className="reg-lock-text">Please contact administration for further details.</p>
             </div>
-            <h2 style={{
-              color: "#ffffff",
-              fontSize: "32px",
-              fontWeight: "700",
-              marginBottom: "15px",
-              letterSpacing: "0.5px"
-            }}>
-              Registrations Are Closed
-            </h2>
-            <p style={{
-              color: "rgba(255, 255, 255, 0.8)",
-              fontSize: "16px",
-              lineHeight: "1.6",
-              fontWeight: "400"
-            }}>
-              Please contact administration for further details.
-            </p>
           </div>
-          <style>{`
-            @keyframes lockFadeIn {
-              from {
-                opacity: 0;
-              }
-              to {
-                opacity: 1;
-              }
-            }
-            @keyframes lockSlideUp {
-              from {
-                transform: translateY(30px);
-                opacity: 0;
-              }
-              to {
-                transform: translateY(0);
-                opacity: 1;
-              }
-            }
-            @keyframes lockPulse {
-              0%, 100% {
-                transform: scale(1);
-              }
-              50% {
-                transform: scale(1.1);
-              }
-            }
-          `}</style>
-        </div>
+        </>
       )}
 
-      <div style={{ filter: isLocked ? "blur(8px)" : "none", pointerEvents: isLocked ? "none" : "auto" }}>
+      <div className={isLocked ? "reg-content-locked" : ""}>
         <h2 className="register-title">Student Registration</h2>
 
         {errorMessage && (
@@ -597,7 +511,7 @@ export default function RegisterStudent() {
               onChange={handleChange}
               onBlur={(e) => checkUSN(e.target.value)}
               placeholder="e.g., VTU2026CS001 (alphanumeric only)"
-              disabled={loading || isLocked}
+              disabled={loading}
               required
             />
             {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
@@ -614,7 +528,7 @@ export default function RegisterStudent() {
               value={form.fullName}
               onChange={handleChange}
               placeholder="Enter your full name"
-              disabled={formDisabled || loading || isLocked}
+              disabled={formDisabled || loading}
               style={{ opacity: formDisabled ? 0.5 : 1 }}
               required
             />
@@ -624,7 +538,7 @@ export default function RegisterStudent() {
               name="collegeId"
               value={form.collegeId}
               onChange={handleChange}
-              disabled={formDisabled || loading || isLocked}
+              disabled={formDisabled || loading}
               style={{ opacity: formDisabled ? 0.5 : 1 }}
               required
             >
@@ -643,7 +557,7 @@ export default function RegisterStudent() {
               value={form.email}
               onChange={handleChange}
               placeholder="Enter your email"
-              disabled={formDisabled || loading || isLocked}
+              disabled={formDisabled || loading}
               style={{ opacity: formDisabled ? 0.5 : 1 }}
               required
             />
@@ -655,7 +569,7 @@ export default function RegisterStudent() {
               onChange={handleChange}
               placeholder="e.g., 9876543210 (10 digits)"
               maxLength="10"
-              disabled={formDisabled || loading || isLocked}
+              disabled={formDisabled || loading}
               style={{ opacity: formDisabled ? 0.5 : 1 }}
               required
             />
@@ -665,7 +579,7 @@ export default function RegisterStudent() {
               name="gender"
               value={form.gender}
               onChange={handleChange}
-              disabled={formDisabled || loading || isLocked}
+              disabled={formDisabled || loading}
               style={{ opacity: formDisabled ? 0.5 : 1 }}
               required
             >
@@ -675,11 +589,11 @@ export default function RegisterStudent() {
               <option value="Other">Other</option>
             </select>
 
-            <button type="submit" disabled={formDisabled || loading || usnChecking || isLocked}>
+            <button type="submit" disabled={formDisabled || loading || usnChecking}>
               {loading ? "Processing..." : "Next →"}
             </button>
 
-            <p className="back-link" onClick={() => !isLocked && navigate("/")}>
+            <p className="back-link" onClick={() => navigate("/")}>
               ← Back to Login
             </p>
           </form>
@@ -714,7 +628,7 @@ export default function RegisterStudent() {
               type="file"
               accept="image/png,image/jpeg,image/jpg"
               onChange={handlePhotoChange}
-              disabled={timerExpired || uploadStatus === "success" || isLocked}
+              disabled={timerExpired || uploadStatus === "success"}
             />
 
             {photoPreview && (
@@ -736,7 +650,7 @@ export default function RegisterStudent() {
               <button
                 type="button"
                 onClick={uploadPhoto}
-                disabled={timerExpired || loading || uploadStatus === "uploading" || isLocked}
+                disabled={timerExpired || loading || uploadStatus === "uploading"}
                 style={{ marginTop: "10px" }}
               >
                 {uploadStatus === "uploading"
@@ -751,7 +665,7 @@ export default function RegisterStudent() {
               </p>
             )}
 
-            {uploadStatus === "failed" && uploadRetries < 3 && !isLocked && (
+            {uploadStatus === "failed" && uploadRetries < 3 && (
               <p style={{ color: "#d32f2f", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
                 ✗ Upload failed. Please try again (Attempt {uploadRetries}/3)
               </p>
@@ -764,7 +678,7 @@ export default function RegisterStudent() {
               value={form.password}
               onChange={handleChange}
               placeholder="Enter password"
-              disabled={timerExpired || loading || isLocked}
+              disabled={timerExpired || loading}
               required
             />
 
@@ -775,7 +689,7 @@ export default function RegisterStudent() {
               value={form.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm password"
-              disabled={timerExpired || loading || isLocked}
+              disabled={timerExpired || loading}
               required
             />
 
@@ -799,14 +713,13 @@ export default function RegisterStudent() {
                 timerExpired ||
                 loading ||
                 !isUploadComplete ||
-                isUploadBlocked() ||
-                isLocked
+                isUploadBlocked()
               }
               style={{
-                cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked() || isLocked)
+                cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
                   ? "not-allowed"
                   : "pointer",
-                opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked() || isLocked)
+                opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
                   ? 0.5
                   : 1,
                 transition: "opacity 0.2s ease"
@@ -816,7 +729,6 @@ export default function RegisterStudent() {
             </button>
 
             <p className="back-link" onClick={() => {
-              if (isLocked) return;
               setShowUploadSection(false);
               setSessionData(null);
               setUploadStatus("");
