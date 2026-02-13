@@ -5,23 +5,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    /* --- AUTH PAGE THEME VARIABLES --- */
-    --bg-gradient: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    --glass-bg: rgba(255, 255, 255, 0.15);
-    /* White/Glossy Glass */
-    --glass-border: rgba(255, 255, 255, 0.3);
-    --glass-highlight: rgba(255, 255, 255, 0.5);
-    --neon-blue: #a8edea;
-    /* Soft teal from auth */
-    --neon-purple: #ffb7b2;
-    /* Soft pinkish/peach */
-    --neon-green: #96f2d7;
-    /* Soft mint */
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.85);
-    /* Increased opacity for readability */
-    --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
-    /* Blueish tint shadow like auth */
+    /* --- PROFESSIONAL LIGHT THEME --- */
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    /* Static Light Gray */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    /* High opacity white */
+    --glass-border: rgba(226, 232, 240, 0.8);
+    --glass-highlight: rgba(255, 255, 255, 0.9);
+    --neon-blue: #2563eb;
+    /* Royal Blue */
+    --neon-purple: #7c3aed;
+    /* Violet */
+    --neon-green: #059669;
+    /* Emerald */
+    --text-primary: #1e293b;
+    /* Dark Slate */
+    --text-secondary: #64748b;
+    /* Slate Gray */
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* --- GLOBAL RESET & SCROLL FIX --- */
@@ -60,26 +61,17 @@ body::before {
     top: 0;
     left: 0;
     width: 100vw;
+    width: 100vw;
     height: 100vh;
     background: var(--bg-gradient);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
     z-index: -2;
+    /* No animation for professional look */
 }
 
 /* Floating Glow Orbs */
-/* Floating Shapes matching Auth Page */
+/* Floating Shapes REMOVED for professional look */
 body::after {
-    content: "";
-    position: fixed;
-    bottom: -10%;
-    right: -10%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-    filter: blur(60px);
-    z-index: -1;
-    animation: float 10s ease-in-out infinite;
+    display: none;
 }
 
 /* Main Dashboard Wrapper - This handles scrolling */
@@ -157,16 +149,35 @@ body::after {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    /* For absolute centering */
+    min-height: 80px;
+    /* Ensure height for absolute element */
+}
+
+/* CENTERED QR BADGE */
+.qr-badge-centered {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+}
+
+/* Ensure welcome text doesn't overlap if screen is small */
+.welcome-text {
+    z-index: 5;
+    max-width: 35%;
+    /* Prevent overlap with center */
 }
 
 .welcome-text h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: 700;
     margin: 0;
-    background: linear-gradient(to right, #fff, var(--neon-blue));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: #1e293b;
+    /* Solid dark color instead of gradient text */
 }
 
 .welcome-text p {
@@ -211,9 +222,13 @@ body::after {
 .ticker-text {
     display: inline-block;
     white-space: nowrap;
-    animation: ticker 15s linear infinite;
+    /* Tweaked animation for smoother long-text scrolling */
+    animation: ticker 30s linear infinite;
+    /* Slower for readability */
     color: var(--text-primary);
     font-weight: 500;
+    padding-left: 100%;
+    /* Start off-screen */
 }
 
 @keyframes ticker {
@@ -261,10 +276,10 @@ body::after {
 }
 
 .glass-card:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 15px 35px rgba(31, 38, 135, 0.3);
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--neon-blue);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .glass-card:hover::before {

@@ -170,14 +170,9 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    if (priority1Notifications.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentPriority1Index((prev) => (prev + 1) % priority1Notifications.length);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [priority1Notifications.length]);
+  // --- REMOVED AUTO-ROTATION FOR TICKER ---
+  // The priority1Notifications are now joined in the render for smooth scrolling
+  // and no sudden content changes. 
 
   const handleSubmitApplication = () => {
     navigate("/student-register");
@@ -236,14 +231,15 @@ export default function Dashboard() {
       <div className="dashboard-glass-wrapper">
 
         {/* --- HEADER --- */}
-        <div className="dashboard-header">
+        <div className="dashboard-header relative-header">
           <div className="welcome-text">
             <h1>Welcome, {dashboardData?.student?.full_name?.split(' ')[0] || "Student"}</h1>
             {/* <p>Dashboard Overview</p> */}
           </div>
 
-          <div className="qr-badge" style={{ textAlign: 'right' }}>
-            <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem' }}>
+          {/* QR CODE - CENTERED ABSOLUTELY */}
+          <div className="qr-badge-centered">
+            <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem', textAlign: 'center' }}>
               {dashboardData?.qr_code ? "Your QR Code:" : "Your QR Code:"}
             </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
@@ -260,6 +256,9 @@ export default function Dashboard() {
               )
             }
           </div>
+
+          {/* Empty div to balance flex if needed, but absolute positioning handles centering better */}
+          <div className="header-spacer"></div>
         </div>
 
         {/* --- TICKER --- */}
@@ -268,7 +267,7 @@ export default function Dashboard() {
             <span className="ticker-label">LATEST UPDATES</span>
             <div className="ticker-wrapper">
               <span className="ticker-text">
-                {priority1Notifications[currentPriority1Index]?.message}
+                {priority1Notifications.map(n => n.message).join(" |   •   | ")}
               </span>
             </div>
           </div>
