@@ -22,6 +22,16 @@ import Rules from "../pages/Rules";
 import FeePayment from "../pages/FeePayment";
 import ManagerDashboard from "../pages/ManagerDashboard";
 
+// New Logins
+import AdminLogin from "../pages/AdminLogin";
+import EventManagerLogin from "../pages/EventManagerLogin";
+import VolunteerLogin from "../pages/VolunteerLogin";
+
+// New Dashboards
+import AdminDashboard from "../pages/AdminDashboard";
+import EventManagerDashboard from "../pages/EventManagerDashboard";
+import VolunteerDashboard from "../pages/VolunteerDashboard";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -30,6 +40,17 @@ export default function AppRoutes() {
       <Route path="/register-student" element={<AuthPage initialView="register" />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/assign-events" element={<AssignEvents />} />
+
+      {/* ================= NEW LOGIN PAGES ================= */}
+      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/event-manager-login" element={<EventManagerLogin />} />
+      <Route path="/volunteer-login" element={<VolunteerLogin />} />
+
+      {/* ================= NEW DASHBOARDS (PLACEHOLDERS) ================= */}
+      {/* Note: In a real app, these would be protected routes */}
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/event-manager-dashboard" element={<EventManagerDashboard />} />
+      <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
 
       {/* ================= RESET PASSWORD (RESET-AUTHORIZED) ================= */}
       {/* 
