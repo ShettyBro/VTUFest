@@ -336,13 +336,16 @@ export default function AuthPage({ initialView = "login" }) {
 
             // Backend returns { message: "..." } on success
             if (res.ok) {
-                alert("Registration Successful! Please Login.");
-                setView("login");
-                setRegStep(1);
-                setRegForm({
-                    usn: "", fullName: "", email: "", phone: "", gender: "",
-                    collegeId: "", password: "", confirmPassword: ""
-                });
+                setGlobalSuccess("Registration Successful! Redirecting to login...");
+                setTimeout(() => {
+                    setView("login");
+                    setRegStep(1);
+                    setRegForm({
+                        usn: "", fullName: "", email: "", phone: "", gender: "",
+                        collegeId: "", password: "", confirmPassword: ""
+                    });
+                    setGlobalSuccess("");
+                }, 3000);
             } else {
                 setGlobalError(data.error || data.message || "Finalization failed");
             }
@@ -576,23 +579,30 @@ export default function AuthPage({ initialView = "login" }) {
                                             {/* Photo Upload */}
                                             <div className="file-upload-wrapper">
                                                 {photoPreview ? (
-                                                    <img src={photoPreview} alt="Preview" style={{ width: '100px', borderRadius: '50%' }} />
-                                                ) : <span>Select Passport Photo</span>}
+                                                    <img src={photoPreview} alt="Preview" className="preview-img" />
+                                                ) : (
+                                                    <div style={{ marginBottom: '10px', fontSize: '2rem' }}>📷</div>
+                                                )}
 
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    style={{ marginTop: '10px' }}
-                                                    onChange={(e) => {
-                                                        const file = e.target.files[0];
-                                                        if (file) {
-                                                            setPhotoFile(file);
-                                                            const reader = new FileReader();
-                                                            reader.onloadend = () => setPhotoPreview(reader.result);
-                                                            reader.readAsDataURL(file);
-                                                        }
-                                                    }}
-                                                />
+                                                <div>
+                                                    <label htmlFor="file-upload" className="custom-file-upload">
+                                                        {photoFile ? "Change Photo" : "Choose Photo"}
+                                                    </label>
+                                                    <input
+                                                        id="file-upload"
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files[0];
+                                                            if (file) {
+                                                                setPhotoFile(file);
+                                                                const reader = new FileReader();
+                                                                reader.onloadend = () => setPhotoPreview(reader.result);
+                                                                reader.readAsDataURL(file);
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
 
                                                 {photoFile && uploadStatus !== "success" && (
                                                     <button
@@ -600,6 +610,7 @@ export default function AuthPage({ initialView = "login" }) {
                                                         className="secondary-btn"
                                                         onClick={handlePhotoUpload}
                                                         disabled={uploadStatus === "uploading"}
+                                                        style={{ marginTop: '15px' }}
                                                     >
                                                         {uploadStatus === "uploading" ? `Uploading ${uploadProgress}%` : "Upload Now"}
                                                     </button>
