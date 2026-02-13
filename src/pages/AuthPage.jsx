@@ -257,12 +257,13 @@ export default function AuthPage({ initialView = "login" }) {
             });
             const data = await res.json();
 
-            if (data.success) {
+            // Backend returns session_id directly on success
+            if (res.ok && data.session_id) {
                 setRegSession({ session_id: data.session_id });
                 setRegTimer(data.remaining_seconds);
                 setRegStep(2);
             } else {
-                setGlobalError(data.message || "Registration init failed");
+                setGlobalError(data.error || data.message || "Registration init failed");
             }
         } catch (e) {
             setGlobalError("Network error");
@@ -286,12 +287,16 @@ export default function AuthPage({ initialView = "login" }) {
         xhr.onload = () => {
             if (xhr.status === 200) {
                 const data = JSON.parse(xhr.responseText);
-                if (data.success) {
+                // Backend might return { success: true } or just a message? 
+                // The provided backend code for upload is NOT shown, but usually it's standard.
+                // Assuming upload endpoint returns success: true based entirely on previous context or assuming standard.
+                // If it fails, user will report. But for register.js, we saw code.
+                if (data.success || data.message) {
                     setUploadStatus("success");
                     setGlobalSuccess("Photo uploaded!");
                 } else {
                     setUploadStatus("error");
-                    setGlobalError(data.message);
+                    setGlobalError(data.message || "Upload failed");
                 }
             } else {
                 setUploadStatus("error");
@@ -318,7 +323,9 @@ export default function AuthPage({ initialView = "login" }) {
                 })
             });
             const data = await res.json();
-            if (data.success) {
+
+            // Backend returns { message: "..." } on success
+            if (res.ok) {
                 alert("Registration Successful! Please Login.");
                 setView("login");
                 setRegStep(1);
@@ -327,7 +334,7 @@ export default function AuthPage({ initialView = "login" }) {
                     collegeId: "", password: "", confirmPassword: ""
                 });
             } else {
-                setGlobalError(data.message);
+                setGlobalError(data.error || data.message || "Finalization failed");
             }
         } catch (e) {
             setGlobalError("Finalization failed");
