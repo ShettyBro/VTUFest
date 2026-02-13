@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
-import "../styles/PrincipalDashboard.css";
+import "../styles/dashboard-glass.css"; // UPDATED CSS IMPORT
 import notificationsData from "../data/notifications.json";
-import eventsCalendarData from "../data/events-calendar.json";
 
 export default function PrincipalDashboard() {
   const navigate = useNavigate();
@@ -54,7 +53,7 @@ export default function PrincipalDashboard() {
     if (priority1Notifications.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentPriority1Index(prev => 
+      setCurrentPriority1Index(prev =>
         (prev + 1) % priority1Notifications.length
       );
     }, 20000);
@@ -202,7 +201,7 @@ export default function PrincipalDashboard() {
   if (loading) {
     return (
       <Layout>
-        <div className="loading-container">
+        <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
           <div className="spinner"></div>
           <h3>Loading Principal Dashboard...</h3>
           <p>Please wait while we fetch your data</p>
@@ -214,115 +213,144 @@ export default function PrincipalDashboard() {
   const participatingCount = dashboardData?.stats?.participating_event_count || 0;
   const showViewEventsButton = participatingCount >= 1;
 
+  // Input styles for modal to match glass theme
+  const inputStyle = {
+    width: "100%",
+    padding: "12px",
+    borderRadius: "8px",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid var(--glass-border)",
+    color: "white",
+    fontSize: "0.95rem",
+    marginTop: "5px",
+    marginBottom: "15px"
+  };
+
+  const labelStyle = {
+    display: "block",
+    color: "var(--text-secondary)",
+    fontSize: "0.9rem",
+    marginBottom: "5px"
+  };
+
   return (
     <Layout>
-      {priority1Notifications.length > 0 && (
-        <div className="top-banner">
-          <div className="priority-ticker">
-            <span className="ticker-label">IMP Notification:</span>
-            <div className="ticker-wrapper">
-              <span className="ticker-text">
-                {priority1Notifications[currentPriority1Index]?.message}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="dashboard-glass-wrapper">
 
-      <div className="dashboard-container">
-        <div className="dashboard-header">
-          <h2>Principal Dashboard</h2>
-          <p>VTU HABBA 2026 — Principal Administration Panel</p>
+        {/* --- HEADER --- */}
+        <div className="dashboard-header relative-header">
+          <div className="welcome-text">
+            <h1>Principal Dashboard</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Principal Administration Panel</p>
+          </div>
 
           {dashboardData && !dashboardData.has_team_manager && (
             <button
-              className="assign-manager-btn"
+              className="neon-btn"
               onClick={() => setShowAssignModal(true)}
               disabled={assigningManager}
+              style={{ padding: '8px 20px', fontSize: '0.9rem' }}
             >
               {assigningManager ? "Assigning..." : "Assign Manager"}
             </button>
           )}
         </div>
 
-        <div className="stats-grid">
-          <div className="stat-card">
+        {/* --- TICKER --- */}
+        {priority1Notifications.length > 0 && (
+          <div className="glass-banner">
+            <span className="ticker-label">IMP Notification</span>
+            <div className="ticker-single">
+              <span className="ticker-message">
+                {priority1Notifications[currentPriority1Index]?.message}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* --- STATS GRID --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+
+          <div className="glass-card">
             <h4>Total Registrations</h4>
-            <p>{dashboardData?.stats?.total_students || 0}</p>
-            <small>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-info)', margin: '10px 0' }}>
+              {dashboardData?.stats?.total_students || 0}
+            </div>
+            <small style={{ color: 'var(--text-secondary)' }}>
               With applications: {dashboardData?.stats?.students_with_applications || 0}
             </small>
           </div>
 
           <div
-            className="stat-card warning clickable"
+            className="glass-card clickable"
+            style={{ cursor: 'pointer', borderLeft: '4px solid var(--accent-warning)' }}
             onClick={() => navigate("/accompanist-form")}
           >
-            <h4>Accompanists</h4>
-            <p>{dashboardData?.stats?.accompanists_count || 0}</p>
+            <h4 style={{ color: 'var(--accent-warning)', borderColor: 'rgba(245, 158, 11, 0.2)' }}>Accompanists</h4>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-warning)', margin: '10px 0' }}>
+              {dashboardData?.stats?.accompanists_count || 0}
+            </div>
           </div>
 
           <div
-            className="stat-card success clickable"
+            className="glass-card clickable"
+            style={{ cursor: 'pointer', borderLeft: '4px solid var(--accent-success)' }}
             onClick={() => navigate("/approved-students")}
           >
-            <h4>Approved Students</h4>
-            <p>{dashboardData?.stats?.approved_students || 0}</p>
+            <h4 style={{ color: 'var(--accent-success)', borderColor: 'rgba(16, 185, 129, 0.2)' }}>Approved Students</h4>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-success)', margin: '10px 0' }}>
+              {dashboardData?.stats?.approved_students || 0}
+            </div>
           </div>
 
           <div
-            className="stat-card danger clickable"
+            className="glass-card clickable"
+            style={{ cursor: 'pointer', borderLeft: '4px solid #EF5350' }}
             onClick={() => navigate("/rejected-students")}
           >
-            <h4>Rejected Students</h4>
-            <p>{dashboardData?.stats?.rejected_students || 0}</p>
+            <h4 style={{ color: '#EF5350', borderColor: 'rgba(239, 83, 80, 0.2)' }}>Rejected Students</h4>
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#EF5350', margin: '10px 0' }}>
+              {dashboardData?.stats?.rejected_students || 0}
+            </div>
           </div>
 
           <div
-            className="stat-card accommodation clickable"
+            className="glass-card clickable"
+            style={{ cursor: 'pointer', borderLeft: '4px solid #8B5CF6' }}
             onClick={() => navigate("/accommodation")}
           >
-            <h4>Accommodation</h4>
+            <h4 style={{ color: '#8B5CF6', borderColor: 'rgba(139, 92, 246, 0.2)' }}>Accommodation</h4>
             {dashboardData?.accommodation ? (
-              <>
-                <p>Girls: {dashboardData.accommodation.total_girls}</p>
-                <p>Boys: {dashboardData.accommodation.total_boys}</p>
-                <small>Status: {dashboardData.accommodation.status}</small>
-              </>
+              <div style={{ marginTop: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span>Girls:</span> <strong style={{ color: '#fff' }}>{dashboardData.accommodation.total_girls}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span>Boys:</span> <strong style={{ color: '#fff' }}>{dashboardData.accommodation.total_boys}</strong>
+                </div>
+                <small style={{ display: 'block', marginTop: '10px', color: '#A78BFA' }}>Status: {dashboardData.accommodation.status}</small>
+              </div>
             ) : (
-              <p>Apply Now</p>
+              <p style={{ marginTop: '10px', color: '#A78BFA' }}>Apply Now</p>
             )}
           </div>
 
-          <div className="stat-card">
+          <div className="glass-card">
             <h4>College Quota</h4>
-            <p>
-              {dashboardData?.stats?.quota_used || 0} /{" "}
-              {dashboardData?.college?.max_quota || 45}
-            </p>
-            <small>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
-            
+            <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '10px 0' }}>
+              {dashboardData?.stats?.quota_used || 0} / {dashboardData?.college?.max_quota || 45}
+            </div>
+            <small style={{ color: 'var(--text-secondary)' }}>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
+
             {showViewEventsButton && (
               <button
+                className="neon-btn"
                 onClick={() => navigate("/assign-events")}
                 style={{
-                  marginTop: "12px",
+                  marginTop: "15px",
                   width: "100%",
-                  padding: "8px 12px",
-                  background: "#2563eb",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  transition: "background 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = "#1d4ed8";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = "#2563eb";
+                  fontSize: "0.85rem",
+                  padding: "8px 12px"
                 }}
               >
                 View Assigned Events
@@ -331,71 +359,94 @@ export default function PrincipalDashboard() {
           </div>
         </div>
 
-        <div className="dashboard-map-wrapper">
-          <div className="map-side left">
-            {blockEvents.left.map((block, idx) => (
-              <div className="block-card" key={idx}>
-                <h4>
-                  {block.blockNo}. {block.blockName}
-                </h4>
-                {block.events.map((e, i) => (
-                  <p key={i}>
-                    • {e.name} — Room {e.room} ({e.day})
-                  </p>
-                ))}
-              </div>
-            ))}
-          </div>
+        {/* --- MAP SECTION --- */}
+        <div className="glass-card">
+          <h3 style={{ marginBottom: '5px' }}>Campus Map</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>Event Locations & Blocks</p>
 
-          <div className="map-center">
-            <h3 className="section-title">Campus Map & Event Locations</h3>
-            <CampusMap />
-          </div>
+          <div className="map-container-full">
+            <div className="map-blocks-left">
+              {blockEvents.left.map((block, idx) => (
+                <div className="block-item" key={idx}>
+                  <strong style={{ color: 'var(--academic-gold)' }}>{block.blockNo}. {block.blockName}</strong>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
+                    {block.events.map((e, i) => <div key={i}>• {e.name} – Room {e.room} ({e.day})</div>)}
+                  </div>
+                </div>
+              ))}
+            </div>
 
-          <div className="map-side right">
-            {blockEvents.right.map((block, idx) => (
-              <div className="block-card" key={idx}>
-                <h4>
-                  {block.blockNo}. {block.blockName}
-                </h4>
-                {block.events.map((e, i) => (
-                  <p key={i}>
-                    • {e.name} — Room {e.room} ({e.day})
-                  </p>
-                ))}
-              </div>
-            ))}
+            <div className="map-card" style={{ minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CampusMap />
+            </div>
+
+            <div className="map-blocks-right">
+              {blockEvents.right.map((block, idx) => (
+                <div className="block-item" key={idx}>
+                  <strong style={{ color: 'var(--academic-gold)' }}>{block.blockNo}. {block.blockName}</strong>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
+                    {block.events.map((e, i) => <div key={i}>• {e.name} – Room {e.room} ({e.day})</div>)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+
       </div>
 
       {showAssignModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>Assign Team Manager</h3>
-            <label>Manager Name</label>
-            <input
-              value={managerForm.name}
-              onChange={(e) => setManagerForm({ ...managerForm, name: e.target.value })}
-              disabled={assigningManager}
-            />
-            <label>Manager Email</label>
-            <input
-              value={managerForm.email}
-              onChange={(e) => setManagerForm({ ...managerForm, email: e.target.value })}
-              disabled={assigningManager}
-            />
-            <label>Manager Mobile</label>
-            <input
-              value={managerForm.phone}
-              onChange={(e) => setManagerForm({ ...managerForm, phone: e.target.value })}
-              disabled={assigningManager}
-            />
-            <div className="modal-actions">
-              <button onClick={handleAssignManager} disabled={assigningManager}>
-                {assigningManager ? "Assigning..." : "Submit"}
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="glass-card" style={{ width: '90%', maxWidth: '500px', background: 'var(--navy-dark)', border: '1px solid var(--academic-gold)' }}>
+            <h3 style={{ color: 'var(--academic-gold)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', marginTop: 0 }}>
+              Assign Team Manager
+            </h3>
+
+            <div>
+              <label style={labelStyle}>Manager Name</label>
+              <input
+                value={managerForm.name}
+                onChange={(e) => setManagerForm({ ...managerForm, name: e.target.value })}
+                disabled={assigningManager}
+                style={inputStyle}
+                placeholder="Enter Full Name"
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Manager Email</label>
+              <input
+                value={managerForm.email}
+                onChange={(e) => setManagerForm({ ...managerForm, email: e.target.value })}
+                disabled={assigningManager}
+                style={inputStyle}
+                placeholder="Enter Email Address"
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Manager Mobile</label>
+              <input
+                value={managerForm.phone}
+                onChange={(e) => setManagerForm({ ...managerForm, phone: e.target.value })}
+                disabled={assigningManager}
+                style={inputStyle}
+                placeholder="Enter 10-digit Mobile"
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button
+                className="neon-btn"
+                onClick={handleAssignManager}
+                disabled={assigningManager}
+              >
+                {assigningManager ? "Assigning..." : "Assign Manager"}
               </button>
-              <button onClick={() => setShowAssignModal(false)} disabled={assigningManager}>
+              <button
+                className="neon-btn"
+                onClick={() => setShowAssignModal(false)}
+                disabled={assigningManager}
+                style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}
+              >
                 Cancel
               </button>
             </div>
