@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/StudentRegister.css";
+import "../styles/auth.css"; // Using auth.css as requested
 
 
 const API_BASE = {
@@ -348,252 +348,269 @@ export default function SubmitApplication() {
     }
   };
 
-  return (
-    <div className="register-page">
-      <h2>Submit Application</h2>
+  // Helper component for file upload to match AuthPage design
+  const FileUploadField = ({ label, docType, blobType, accept, title }) => (
+    <div className="file-upload-wrapper" style={{ marginTop: '20px', padding: '20px' }}>
+      <h4 style={{ color: 'white', marginBottom: '15px' }}>{title || label}</h4>
+      <div className="preview-container">
+        {documentPreviews[docType] ? (
+          documentPreviews[docType] === "PDF" ? (
+            <div style={{ marginBottom: '15px', fontSize: '3rem', color: '#fff' }}>📄 PDF</div>
+          ) : (
+            <img src={documentPreviews[docType]} alt="Preview" className="preview-img" style={{ width: '120px', height: '120px' }} />
+          )
+        ) : (
+          <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📄</div>
+        )}
+      </div>
+      <div style={{ textAlign: "center" }}>
+        <label htmlFor={`file-upload-${docType}`} className="custom-file-upload">
+          <span style={{ marginRight: '10px' }}>📁</span>
+          {documents[docType] ? "Change File" : "Choose File"}
+        </label>
+        <input
+          id={`file-upload-${docType}`}
+          type="file"
+          accept={accept}
+          onChange={handleDocumentChange(docType)}
+          disabled={timerExpired || uploadStatus[docType] === "success"}
+          style={{ display: 'none' }}
+        />
+        {documents[docType] && (
+          <div className="file-name-display">
+            {documents[docType].name}
+          </div>
+        )}
+      </div>
 
-      {!showUploadSection ? (
-        <form className="register-card" onSubmit={handleNext}>
-          <label>USN / Registration Number</label>
-          <input
-            value={studentInfo?.usn || "Loading..."}
-            disabled
-            style={{ backgroundColor: "#f0f0f0" }}
-          />
-
-          {studentInfo?.college && (
-            <>
-              <label>College </label>
-              <input
-                value={`${studentInfo.college.college_name}, ${studentInfo.college.place}`}
-                disabled
-                style={{ backgroundColor: "#f0f0f0" }}
-              />
-            </>
-          )}
-
-          <label>Blood Group *</label>
-          <select
-            name="bloodGroup"
-            value={form.bloodGroup}
-            onChange={handleChange}
-            disabled={loading}
-            required
-          >
-            <option value="">Select Blood Group</option>
-            <option>A+</option>
-            <option>A-</option>
-            <option>B+</option>
-            <option>B-</option>
-            <option>AB+</option>
-            <option>AB-</option>
-            <option>O+</option>
-            <option>O-</option>
-          </select>
-
-          <label>Permanent Address *</label>
-          <textarea
-            name="address"
-            value={form.address}
-            onChange={handleChange}
-            placeholder="Enter your permanent address"
-            rows="3"
-            disabled={loading}
-            required
-          />
-
-          <label>Department *</label>
-          <input
-            type="text"
-            name="department"
-            value={form.department || ""}
-            onChange={handleChange}
-            placeholder="Enter your department"
-            disabled={loading}
-            required
-          />
-
-          <label>Year of Study *</label>
-          <select
-            name="yearOfStudy"
-            value={form.yearOfStudy}
-            onChange={handleChange}
-            disabled={loading}
-            required
-          >
-            <option value="">Select Year</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-
-          <label>Semester *</label>
-          <select
-            name="semester"
-            value={form.semester}
-            onChange={handleChange}
-            disabled={loading}
-            required
-          >
-            <option value="">Select Semester</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-              <option key={s} value={s}>
-                Semester {s}
-              </option>
-            ))}
-          </select>
-
-          <button type="submit" disabled={loading || !studentInfo}>
-            {loading ? "Processing..." : "Next"}
-          </button>
-
-          <p className="back-link" onClick={() => navigate("/dashboard")}>
-            ← Back to Dashboard
-          </p>
-        </form>
-      ) : (
-        <form className="register-card" onSubmit={handleSubmit}>
-          {timer !== null && !timerExpired && (
-            <div
-              style={{
-                textAlign: "center",
-                color: timer < 30 ? "red" : "green",
-                fontWeight: "bold",
-                marginBottom: "15px",
-              }}
-            >
-              Session expires in: {formatTimer(timer)}
-            </div>
-          )}
-
-          {timerExpired && (
-            <div
-              style={{
-                textAlign: "center",
-                color: "red",
-                fontWeight: "bold",
-                marginBottom: "15px",
-              }}
-            >
-              Session expired. Please restart.
-            </div>
-          )}
-
-          <label>Aadhaar Card * (PNG/JPG/PDF, max 5MB)</label>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,application/pdf"
-            onChange={handleDocumentChange("aadhaar")}
-            disabled={timerExpired || uploadStatus.aadhaar === "success"}
-          />
-          {documentPreviews.aadhaar && documentPreviews.aadhaar !== "PDF" && (
-            <div style={{ textAlign: "center", margin: "10px 0" }}>
-              <img
-                src={documentPreviews.aadhaar}
-                alt="Aadhaar Preview"
-                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
-              />
-            </div>
-          )}
-          {documents.aadhaar && uploadStatus.aadhaar !== "success" && (
-            <button
-              type="button"
-              onClick={() => uploadDocument("aadhaar", "aadhaar")}
-              disabled={timerExpired || loading}
-              style={{ marginTop: "10px" }}
-            >
-              {uploadStatus.aadhaar === "uploading" ? "Uploading..." : "Upload Aadhaar"}
-            </button>
-          )}
-          {uploadStatus.aadhaar === "success" && (
-            <p style={{ color: "green", fontSize: "14px" }}>✓ Aadhaar uploaded</p>
-          )}
-
-          <label>College ID Card * (PNG/JPG/PDF, max 5MB)</label>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,application/pdf"
-            onChange={handleDocumentChange("collegeId")}
-            disabled={timerExpired || uploadStatus.collegeId === "success"}
-          />
-          {documentPreviews.collegeId && documentPreviews.collegeId !== "PDF" && (
-            <div style={{ textAlign: "center", margin: "10px 0" }}>
-              <img
-                src={documentPreviews.collegeId}
-                alt="College ID Preview"
-                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
-              />
-            </div>
-          )}
-          {documents.collegeId && uploadStatus.collegeId !== "success" && (
-            <button
-              type="button"
-              onClick={() => uploadDocument("collegeId", "college_id_card")}
-              disabled={timerExpired || loading}
-              style={{ marginTop: "10px" }}
-            >
-              {uploadStatus.collegeId === "uploading" ? "Uploading..." : "Upload College ID"}
-            </button>
-          )}
-          {uploadStatus.collegeId === "success" && (
-            <p style={{ color: "green", fontSize: "14px" }}>✓ College ID uploaded</p>
-          )}
-
-          <label>10th Marks Card * (PNG/JPG/PDF, max 5MB)</label>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,application/pdf"
-            onChange={handleDocumentChange("marksCard")}
-            disabled={timerExpired || uploadStatus.marksCard === "success"}
-          />
-          {documentPreviews.marksCard && documentPreviews.marksCard !== "PDF" && (
-            <div style={{ textAlign: "center", margin: "10px 0" }}>
-              <img
-                src={documentPreviews.marksCard}
-                alt="Marks Card Preview"
-                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
-              />
-            </div>
-          )}
-          {documents.marksCard && uploadStatus.marksCard !== "success" && (
-            <button
-              type="button"
-              onClick={() => uploadDocument("marksCard", "marks_card_10th")}
-              disabled={timerExpired || loading}
-              style={{ marginTop: "10px" }}
-            >
-              {uploadStatus.marksCard === "uploading" ? "Uploading..." : "Upload Marks Card"}
-            </button>
-          )}
-          {uploadStatus.marksCard === "success" && (
-            <p style={{ color: "green", fontSize: "14px" }}>✓ Marks Card uploaded</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={
-              timerExpired ||
-              loading ||
-              uploadStatus.aadhaar !== "success" ||
-              uploadStatus.collegeId !== "success" ||
-              uploadStatus.marksCard !== "success"
-            }
-          >
-            {loading ? "Submitting..." : "Submit Application"}
-          </button>
-
-          <p
-            className="back-link"
-            onClick={() => {
-              setShowUploadSection(false);
-              localStorage.removeItem("application_session");
-            }}
-          >
-            ← Back to Form
-          </p>
-        </form>
+      {documents[docType] && uploadStatus[docType] !== "success" && (
+        <button
+          type="button"
+          className="secondary-btn"
+          onClick={() => uploadDocument(docType, blobType)}
+          disabled={timerExpired || loading || uploadStatus[docType] === "uploading"}
+          style={{
+            marginTop: '20px',
+            borderRadius: '50px',
+            padding: '10px 25px',
+            background: 'rgba(255,255,255,0.1)'
+          }}
+        >
+          {uploadStatus[docType] === "uploading" ? "Uploading..." : "Upload Now"}
+        </button>
       )}
+
+      {uploadStatus[docType] === "success" && (
+        <p style={{ color: "#a8edea", marginTop: '10px', fontSize: "14px", textAlign: "center", fontWeight: "600" }}>
+          ✓ Uploaded Successfully
+        </p>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="auth-page">
+      {/* Floating shapes from auth.css */}
+      <div className="shape shape-1"></div>
+      <div className="shape shape-2"></div>
+
+      <div className="auth-container" style={{ maxWidth: '800px', flexDirection: 'column', minHeight: 'auto', padding: '30px' }}>
+        <h2 className="form-title" style={{ fontSize: '2.2rem', marginBottom: '30px' }}>Submit Application</h2>
+
+        {!showUploadSection ? (
+          <form className="auth-form" onSubmit={handleNext} style={{ maxWidth: '100%' }}>
+
+            <div className="input-group">
+              <label>USN / Registration Number</label>
+              <input
+                value={studentInfo?.usn || "Loading..."}
+                disabled
+                style={{ opacity: 0.7 }}
+              />
+            </div>
+
+            {studentInfo?.college && (
+              <div className="input-group">
+                <label>College</label>
+                <input
+                  value={`${studentInfo.college.college_name}, ${studentInfo.college.place}`}
+                  disabled
+                  style={{ opacity: 0.7 }}
+                />
+              </div>
+            )}
+
+            <div className="input-group">
+              <label>Blood Group *</label>
+              <select
+                name="bloodGroup"
+                value={form.bloodGroup}
+                onChange={handleChange}
+                disabled={loading}
+                required
+              >
+                <option value="">Select Blood Group</option>
+                <option>A+</option>
+                <option>A-</option>
+                <option>B+</option>
+                <option>B-</option>
+                <option>AB+</option>
+                <option>AB-</option>
+                <option>O+</option>
+                <option>O-</option>
+              </select>
+            </div>
+
+            <div className="input-group">
+              <label>Permanent Address *</label>
+              <input // Use input instead of textarea to match auth design or style textarea similarly
+                as="textarea" // Just in case, but auth.css targets input/select. Let's use textarea but add style
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                placeholder="Enter your permanent address"
+                disabled={loading}
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 15px',
+                  background: 'var(--input-bg)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '10px',
+                  color: 'var(--input-text)',
+                  minHeight: '80px'
+                }}
+              />
+            </div>
+
+            <div className="input-group">
+              <label>Department *</label>
+              <input
+                type="text"
+                name="department"
+                value={form.department || ""}
+                onChange={handleChange}
+                placeholder="Enter your department"
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <div className="input-group">
+              <label>Year of Study *</label>
+              <select
+                name="yearOfStudy"
+                value={form.yearOfStudy}
+                onChange={handleChange}
+                disabled={loading}
+                required
+              >
+                <option value="">Select Year</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
+            </div>
+
+            <div className="input-group">
+              <label>Semester *</label>
+              <select
+                name="semester"
+                value={form.semester}
+                onChange={handleChange}
+                disabled={loading}
+                required
+              >
+                <option value="">Select Semester</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                  <option key={s} value={s}>
+                    Semester {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button type="submit" className="auth-btn" disabled={loading || !studentInfo}>
+              {loading ? "Processing..." : "Next Step"}
+            </button>
+
+            <button
+              type="button"
+              className="text-btn"
+              onClick={() => navigate("/dashboard")}
+              style={{ width: '100%' }}
+            >
+              ← Back to Dashboard
+            </button>
+          </form>
+        ) : (
+          <form className="auth-form" onSubmit={handleSubmit} style={{ maxWidth: '100%' }}>
+            {timer !== null && !timerExpired && (
+              <div className="timer-display">
+                Session expires in: {formatTimer(timer)}
+              </div>
+            )}
+
+            {timerExpired && (
+              <div className="error-msg">
+                Session expired. Please restart.
+              </div>
+            )}
+
+            <FileUploadField
+              label="Aadhaar Card *"
+              title="Aadhaar Card (PNG/JPG/PDF)"
+              docType="aadhaar"
+              blobType="aadhaar"
+              accept="image/png,image/jpeg,image/jpg,application/pdf"
+            />
+
+            <FileUploadField
+              label="College ID Card *"
+              title="College ID Card (PNG/JPG/PDF)"
+              docType="collegeId"
+              blobType="college_id_card"
+              accept="image/png,image/jpeg,image/jpg,application/pdf"
+            />
+
+            <FileUploadField
+              label="10th Marks Card *"
+              title="10th Marks Card (PNG/JPG/PDF)"
+              docType="marksCard"
+              blobType="marks_card_10th"
+              accept="image/png,image/jpeg,image/jpg,application/pdf"
+            />
+
+            <button
+              type="submit"
+              className="auth-btn"
+              disabled={
+                timerExpired ||
+                loading ||
+                uploadStatus.aadhaar !== "success" ||
+                uploadStatus.collegeId !== "success" ||
+                uploadStatus.marksCard !== "success"
+              }
+              style={{ marginTop: '30px' }}
+            >
+              {loading ? "Submitting..." : "Submit Application"}
+            </button>
+
+            <button
+              type="button"
+              className="text-btn"
+              onClick={() => {
+                setShowUploadSection(false);
+                localStorage.removeItem("application_session");
+              }}
+              style={{ width: '100%' }}
+            >
+              ← Back to Form
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
