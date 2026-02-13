@@ -1,12 +1,10 @@
 // ForgotPassword.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 
-// Restore exact constant from original code
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
 
-// Explicit roles
 const ROLES = [
   { value: 'student', label: 'Student' },
   { value: 'manager', label: 'Manager' },
@@ -16,10 +14,16 @@ const ROLES = [
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState(() => {
+    return localStorage.getItem('selectedRole') || 'student';
+  });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem('selectedRole', role);
+  }, [role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +36,6 @@ export default function ForgotPassword() {
     }
 
     const cleanRole = (role || "").trim().toLowerCase();
-
     const allowedRoles = ["student", "manager", "principal"];
 
     if (!allowedRoles.includes(cleanRole)) {
@@ -45,7 +48,7 @@ export default function ForgotPassword() {
     try {
       setLoading(true);
 
-      const url = `${API_BASE_URL}auth/forgot-password/${cleanRole}`;
+      const url = `${API_BASE_URL}auth/${cleanRole}/forgot-password`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -69,16 +72,12 @@ export default function ForgotPassword() {
     }
   };
 
-
   return (
     <div className="auth-page">
-      {/* BACKGROUND SHAPES */}
       <div className="shape shape-1"></div>
       <div className="shape shape-2"></div>
 
       <div className="auth-container" style={{ maxWidth: '500px', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'auto', padding: '40px' }}>
-
-        {/* BRANDING SHORT */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 'bold' }}>Forgot Password</h3>
           <p style={{ color: '#e0f7fa', fontSize: '0.9rem' }}>
@@ -87,7 +86,6 @@ export default function ForgotPassword() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} style={{ width: '100%' }}>
-
           <div className="input-group">
             <label>I am a:</label>
             <select
