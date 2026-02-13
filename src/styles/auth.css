@@ -185,6 +185,7 @@ body {
     padding: 40px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     overflow-y: auto;
     /* Scroll if form is long */
     position: relative;
@@ -222,7 +223,7 @@ body {
 
 .form-title {
     font-size: 1.8rem;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
     text-align: center;
     color: white;
     font-weight: 600;
