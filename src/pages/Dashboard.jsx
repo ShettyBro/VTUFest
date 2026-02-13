@@ -24,6 +24,19 @@ export default function Dashboard() {
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // Rotate through priority 1 notifications every 6 seconds
+  useEffect(() => {
+    if (priority1Notifications.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentPriority1Index((prevIndex) =>
+          (prevIndex + 1) % priority1Notifications.length
+        );
+      }, 6000); // Change notification every 6 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [priority1Notifications.length]);
+
   const priority2PlusNotifications = notificationsData
     .filter(n => n.priority >= 2)
     .sort((a, b) => {
@@ -261,10 +274,10 @@ export default function Dashboard() {
         {/* --- TICKER --- */}
         {priority1Notifications.length > 0 && (
           <div className="glass-banner">
-            <span className="ticker-label">LATEST UPDATES</span>
-            <div className="ticker-wrapper">
-              <span className="ticker-text">
-                {priority1Notifications.map(n => n.message).join(" |   •   | ")}
+            <span className="ticker-label">Important</span>
+            <div className="ticker-single">
+              <span className="ticker-message" key={currentPriority1Index}>
+                {priority1Notifications[currentPriority1Index]?.message}
               </span>
             </div>
           </div>

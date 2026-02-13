@@ -5,22 +5,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    /* --- PROFESSIONAL LIGHT THEME --- */
-    --glass-nav-bg: rgba(255, 255, 255, 0.95);
-    /* Light professional nav */
-    --glass-sidebar-bg: #1a1d29;
-    /* Dark sidebar */
-    --glass-border: rgba(0, 0, 0, 0.08);
-    --accent-blue: #4a5568;
-    --accent-purple: #667eea;
-    --accent-green: #48bb78;
-    --text-primary: #2d3748;
-    /* Dark text for light elements */
-    --text-secondary: #718096;
-    --text-on-dark: #ffffff;
-    /* White text for dark sidebar */
-    --sidebar-text: #e2e8f0;
-    /* Light gray text for dark sidebar */
+    /* --- BALANCED MODERN THEME --- */
+    --glass-nav-bg: rgba(255, 255, 255, 0.98);
+    --glass-sidebar-bg: #1e293b;
+    /* Deep navy - slate-800 */
+    --glass-border: rgba(100, 116, 139, 0.12);
+
+    --accent-primary: #6366f1;
+    /* Indigo-500 */
+    --accent-hover: #4f46e5;
+    --accent-success: #10b981;
+
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-on-dark: #f1f5f9;
+    /* Light text for dark sidebar */
+    --sidebar-text: #cbd5e1;
+    /* Slate-300 for sidebar */
 }
 
 /* =========================================
@@ -121,24 +122,23 @@ body,
 }
 
 .college-code {
-    background: rgba(0, 0, 0, 0.03);
-    border: 1px solid var(--glass-border);
-    color: var(--accent-blue);
-    padding: 8px 20px;
-    border-radius: 50px;
-    font-size: 0.95rem;
+    background: var(--accent-light);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: var(--accent-primary);
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 0.9rem;
     font-weight: 600;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s;
-    backdrop-filter: blur(5px);
+    letter-spacing: 0.3px;
+    box-shadow: 0 1px 3px rgba(99, 102, 241, 0.1);
+    transition: all 0.2s;
 }
 
 .college-code:hover {
-    background: rgba(102, 126, 234, 0.1);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
-    color: var(--accent-purple);
-    cursor: pointer;
+    background: rgba(99, 102, 241, 0.1);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
 }
 
 /* Right Actions */
@@ -169,21 +169,21 @@ body,
 }
 
 .notif-icon:hover {
-    color: var(--accent-purple);
-    filter: drop-shadow(0 0 3px var(--accent-purple));
+    color: var(--accent-primary);
+    filter: drop-shadow(0 0 4px var(--accent-primary));
 }
 
 .notif-badge {
     position: absolute;
     top: -5px;
     right: -5px;
-    background: var(--accent-purple);
+    background: var(--accent-primary);
     color: white;
     font-size: 10px;
     font-weight: bold;
     padding: 2px 6px;
     border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.4);
 }
 
 /* Notification Dropdown (Glass) */
@@ -222,12 +222,12 @@ body,
 
 /* Critical */
 .notif-item.priority-2 {
-    border-left: 3px solid var(--accent-purple);
+    border-left: 3px solid var(--accent-primary);
 }
 
 /* High */
 .notif-item.priority-3 {
-    border-left: 3px solid var(--accent-blue);
+    border-left: 3px solid var(--accent-info);
 }
 
 /* Medium */
@@ -271,8 +271,9 @@ body,
     width: 38px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--accent-purple);
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+    transition: all 0.2s;
 }
 
 .username {
@@ -286,17 +287,17 @@ body,
     top: 120%;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--accent-purple);
+    background: var(--accent-primary);
     color: white;
-    font-weight: bold;
-    padding: 4px 10px;
+    font-weight: 600;
+    padding: 5px 12px;
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
 }
 
 .profile-trigger:hover .usn-tooltip {
@@ -331,8 +332,8 @@ body,
 }
 
 .menu-item:hover {
-    background: rgba(102, 126, 234, 0.1);
-    color: var(--accent-purple);
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--accent-primary);
     padding-left: 25px;
 }
 
@@ -390,9 +391,10 @@ body,
 }
 
 .sidebar-item.active {
-    background: rgba(102, 126, 234, 0.15);
-    color: var(--accent-purple);
-    border-left: 3px solid var(--accent-purple);
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--accent-primary);
+    border-left: 3px solid var(--accent-primary);
+    font-weight: 600;
 }
 
 /* Sidebar Icons */

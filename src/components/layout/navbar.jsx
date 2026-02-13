@@ -21,10 +21,10 @@ export default function Navbar() {
   const userName = localStorage.getItem("name") || "User";
   const userUsn = localStorage.getItem("usn") || "";
 
-  // Generate random but consistent avatar using DiceBear API
+  // Generate gender-neutral robot avatars using DiceBear API
   // Using USN as seed ensures same user always gets same avatar
   const avatarSeed = userUsn || userName || "default";
-  const userPhoto = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`;
+  const userPhoto = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
   /* ================= SORT NOTIFICATIONS ================= */
   useEffect(() => {
