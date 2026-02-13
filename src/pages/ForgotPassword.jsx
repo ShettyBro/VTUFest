@@ -3,20 +3,20 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
+// Remove the trailing slash from base to avoid double slash issues, and append /api manually to match AuthPage pattern
+const API_DOMAIN = "https://vtu-festserver-production.up.railway.app";
 
 // Explicit roles as per backend requirement
 const ROLES = [
   { value: 'student', label: 'Student' },
   { value: 'manager', label: 'Manager' },
   { value: 'principal', label: 'Principal' },
-  // { value: 'admin', label: 'Admin' }, // Typically admins have a different flow, but if needed can be added
 ];
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("student"); // Default to student
+  const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -36,16 +36,28 @@ export default function ForgotPassword() {
       return;
     }
 
+    // STRICT CLEANING
+    const cleanRole = role.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Verify against allowed list immediately
+    const allowed = ['student', 'manager', 'principal'];
+    if (!allowed.includes(cleanRole)) {
+      setErrorMsg("Selected role is invalid.");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const response = await fetch(
-        `${API_BASE_URL}auth/forgot-password/${role}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim().toLowerCase() }),
-        }
+      const url = `${API_DOMAIN}/api/auth/forgot-password/${cleanRole}`;
+      console.log("Requesting Password Reset:", url); // Debug log
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail }),
+      }
       );
 
       const data = await response.json();
@@ -58,7 +70,8 @@ export default function ForgotPassword() {
 
       setSuccessMsg(data.message);
       setEmail("");
-    } catch {
+    } catch (err) {
+      console.error(err);
       setErrorMsg("Server not reachable. Retry.");
     } finally {
       setLoading(false);
