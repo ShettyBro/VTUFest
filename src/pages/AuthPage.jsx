@@ -459,8 +459,9 @@ export default function AuthPage({ initialView = "login" }) {
                                             <div className="input-group">
                                                 <label>USN *</label>
                                                 <input
+                                                    name="usn"
                                                     value={regForm.usn}
-                                                    onChange={e => setRegForm({ ...regForm, usn: e.target.value.toUpperCase() })}
+                                                    onChange={e => setRegForm(prev => ({ ...prev, usn: e.target.value.toUpperCase() }))}
                                                     onBlur={e => checkUSN(e.target.value)}
                                                     placeholder="VTU2026CS001"
                                                 />
@@ -471,8 +472,9 @@ export default function AuthPage({ initialView = "login" }) {
                                             <div className="input-group">
                                                 <label>Full Name *</label>
                                                 <input
+                                                    name="fullName"
                                                     value={regForm.fullName}
-                                                    onChange={e => setRegForm({ ...regForm, fullName: e.target.value })}
+                                                    onChange={e => setRegForm(prev => ({ ...prev, fullName: e.target.value }))}
                                                     disabled={usnStatus !== "valid"}
                                                     style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
@@ -482,8 +484,9 @@ export default function AuthPage({ initialView = "login" }) {
                                             <div className="input-group">
                                                 <label>College *</label>
                                                 <select
+                                                    name="collegeId"
                                                     value={regForm.collegeId}
-                                                    onChange={e => setRegForm({ ...regForm, collegeId: e.target.value })}
+                                                    onChange={e => setRegForm(prev => ({ ...prev, collegeId: e.target.value }))}
                                                     disabled={usnStatus !== "valid"}
                                                     style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
@@ -500,9 +503,10 @@ export default function AuthPage({ initialView = "login" }) {
                                             <div className="input-group">
                                                 <label>Email *</label>
                                                 <input
+                                                    name="email"
                                                     type="email"
                                                     value={regForm.email}
-                                                    onChange={e => setRegForm({ ...regForm, email: e.target.value })}
+                                                    onChange={e => setRegForm(prev => ({ ...prev, email: e.target.value }))}
                                                     disabled={usnStatus !== "valid"}
                                                     style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
@@ -512,9 +516,10 @@ export default function AuthPage({ initialView = "login" }) {
                                             <div className="input-group">
                                                 <label>Phone *</label>
                                                 <input
+                                                    name="phone"
                                                     value={regForm.phone}
                                                     maxLength={10}
-                                                    onChange={e => setRegForm({ ...regForm, phone: e.target.value.replace(/\D/g, '') })}
+                                                    onChange={e => setRegForm(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
                                                     disabled={usnStatus !== "valid"}
                                                     style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
@@ -524,8 +529,9 @@ export default function AuthPage({ initialView = "login" }) {
                                             <div className="input-group">
                                                 <label>Gender *</label>
                                                 <select
+                                                    name="gender"
                                                     value={regForm.gender}
-                                                    onChange={e => setRegForm({ ...regForm, gender: e.target.value })}
+                                                    onChange={e => setRegForm(prev => ({ ...prev, gender: e.target.value }))}
                                                     disabled={usnStatus !== "valid"}
                                                     style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
