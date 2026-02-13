@@ -25,10 +25,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;  /* restore original */
-  padding: 40px 16px 60px;      /* restore bottom spacing */
+  justify-content: flex-start;
+  min-height: 100vh;     /* ✅ important */
+  padding: 60px 16px 80px; /* slightly more breathing space */
   box-sizing: border-box;
 }
+
 
 
 /* =========================================================
