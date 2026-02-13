@@ -112,13 +112,7 @@ export default function ForgotPassword() {
             />
           </div>
 
-          {errorMsg && (
-            <div className="error-msg">{errorMsg}</div>
-          )}
 
-          {successMsg && (
-            <div className="success-msg">{successMsg}</div>
-          )}
 
           <button className="auth-btn" type="submit" disabled={loading}>
             {loading ? "Sending reset link..." : "Send Reset Link"}
