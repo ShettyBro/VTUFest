@@ -150,22 +150,90 @@ body {
 }
 
 /* =========================================================
-   SAFE OVERRIDE: REMOVE GRADIENT EFFECT VISUALLY
-   (Original gradients remain in code – NOT REMOVED)
+   REGISTRATION LOCK OVERLAY (APPEND ONLY)
+   Does NOT modify existing design
 ========================================================= */
 
-/* PAGE BACKGROUND → solid soft white-blue */
-html,
-body {
-  background: #f8fafc !important;
+/* Dark backdrop */
+.reg-lock-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9998;
 }
 
-/* SUBMIT BUTTON → solid saffron */
-.register-card button {
-  background: #f59e0b !important;
+/* Center container */
+.reg-lock-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
 
-/* CARD ACCENT REMAINS, JUST CLEANER LOOK */
-.register-card {
-  background: #ffffff !important;
+/* Modal box */
+.reg-lock-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 48px 36px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  animation: regLockFadeIn 0.3s ease;
+}
+
+/* Lock icon */
+.reg-lock-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+/* Title */
+.reg-lock-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 12px;
+}
+
+/* Description */
+.reg-lock-text {
+  font-size: 15px;
+  color: #475569;
+  margin: 0;
+}
+
+/* Blur background content */
+.reg-content-locked {
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* Simple fade animation */
+@keyframes regLockFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .reg-lock-modal {
+    padding: 32px 20px;
+  }
+
+  .reg-lock-icon {
+    font-size: 48px;
+  }
+
+  .reg-lock-title {
+    font-size: 20px;
+  }
+
+  .reg-lock-text {
+    font-size: 14px;
+  }
 }
