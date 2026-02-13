@@ -9,23 +9,23 @@ const API_BASE = {
 
 // Helper component for file upload to match AuthPage design
 const FileUploadField = ({ label, docType, blobType, accept, title, documents, documentPreviews, uploadStatus, handleDocumentChange, uploadDocument, timerExpired, loading }) => (
-  <div className="file-upload-wrapper" style={{ marginTop: '20px', padding: '20px', background: 'rgba(0, 0, 0, 0.3)', border: '2px dashed rgba(255, 255, 255, 0.5)' }}>
-    <h4 style={{ color: 'white', marginBottom: '15px' }}>{title || label}</h4>
-    <div className="preview-container">
+  <div className="file-upload-wrapper" style={{ flex: 1, padding: '15px', background: 'rgba(0, 0, 0, 0.3)', border: '2px dashed rgba(255, 255, 255, 0.5)', minWidth: '200px' }}>
+    <h4 style={{ color: 'white', marginBottom: '10px', fontSize: '14px', textAlign: 'center' }}>{title || label}</h4>
+    <div className="preview-container" style={{ margin: '10px 0', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {documentPreviews[docType] ? (
         documentPreviews[docType] === "PDF" ? (
-          <div style={{ marginBottom: '15px', fontSize: '3rem', color: '#fff' }}>📄 PDF</div>
+          <div style={{ fontSize: '2rem', color: '#fff' }}>📄</div>
         ) : (
-          <img src={documentPreviews[docType]} alt="Preview" className="preview-img" style={{ width: '120px', height: '120px', objectFit: 'cover' }} />
+          <img src={documentPreviews[docType]} alt="Preview" className="preview-img" style={{ width: '80px', height: '80px', objectFit: 'cover' }} />
         )
       ) : (
-        <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📄</div>
+        <div style={{ fontSize: '2rem', opacity: 0.7 }}>📄</div>
       )}
     </div>
     <div style={{ textAlign: "center" }}>
-      <label htmlFor={`file-upload-${docType}`} className="custom-file-upload" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '10px 20px', borderRadius: '50px', cursor: 'pointer', display: 'inline-block' }}>
-        <span style={{ marginRight: '10px' }}>📁</span>
-        {documents[docType] ? "Change File" : "Choose File"}
+      <label htmlFor={`file-upload-${docType}`} className="custom-file-upload" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '8px 16px', borderRadius: '50px', cursor: 'pointer', display: 'inline-block', fontSize: '12px' }}>
+        <span style={{ marginRight: '5px' }}>📁</span>
+        {documents[docType] ? "Change" : "Choose"}
       </label>
       <input
         id={`file-upload-${docType}`}
@@ -36,7 +36,7 @@ const FileUploadField = ({ label, docType, blobType, accept, title, documents, d
         style={{ display: 'none' }}
       />
       {documents[docType] && (
-        <div className="file-name-display" style={{ marginTop: '10px', color: '#a8edea' }}>
+        <div className="file-name-display" style={{ marginTop: '5px', color: '#a8edea', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
           {documents[docType].name}
         </div>
       )}
@@ -49,22 +49,24 @@ const FileUploadField = ({ label, docType, blobType, accept, title, documents, d
         onClick={() => uploadDocument(docType, blobType)}
         disabled={timerExpired || loading || uploadStatus[docType] === "uploading"}
         style={{
-          marginTop: '20px',
+          marginTop: '10px',
           borderRadius: '50px',
-          padding: '10px 25px',
+          padding: '6px 12px',
           background: 'rgba(255,255,255,0.1)',
           border: '1px solid white',
           color: 'white',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          fontSize: '12px',
+          width: '100%'
         }}
       >
-        {uploadStatus[docType] === "uploading" ? "Uploading..." : "Upload Now"}
+        {uploadStatus[docType] === "uploading" ? "..." : "Upload"}
       </button>
     )}
 
     {uploadStatus[docType] === "success" && (
-      <p style={{ color: "#a8edea", marginTop: '10px', fontSize: "14px", textAlign: "center", fontWeight: "600" }}>
-        ✓ Uploaded Successfully
+      <p style={{ color: "#a8edea", marginTop: '5px', fontSize: "12px", textAlign: "center", fontWeight: "600" }}>
+        ✓ Done
       </p>
     )}
   </div>
@@ -417,119 +419,174 @@ export default function SubmitApplication() {
       <div className="shape shape-1"></div>
       <div className="shape shape-2"></div>
 
-      <div className="auth-container" style={{ maxWidth: '800px', flexDirection: 'column', minHeight: 'auto', padding: '30px', maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2 className="form-title" style={{ fontSize: '2.2rem', marginBottom: '30px' }}>Submit Application</h2>
+      <style>{`
+          .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+          }
+          .form-grid .full-width {
+            grid-column: span 2;
+          }
+          .upload-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+          }
+          @media (max-width: 768px) {
+            .form-grid {
+              grid-template-columns: 1fr;
+            }
+            .form-grid .full-width {
+              grid-column: span 1;
+            }
+            .upload-grid {
+              flex-direction: column;
+            }
+          }
+          /* Custom overrides for compact layout */
+          .auth-container.compact {
+            padding: 25px;
+            max-width: 900px;
+            min-height: auto;
+          }
+          .input-group {
+            margin-bottom: 10px;
+          }
+          .input-group label {
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+          }
+          .input-group input, .input-group select {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+          }
+          .form-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+          }
+          .auth-btn {
+            margin-top: 15px;
+            padding: 10px;
+          }
+        `}</style>
+
+      <div className="auth-container compact" style={{ flexDirection: 'column', overflowY: 'visible', maxHeight: 'none' }}>
+        <h2 className="form-title" style={{ textAlign: "center" }}>Submit Application</h2>
 
         {!showUploadSection ? (
           <form className="auth-form" onSubmit={handleNext} style={{ maxWidth: '100%' }}>
-
-            <div className="input-group">
-              <label>USN / Registration Number</label>
-              <input
-                value={studentInfo?.usn || "Loading..."}
-                readOnly
-                style={{ opacity: 1, color: '#ffffff', backgroundColor: 'rgba(255,255,255,0.05)', cursor: 'default' }}
-              />
-            </div>
-
-            {studentInfo?.college && (
+            <div className="form-grid">
               <div className="input-group">
-                <label>College</label>
+                <label>USN / Registration Number</label>
                 <input
-                  value={`${studentInfo.college.college_name}, ${studentInfo.college.place}`}
+                  value={studentInfo?.usn || "Loading..."}
                   readOnly
                   style={{ opacity: 1, color: '#ffffff', backgroundColor: 'rgba(255,255,255,0.05)', cursor: 'default' }}
                 />
               </div>
-            )}
 
-            <div className="input-group">
-              <label>Blood Group *</label>
-              <select
-                name="bloodGroup"
-                value={form.bloodGroup}
-                onChange={handleChange}
-                disabled={loading}
-                required
-              >
-                <option value="">Select Blood Group</option>
-                <option>A+</option>
-                <option>A-</option>
-                <option>B+</option>
-                <option>B-</option>
-                <option>AB+</option>
-                <option>AB-</option>
-                <option>O+</option>
-                <option>O-</option>
-              </select>
-            </div>
+              {studentInfo?.college && (
+                <div className="input-group">
+                  <label>College</label>
+                  <input
+                    value={`${studentInfo.college.college_name}, ${studentInfo.college.place}`}
+                    readOnly
+                    style={{ opacity: 1, color: '#ffffff', backgroundColor: 'rgba(255,255,255,0.05)', cursor: 'default' }}
+                  />
+                </div>
+              )}
 
-            <div className="input-group">
-              <label>Permanent Address *</label>
-              <input // Using input but styled as textarea replacement if needed, or stick to input
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                placeholder="Enter your permanent address"
-                disabled={loading}
-                required
-                style={{
-                  width: '100%',
-                  padding: '12px 15px',
-                  background: 'var(--input-bg)',
-                  border: '1px solid var(--glass-border)',
-                  borderRadius: '10px',
-                  color: 'var(--input-text)',
-                }}
-              />
-            </div>
+              <div className="input-group">
+                <label>Blood Group *</label>
+                <select
+                  name="bloodGroup"
+                  value={form.bloodGroup}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                >
+                  <option value="">Select Blood Group</option>
+                  <option>A+</option>
+                  <option>A-</option>
+                  <option>B+</option>
+                  <option>B-</option>
+                  <option>AB+</option>
+                  <option>AB-</option>
+                  <option>O+</option>
+                  <option>O-</option>
+                </select>
+              </div>
 
-            <div className="input-group">
-              <label>Department *</label>
-              <input
-                type="text"
-                name="department"
-                value={form.department || ""}
-                onChange={handleChange}
-                placeholder="Enter your department"
-                disabled={loading}
-                required
-              />
-            </div>
+              <div className="input-group">
+                <label>Department *</label>
+                <input
+                  type="text"
+                  name="department"
+                  value={form.department || ""}
+                  onChange={handleChange}
+                  placeholder="Enter your department"
+                  disabled={loading}
+                  required
+                />
+              </div>
 
-            <div className="input-group">
-              <label>Year of Study *</label>
-              <select
-                name="yearOfStudy"
-                value={form.yearOfStudy}
-                onChange={handleChange}
-                disabled={loading}
-                required
-              >
-                <option value="">Select Year</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
-              </select>
-            </div>
+              <div className="input-group">
+                <label>Year of Study *</label>
+                <select
+                  name="yearOfStudy"
+                  value={form.yearOfStudy}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                >
+                  <option value="">Select Year</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
+              </div>
 
-            <div className="input-group">
-              <label>Semester *</label>
-              <select
-                name="semester"
-                value={form.semester}
-                onChange={handleChange}
-                disabled={loading}
-                required
-              >
-                <option value="">Select Semester</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                  <option key={s} value={s}>
-                    Semester {s}
-                  </option>
-                ))}
-              </select>
+              <div className="input-group">
+                <label>Semester *</label>
+                <select
+                  name="semester"
+                  value={form.semester}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                >
+                  <option value="">Select Semester</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                    <option key={s} value={s}>
+                      Semester {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="input-group full-width">
+                <label>Permanent Address *</label>
+                <input
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Enter your permanent address"
+                  disabled={loading}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: 'var(--input-bg)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: '10px',
+                    color: 'var(--input-text)',
+                  }}
+                />
+              </div>
             </div>
 
             <button type="submit" className="auth-btn" disabled={loading || !studentInfo}>
@@ -548,7 +605,7 @@ export default function SubmitApplication() {
         ) : (
           <form className="auth-form" onSubmit={handleSubmit} style={{ maxWidth: '100%' }}>
             {timer !== null && !timerExpired && (
-              <div className="timer-display">
+              <div className="timer-display" style={{ padding: '5px', fontSize: '0.9rem', marginBottom: '10px' }}>
                 Session expires in: {formatTimer(timer)}
               </div>
             )}
@@ -559,50 +616,52 @@ export default function SubmitApplication() {
               </div>
             )}
 
-            <FileUploadField
-              label="Aadhaar Card *"
-              title="Aadhaar Card (PNG/JPG/PDF)"
-              docType="aadhaar"
-              blobType="aadhaar"
-              accept="image/png,image/jpeg,image/jpg,application/pdf"
-              documents={documents}
-              documentPreviews={documentPreviews}
-              uploadStatus={uploadStatus}
-              handleDocumentChange={handleDocumentChange}
-              uploadDocument={uploadDocument}
-              timerExpired={timerExpired}
-              loading={loading}
-            />
+            <div className="upload-grid">
+              <FileUploadField
+                label="Aadhaar Card *"
+                title="Aadhaar Card"
+                docType="aadhaar"
+                blobType="aadhaar"
+                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                documents={documents}
+                documentPreviews={documentPreviews}
+                uploadStatus={uploadStatus}
+                handleDocumentChange={handleDocumentChange}
+                uploadDocument={uploadDocument}
+                timerExpired={timerExpired}
+                loading={loading}
+              />
 
-            <FileUploadField
-              label="College ID Card *"
-              title="College ID Card (PNG/JPG/PDF)"
-              docType="collegeId"
-              blobType="college_id_card"
-              accept="image/png,image/jpeg,image/jpg,application/pdf"
-              documents={documents}
-              documentPreviews={documentPreviews}
-              uploadStatus={uploadStatus}
-              handleDocumentChange={handleDocumentChange}
-              uploadDocument={uploadDocument}
-              timerExpired={timerExpired}
-              loading={loading}
-            />
+              <FileUploadField
+                label="College ID Card *"
+                title="College ID Card"
+                docType="collegeId"
+                blobType="college_id_card"
+                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                documents={documents}
+                documentPreviews={documentPreviews}
+                uploadStatus={uploadStatus}
+                handleDocumentChange={handleDocumentChange}
+                uploadDocument={uploadDocument}
+                timerExpired={timerExpired}
+                loading={loading}
+              />
 
-            <FileUploadField
-              label="10th Marks Card *"
-              title="10th Marks Card (PNG/JPG/PDF)"
-              docType="marksCard"
-              blobType="marks_card_10th"
-              accept="image/png,image/jpeg,image/jpg,application/pdf"
-              documents={documents}
-              documentPreviews={documentPreviews}
-              uploadStatus={uploadStatus}
-              handleDocumentChange={handleDocumentChange}
-              uploadDocument={uploadDocument}
-              timerExpired={timerExpired}
-              loading={loading}
-            />
+              <FileUploadField
+                label="10th Marks Card *"
+                title="10th Marks Card"
+                docType="marksCard"
+                blobType="marks_card_10th"
+                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                documents={documents}
+                documentPreviews={documentPreviews}
+                uploadStatus={uploadStatus}
+                handleDocumentChange={handleDocumentChange}
+                uploadDocument={uploadDocument}
+                timerExpired={timerExpired}
+                loading={loading}
+              />
+            </div>
 
             <button
               type="submit"
@@ -614,7 +673,7 @@ export default function SubmitApplication() {
                 uploadStatus.collegeId !== "success" ||
                 uploadStatus.marksCard !== "success"
               }
-              style={{ marginTop: '30px' }}
+              style={{ marginTop: '20px' }}
             >
               {loading ? "Submitting..." : "Submit Application"}
             </button>
