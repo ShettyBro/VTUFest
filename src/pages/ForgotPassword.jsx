@@ -31,52 +31,44 @@ export default function ForgotPassword() {
       return;
     }
 
-    if (!role) {
-      setErrorMsg("Please select your role");
+    const cleanRole = (role || "").trim().toLowerCase();
+
+    const allowedRoles = ["student", "manager", "principal"];
+
+    if (!allowedRoles.includes(cleanRole)) {
+      setErrorMsg("Invalid role selected");
       return;
     }
 
-    // Clean inputs
-    const cleanRole = role.trim().toLowerCase();
     const cleanEmail = email.trim().toLowerCase();
 
     try {
       setLoading(true);
 
-      // Construct URL exactly as in original code logic
       const url = `${API_BASE_URL}auth/forgot-password/${cleanRole}`;
 
-      console.log("Sending Password Reset Request:", url);
-
-      // Added role to body as well, per user request, just in case
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: cleanEmail,
-          role: cleanRole
-        }),
-      }
-      );
+        body: JSON.stringify({ email: cleanEmail }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         setErrorMsg(data.error || data.message || "Request failed. Retry.");
-        setLoading(false);
         return;
       }
 
       setSuccessMsg(data.message);
-      // Don't clear email immediately in case of error, but here success.
       setEmail("");
-    } catch (err) {
-      console.error(err);
+    } catch {
       setErrorMsg("Server not reachable. Retry.");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="auth-page">
@@ -100,7 +92,12 @@ export default function ForgotPassword() {
             <label>I am a:</label>
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={(e) => {
+                const selected = e.target.value;
+                if (["student", "manager", "principal"].includes(selected)) {
+                  setRole(selected);
+                }
+              }}
               disabled={loading}
               style={{ width: '100%', padding: '12px 15px', background: 'var(--input-bg)', border: '1px solid var(--glass-border)', borderRadius: '10px', color: 'white', outline: 'none' }}
             >
