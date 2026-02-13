@@ -326,6 +326,13 @@ input[type="file"] {
     display: none;
 }
 
+.preview-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
 .preview-img {
     width: 180px;
     height: 180px;

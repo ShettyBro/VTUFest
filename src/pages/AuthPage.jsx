@@ -375,12 +375,10 @@ export default function AuthPage({ initialView = "login" }) {
                 {/* --- LEFT PANEL: BRANDING & INFO --- */}
                 <div className="auth-info-panel">
                     <div className="auth-brand">
-                        <img src="/acharya.png" alt="Acharya" />
-                        <span className="logo-separator">|</span>
-                        <img src="/vtu.png" alt="VTU" />
+                        <img src="/main.webp" alt="VTU Fest Logos" style={{ height: 'auto', maxWidth: '100%', maxHeight: '120px' }} />
                     </div>
                     <div className="brand-text">
-                        <h3>VTU HABBA 2026</h3>
+                        <h3> Acharya VTU HABBA 2026</h3>
                         <span>Visvesvaraya Technological University</span>
                     </div>
 
@@ -578,14 +576,17 @@ export default function AuthPage({ initialView = "login" }) {
 
                                             {/* Photo Upload */}
                                             <div className="file-upload-wrapper">
-                                                {photoPreview ? (
-                                                    <img src={photoPreview} alt="Preview" className="preview-img" />
-                                                ) : (
-                                                    <div style={{ marginBottom: '10px', fontSize: '2rem' }}>📷</div>
-                                                )}
+                                                <div className="preview-container">
+                                                    {photoPreview ? (
+                                                        <img src={photoPreview} alt="Preview" className="preview-img" />
+                                                    ) : (
+                                                        <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📷</div>
+                                                    )}
+                                                </div>
 
-                                                <div>
+                                                <div style={{ textAlign: "center" }}>
                                                     <label htmlFor="file-upload" className="custom-file-upload">
+                                                        <span style={{ marginRight: '10px' }}>📁</span>
                                                         {photoFile ? "Change Photo" : "Choose Photo"}
                                                     </label>
                                                     <input
@@ -602,6 +603,12 @@ export default function AuthPage({ initialView = "login" }) {
                                                             }
                                                         }}
                                                     />
+
+                                                    {photoFile && (
+                                                        <div className="file-name-display">
+                                                            {photoFile.name}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {photoFile && uploadStatus !== "success" && (
@@ -610,7 +617,12 @@ export default function AuthPage({ initialView = "login" }) {
                                                         className="secondary-btn"
                                                         onClick={handlePhotoUpload}
                                                         disabled={uploadStatus === "uploading"}
-                                                        style={{ marginTop: '15px' }}
+                                                        style={{
+                                                            marginTop: '20px',
+                                                            borderRadius: '50px',
+                                                            padding: '10px 25px',
+                                                            background: 'rgba(255,255,255,0.1)'
+                                                        }}
                                                     >
                                                         {uploadStatus === "uploading" ? `Uploading ${uploadProgress}%` : "Upload Now"}
                                                     </button>
