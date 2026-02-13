@@ -1,8 +1,7 @@
 // ChangePassword.jsx (ResetPassword)
-// ✅ NO CHANGES NEEDED - Already handles token-based reset for both flows
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import "../styles/ForgotPassword.css";
+import "../styles/auth.css"; // UPDATED CSS
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
 
@@ -45,7 +44,6 @@ export default function ResetPassword() {
       setLoading(true);
 
       // ✅ Same endpoint for both forgot-password and forced-reset flows
-      // Backend differentiates based on token and force_password_reset flag
       const response = await fetch(
         `${API_BASE_URL}auth/reset-password/${role}`,
         {
@@ -80,43 +78,56 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="forgot-page">
-      <div className="forgot-card">
-        <h2>Reset Password</h2>
-        <p>Enter your new password</p>
+    <div className="auth-page">
+      {/* BACKGROUND SHAPES */}
+      <div className="shape shape-1"></div>
+      <div className="shape shape-2"></div>
 
-        <form onSubmit={handleSubmit}>
-          <label>New Password</label>
-          <input
-            type="password"
-            placeholder="Enter new password (min 8 characters)"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            disabled={loading}
-            required
-          />
+      <div className="auth-container" style={{ maxWidth: '500px', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'auto', padding: '40px' }}>
 
-          <label>Confirm Password</label>
-          <input
-            type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={loading}
-            required
-          />
+        {/* BRANDING SHORT */}
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 'bold' }}>Reset Password</h3>
+          <p style={{ color: '#e0f7fa', fontSize: '0.9rem' }}>
+            Enter your new password below.
+          </p>
+        </div>
+
+        <form className="auth-form" onSubmit={handleSubmit} style={{ width: '100%' }}>
+
+          <div className="input-group">
+            <label>New Password</label>
+            <input
+              type="password"
+              placeholder="Enter new password (min 8 characters)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
 
           {errorMsg && (
-            <div style={{ color: "red", marginTop: "8px" }}>{errorMsg}</div>
+            <div className="error-msg">{errorMsg}</div>
           )}
 
           {successMsg && (
-            <div style={{ color: "green", marginTop: "8px" }}>
-              {successMsg}
-            </div>
+            <div className="success-msg">{successMsg}</div>
           )}
 
-          <button type="submit" disabled={loading}>
+          <button className="auth-btn" type="submit" disabled={loading}>
             {loading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
