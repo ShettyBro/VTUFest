@@ -7,13 +7,16 @@ body {
   padding: 0;
   min-height: 100%;
   overflow-x: hidden;
-  overflow-y: auto;          /* ✅ scrolling works */
+  overflow-y: auto;
+  /* ✅ scrolling works */
   font-family: "Segoe UI", sans-serif;
   scroll-behavior: smooth;
 
   /* 🔒 HIDE SCROLLBAR VISUALLY (ALL BROWSERS) */
-  scrollbar-width: none;     /* Firefox */
-  -ms-overflow-style: none;  /* IE / Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE / Edge */
 }
 
 /* Chrome / Safari / Edge */
@@ -32,6 +35,10 @@ body::-webkit-scrollbar {
   margin: 30px auto;
   padding: 0 20px 60px;
   box-sizing: border-box;
+  min-height: 100vh;
+  /* Ensure content is always scrollable */
+  overflow-y: visible;
+  /* Allow content to overflow and be scrollable */
 }
 
 /* =========================================================

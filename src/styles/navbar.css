@@ -22,7 +22,7 @@
 }
 
 .logo {
-  height: 36px;
+  height: 45px;
   object-fit: contain;
 }
 
@@ -37,7 +37,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px; /* spacing between bell and profile */
+  gap: 18px;
+  /* spacing between bell and profile */
 }
 
 /* -------- NOTIFICATION BELL -------- */
@@ -162,7 +163,8 @@
 .college-code {
   font-size: 15px;
   font-weight: 600;
-  color: #92400e; /* saffron-brown */
+  color: #92400e;
+  /* saffron-brown */
   background: #fff7ed;
   padding: 6px 14px;
   border-radius: 20px;
@@ -241,7 +243,8 @@
 
 /* -------- ADDITIONAL STYLES -------- */
 .navbar-spacer {
-  height: 60px; /* same as navbar height */
+  height: 60px;
+  /* same as navbar height */
 }
 
 .navbar-container {
@@ -256,7 +259,8 @@
 
 /* Bigger logos */
 .big-logo {
-  height: 48px;       /* increase from default */
+  height: 48px;
+  /* increase from default */
   width: auto;
 }
 
@@ -264,7 +268,8 @@
 .bell-icon {
   width: 22px;
   height: 22px;
-  color: #2563eb;     /* BLUE */
+  color: #2563eb;
+  /* BLUE */
 }
 
 /* Keep badge position intact */

@@ -188,15 +188,15 @@ export default function Dashboard() {
   // and no sudden content changes. 
 
   const handleSubmitApplication = () => {
-    navigate("/student-register");
+    navigate("/StudentRegister");
   };
 
   const handleCompleteApplication = () => {
-    navigate("/student-register");
+    navigate("/StudentRegister");
   };
 
   const handleReapply = () => {
-    navigate("/student-register");
+    navigate("/StudentRegister");
   };
 
   const handleViewAllocatedEvents = () => {
