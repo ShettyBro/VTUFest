@@ -243,16 +243,20 @@ export default function Dashboard() {
           </div>
 
           <div className="qr-badge" style={{ textAlign: 'right' }}>
+            <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem' }}>
+              {dashboardData?.qr_code ? "Entry QR Code:" : "QR Code will appear here"}
+            </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
               dashboardData?.qr_code ? (
                 <div style={{ background: 'rgba(255,255,255,0.1)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
-                  <small style={{ color: '#aaa', display: 'block' }}>YOUR ID CODE</small>
                   <span style={{ color: 'var(--neon-green)', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
                     {dashboardData.qr_code}
                   </span>
                 </div>
               ) : (
-                <span style={{ color: 'var(--text-secondary)' }}>ID Not Allotted</span>
+                <div style={{ border: '1px dashed var(--text-secondary)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Not Yet Allotted</span>
+                </div>
               )
             }
           </div>
@@ -310,7 +314,7 @@ export default function Dashboard() {
                 </div>
                 <div className="detail-row">
                   <span>College</span>
-                  <span style={{ fontSize: '0.9rem', textAlign: 'right' }}>{dashboardData?.college?.college_name || "N/A"}</span>
+                  <span style={{ textAlign: 'left', paddingLeft: '20px', flex: 1 }}>{dashboardData?.college?.college_name || "N/A"}</span>
                 </div>
               </div>
 

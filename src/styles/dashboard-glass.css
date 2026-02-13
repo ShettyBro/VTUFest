@@ -35,9 +35,15 @@ html {
 }
 
 /* Override Layout Background */
+/* Override Layout Background */
 .layout,
-.content {
+.content,
+.layout-container,
+#root,
+body,
+html {
     background: transparent !important;
+    background-color: transparent !important;
 }
 
 /* Animated Background Layer */
@@ -352,18 +358,28 @@ body::after {
 
 .detail-row {
     display: flex;
-    justify-content: space-between;
+    display: flex;
+    justify-content: flex-start;
+    /* Changed from space-between */
+    align-items: center;
     padding: 10px 0;
     border-bottom: 1px solid var(--glass-border);
 }
 
 .detail-row span:first-child {
     color: var(--text-secondary);
+    min-width: 100px;
+    /* Fixed width for labels to align values */
+    font-weight: 500;
 }
 
 .detail-row span:last-child {
     font-weight: 600;
     color: white;
+    text-align: left;
+    /* Changed from default right align via flex space-between */
+    flex: 1;
+    padding-left: 20px;
 }
 
 /* --- ACTION BUTTONS --- */
