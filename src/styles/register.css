@@ -25,11 +25,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;   /* Center vertically */
-  min-height: 100vh;         /* Full viewport height */
-  padding: 40px 16px;
+  justify-content: flex-start;  /* restore original */
+  padding: 40px 16px 60px;      /* restore bottom spacing */
   box-sizing: border-box;
 }
+
 
 /* =========================================================
    PAGE TITLE
