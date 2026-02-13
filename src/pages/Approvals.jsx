@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/dashboard-glass.css"; // UPDATED CSS
+import "../styles/dashboard-glass.css";
+import { usePopup } from "../context/PopupContext"; // UPDATED CSS
 
 export default function Approvals() {
   const navigate = useNavigate();
@@ -49,6 +50,9 @@ export default function Approvals() {
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [processingAction, setProcessingAction] = useState(false);
+
+
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     if (!token) {
@@ -156,7 +160,7 @@ export default function Approvals() {
       }
     } catch (error) {
       console.error("Fetch pending error:", error);
-      alert("Failed to load pending students");
+      showPopup("Failed to load pending students", "error");
     } finally {
       setLoading(false);
     }
@@ -190,7 +194,7 @@ export default function Approvals() {
       }
     } catch (error) {
       console.error("Fetch approved error:", error);
-      alert("Failed to load approved students");
+      showPopup("Failed to load approved students", "error");
     }
   };
 
@@ -221,12 +225,12 @@ export default function Approvals() {
       }
     } catch (error) {
       console.error("Fetch rejected error:", error);
-      alert("Failed to load rejected students");
+      showPopup("Failed to load rejected students", "error");
     }
   };
 
   const handleSessionExpired = () => {
-    alert("Session expired. Please login again.");
+    showPopup("Session expired. Please login again.", "error");
     localStorage.clear();
     navigate("/");
   };
@@ -300,13 +304,13 @@ export default function Approvals() {
           )
         );
         setEditingPending(null);
-        alert("Details saved successfully. You can now approve.");
+        showPopup("Details saved successfully. You can now approve.", "success");
       } else {
-        alert(data.error || "Failed to save details");
+        showPopup(data.error || "Failed to save details", "error");
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert("Failed to save details");
+      showPopup("Failed to save details", "error");
     } finally {
       setSavingEdit(false);
     }
@@ -317,13 +321,13 @@ export default function Approvals() {
 
     // Check quota before approval
     if (quota.remaining <= 0) {
-      alert("College quota exhausted. Cannot approve more students.");
+      showPopup("College quota exhausted. Cannot approve more students.", "warning");
       return;
     }
 
     // If editing, prevent approval
     if (editingPending === student.application_id) {
-      alert("Please save your changes before approving");
+      showPopup("Please save your changes before approving", "warning");
       return;
     }
 
@@ -374,13 +378,13 @@ export default function Approvals() {
         }
 
         setExpandedPending(null);
-        alert("Student approved successfully");
+        showPopup("Student approved successfully", "success");
       } else {
-        alert(data.error || "Approval failed");
+        showPopup(data.error || "Approval failed", "error");
       }
     } catch (error) {
       console.error("Approve error:", error);
-      alert("Failed to approve student");
+      showPopup("Failed to approve student", "error");
     } finally {
       setProcessingAction(false);
     }
@@ -467,13 +471,13 @@ export default function Approvals() {
           )
         );
         setEditingApproved(null);
-        alert("Details saved successfully");
+        showPopup("Details saved successfully", "success");
       } else {
-        alert(data.error || "Failed to save details");
+        showPopup(data.error || "Failed to save details", "error");
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert("Failed to save details");
+      showPopup("Failed to save details", "error");
     } finally {
       setSavingEdit(false);
     }
@@ -505,7 +509,7 @@ export default function Approvals() {
     if (isReadOnly) return;
 
     if (!rejectionReason.trim()) {
-      alert("Please provide a rejection reason");
+      showPopup("Please provide a rejection reason", "warning");
       return;
     }
 
@@ -550,9 +554,9 @@ export default function Approvals() {
           }
 
           closeRejectModal();
-          alert("Student rejected successfully");
+          showPopup("Student rejected successfully", "success");
         } else {
-          alert(data.error || "Rejection failed");
+          showPopup(data.error || "Rejection failed", "error");
         }
       } else if (rejectTarget.type === "approved") {
         const response = await fetch(
@@ -597,14 +601,14 @@ export default function Approvals() {
           }
 
           closeRejectModal();
-          alert("Student moved to rejected successfully");
+          showPopup("Student moved to rejected successfully", "success");
         } else {
-          alert(data.error || "Failed to move student");
+          showPopup(data.error || "Failed to move student", "error");
         }
       }
     } catch (error) {
       console.error("Reject error:", error);
-      alert("Failed to process rejection");
+      showPopup("Failed to process rejection", "error");
     } finally {
       setProcessingAction(false);
     }

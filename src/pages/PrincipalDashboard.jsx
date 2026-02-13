@@ -5,6 +5,7 @@ import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import "../styles/dashboard-glass.css"; // UPDATED CSS IMPORT
 import notificationsData from "../data/notifications.json";
+import { usePopup } from "../context/PopupContext";
 
 export default function PrincipalDashboard() {
   const navigate = useNavigate();
@@ -38,6 +39,9 @@ export default function PrincipalDashboard() {
     email: "",
     phone: "",
   });
+
+
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     if (!token || role !== "principal") {
@@ -74,7 +78,7 @@ export default function PrincipalDashboard() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -87,7 +91,7 @@ export default function PrincipalDashboard() {
       }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
-      alert("Failed to load dashboard. Please refresh the page.");
+      showPopup("Failed to load dashboard. Please refresh the page.", "error");
     } finally {
       setLoading(false);
     }
@@ -104,7 +108,7 @@ export default function PrincipalDashboard() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -126,7 +130,7 @@ export default function PrincipalDashboard() {
 
   const handleAssignManager = async () => {
     if (!managerForm.name || !managerForm.email || !managerForm.phone) {
-      alert("All fields are required");
+      showPopup("All fields are required", "warning");
       return;
     }
 
@@ -147,7 +151,7 @@ export default function PrincipalDashboard() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -156,16 +160,16 @@ export default function PrincipalDashboard() {
       const data = await response.json();
 
       if (data.success) {
-        alert("Manager assigned successfully. Email sent with credentials.");
+        showPopup("Manager assigned successfully. Email sent with credentials.", "success");
         setShowAssignModal(false);
         setManagerForm({ name: "", email: "", phone: "" });
         fetchDashboardData();
       } else {
-        alert(data.error || "Failed to assign manager");
+        showPopup(data.error || "Failed to assign manager", "error");
       }
     } catch (error) {
       console.error("Assign manager error:", error);
-      alert("Failed to assign manager. Please try again.");
+      showPopup("Failed to assign manager. Please try again.", "error");
     } finally {
       setAssigningManager(false);
     }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
+import { usePopup } from "../context/PopupContext";
 
 export default function Accommodation() {
   const navigate = useNavigate();
@@ -22,6 +23,9 @@ export default function Accommodation() {
     contact_person_phone: "",
     special_requirements: "",
   });
+
+
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     if (!token) {
@@ -76,7 +80,7 @@ export default function Accommodation() {
       );
 
       if (response.status === 401) {
-        alert("Session expired");
+        showPopup("Session expired", "error");
         navigate("/");
         return;
       }
@@ -103,7 +107,7 @@ export default function Accommodation() {
     if (existingRequest) return;
 
     if (!formData.total_girls || !formData.total_boys || !formData.contact_person_name || !formData.contact_person_phone) {
-      alert("Please fill all required fields");
+      showPopup("Please fill all required fields", "warning");
       return;
     }
 
@@ -126,14 +130,14 @@ export default function Accommodation() {
 
       const data = await response.json();
       if (data.success) {
-        alert("Accommodation request submitted successfully!");
+        showPopup("Accommodation request submitted successfully!", "success");
         fetchAccommodationStatus();
       } else {
-        alert(data.error || "Submission failed");
+        showPopup(data.error || "Submission failed", "error");
       }
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Something went wrong");
+      showPopup("Something went wrong", "error");
     } finally {
       setSubmitting(false);
     }

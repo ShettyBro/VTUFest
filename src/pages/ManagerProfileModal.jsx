@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/ManagerProfileModal.css";
+import { usePopup } from "../context/PopupContext";
 
 const API_URL = "https://vtu-festserver-production.up.railway.app/api/manager/manager-profile";
 
@@ -31,6 +32,9 @@ export default function ManagerProfileModal({ onComplete }) {
     college_id_card: "",
     aadhaar_card: "",
   });
+
+
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     loadSessionFromStorage();
@@ -107,7 +111,7 @@ export default function ManagerProfileModal({ onComplete }) {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -122,11 +126,11 @@ export default function ManagerProfileModal({ onComplete }) {
         setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
         setTimerExpired(false);
       } else {
-        alert(data.error || "Failed to initialize profile");
+        showPopup(data.error || "Failed to initialize profile", "error");
       }
     } catch (error) {
       console.error("Init error:", error);
-      alert("Failed to initialize profile");
+      showPopup("Failed to initialize profile", "error");
     } finally {
       setLoading(false);
     }
@@ -137,12 +141,12 @@ export default function ManagerProfileModal({ onComplete }) {
     if (!file) return;
 
     if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
-      alert("Only PNG, JPG, or PDF files allowed");
+      showPopup("Only PNG, JPG, or PDF files allowed", "warning");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File must be less than 5MB");
+      showPopup("File must be less than 5MB", "warning");
       return;
     }
 
@@ -161,12 +165,12 @@ export default function ManagerProfileModal({ onComplete }) {
 
   const uploadFile = async (key) => {
     if (!files[key]) {
-      alert(`Please select ${key.replace(/_/g, " ")}`);
+      showPopup(`Please select ${key.replace(/_/g, " ")}`, "warning");
       return;
     }
 
     if (!session?.upload_urls?.[key]) {
-      alert("Session expired. Please restart.");
+      showPopup("Session expired. Please restart.", "error");
       return;
     }
 
@@ -187,7 +191,7 @@ export default function ManagerProfileModal({ onComplete }) {
     } catch (error) {
       console.error(`Upload error (${key}):`, error);
       setUploadStatus((prev) => ({ ...prev, [key]: "failed" }));
-      alert(`Failed to upload ${key.replace(/_/g, " ")}`);
+      showPopup(`Failed to upload ${key.replace(/_/g, " ")}`, "error");
     }
   };
 
@@ -197,7 +201,7 @@ export default function ManagerProfileModal({ onComplete }) {
       uploadStatus.college_id_card !== "done" ||
       uploadStatus.aadhaar_card !== "done"
     ) {
-      alert("Please upload all 3 documents before submitting");
+      showPopup("Please upload all 3 documents before submitting", "warning");
       return;
     }
 
@@ -217,7 +221,7 @@ export default function ManagerProfileModal({ onComplete }) {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -227,15 +231,15 @@ export default function ManagerProfileModal({ onComplete }) {
 
       if (data.success) {
         localStorage.removeItem("manager_profile_session");
-        alert("Profile completed! You are now counted in the 45-person quota.");
+        showPopup("Profile completed! You are now counted in the 45-person quota.", "success");
         if (onComplete) onComplete();
         window.location.reload();
       } else {
-        alert(data.error || "Finalization failed");
+        showPopup(data.error || "Finalization failed", "error");
       }
     } catch (error) {
       console.error("Finalize error:", error);
-      alert("Failed to finalize profile");
+      showPopup("Failed to finalize profile", "error");
     } finally {
       setLoading(false);
     }
@@ -257,7 +261,7 @@ export default function ManagerProfileModal({ onComplete }) {
         onChange={(e) => handleFileChange(e, key)}
         disabled={timerExpired || uploadStatus[key] === "done"}
       />
-      
+
       {filePreviews[key] && filePreviews[key] !== "PDF" && (
         <div style={{ textAlign: "center", margin: "10px 0" }}>
           <img
@@ -341,8 +345,8 @@ export default function ManagerProfileModal({ onComplete }) {
             )}
 
             <div className="modal-actions">
-              <button 
-                onClick={handleFinalize} 
+              <button
+                onClick={handleFinalize}
                 disabled={!allUploaded || loading || timerExpired}
               >
                 {loading ? "Submitting..." : "Complete Profile"}

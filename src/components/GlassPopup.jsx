@@ -40,7 +40,7 @@ export default function GlassPopup({ message, type = "info", onClose }) {
         height: "100%",
         backgroundColor: "rgba(0, 0, 0, 0.6)",
         backdropFilter: "blur(5px)",
-        zIndex: 9999,
+        zIndex: 10000,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

@@ -1,7 +1,10 @@
+
 // ChangePassword.jsx (ResetPassword)
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import "../styles/auth.css"; // UPDATED CSS
+import "../styles/auth.css";
+// ✅ Import popup hook
+import { usePopup } from "../context/PopupContext";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
 
@@ -11,8 +14,9 @@ export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+
+  // ✅ Use popup instead of local error/success state
+  const { showPopup } = usePopup();
 
   const token = searchParams.get("token");
   const email = searchParams.get("email");
@@ -27,16 +31,14 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
 
     if (!newPassword || newPassword.length < 8) {
-      setErrorMsg("Password must be at least 8 characters");
+      showPopup("Password must be at least 8 characters", "warning");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMsg("Passwords do not match");
+      showPopup("Passwords do not match", "warning");
       return;
     }
 
@@ -60,18 +62,18 @@ export default function ResetPassword() {
       const data = await response.json();
 
       if (!response.ok) {
-        setErrorMsg(data.error || data.message || "Reset failed. Retry.");
+        showPopup(data.error || data.message || "Reset failed. Retry.", "error");
         setLoading(false);
         return;
       }
 
       // ✅ Success - redirect to login after 2 seconds
-      setSuccessMsg(data.message);
+      showPopup(data.message, "success");
       setTimeout(() => {
         navigate("/");
       }, 2000);
     } catch {
-      setErrorMsg("Server not reachable. Retry.");
+      showPopup("Server not reachable. Retry.", "error");
     } finally {
       setLoading(false);
     }
@@ -118,14 +120,6 @@ export default function ResetPassword() {
               required
             />
           </div>
-
-          {errorMsg && (
-            <div className="error-msg">{errorMsg}</div>
-          )}
-
-          {successMsg && (
-            <div className="success-msg">{successMsg}</div>
-          )}
 
           <button className="auth-btn" type="submit" disabled={loading}>
             {loading ? "Resetting..." : "Reset Password"}

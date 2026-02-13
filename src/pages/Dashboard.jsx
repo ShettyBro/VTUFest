@@ -4,6 +4,7 @@ import Layout from "../components/layout/layout";
 import CampusMap from "../components/CampusMap";
 import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import "../styles/dashboard-glass.css";
+import { usePopup } from "../context/PopupContext";
 
 import settingsData from "../data/settings.json";
 import notificationsData from "../data/notifications.json";
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [showAllocatedEventsModal, setShowAllocatedEventsModal] = useState(false);
+  const { showPopup } = usePopup();
 
   const priority1Notifications = notificationsData
     .filter(n => n.priority === 1)
@@ -118,6 +120,7 @@ export default function Dashboard() {
     ],
   };
 
+
   const fetchDashboardData = async (isManualRefresh = false) => {
     const token = localStorage.getItem("vtufest_token");
 
@@ -141,7 +144,7 @@ export default function Dashboard() {
       const data = await response.json();
 
       if (response.status === 401 && data.redirect) {
-        alert(data.message || "Session expired. Redirecting to login...");
+        showPopup(data.message || "Session expired. Redirecting to login...", "error");
 
         setTimeout(() => {
           localStorage.clear();
@@ -157,7 +160,7 @@ export default function Dashboard() {
             fetchDashboardData(isManualRefresh);
           }, 2000);
         } else {
-          alert("Failed to load dashboard after multiple attempts. Please contact support.");
+          showPopup("Failed to load dashboard after multiple attempts. Please contact support.", "error");
         }
         return;
       }
@@ -172,7 +175,7 @@ export default function Dashboard() {
           fetchDashboardData(isManualRefresh);
         }, 2000);
       } else {
-        alert("Network error. Please check your connection.");
+        showPopup("Network error. Please check your connection.", "error");
       }
     } finally {
       setLoading(false);
@@ -222,6 +225,7 @@ export default function Dashboard() {
     : "Loading...";
 
   const isCollegeLocked = dashboardData?.college?.is_locked || dashboardData?.college?.registration_lock || false;
+  const isRegistrationLocked = dashboardData?.college?.registration_lock || false;
 
   const getStatusBadgeClass = () => {
     if (!dashboardData?.application) return "pending";
@@ -344,7 +348,12 @@ export default function Dashboard() {
 
               {isCollegeLocked && (
                 <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
-                  ⚠️ Applications Closed
+                  ⚠️ You Collage Accepts no more applications for this year!!
+                </div>
+              )}
+              {isRegistrationLocked && (
+                <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
+                  ⚠️ Registration is closed for this year!!
                 </div>
               )}
             </div>

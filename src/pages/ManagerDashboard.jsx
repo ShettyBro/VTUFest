@@ -7,6 +7,7 @@ import CampusMap from "../components/CampusMap";
 import "../styles/dashboard-glass.css";
 import notificationsData from "../data/notifications.json";
 import eventsCalendarData from "../data/events-calendar.json";
+import { usePopup } from "../context/PopupContext";
 
 export default function ManagerDashboard() {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ export default function ManagerDashboard() {
       return new Date(b.date) - new Date(a.date);
     });
 
+
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     if (!token || role !== "manager") {
@@ -70,7 +73,7 @@ export default function ManagerDashboard() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -83,7 +86,7 @@ export default function ManagerDashboard() {
       }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
-      alert("Failed to load dashboard. Please refresh the page.");
+      showPopup("Failed to load dashboard. Please refresh the page.", "error");
     } finally {
       setLoading(false);
     }
@@ -101,7 +104,7 @@ export default function ManagerDashboard() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -128,7 +131,7 @@ export default function ManagerDashboard() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;

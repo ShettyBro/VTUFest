@@ -4,6 +4,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import Layout from "../components/layout/layout";
 import "../styles/approvedStudents.css";
+import { usePopup } from "../context/PopupContext";
 
 const API_BASE_URL = "";
 
@@ -19,6 +20,7 @@ export default function ApprovedStudents() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [allEvents, setAllEvents] = useState([]);
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     if (!token) {
@@ -27,6 +29,7 @@ export default function ApprovedStudents() {
     }
     fetchData();
   }, []);
+
 
   const fetchData = async () => {
     try {
@@ -42,7 +45,7 @@ export default function ApprovedStudents() {
       });
 
       if (lockResponse.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -64,7 +67,7 @@ export default function ApprovedStudents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -97,7 +100,7 @@ export default function ApprovedStudents() {
 
   const handleEdit = (student) => {
     if (isLocked) {
-      alert("Cannot edit after final approval");
+      showPopup("Cannot edit after final approval", "warning");
       return;
     }
     setSelectedStudent({
@@ -110,7 +113,7 @@ export default function ApprovedStudents() {
 
   const handleMoveToRejected = (student) => {
     if (isLocked) {
-      alert("Cannot reject after final approval");
+      showPopup("Cannot reject after final approval", "warning");
       return;
     }
     setSelectedStudent(student);
@@ -147,7 +150,7 @@ export default function ApprovedStudents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -156,21 +159,21 @@ export default function ApprovedStudents() {
       const data = await response.json();
 
       if (data.success) {
-        alert("Events updated successfully");
+        showPopup("Events updated successfully", "success");
         setShowEditModal(false);
         fetchData();
       } else {
-        alert(data.error || "Update failed");
+        showPopup(data.error || "Update failed", "error");
       }
     } catch (error) {
       console.error("Edit error:", error);
-      alert("Failed to update events");
+      showPopup("Failed to update events", "error");
     }
   };
 
   const confirmReject = async () => {
     if (!rejectionReason.trim()) {
-      alert("Please provide a rejection reason");
+      showPopup("Please provide a rejection reason", "warning");
       return;
     }
 
@@ -189,7 +192,7 @@ export default function ApprovedStudents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -198,16 +201,16 @@ export default function ApprovedStudents() {
       const data = await response.json();
 
       if (data.success) {
-        alert("Student moved to rejected list");
+        showPopup("Student moved to rejected list", "success");
         setShowRejectModal(false);
         setRejectionReason("");
         fetchData();
       } else {
-        alert(data.error || "Rejection failed");
+        showPopup(data.error || "Rejection failed", "error");
       }
     } catch (error) {
       console.error("Reject error:", error);
-      alert("Failed to reject student");
+      showPopup("Failed to reject student", "error");
     }
   };
 

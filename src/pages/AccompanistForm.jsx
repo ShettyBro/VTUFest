@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
+import { usePopup } from "../context/PopupContext";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
@@ -133,6 +134,9 @@ export default function AccompanistForm() {
   const [accompanistsLoaded, setAccompanistsLoaded] = useState(false);
   const [removingId, setRemovingId] = useState(null);
 
+
+  const { showPopup } = usePopup();
+
   useEffect(() => {
     if (!token) {
       navigate("/");
@@ -217,7 +221,7 @@ export default function AccompanistForm() {
   const isReadOnlyMode = isLocked || registrationLock;
 
   const handleSessionExpired = () => {
-    alert("Session expired. Please login again.");
+    showPopup("Session expired. Please login again.", "error");
     localStorage.clear();
     navigate("/");
   };
@@ -233,7 +237,7 @@ export default function AccompanistForm() {
   const openModal = () => {
     if (isReadOnlyMode) return;
     if (remainingSlots <= 0) {
-      alert("Maximum capacity 45 reached.");
+      showPopup("Maximum capacity 45 reached.", "warning");
       return;
     }
 
@@ -272,12 +276,12 @@ export default function AccompanistForm() {
     if (!file) return;
 
     if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
-      alert("Only PNG, JPG, or PDF files allowed");
+      showPopup("Only PNG, JPG, or PDF files allowed", "warning");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File must be less than 5MB");
+      showPopup("File must be less than 5MB", "warning");
       return;
     }
 
@@ -297,11 +301,11 @@ export default function AccompanistForm() {
 
   const handleNext = async () => {
     if (!modalForm.full_name || !modalForm.phone) {
-      alert("Name and Phone are required");
+      showPopup("Name and Phone are required", "warning");
       return;
     }
     if (!["faculty", "professional"].includes(modalForm.accompanist_type)) {
-      alert("Accompanist type must be either 'faculty' or 'professional'");
+      showPopup("Accompanist type must be either 'faculty' or 'professional'", "warning");
       return;
     }
 
@@ -330,7 +334,7 @@ export default function AccompanistForm() {
 
       const initData = await initResponse.json();
       if (!initData.success) {
-        alert(initData.message || "Failed to initialize session");
+        showPopup(initData.message || "Failed to initialize session", "error");
         return;
       }
 
@@ -340,7 +344,7 @@ export default function AccompanistForm() {
       setModalStep(2);
     } catch (error) {
       console.error("Init error:", error);
-      alert("Network error. Please try again.");
+      showPopup("Network error. Please try again.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -401,17 +405,17 @@ export default function AccompanistForm() {
 
       const finalizeData = await finalizeResponse.json();
       if (!finalizeData.success) {
-        alert(finalizeData.message || "Failed to add accompanist");
+        showPopup(finalizeData.message || "Failed to add accompanist", "error");
         return;
       }
 
-      alert("Accompanist added successfully");
+      showPopup("Accompanist added successfully", "success");
       closeModal();
       await fetchQuota();
       await fetchAccompanists();
     } catch (error) {
       console.error("Submit error:", error);
-      alert("Network error.");
+      showPopup("Network error.", "error");
     } finally {
       setSubmitting(false);
     }
@@ -442,16 +446,16 @@ export default function AccompanistForm() {
 
       const data = await response.json();
       if (!data.success) {
-        alert(data.message || "Failed to remove accompanist");
+        showPopup(data.message || "Failed to remove accompanist", "error");
         setRemovingId(null);
         return;
       }
 
       setAccompanists(accompanists.filter((acc) => acc.accompanist_id !== accompanist_id));
       setQuotaUsed(quotaUsed - 1);
-      alert("Accompanist removed successfully");
+      showPopup("Accompanist removed successfully", "success");
     } catch (error) {
-      alert("Failed to remove accompanist");
+      showPopup("Failed to remove accompanist", "error");
     } finally {
       setRemovingId(null);
     }

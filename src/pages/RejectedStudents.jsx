@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/rejectedStudents.css";
+import { usePopup } from "../context/PopupContext";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/manager";
 export default function RejectedStudents() {
@@ -10,6 +11,7 @@ export default function RejectedStudents() {
 
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
+  const { showPopup } = usePopup();
 
   useEffect(() => {
     if (!token) {
@@ -18,6 +20,7 @@ export default function RejectedStudents() {
     }
     fetchRejectedStudents();
   }, []);
+
 
   const fetchRejectedStudents = async () => {
     try {
@@ -32,7 +35,7 @@ export default function RejectedStudents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;

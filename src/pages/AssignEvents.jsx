@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/dashboard-glass.css"; // UPDATED CSS
+import "../styles/dashboard-glass.css";
+import { usePopup } from "../context/PopupContext"; // UPDATED CSS
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
 
@@ -105,6 +106,9 @@ export default function AssignEvents() {
   const [registrationLock, setRegistrationLock] = useState(false); // global lock
 
 
+
+  const { showPopup } = usePopup();
+
   useEffect(() => {
     if (!token) {
       navigate("/");
@@ -129,7 +133,7 @@ export default function AssignEvents() {
       );
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -157,7 +161,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -198,7 +202,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -217,11 +221,11 @@ export default function AssignEvents() {
           },
         }));
       } else {
-        alert(data.error || "Failed to load event data");
+        showPopup(data.error || "Failed to load event data", "error");
       }
     } catch (error) {
       console.error("Fetch event error:", error);
-      alert("Failed to load event data");
+      showPopup("Failed to load event data", "error");
     } finally {
       setLoadingEvents((prev) => ({ ...prev, [eventSlug]: false }));
     }
@@ -245,13 +249,13 @@ export default function AssignEvents() {
     if (mode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
       if (currentParticipants >= eventLimits?.participants) {
-        alert(`Maximum participants (${eventLimits.participants}) reached for this event`);
+        showPopup(`Maximum participants (${eventLimits.participants}) reached for this event`, "warning");
         return;
       }
     } else if (mode === "add_accompanist") {
       const currentAccompanists = currentData?.accompanists?.length || 0;
       if (currentAccompanists >= eventLimits?.accompanists) {
-        alert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`);
+        showPopup(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
         return;
       }
     }
@@ -273,18 +277,18 @@ export default function AssignEvents() {
 
   const handleAdd = async () => {
     if (!selectedPersonId) {
-      alert("Please select a person");
+      showPopup("Please select a person", "warning");
       return;
     }
 
     if (modalMode === "add_participant" && selectedPersonType !== "student") {
-      alert("Participants must be students only");
+      showPopup("Participants must be students only", "warning");
       return;
     }
 
     const eventLimits = EVENT_LIMITS[currentEventSlug];
     if (!eventLimits) {
-      alert("Event configuration not found");
+      showPopup("Event configuration not found", "error");
       return;
     }
 
@@ -292,13 +296,13 @@ export default function AssignEvents() {
     if (modalMode === "add_participant") {
       const currentParticipants = currentData?.participants?.length || 0;
       if (currentParticipants >= eventLimits.participants) {
-        alert(`Maximum participants (${eventLimits.participants}) reached for this event`);
+        showPopup(`Maximum participants (${eventLimits.participants}) reached for this event`, "warning");
         return;
       }
     } else if (modalMode === "add_accompanist") {
       const currentAccompanists = currentData?.accompanists?.length || 0;
       if (currentAccompanists >= eventLimits.accompanists) {
-        alert(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`);
+        showPopup(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
         return;
       }
     }
@@ -324,7 +328,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -333,16 +337,16 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message);
+        showPopup(data.message, "success");
         closeModal();
         await fetchEventData(currentEventSlug, true);
         fetchDashboardData();
       } else {
-        alert(data.error || "Failed to add assignment");
+        showPopup(data.error || "Failed to add assignment", "error");
       }
     } catch (error) {
       console.error("Add error:", error);
-      alert("Failed to add assignment");
+      showPopup("Failed to add assignment", "error");
     } finally {
       setIsSubmittingAdd(false);
     }
@@ -373,7 +377,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -382,15 +386,15 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message);
+        showPopup(data.message, "success");
         await fetchEventData(eventSlug, true);
         fetchDashboardData();
       } else {
-        alert(data.error || "Failed to remove assignment");
+        showPopup(data.error || "Failed to remove assignment", "error");
       }
     } catch (error) {
       console.error("Remove error:", error);
-      alert("Failed to remove assignment");
+      showPopup("Failed to remove assignment", "error");
     } finally {
       setRemovingPersonId(null);
     }
@@ -398,7 +402,7 @@ export default function AssignEvents() {
 
   const handleFinalApproval = async () => {
     if (!termsAccepted) {
-      alert("You must accept the terms to proceed");
+      showPopup("You must accept the terms to proceed", "warning");
       return;
     }
 
@@ -414,7 +418,7 @@ export default function AssignEvents() {
       });
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
         navigate("/");
         return;
@@ -423,16 +427,16 @@ export default function AssignEvents() {
       const data = await response.json();
 
       if (data.success) {
-        alert(data.message);
+        showPopup(data.message, "success");
         setShowFinalApprovalModal(false);
         setIsLocked(true);
         fetchDashboardData();
       } else {
-        alert(data.error || "Final approval failed");
+        showPopup(data.error || "Final approval failed", "error");
       }
     } catch (error) {
       console.error("Final approval error:", error);
-      alert("Final approval failed");
+      showPopup("Final approval failed", "error");
     } finally {
       setFinalApproving(false);
     }

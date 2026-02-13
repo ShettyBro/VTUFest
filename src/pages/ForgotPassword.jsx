@@ -1,7 +1,9 @@
 // ForgotPassword.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth.css"; // Changed to auth.css for UI theme
+import "../styles/auth.css";
+// ✅ Import popup hook
+import { usePopup } from "../context/PopupContext";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
 
@@ -16,16 +18,14 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const { showPopup } = usePopup();
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
 
     if (!email) {
-      setErrorMsg("Please enter your registered email");
+      showPopup("Please enter your registered email", "warning");
       return;
     }
 
@@ -44,15 +44,15 @@ export default function ForgotPassword() {
       const data = await response.json();
 
       if (!response.ok) {
-        setErrorMsg(data.error || data.message || "Request failed. Retry.");
+        showPopup(data.error || data.message || "Request failed. Retry.", "error");
         setLoading(false);
         return;
       }
 
-      setSuccessMsg(data.message);
+      showPopup(data.message, "success");
       setEmail("");
     } catch {
-      setErrorMsg("Server not reachable. Retry.");
+      showPopup("Server not reachable. Retry.", "error");
     } finally {
       setLoading(false);
     }
