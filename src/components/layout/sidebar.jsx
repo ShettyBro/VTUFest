@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
-import "../../styles/sidebar.css";
+import "../../styles/layout-glass.css";
 
 export default function Sidebar({ role, hasApplication = false, collegeLocked = false }) {
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
           <span className="label">Register</span>
         </div>
       )}
-      
+
 
       {(role === "principal") && (
         <>

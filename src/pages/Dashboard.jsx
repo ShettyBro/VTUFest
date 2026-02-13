@@ -239,12 +239,12 @@ export default function Dashboard() {
         <div className="dashboard-header">
           <div className="welcome-text">
             <h1>Welcome, {dashboardData?.student?.full_name?.split(' ')[0] || "Student"}</h1>
-            <p>Dashboard Overview</p>
+            {/* <p>Dashboard Overview</p> */}
           </div>
 
           <div className="qr-badge" style={{ textAlign: 'right' }}>
             <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem' }}>
-              {dashboardData?.qr_code ? "Entry QR Code:" : "QR Code will appear here"}
+              {dashboardData?.qr_code ? "Your QR Code:" : "our QR Code:"}
             </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
               dashboardData?.qr_code ? (

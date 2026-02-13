@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
-import "../../styles/layout.css";
+import "../../styles/layout-glass.css";
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student/dashboard";
 
