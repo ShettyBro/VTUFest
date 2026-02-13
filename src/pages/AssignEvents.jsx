@@ -146,34 +146,36 @@ export default function AssignEvents() {
     }
   };
 
-  const checkLockStatus = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/principal/check-lock-status`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+const checkLockStatus = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/principal/check-lock-status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        localStorage.clear();
-        navigate("/");
-        return;
-      }
-
-      const data = await response.json();
-      if (data.success && data.data) {
-        setIsLocked(!!data.data.is_locked);
-        setRegistrationLock(!!data.data.registration_lock);
-      }
-
-
-    } catch (error) {
-      console.error("Lock status check error:", error);
+    if (response.status === 401) {
+      alert("Session expired. Please login again.");
+      localStorage.clear();
+      navigate("/");
+      return;
     }
-  };
+
+    const data = await response.json();
+
+    // ✅ FIXED: remove .data
+    if (data.success) {
+      setIsLocked(!!data.is_locked);
+      setRegistrationLock(!!data.registration_lock);
+    }
+
+  } catch (error) {
+    console.error("Lock status check error:", error);
+  }
+};
+
   const isReadOnlyMode = isLocked || registrationLock;
 
 
