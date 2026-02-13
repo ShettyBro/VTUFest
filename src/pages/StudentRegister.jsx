@@ -7,6 +7,69 @@ const API_BASE = {
   submitApplication: "https://vtu-festserver-production.up.railway.app/api/student/submit-application"
 };
 
+// Helper component for file upload to match AuthPage design
+const FileUploadField = ({ label, docType, blobType, accept, title, documents, documentPreviews, uploadStatus, handleDocumentChange, uploadDocument, timerExpired, loading }) => (
+  <div className="file-upload-wrapper" style={{ marginTop: '20px', padding: '20px', background: 'rgba(0, 0, 0, 0.3)', border: '2px dashed rgba(255, 255, 255, 0.5)' }}>
+    <h4 style={{ color: 'white', marginBottom: '15px' }}>{title || label}</h4>
+    <div className="preview-container">
+      {documentPreviews[docType] ? (
+        documentPreviews[docType] === "PDF" ? (
+          <div style={{ marginBottom: '15px', fontSize: '3rem', color: '#fff' }}>📄 PDF</div>
+        ) : (
+          <img src={documentPreviews[docType]} alt="Preview" className="preview-img" style={{ width: '120px', height: '120px', objectFit: 'cover' }} />
+        )
+      ) : (
+        <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📄</div>
+      )}
+    </div>
+    <div style={{ textAlign: "center" }}>
+      <label htmlFor={`file-upload-${docType}`} className="custom-file-upload" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '10px 20px', borderRadius: '50px', cursor: 'pointer', display: 'inline-block' }}>
+        <span style={{ marginRight: '10px' }}>📁</span>
+        {documents[docType] ? "Change File" : "Choose File"}
+      </label>
+      <input
+        id={`file-upload-${docType}`}
+        type="file"
+        accept={accept}
+        onChange={handleDocumentChange(docType)}
+        disabled={timerExpired || uploadStatus[docType] === "success"}
+        style={{ display: 'none' }}
+      />
+      {documents[docType] && (
+        <div className="file-name-display" style={{ marginTop: '10px', color: '#a8edea' }}>
+          {documents[docType].name}
+        </div>
+      )}
+    </div>
+
+    {documents[docType] && uploadStatus[docType] !== "success" && (
+      <button
+        type="button"
+        className="secondary-btn"
+        onClick={() => uploadDocument(docType, blobType)}
+        disabled={timerExpired || loading || uploadStatus[docType] === "uploading"}
+        style={{
+          marginTop: '20px',
+          borderRadius: '50px',
+          padding: '10px 25px',
+          background: 'rgba(255,255,255,0.1)',
+          border: '1px solid white',
+          color: 'white',
+          cursor: 'pointer'
+        }}
+      >
+        {uploadStatus[docType] === "uploading" ? "Uploading..." : "Upload Now"}
+      </button>
+    )}
+
+    {uploadStatus[docType] === "success" && (
+      <p style={{ color: "#a8edea", marginTop: '10px', fontSize: "14px", textAlign: "center", fontWeight: "600" }}>
+        ✓ Uploaded Successfully
+      </p>
+    )}
+  </div>
+);
+
 export default function SubmitApplication() {
   const navigate = useNavigate();
 
@@ -348,73 +411,13 @@ export default function SubmitApplication() {
     }
   };
 
-  // Helper component for file upload to match AuthPage design
-  const FileUploadField = ({ label, docType, blobType, accept, title }) => (
-    <div className="file-upload-wrapper" style={{ marginTop: '20px', padding: '20px' }}>
-      <h4 style={{ color: 'white', marginBottom: '15px' }}>{title || label}</h4>
-      <div className="preview-container">
-        {documentPreviews[docType] ? (
-          documentPreviews[docType] === "PDF" ? (
-            <div style={{ marginBottom: '15px', fontSize: '3rem', color: '#fff' }}>📄 PDF</div>
-          ) : (
-            <img src={documentPreviews[docType]} alt="Preview" className="preview-img" style={{ width: '120px', height: '120px' }} />
-          )
-        ) : (
-          <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📄</div>
-        )}
-      </div>
-      <div style={{ textAlign: "center" }}>
-        <label htmlFor={`file-upload-${docType}`} className="custom-file-upload">
-          <span style={{ marginRight: '10px' }}>📁</span>
-          {documents[docType] ? "Change File" : "Choose File"}
-        </label>
-        <input
-          id={`file-upload-${docType}`}
-          type="file"
-          accept={accept}
-          onChange={handleDocumentChange(docType)}
-          disabled={timerExpired || uploadStatus[docType] === "success"}
-          style={{ display: 'none' }}
-        />
-        {documents[docType] && (
-          <div className="file-name-display">
-            {documents[docType].name}
-          </div>
-        )}
-      </div>
-
-      {documents[docType] && uploadStatus[docType] !== "success" && (
-        <button
-          type="button"
-          className="secondary-btn"
-          onClick={() => uploadDocument(docType, blobType)}
-          disabled={timerExpired || loading || uploadStatus[docType] === "uploading"}
-          style={{
-            marginTop: '20px',
-            borderRadius: '50px',
-            padding: '10px 25px',
-            background: 'rgba(255,255,255,0.1)'
-          }}
-        >
-          {uploadStatus[docType] === "uploading" ? "Uploading..." : "Upload Now"}
-        </button>
-      )}
-
-      {uploadStatus[docType] === "success" && (
-        <p style={{ color: "#a8edea", marginTop: '10px', fontSize: "14px", textAlign: "center", fontWeight: "600" }}>
-          ✓ Uploaded Successfully
-        </p>
-      )}
-    </div>
-  );
-
   return (
     <div className="auth-page">
       {/* Floating shapes from auth.css */}
       <div className="shape shape-1"></div>
       <div className="shape shape-2"></div>
 
-      <div className="auth-container" style={{ maxWidth: '800px', flexDirection: 'column', minHeight: 'auto', padding: '30px' }}>
+      <div className="auth-container" style={{ maxWidth: '800px', flexDirection: 'column', minHeight: 'auto', padding: '30px', maxHeight: '90vh', overflowY: 'auto' }}>
         <h2 className="form-title" style={{ fontSize: '2.2rem', marginBottom: '30px' }}>Submit Application</h2>
 
         {!showUploadSection ? (
@@ -424,8 +427,8 @@ export default function SubmitApplication() {
               <label>USN / Registration Number</label>
               <input
                 value={studentInfo?.usn || "Loading..."}
-                disabled
-                style={{ opacity: 0.7 }}
+                readOnly
+                style={{ opacity: 1, color: '#ffffff', backgroundColor: 'rgba(255,255,255,0.05)', cursor: 'default' }}
               />
             </div>
 
@@ -434,8 +437,8 @@ export default function SubmitApplication() {
                 <label>College</label>
                 <input
                   value={`${studentInfo.college.college_name}, ${studentInfo.college.place}`}
-                  disabled
-                  style={{ opacity: 0.7 }}
+                  readOnly
+                  style={{ opacity: 1, color: '#ffffff', backgroundColor: 'rgba(255,255,255,0.05)', cursor: 'default' }}
                 />
               </div>
             )}
@@ -463,8 +466,7 @@ export default function SubmitApplication() {
 
             <div className="input-group">
               <label>Permanent Address *</label>
-              <input // Use input instead of textarea to match auth design or style textarea similarly
-                as="textarea" // Just in case, but auth.css targets input/select. Let's use textarea but add style
+              <input // Using input but styled as textarea replacement if needed, or stick to input
                 name="address"
                 value={form.address}
                 onChange={handleChange}
@@ -478,7 +480,6 @@ export default function SubmitApplication() {
                   border: '1px solid var(--glass-border)',
                   borderRadius: '10px',
                   color: 'var(--input-text)',
-                  minHeight: '80px'
                 }}
               />
             </div>
@@ -564,6 +565,13 @@ export default function SubmitApplication() {
               docType="aadhaar"
               blobType="aadhaar"
               accept="image/png,image/jpeg,image/jpg,application/pdf"
+              documents={documents}
+              documentPreviews={documentPreviews}
+              uploadStatus={uploadStatus}
+              handleDocumentChange={handleDocumentChange}
+              uploadDocument={uploadDocument}
+              timerExpired={timerExpired}
+              loading={loading}
             />
 
             <FileUploadField
@@ -572,6 +580,13 @@ export default function SubmitApplication() {
               docType="collegeId"
               blobType="college_id_card"
               accept="image/png,image/jpeg,image/jpg,application/pdf"
+              documents={documents}
+              documentPreviews={documentPreviews}
+              uploadStatus={uploadStatus}
+              handleDocumentChange={handleDocumentChange}
+              uploadDocument={uploadDocument}
+              timerExpired={timerExpired}
+              loading={loading}
             />
 
             <FileUploadField
@@ -580,6 +595,13 @@ export default function SubmitApplication() {
               docType="marksCard"
               blobType="marks_card_10th"
               accept="image/png,image/jpeg,image/jpg,application/pdf"
+              documents={documents}
+              documentPreviews={documentPreviews}
+              uploadStatus={uploadStatus}
+              handleDocumentChange={handleDocumentChange}
+              uploadDocument={uploadDocument}
+              timerExpired={timerExpired}
+              loading={loading}
             />
 
             <button
