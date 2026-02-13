@@ -2,8 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
 /* PUBLIC */
-import Login from "../pages/Login";
-import RegisterStudent from "../pages/RegisterStudent";
+import AuthPage from "../pages/AuthPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ChangePassword";
 import AssignEvents from "../pages/AssignEvents";
@@ -27,8 +26,8 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* ================= PUBLIC ================= */}
-      <Route path="/" element={<Login />} />
-      <Route path="/register-student" element={<RegisterStudent />} />
+      <Route path="/" element={<AuthPage initialView="login" />} />
+      <Route path="/register-student" element={<AuthPage initialView="register" />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/assign-events" element={<AssignEvents />} />
 
