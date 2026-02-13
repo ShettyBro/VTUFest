@@ -5,14 +5,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --glass-nav-bg: rgba(15, 12, 41, 0.7);
-    /* Darker glass for nav */
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --neon-blue: #00f2ff;
-    --neon-purple: #bc13fe;
-    --neon-green: #0aff60;
+    --glass-nav-bg: rgba(255, 255, 255, 0.15);
+    /* Light Glossy Nav */
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --neon-blue: #a8edea;
+    /* Soft teal */
+    --neon-purple: #ffb7b2;
+    /* Soft pink/peach */
+    --neon-green: #96f2d7;
+    /* Soft mint */
     --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-secondary: rgba(255, 255, 255, 0.85);
 }
 
 /* =========================================
@@ -184,7 +187,7 @@ body,
     top: 50px;
     right: -10px;
     width: 320px;
-    background: rgba(20, 10, 40, 0.9);
+    background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(25px);
     border: 1px solid var(--glass-border);
     border-radius: 12px;
@@ -301,7 +304,7 @@ body,
     top: 60px;
     right: 0;
     width: 200px;
-    background: rgba(20, 10, 40, 0.9);
+    background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(25px);
     border: 1px solid var(--glass-border);
     border-radius: 12px;

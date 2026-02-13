@@ -244,7 +244,7 @@ export default function Dashboard() {
 
           <div className="qr-badge" style={{ textAlign: 'right' }}>
             <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem' }}>
-              {dashboardData?.qr_code ? "Your QR Code:" : "our QR Code:"}
+              {dashboardData?.qr_code ? "Your QR Code:" : "Your QR Code:"}
             </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
               dashboardData?.qr_code ? (

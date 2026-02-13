@@ -17,10 +17,13 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   /* ================= USER DATA ================= */
+  /* ================= USER DATA ================= */
   const role = localStorage.getItem("vtufest_role") || "student";
   const userName = localStorage.getItem("name") || "User";
   const userUsn = localStorage.getItem("usn") || "";
-  const userPhoto = "/user.png";
+
+  // Dynamic DiceBear Avatar based on Username (Consistent for same user)
+  const userPhoto = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(userName)}`;
 
   /* ================= SORT NOTIFICATIONS ================= */
   useEffect(() => {
@@ -100,9 +103,7 @@ export default function Navbar() {
     <header className="navbar">
       {/* LEFT LOGOS */}
       <div className="navbar-left">
-        <img src="/acharya.png" alt="Acharya" className="logo big-logo" />
-        <span className="logo-divider">|</span>
-        <img src="/vtu.png" alt="VTU" className="logo big-logo" />
+        <img src="/main.webp" alt="VTU Fest" className="logo big-logo" style={{ height: '50px' }} />
       </div>
 
       {/* CENTER – COLLEGE CODE */}
