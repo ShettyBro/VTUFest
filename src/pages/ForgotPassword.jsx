@@ -34,8 +34,8 @@ export default function ForgotPassword() {
       setErrorMsg("Please enter your registered email");
       return;
     }
-
-    const cleanRole = (role || "").trim().toLowerCase();
+    // Clean inputs
+    const cleanRole = (role || "student").trim().toLowerCase();
     const allowedRoles = ["student", "manager", "principal"];
 
     if (!allowedRoles.includes(cleanRole)) {
@@ -48,24 +48,33 @@ export default function ForgotPassword() {
     try {
       setLoading(true);
 
-      const url = `${API_BASE_URL}auth/${cleanRole}/forgot-password`;
+      // Correct URL structure: /api/auth/forgot-password/:role
+      const url = `${API_BASE_URL}auth/forgot-password/${cleanRole}`;
+
+      console.log("Sending Password Reset Request:", url);
 
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail }),
+        // Sending role in body as well to satisfy all requirements
+        body: JSON.stringify({
+          email: cleanEmail,
+          role: cleanRole
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         setErrorMsg(data.error || data.message || "Request failed. Retry.");
+        setLoading(false);
         return;
       }
 
       setSuccessMsg(data.message);
       setEmail("");
-    } catch {
+    } catch (err) {
+      console.error(err);
       setErrorMsg("Server not reachable. Retry.");
     } finally {
       setLoading(false);
@@ -78,6 +87,7 @@ export default function ForgotPassword() {
       <div className="shape shape-2"></div>
 
       <div className="auth-container" style={{ maxWidth: '500px', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'auto', padding: '40px' }}>
+
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 'bold' }}>Forgot Password</h3>
           <p style={{ color: '#e0f7fa', fontSize: '0.9rem' }}>
@@ -86,16 +96,12 @@ export default function ForgotPassword() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} style={{ width: '100%' }}>
+
           <div className="input-group">
             <label>I am a:</label>
             <select
               value={role}
-              onChange={(e) => {
-                const selected = e.target.value;
-                if (["student", "manager", "principal"].includes(selected)) {
-                  setRole(selected);
-                }
-              }}
+              onChange={(e) => setRole(e.target.value)}
               disabled={loading}
               style={{ width: '100%', padding: '12px 15px', background: 'var(--input-bg)', border: '1px solid var(--glass-border)', borderRadius: '10px', color: 'white', outline: 'none' }}
             >
