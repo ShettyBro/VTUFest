@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
-import "../styles/dashboard-glass.css"; // UPDATED CSS
+import "../styles/dashboard-glass.css";
 
 export default function Accommodation() {
   const navigate = useNavigate();
@@ -18,8 +18,9 @@ export default function Accommodation() {
   const [formData, setFormData] = useState({
     total_girls: "",
     total_boys: "",
-    arrival_date: "",
-    arrival_time: "",
+    contact_person_name: "",
+    contact_person_phone: "",
+    special_requirements: "",
   });
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function Accommodation() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ action: "status" }),
+          body: JSON.stringify({ action: "get_accommodation_status" }),
         }
       );
 
@@ -81,8 +82,8 @@ export default function Accommodation() {
       }
 
       const data = await response.json();
-      if (data.success && data.data) {
-        setExistingRequest(data.data);
+      if (data.success && data.data && data.data.accommodation) {
+        setExistingRequest(data.data.accommodation);
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -99,10 +100,10 @@ export default function Accommodation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isReadOnlyMode) return;
-    if (existingRequest) return; // double check
+    if (existingRequest) return;
 
-    if (!formData.total_girls || !formData.total_boys || !formData.arrival_date || !formData.arrival_time) {
-      alert("Please fill all fields");
+    if (!formData.total_girls || !formData.total_boys || !formData.contact_person_name || !formData.contact_person_phone) {
+      alert("Please fill all required fields");
       return;
     }
 
@@ -117,7 +118,7 @@ export default function Accommodation() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            action: "create",
+            action: "submit_accommodation",
             ...formData,
           }),
         }
@@ -161,7 +162,7 @@ export default function Accommodation() {
     return (
       <Layout>
         <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
-          <h3>Loading Accommodation Status...</h3>
+          <h3>Loading...</h3>
         </div>
       </Layout>
     );
@@ -173,18 +174,18 @@ export default function Accommodation() {
         <div className="dashboard-header">
           <div className="welcome-text">
             <h1>Accommodation</h1>
-            <p>Request Accommodation for Team & Accompanists</p>
+            <p>Request Accommodation for Team</p>
           </div>
         </div>
 
         {isLocked && (
           <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 Final approval submitted. This page is read-only.
+            🔒 Final approval submitted. Read-only.
           </div>
         )}
         {registrationLock && (
           <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 Registration is currently locked. All actions are read-only.
+            🔒 Registration locked. Read-only.
           </div>
         )}
 
@@ -193,13 +194,13 @@ export default function Accommodation() {
           {existingRequest ? (
             // EXISTING REQUEST VIEW
             <div style={{ textAlign: "center", padding: "20px" }}>
-              <h2 style={{ color: "var(--academic-gold)", marginBottom: "30px" }}>Accommodation Request Status</h2>
+              <h2 style={{ color: "var(--academic-gold)", marginBottom: "30px" }}>Request Status</h2>
 
               <div className="status-badge-lg"
                 style={{
-                  background: existingRequest.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                  color: existingRequest.status === 'approved' ? '#10b981' : '#f59e0b',
-                  border: `1px solid ${existingRequest.status === 'approved' ? '#10b981' : '#f59e0b'}`,
+                  background: existingRequest.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                  color: existingRequest.status === 'APPROVED' ? '#10b981' : '#f59e0b',
+                  border: `1px solid ${existingRequest.status === 'APPROVED' ? '#10b981' : '#f59e0b'}`,
                   display: "inline-block",
                   padding: "10px 20px",
                   borderRadius: "50px",
@@ -220,78 +221,102 @@ export default function Accommodation() {
                   <span>{existingRequest.total_girls}</span>
                 </div>
                 <div className="detail-row">
-                  <span>Arrival Date:</span>
-                  <span>{new Date(existingRequest.arrival_date).toLocaleDateString()}</span>
+                  <span>Contact Person:</span>
+                  <span>{existingRequest.contact_person_name}</span>
                 </div>
                 <div className="detail-row">
-                  <span>Arrival Time:</span>
-                  <span>{existingRequest.arrival_time}</span>
+                  <span>Contact Phone:</span>
+                  <span>{existingRequest.contact_person_phone}</span>
                 </div>
+                {existingRequest.special_requirements && (
+                  <div className="detail-row">
+                    <span>Special Requirements:</span>
+                    <span>{existingRequest.special_requirements}</span>
+                  </div>
+                )}
+                {existingRequest.admin_remarks && (
+                  <div className="detail-row" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '10px', paddingTop: '10px' }}>
+                    <span style={{ color: 'var(--accent-info)' }}>Admin Remarks:</span>
+                    <span>{existingRequest.admin_remarks}</span>
+                  </div>
+                )}
               </div>
-
-              <p style={{ marginTop: "20px", color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                For any changes, please contact the fest coordinator directly.
-              </p>
             </div>
           ) : (
             // NEW REQUEST FORM
             <div>
               <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
-                Submit Request
+                Submit New Request
               </h3>
               <form onSubmit={handleSubmit}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div>
+                    <label style={labelStyle}>Total Boys *</label>
+                    <input
+                      type="number"
+                      name="total_boys"
+                      value={formData.total_boys}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      min="0"
+                      placeholder="0"
+                      required
+                      disabled={isReadOnlyMode}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Total Girls *</label>
+                    <input
+                      type="number"
+                      name="total_girls"
+                      value={formData.total_girls}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      min="0"
+                      placeholder="0"
+                      required
+                      disabled={isReadOnlyMode}
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label style={labelStyle}>Total Boys *</label>
+                  <label style={labelStyle}>Contact Person Name *</label>
                   <input
-                    type="number"
-                    name="total_boys"
-                    value={formData.total_boys}
+                    type="text"
+                    name="contact_person_name"
+                    value={formData.contact_person_name}
                     onChange={handleInputChange}
                     style={inputStyle}
-                    min="0"
-                    placeholder="0"
+                    placeholder="Name of person responsible"
                     required
                     disabled={isReadOnlyMode}
                   />
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Total Girls *</label>
+                  <label style={labelStyle}>Contact Phone *</label>
                   <input
-                    type="number"
-                    name="total_girls"
-                    value={formData.total_girls}
+                    type="tel"
+                    name="contact_person_phone"
+                    value={formData.contact_person_phone}
                     onChange={handleInputChange}
                     style={inputStyle}
-                    min="0"
-                    placeholder="0"
+                    placeholder="10-digit mobile number"
                     required
                     disabled={isReadOnlyMode}
                   />
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Expected Arrival Date *</label>
-                  <input
-                    type="date"
-                    name="arrival_date"
-                    value={formData.arrival_date}
+                  <label style={labelStyle}>Special Requirements (Optional)</label>
+                  <textarea
+                    name="special_requirements"
+                    value={formData.special_requirements}
                     onChange={handleInputChange}
-                    style={inputStyle}
-                    required
-                    disabled={isReadOnlyMode}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Expected Arrival Time *</label>
-                  <input
-                    type="time"
-                    name="arrival_time"
-                    value={formData.arrival_time}
-                    onChange={handleInputChange}
-                    style={inputStyle}
-                    required
+                    style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
+                    placeholder="Any specific needs..."
                     disabled={isReadOnlyMode}
                   />
                 </div>
