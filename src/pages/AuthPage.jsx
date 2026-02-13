@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/auth.css";
@@ -583,7 +584,6 @@ export default function AuthPage({ initialView = "login" }) {
                                                         <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📷</div>
                                                     )}
                                                 </div>
-
                                                 <div style={{ textAlign: "center" }}>
                                                     <label htmlFor="file-upload" className="custom-file-upload">
                                                         <span style={{ marginRight: '10px' }}>📁</span>
