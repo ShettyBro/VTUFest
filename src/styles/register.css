@@ -1,62 +1,100 @@
 /* =========================================================
-   ROOT RESET (SAFE & SCROLL FRIENDLY)
+   ROOT – SINGLE SCROLL OWNER (SCROLL ENABLED)
 ========================================================= */
 html,
 body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  overflow-x: hidden;          /* only block horizontal */
-  overflow-y: auto;            /* allow vertical scroll */
+  overflow-x: hidden;
+  overflow-y: auto;              /* ✅ SCROLL ENABLED */
   font-family: "Segoe UI", sans-serif;
+  scroll-behavior: smooth;
 
+  /* HIDE SCROLLBAR VISUALLY */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* =========================================================
+   PAGE CONTAINER (RENAMED FROM .reg-container)
+========================================================= */
+.register-page {
+  max-width: 600px;
+  margin: 40px auto 80px;        /* ✅ bottom space ensures full scroll */
+  padding: 0 16px;
+  font-family: "Segoe UI", sans-serif;
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================================
+   GRADIENT BACKGROUND (SCOPED)
+========================================================= */
+.register-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
   background: linear-gradient(
     135deg,
     #fff7ed 0%,
     #f0f9ff 100%
   );
+  z-index: -2;
 }
 
 /* =========================================================
-   REGISTER PAGE WRAPPER
-   ● SPECIFICITY FIX: div.register-page beats .register-page
-   ● Prevents production bundle override
+   ABSTRACT DECORATION
 ========================================================= */
-div.register-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;     /* ✅ important */
-  padding: 60px 16px 80px; /* slightly more breathing space */
-  box-sizing: border-box;
+.register-page::after {
+  content: "";
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: rgba(250, 204, 21, 0.15);
+  top: -220px;
+  left: -260px;
+  z-index: -1;
 }
 
-
+.register-page .bg-accent {
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: rgba(250, 204, 21, 0.12);
+  bottom: -240px;
+  right: -260px;
+  z-index: -1;
+}
 
 /* =========================================================
-   PAGE TITLE
+   TITLE
 ========================================================= */
 .register-page h2 {
+  text-align: center;
+  margin-bottom: 20px;
   color: #1e3a8a;
-  margin-bottom: 22px;
   font-size: 22px;
   font-weight: 700;
-  text-align: center;
 }
 
 /* =========================================================
-   REGISTER CARD
+   FORM CARD (RENAMED FROM .reg-card)
 ========================================================= */
 .register-card {
   background: #ffffff;
-  color: #1f2937;
-  width: 100%;
-  max-width: 600px;
   padding: 28px 26px;
   border-radius: 14px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
-  box-sizing: border-box;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
   position: relative;
 }
 
@@ -71,7 +109,7 @@ div.register-page {
 }
 
 /* =========================================================
-   FORM LABELS
+   LABELS
 ========================================================= */
 .register-card label {
   display: block;
@@ -82,38 +120,49 @@ div.register-page {
 }
 
 /* =========================================================
-   INPUT FIELDS
+   INPUTS / SELECTS / ADDRESS
 ========================================================= */
-.register-card input {
+.register-card input,
+.register-card select,
+.register-card textarea {
   width: 100%;
   padding: 11px 12px;
   margin-top: 6px;
   border-radius: 8px;
   border: 1px solid #c7d2fe;
-  outline: none;
   font-size: 14px;
+  background: #ffffff;
+  font-family: inherit;
   box-sizing: border-box;
+  outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.register-card input:focus {
+.register-card textarea {
+  height: 90px;
+  resize: none;
+}
+
+.register-card input:focus,
+.register-card select:focus,
+.register-card textarea:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
 /* =========================================================
-   SUBMIT BUTTON
+   BUTTONS
 ========================================================= */
 .register-card button {
   width: 100%;
   margin-top: 22px;
   padding: 12px;
   background: linear-gradient(to right, #f59e0b, #d97706);
-  border: none;
-  font-size: 15px;
-  font-weight: 700;
   color: #ffffff;
+  border: none;
   border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.15s ease;
 }
@@ -143,7 +192,7 @@ div.register-page {
    MOBILE SAFETY
 ========================================================= */
 @media (max-width: 480px) {
-  div.register-page {
+  .register-page {
     padding-top: 24px;
     padding-bottom: 48px;
   }
@@ -154,8 +203,7 @@ div.register-page {
 }
 
 /* =========================================================
-   REGISTRATION LOCK OVERLAY (APPEND ONLY)
-   Does NOT modify existing design
+   REGISTRATION LOCK OVERLAY
 ========================================================= */
 
 /* Dark backdrop */
@@ -240,4 +288,14 @@ div.register-page {
   .reg-lock-text {
     font-size: 14px;
   }
+}
+
+.lock-banner {
+  background: #ff4444;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-weight: 500;
+  text-align: center;
 }
