@@ -690,9 +690,9 @@ export default function Approvals() {
             disabled={savingEdit}
             style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           >
-            <option value="Male" style={{ color: "black" }}>Male</option>
-            <option value="Female" style={{ color: "black" }}>Female</option>
-            <option value="Other" style={{ color: "black" }}>Other</option>
+            <option value="Male" style={{ background: 'var(--navy-dark)', color: 'white' }}>Male</option>
+            <option value="Female" style={{ background: 'var(--navy-dark)', color: 'white' }}>Female</option>
+            <option value="Other" style={{ background: 'var(--navy-dark)', color: 'white' }}>Other</option>
           </select>
         ) : (
           <span>{student.gender}</span>
