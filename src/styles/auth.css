@@ -163,6 +163,7 @@ body {
     text-transform: uppercase;
     background: linear-gradient(to right, #fff, #e0e0e0);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     margin-bottom: 10px;
