@@ -2,18 +2,24 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 
+// ✅ FIXED: Use environment variable with fallback
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
 
 const API_ENDPOINTS = {
   registration: `${API_BASE_URL}/api/student/register`,
   colleges: `${API_BASE_URL}/api/shared/college-and-usn/colleges`,
   checkUsn: `${API_BASE_URL}/api/shared/college-and-usn/check-usn`,
-  checkLock: `${API_BASE_URL}/api/shared/check-lock-status`
+  lockStatus: `${API_BASE_URL}/api/shared/check-lock-status`
 };
 
 export default function RegisterStudent() {
   const navigate = useNavigate();
 
+  // Registration lock state
+  const [registrationLocked, setRegistrationLocked] = useState(false);
+  const [lockCheckComplete, setLockCheckComplete] = useState(false);
+
+  // Form state
   const [colleges, setColleges] = useState([]);
   const [form, setForm] = useState({
     usn: "",
@@ -26,6 +32,7 @@ export default function RegisterStudent() {
     confirmPassword: "",
   });
 
+  // UI state
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,22 +47,25 @@ export default function RegisterStudent() {
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Session state
   const [sessionData, setSessionData] = useState(null);
-  const [registrationLocked, setRegistrationLocked] = useState(false);
-  const [lockCheckLoading, setLockCheckLoading] = useState(true);
 
   const isLocked = registrationLocked === true;
 
+  // Check lock status on mount
   useEffect(() => {
-    checkRegistrationLock();
+    checkLockStatus();
   }, []);
 
+  // Load session only after lock check is complete
   useEffect(() => {
-    if (!isLocked) {
+    if (lockCheckComplete && !isLocked) {
       loadSessionFromStorage();
     }
-  }, [isLocked]);
+  }, [lockCheckComplete, isLocked]);
 
+  // Countdown timer
   useEffect(() => {
     if (timer && timer > 0 && !timerExpired) {
       const interval = setInterval(() => {
@@ -71,26 +81,29 @@ export default function RegisterStudent() {
     }
   }, [timer, timerExpired]);
 
-  const checkRegistrationLock = async () => {
+  // Check registration lock status
+  const checkLockStatus = async () => {
     try {
-      setLockCheckLoading(true);
-      const response = await fetch(API_ENDPOINTS.checkLock, {
+      const response = await fetch(API_ENDPOINTS.lockStatus, {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
-      
+
       if (response.ok && data.success) {
         setRegistrationLocked(data.registration_lock === true);
       }
     } catch (error) {
-      console.error("Lock check error:", error);
+      console.error("Lock status check error:", error);
     } finally {
-      setLockCheckLoading(false);
+      setLockCheckComplete(true);
     }
   };
 
+  // Save session to localStorage
   const saveSessionToStorage = (data) => {
     if (isLocked) return;
     localStorage.setItem("registration_session", JSON.stringify({
@@ -99,6 +112,7 @@ export default function RegisterStudent() {
     }));
   };
 
+  // Load session from localStorage
   const loadSessionFromStorage = () => {
     if (isLocked) return;
     try {
@@ -129,6 +143,7 @@ export default function RegisterStudent() {
     }
   };
 
+  // Fetch colleges only after USN is validated
   const fetchColleges = async () => {
     if (isLocked) return;
     try {
@@ -152,6 +167,7 @@ export default function RegisterStudent() {
     }
   };
 
+  // Check USN and fetch colleges if valid
   const checkUSN = async (usn) => {
     if (isLocked) return;
     if (!usn.trim()) {
@@ -213,6 +229,7 @@ export default function RegisterStudent() {
     }
   };
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -228,6 +245,7 @@ export default function RegisterStudent() {
     setErrorMessage("");
   };
 
+  // Handle photo selection
   const handlePhotoChange = (e) => {
     if (isLocked) return;
     const file = e.target.files?.[0];
@@ -254,12 +272,14 @@ export default function RegisterStudent() {
     reader.readAsDataURL(file);
   };
 
+  // Format timer display
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
   };
 
+  // Handle Next button (init registration)
   const handleNext = async (e) => {
     e.preventDefault();
     if (isLocked) return;
@@ -271,22 +291,32 @@ export default function RegisterStudent() {
     }
 
     if (!usnValid) {
-      setErrorMessage("Please enter a valid USN that hasn't been registered");
+      setErrorMessage("Please enter a valid USN that is not already registered");
       return;
     }
 
-    if (!form.fullName.trim() || !form.email.trim() || !form.phone.trim() || !form.gender || !form.collegeId) {
-      setErrorMessage("All fields are required");
+    if (!form.fullName.trim()) {
+      setErrorMessage("Full name is required");
       return;
     }
 
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-      setErrorMessage("Invalid email format");
+    if (!form.collegeId) {
+      setErrorMessage("Please select your college");
       return;
     }
 
-    if (!/^\d{10}$/.test(form.phone)) {
-      setErrorMessage("Phone must be 10 digits");
+    if (!form.email.trim()) {
+      setErrorMessage("Email is required");
+      return;
+    }
+
+    if (form.phone.length !== 10) {
+      setErrorMessage("Phone number must be 10 digits");
+      return;
+    }
+
+    if (!form.gender) {
+      setErrorMessage("Please select your gender");
       return;
     }
 
@@ -297,12 +327,12 @@ export default function RegisterStudent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "init",
-          usn: form.usn.trim().toUpperCase(),
-          full_name: form.fullName.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
+          usn: form.usn,
+          fullName: form.fullName,
+          collegeId: form.collegeId,
+          email: form.email,
+          phone: form.phone,
           gender: form.gender,
-          college_id: parseInt(form.collegeId, 10),
         }),
       });
 
@@ -313,91 +343,95 @@ export default function RegisterStudent() {
           session_id: data.session_id,
           expires_at: data.expires_at,
           remaining_seconds: data.remaining_seconds,
-          formData: form,
+          formData: {
+            usn: form.usn,
+            fullName: form.fullName,
+            collegeId: form.collegeId,
+            email: form.email,
+            phone: form.phone,
+            gender: form.gender,
+          }
         };
 
         setSessionData(sessionInfo);
         saveSessionToStorage(sessionInfo);
-        setShowUploadSection(true);
         setTimer(data.remaining_seconds);
+        setShowUploadSection(true);
         setErrorMessage("");
       } else {
-        setErrorMessage(data.error || "Registration initialization failed");
+        setErrorMessage(data.message || "Registration initialization failed");
       }
     } catch (error) {
-      console.error("Init error:", error);
+      console.error("Error initializing registration:", error);
       setErrorMessage("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Upload photo
   const uploadPhoto = async () => {
     if (isLocked) return;
-    if (!photoFile || !sessionData?.session_id) {
-      setErrorMessage("No photo or session found");
-      return;
-    }
-
-    if (uploadRetries >= 3) {
-      setErrorMessage("Maximum upload attempts reached. Please refresh and try again.");
-      return;
-    }
+    if (!photoFile || !sessionData?.session_id) return;
 
     try {
+      setLoading(true);
       setUploadStatus("uploading");
       setUploadProgress(0);
 
       const formData = new FormData();
-      formData.append("action", "upload_photo");
-      formData.append("session_id", sessionData.session_id);
       formData.append("photo", photoFile);
+      formData.append("session_id", sessionData.session_id);
 
       const xhr = new XMLHttpRequest();
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(percent);
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(progress);
         }
-      };
+      });
 
-      xhr.onload = () => {
+      xhr.addEventListener("load", () => {
         if (xhr.status === 200) {
           const data = JSON.parse(xhr.responseText);
           if (data.success) {
             setUploadStatus("success");
-            setUploadProgress(100);
+            setUploadRetries(0);
             setErrorMessage("");
           } else {
             setUploadStatus("failed");
             setUploadRetries((prev) => prev + 1);
-            setErrorMessage(data.error || "Upload failed");
+            setErrorMessage(data.message || "Photo upload failed");
           }
         } else {
           setUploadStatus("failed");
           setUploadRetries((prev) => prev + 1);
-          setErrorMessage("Upload failed. Please try again.");
+          setErrorMessage("Photo upload failed");
         }
-      };
+        setLoading(false);
+      });
 
-      xhr.onerror = () => {
+      xhr.addEventListener("error", () => {
         setUploadStatus("failed");
         setUploadRetries((prev) => prev + 1);
-        setErrorMessage("Network error during upload");
-      };
+        setErrorMessage("Network error during photo upload");
+        setLoading(false);
+      });
 
-      xhr.open("POST", API_ENDPOINTS.registration);
+      xhr.open("POST", `${API_BASE_URL}/api/student/upload-photo`);
       xhr.send(formData);
 
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Error uploading photo:", error);
       setUploadStatus("failed");
       setUploadRetries((prev) => prev + 1);
-      setErrorMessage("Upload failed. Please try again.");
+      setErrorMessage("Photo upload error");
+      setLoading(false);
     }
   };
 
+  // Handle final registration
   const handleRegister = async (e) => {
     e.preventDefault();
     if (isLocked) return;
@@ -408,18 +442,13 @@ export default function RegisterStudent() {
       return;
     }
 
-    if (!form.password || form.password.length < 8) {
+    if (form.password.length < 8) {
       setErrorMessage("Password must be at least 8 characters");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
       setErrorMessage("Passwords do not match");
-      return;
-    }
-
-    if (!sessionData?.session_id) {
-      setErrorMessage("Session expired. Please restart registration.");
       return;
     }
 
@@ -439,13 +468,13 @@ export default function RegisterStudent() {
 
       if (response.ok && data.success) {
         localStorage.removeItem("registration_session");
-        alert("Registration successful! Please wait for approval.");
+        alert("Registration successful! Please login.");
         navigate("/");
       } else {
-        setErrorMessage(data.error || "Registration failed");
+        setErrorMessage(data.message || "Registration failed");
       }
     } catch (error) {
-      console.error("Finalize error:", error);
+      console.error("Error completing registration:", error);
       setErrorMessage("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -453,94 +482,64 @@ export default function RegisterStudent() {
   };
 
   const isUploadComplete = uploadStatus === "success";
-  const isUploadBlocked = () => uploadRetries >= 3;
-
-  if (lockCheckLoading) {
-    return (
-      <div className="register-page" style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-      }}>
-        <div style={{ 
-          color: "white", 
-          fontSize: "18px", 
-          fontWeight: "500" 
-        }}>
-          Loading...
-        </div>
-      </div>
-    );
-  }
+  const isUploadBlocked = () => uploadRetries >= 3 && uploadStatus !== "success";
 
   return (
-    <div className="register-page" style={{ position: "relative" }}>
+    <div className="register-page">
       {isLocked && (
-        <>
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          animation: "lockFadeIn 0.4s ease-out"
+        }}>
           <div style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            zIndex: 9998
-          }} />
-          <div style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-            animation: "fadeIn 0.4s ease-in-out"
+            background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
+            borderRadius: "20px",
+            padding: "60px 50px",
+            maxWidth: "500px",
+            width: "90%",
+            textAlign: "center",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+            animation: "lockSlideUp 0.5s ease-out",
+            border: "1px solid rgba(255, 255, 255, 0.1)"
           }}>
             <div style={{
-              background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
-              borderRadius: "24px",
-              padding: "60px 50px",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(102, 126, 234, 0.1)",
-              textAlign: "center",
-              maxWidth: "480px",
-              width: "90%",
-              animation: "scaleIn 0.4s ease-out",
-              border: "1px solid rgba(255, 255, 255, 0.3)"
+              fontSize: "80px",
+              marginBottom: "20px",
+              animation: "lockPulse 2s ease-in-out infinite"
             }}>
-              <div style={{
-                fontSize: "72px",
-                marginBottom: "24px",
-                animation: "bounce 2s ease-in-out infinite"
-              }}>
-                🔒
-              </div>
-              <h2 style={{
-                fontSize: "32px",
-                fontWeight: "700",
-                color: "#1a202c",
-                marginBottom: "16px",
-                letterSpacing: "-0.5px"
-              }}>
-                Registrations Are Closed
-              </h2>
-              <p style={{
-                fontSize: "16px",
-                color: "#718096",
-                lineHeight: "1.6",
-                fontWeight: "400"
-              }}>
-                Please contact administration for further details.
-              </p>
+              🔒
             </div>
+            <h2 style={{
+              color: "#ffffff",
+              fontSize: "32px",
+              fontWeight: "700",
+              marginBottom: "15px",
+              letterSpacing: "0.5px"
+            }}>
+              Registrations Are Closed
+            </h2>
+            <p style={{
+              color: "rgba(255, 255, 255, 0.8)",
+              fontSize: "16px",
+              lineHeight: "1.6",
+              fontWeight: "400"
+            }}>
+              Please contact administration for further details.
+            </p>
           </div>
           <style>{`
-            @keyframes fadeIn {
+            @keyframes lockFadeIn {
               from {
                 opacity: 0;
               }
@@ -548,26 +547,26 @@ export default function RegisterStudent() {
                 opacity: 1;
               }
             }
-            @keyframes scaleIn {
+            @keyframes lockSlideUp {
               from {
+                transform: translateY(30px);
                 opacity: 0;
-                transform: scale(0.9);
               }
               to {
+                transform: translateY(0);
                 opacity: 1;
+              }
+            }
+            @keyframes lockPulse {
+              0%, 100% {
                 transform: scale(1);
               }
-            }
-            @keyframes bounce {
-              0%, 100% {
-                transform: translateY(0);
-              }
               50% {
-                transform: translateY(-10px);
+                transform: scale(1.1);
               }
             }
           `}</style>
-        </>
+        </div>
       )}
 
       <div style={{ filter: isLocked ? "blur(8px)" : "none", pointerEvents: isLocked ? "none" : "auto" }}>
@@ -577,7 +576,7 @@ export default function RegisterStudent() {
           <div style={{
             backgroundColor: "#ffebee",
             color: "#c62828",
-            padding: "12px 20px",
+            padding: "12px 16px",
             borderRadius: "8px",
             marginBottom: "20px",
             textAlign: "center",
@@ -752,7 +751,7 @@ export default function RegisterStudent() {
               </p>
             )}
 
-            {uploadStatus === "failed" && uploadRetries < 3 && (
+            {uploadStatus === "failed" && uploadRetries < 3 && !isLocked && (
               <p style={{ color: "#d32f2f", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
                 ✗ Upload failed. Please try again (Attempt {uploadRetries}/3)
               </p>
