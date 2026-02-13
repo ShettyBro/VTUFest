@@ -248,8 +248,8 @@ export default function AuthPage({ initialView = "login" }) {
                 body: JSON.stringify({
                     action: "init",
                     usn: regForm.usn,
-                    fullName: regForm.fullName,
-                    collegeId: regForm.collegeId,
+                    full_name: regForm.fullName,
+                    college_id: regForm.collegeId,
                     email: regForm.email,
                     phone: regForm.phone,
                     gender: regForm.gender
