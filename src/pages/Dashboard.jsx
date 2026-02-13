@@ -264,7 +264,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div style={{ border: '1px dashed var(--text-secondary)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Not Yet Allotted</span>
+                  <span style={{ color: 'rgba(224, 214, 214, 0.99)', fontSize: '0.9rem' }}>Not Yet Allotted</span>
                 </div>
               )
             }
