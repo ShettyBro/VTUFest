@@ -104,9 +104,7 @@ export default function Navbar() {
     <header className="navbar">
       {/* LEFT LOGO */}
       <div className="navbar-left">
-        <div className="logo-wrapper">
-          <img src="/main.webp" alt="VTU Fest" className="logo main-logo" style={{ height: '50px' }} />
-        </div>
+        <img src="/main.webp" alt="VTU Fest" className="logo main-logo" style={{ height: '50px' }} />
       </div>
 
       {/* CENTER – COLLEGE CODE */}
