@@ -1,9 +1,11 @@
 // ForgotPassword.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth.css"; // UPDATED CSS
+import "../styles/auth.css"; // Using Auth CSS for redesign
 
 const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
+
+const ALLOWED_ROLES = ['student', 'manager', 'principal', 'admin', 'sub_admin'];
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -13,8 +15,13 @@ export default function ForgotPassword() {
   const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
+    // Check role on mount
     const role = localStorage.getItem("role");
-    if (!role) {
+
+    // Strict validation: If missing or invalid, redirect
+    if (!role || !ALLOWED_ROLES.includes(role.toLowerCase())) {
+      // Fallback: If invalid but present, maybe clear it? 
+      // For now, strict redirect to match original logic intent
       window.location.href = "https://vtufest2026.acharyahabba.com/";
     }
   }, []);
@@ -29,9 +36,19 @@ export default function ForgotPassword() {
       return;
     }
 
-    const role = localStorage.getItem("role");
+    // Get role again
+    let role = localStorage.getItem("role");
+
+    // Safety check
     if (!role) {
       window.location.href = "https://vtufest2026.acharyahabba.com/";
+      return;
+    }
+
+    // Normalize role
+    role = role.toLowerCase();
+    if (!ALLOWED_ROLES.includes(role)) {
+      setErrorMsg("Invalid user role. Please login again.");
       return;
     }
 
