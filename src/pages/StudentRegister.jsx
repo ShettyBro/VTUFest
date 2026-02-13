@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/StudentRegister.css";
 
+
 const API_BASE = {
   submitApplication: "https://vtu-festserver-production.up.railway.app/api/student/submit-application"
 };
