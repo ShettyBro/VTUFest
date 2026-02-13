@@ -21,10 +21,13 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   
+  // ✅ NEW: State for forced password reset toast
   const [showForceResetToast, setShowForceResetToast] = useState(false);
   const [forceResetData, setForceResetData] = useState(null);
 
+  /* ---------- INITIALIZE ROLE & AUTO REDIRECT ON PAGE LOAD ---------- */
   useEffect(() => {
+    // Initialize role in localStorage if missing
     let currentRole = localStorage.getItem("role");
     if (!currentRole) {
       localStorage.setItem("role", "student");
@@ -32,6 +35,7 @@ export default function Login() {
     }
     setRole(currentRole);
 
+    // Check authentication
     const token = localStorage.getItem("vtufest_token");
     const storedRole = localStorage.getItem("vtufest_role");
 
@@ -57,9 +61,11 @@ export default function Login() {
       return;
     }
 
+    // ✅ TOKEN VALID → REDIRECT BASED ON ROLE
     redirectBasedOnRole(storedRole);
   }, [navigate]);
 
+  /* ---------- AUTO-REDIRECT AFTER 3 SECONDS FOR FORCED RESET ---------- */
   useEffect(() => {
     if (showForceResetToast && forceResetData) {
       const timer = setTimeout(() => {
@@ -70,6 +76,7 @@ export default function Login() {
     }
   }, [showForceResetToast, forceResetData]);
 
+  /* ---------- REDIRECT HELPER ---------- */
   const redirectBasedOnRole = (userRole) => {
     switch (userRole) {
       case "principal":
@@ -85,6 +92,7 @@ export default function Login() {
     }
   };
 
+  /* ---------- HANDLE ROLE CHANGE ---------- */
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     localStorage.setItem("role", newRole);
@@ -95,18 +103,22 @@ export default function Login() {
     setForceResetData(null);
   };
 
+  /* ---------- EMAIL VALIDATION ---------- */
   const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
+  /* ---------- FORCED RESET REDIRECT HANDLER ---------- */
   const handleForceResetRedirect = () => {
     if (!forceResetData) return;
 
     const { reset_token, email, role } = forceResetData;
     
+    // Navigate to reset password page with token
     navigate(
       `/changepassword?token=${encodeURIComponent(reset_token)}&email=${encodeURIComponent(email)}&role=${role}`
     );
   };
 
+  /* ---------- LOGIN HANDLER ---------- */
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -123,6 +135,7 @@ export default function Login() {
       return;
     }
 
+    // Single unified login API endpoint
     const loginApi = "https://vtu-festserver-production.up.railway.app/api/auth/login";
 
     try {
@@ -134,13 +147,13 @@ export default function Login() {
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
           password,
-          role,
+          role, // Send the current role to backend
         }),
       });
 
       const data = await response.json();
 
-      console.log("Login response:", data);
+      console.log("Login response:", data); // Debug log
 
       if (!response.ok) {
         setErrorMsg(data.message || "Login failed. Retry.");
@@ -148,29 +161,37 @@ export default function Login() {
         return;
       }
 
+      // ⚠️ CRITICAL: Check for FORCE_RESET status
       if (data.status === "FORCE_RESET") {
+        // Store reset data for redirect
         setForceResetData({
           reset_token: data.reset_token,
           email: data.email,
           role: data.role,
         });
         
+        // Show toast message
         setShowForceResetToast(true);
         setLoading(false);
         
+        // Auto-redirect handled by useEffect after 3 seconds
         return;
       }
 
+      // ✅ NORMAL LOGIN - STORE SESSION
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
 
+      // After successful login
       localStorage.setItem("should_fetch_dashboard", "true");
 
+      // ✅ CRITICAL FIX: Store name from response
       if (data.name) {
         localStorage.setItem("name", data.name);
-        console.log("Name stored:", data.name);
+        console.log("Name stored:", data.name); // Debug log
       }
 
+      // Store college_id and usn if present (for students, principals, managers)
       if (data.college_id) {
         localStorage.setItem("college_id", data.college_id);
       }
@@ -187,8 +208,9 @@ export default function Login() {
         name: localStorage.getItem("name"),
         usn: localStorage.getItem("usn"),
         role: localStorage.getItem("vtufest_role")
-      });
+      }); // Debug log
 
+      // ✅ REDIRECT BASED ON ROLE
       redirectBasedOnRole(role);
     } catch (err) {
       console.error("Login error:", err);
@@ -200,27 +222,48 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      {/* Floating background orbs */}
-      <div className="float-orb float-orb-1" />
-      <div className="float-orb float-orb-2" />
-      <div className="float-orb float-orb-3" />
-
       {/* ================= FORCED RESET TOAST ================= */}
       {showForceResetToast && (
-        <div className="force-reset-toast">
-          <div className="toast-icon">👋</div>
-          <div className="toast-title">
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            padding: "20px 30px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            zIndex: 10000,
+            maxWidth: "500px",
+            textAlign: "center",
+            animation: "slideDown 0.3s ease-out",
+          }}
+        >
+          <div style={{ fontSize: "24px", marginBottom: "10px" }}>👋</div>
+          <div style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>
             Welcome! First-time login detected.
           </div>
-          <div className="toast-text">
+          <div style={{ fontSize: "14px", marginBottom: "15px" }}>
             Please reset your password to continue.
           </div>
-          <div className="toast-countdown">
+          <div style={{ fontSize: "12px", color: "#e8f5e9" }}>
             Redirecting automatically in 3 seconds...
           </div>
           <button
-            className="toast-btn"
             onClick={handleForceResetRedirect}
+            style={{
+              marginTop: "15px",
+              padding: "10px 20px",
+              backgroundColor: "white",
+              color: "#4CAF50",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontWeight: "600",
+              fontSize: "14px",
+            }}
           >
             Reset Password Now
           </button>
@@ -233,11 +276,11 @@ export default function Login() {
           <img src="/acharya.png" alt="Acharya Logo" />
           <span className="logo-separator">|</span>
           <img src="/vtu.png" alt="VTU Logo" />
-        </div>
 
-        <div className="brand-text">
-          <h3>VTU HABBA 2026</h3>
-          <span>Visvesvaraya Technological University</span>
+          <div className="brand-text">
+            <h3>VTU HABBA 2026</h3>
+            <span>Visvesvaraya Technological University</span>
+          </div>
         </div>
 
         <div className="login-contact">
@@ -303,7 +346,7 @@ export default function Login() {
             />
 
             {errorMsg && (
-              <div className="login-error">
+              <div style={{ color: "red", marginTop: "8px" }}>
                 {errorMsg}
               </div>
             )}
@@ -351,6 +394,22 @@ export default function Login() {
 
       {/* ================= BOTTOM FOOTER ================= */}
       <footer className="login-bottom">© 2026 ACHARYA | VTU</footer>
+
+      {/* ================= TOAST ANIMATION ================= */}
+      <style>
+        {`
+          @keyframes slideDown {
+            from {
+              transform: translateX(-50%) translateY(-100px);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(-50%) translateY(0);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

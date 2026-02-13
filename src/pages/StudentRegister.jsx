@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "..styles/StudentRegister.css";
+import "../styles/register.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
 
@@ -14,6 +14,7 @@ const API_ENDPOINTS = {
 export default function RegisterStudent() {
   const navigate = useNavigate();
 
+  // Registration lock state
   const [registrationLocked, setRegistrationLocked] = useState(false);
   const [lockCheckComplete, setLockCheckComplete] = useState(false);
 
@@ -47,10 +48,12 @@ export default function RegisterStudent() {
 
   const isLocked = registrationLocked === true;
 
+  // Check lock status on mount
   useEffect(() => {
     checkLockStatus();
   }, []);
 
+  // Load session only after lock check completes and if not locked
   useEffect(() => {
     if (lockCheckComplete && !isLocked) {
       loadSessionFromStorage();
@@ -72,6 +75,7 @@ export default function RegisterStudent() {
     }
   }, [timer, timerExpired]);
 
+  // Check registration lock status
   const checkLockStatus = async () => {
     try {
       const response = await fetch(API_ENDPOINTS.lockStatus, {
@@ -84,6 +88,7 @@ export default function RegisterStudent() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // ✅ FIX: read from data.data
         setRegistrationLocked(data.data?.registration_lock === true);
       } else {
         setRegistrationLocked(false);
@@ -95,6 +100,7 @@ export default function RegisterStudent() {
       setLockCheckComplete(true);
     }
   };
+
 
   const saveSessionToStorage = (data) => {
     if (isLocked) return;
@@ -468,24 +474,18 @@ export default function RegisterStudent() {
   const isUploadBlocked = () => uploadRetries >= 3 && uploadStatus !== "success";
   
   if (!lockCheckComplete) {
-    return (
-      <div className="register-page">
-        <div className="float-orb float-orb-1" />
-        <div className="float-orb float-orb-2" />
-        <div className="reg-loading">
-          Checking registration status...
-        </div>
+  return (
+    <div className="register-page">
+      <div style={{ marginTop: "120px", fontWeight: "600" }}>
+        Checking registration status...
       </div>
-    );
-  }
+    </div>
+  );
+}
+
 
   return (
     <div className="register-page">
-      {/* Floating background orbs */}
-      <div className="float-orb float-orb-1" />
-      <div className="float-orb float-orb-2" />
-      <div className="float-orb float-orb-3" />
-
       {isLocked && (
         <>
           <div className="reg-lock-backdrop"></div>
@@ -503,7 +503,17 @@ export default function RegisterStudent() {
         <h2 className="register-title">Student Registration</h2>
 
         {errorMessage && (
-          <div className="register-error">
+          <div style={{
+            backgroundColor: "#ffebee",
+            color: "#c62828",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            textAlign: "center",
+            border: "1px solid #ef5350",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}>
             ⚠️ {errorMessage}
           </div>
         )}
@@ -520,9 +530,9 @@ export default function RegisterStudent() {
               disabled={loading}
               required
             />
-            {usnChecking && <p className="reg-status-checking">Checking USN...</p>}
+            {usnChecking && <p style={{ color: "blue", fontSize: "12px" }}>Checking USN...</p>}
             {usnError && (
-              <p className="reg-status-error">
+              <p style={{ color: "red", fontSize: "12px" }}>
                 {usnError}
                 {usnError.includes("already registered") && " Redirecting to login..."}
               </p>
@@ -606,13 +616,25 @@ export default function RegisterStudent() {
         ) : (
           <form className="register-card" onSubmit={handleRegister}>
             {timer !== null && !timerExpired && (
-              <div className={`reg-timer ${timer < 30 ? "warning" : "safe"}`}>
+              <div style={{
+                textAlign: "center",
+                color: timer < 30 ? "#d32f2f" : "#2e7d32",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                fontSize: "16px"
+              }}>
                 ⏱️ Session expires in: {formatTimer(timer)}
               </div>
             )}
 
             {timerExpired && (
-              <div className="reg-timer warning">
+              <div style={{
+                textAlign: "center",
+                color: "#d32f2f",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                fontSize: "16px"
+              }}>
                 ⚠️ Registration session expired. Please restart.
               </div>
             )}
@@ -626,10 +648,16 @@ export default function RegisterStudent() {
             />
 
             {photoPreview && (
-              <div className="reg-photo-preview">
+              <div style={{ textAlign: "center", margin: "15px 0" }}>
                 <img
                   src={photoPreview}
                   alt="Preview"
+                  style={{
+                    maxWidth: "150px",
+                    maxHeight: "150px",
+                    borderRadius: "8px",
+                    border: "2px solid #ddd"
+                  }}
                 />
               </div>
             )}
@@ -648,13 +676,13 @@ export default function RegisterStudent() {
             )}
 
             {uploadStatus === "success" && (
-              <p className="reg-status-success">
+              <p style={{ color: "#2e7d32", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
                 ✓ Photo uploaded successfully
               </p>
             )}
 
             {uploadStatus === "failed" && uploadRetries < 3 && (
-              <p className="reg-status-failed">
+              <p style={{ color: "#d32f2f", fontSize: "14px", textAlign: "center", fontWeight: "500" }}>
                 ✗ Upload failed. Please try again (Attempt {uploadRetries}/3)
               </p>
             )}
@@ -682,7 +710,14 @@ export default function RegisterStudent() {
             />
 
             {!isUploadComplete && !timerExpired && (
-              <p className="reg-upload-warning">
+              <p style={{
+                color: "#d32f2f",
+                fontSize: "13px",
+                textAlign: "center",
+                marginTop: "10px",
+                marginBottom: "5px",
+                fontWeight: "500"
+              }}>
                 ⚠️ Please upload your photo to proceed
               </p>
             )}
