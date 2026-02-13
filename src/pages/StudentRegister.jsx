@@ -1,98 +1,61 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/StudentRegister.css";
+import "../styles/register.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
 
-const API_BASE = {
-  submitApplication: "https://vtu-festserver-production.up.railway.app/api/student/submit-application"
+const API_ENDPOINTS = {
+  registration: `${API_BASE_URL}/api/student/register`,
+  colleges: `${API_BASE_URL}/api/shared/college-and-usn/colleges`,
+  checkUsn: `${API_BASE_URL}/api/shared/college-and-usn/check-usn`,
+  lockStatus: `${API_BASE_URL}/api/shared/college-and-usn/check-lock-status`
 };
 
-export default function SubmitApplication() {
+export default function RegisterStudent() {
   const navigate = useNavigate();
 
+  const [registrationLocked, setRegistrationLocked] = useState(false);
+  const [lockCheckComplete, setLockCheckComplete] = useState(false);
+
+  const [colleges, setColleges] = useState([]);
   const [form, setForm] = useState({
-    bloodGroup: "",
-    address: "",
-    department: "",
-    yearOfStudy: "",
-    semester: "",
+    usn: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    gender: "",
+    collegeId: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  const [studentInfo, setStudentInfo] = useState(null);
-  const [showUploadSection, setShowUploadSection] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
   const [loading, setLoading] = useState(false);
+  const [usnError, setUsnError] = useState("");
+  const [usnChecking, setUsnChecking] = useState(false);
+  const [usnValid, setUsnValid] = useState(false);
+  const [formDisabled, setFormDisabled] = useState(true);
+  const [showUploadSection, setShowUploadSection] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadRetries, setUploadRetries] = useState(0);
   const [timer, setTimer] = useState(null);
   const [timerExpired, setTimerExpired] = useState(false);
-
-  const [documents, setDocuments] = useState({
-    aadhaar: null,
-    collegeId: null,
-    marksCard: null,
-  });
-
-  const [documentPreviews, setDocumentPreviews] = useState({
-    aadhaar: "",
-    collegeId: "",
-    marksCard: "",
-  });
-
-  const [uploadStatus, setUploadStatus] = useState({
-    aadhaar: "",
-    collegeId: "",
-    marksCard: "",
-  });
-
+  const [errorMessage, setErrorMessage] = useState("");
   const [sessionData, setSessionData] = useState(null);
-  const [token, setToken] = useState("");
+
+  const isLocked = registrationLocked === true;
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("vtufest_token");
+    checkLockStatus();
+  }, []);
 
-    if (!storedToken) {
-      alert("Please login first");
-      navigate("/");
-      return;
+  useEffect(() => {
+    if (lockCheckComplete && !isLocked) {
+      loadSessionFromStorage();
     }
-
-    setToken(storedToken);
-
-    const fetchStudentInfo = async () => {
-      try {
-        const response = await fetch(
-          "https://vtu-festserver-production.up.railway.app/api/student/dashboard",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${storedToken}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch student info");
-        }
-
-        const result = await response.json();
-        
-        if (result.data) {
-          setStudentInfo({
-            usn: result.data.student.usn,
-            full_name: result.data.student.full_name,
-            college: result.data.college,
-          });
-        }
-
-      } catch (err) {
-        console.error("Error fetching student info:", err);
-        alert("Unable to load student information. Please login again.");
-        navigate("/");
-      }
-    };
-
-    fetchStudentInfo();
-    loadSessionFromStorage();
-  }, [navigate]);
+  }, [lockCheckComplete, isLocked]);
 
   useEffect(() => {
     if (timer && timer > 0 && !timerExpired) {
@@ -109,16 +72,42 @@ export default function SubmitApplication() {
     }
   }, [timer, timerExpired]);
 
+  const checkLockStatus = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.lockStatus, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setRegistrationLocked(data.data?.registration_lock === true);
+      } else {
+        setRegistrationLocked(false);
+      }
+    } catch (error) {
+      console.error("Lock status check error:", error);
+      setRegistrationLocked(false);
+    } finally {
+      setLockCheckComplete(true);
+    }
+  };
+
   const saveSessionToStorage = (data) => {
-    localStorage.setItem("application_session", JSON.stringify({
+    if (isLocked) return;
+    localStorage.setItem("registration_session", JSON.stringify({
       ...data,
       savedAt: Date.now(),
     }));
   };
 
   const loadSessionFromStorage = () => {
+    if (isLocked) return;
     try {
-      const saved = localStorage.getItem("application_session");
+      const saved = localStorage.getItem("registration_session");
       if (!saved) return;
 
       const data = JSON.parse(saved);
@@ -138,43 +127,136 @@ export default function SubmitApplication() {
         }
         setForm((prev) => ({ ...prev, ...data.formData }));
       } else {
-        localStorage.removeItem("application_session");
+        localStorage.removeItem("registration_session");
       }
     } catch (error) {
       console.error("Error loading session:", error);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const fetchColleges = async () => {
+    if (isLocked) return;
+    try {
+      const response = await fetch(API_ENDPOINTS.colleges);
+      const data = await response.json();
+
+      console.log("Colleges API response:", data);
+
+      if (response.ok && data.success && data.data && data.data.colleges) {
+        setColleges(data.data.colleges);
+        setErrorMessage("");
+      } else {
+        console.error("Failed to fetch colleges:", data);
+        setErrorMessage("Failed to load colleges. Please try again.");
+        setColleges([]);
+      }
+    } catch (error) {
+      console.error("Error fetching colleges:", error);
+      setErrorMessage("Failed to load colleges. Please check your internet connection.");
+      setColleges([]);
+    }
   };
 
-  const handleDocumentChange = (docType) => (e) => {
+  const checkUSN = async (usn) => {
+    if (isLocked) return;
+    if (!usn.trim()) {
+      setUsnError("");
+      setUsnValid(false);
+      setFormDisabled(true);
+      setColleges([]);
+      return;
+    }
+
+    try {
+      setUsnChecking(true);
+      setUsnError("");
+      setErrorMessage("");
+
+      const response = await fetch(API_ENDPOINTS.checkUsn, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "check_usn",
+          usn: usn.trim().toUpperCase()
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.data?.exists === true) {
+          setUsnError("USN already registered");
+          setUsnValid(false);
+          setFormDisabled(true);
+          setColleges([]);
+
+          setTimeout(() => {
+            navigate("/");
+          }, 2000);
+        } else {
+          setUsnError("");
+          setUsnValid(true);
+          setFormDisabled(false);
+          await fetchColleges();
+        }
+
+      } else {
+        console.error("USN check failed:", data);
+        setUsnError("Failed to check USN. Please try again.");
+        setUsnValid(false);
+        setFormDisabled(true);
+        setColleges([]);
+      }
+    } catch (error) {
+      console.error("Error checking USN:", error);
+      setUsnError("Network error. Please try again.");
+      setUsnValid(false);
+      setFormDisabled(true);
+      setColleges([]);
+    } finally {
+      setUsnChecking(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "usn") {
+      setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
+    } else if (name === "phone") {
+      const digits = value.replace(/\D/g, "").slice(0, 10);
+      setForm((prev) => ({ ...prev, [name]: digits }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+
+    setErrorMessage("");
+  };
+
+  const handlePhotoChange = (e) => {
+    if (isLocked) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
-      alert("Only PNG, JPG, or PDF files allowed");
+    if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+      setErrorMessage("Only PNG or JPG images allowed");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File must be less than 5MB");
+      setErrorMessage("Photo must be less than 5MB");
       return;
     }
 
-    setDocuments((prev) => ({ ...prev, [docType]: file }));
+    setPhotoFile(file);
+    setUploadStatus("");
+    setErrorMessage("");
 
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setDocumentPreviews((prev) => ({ ...prev, [docType]: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setDocumentPreviews((prev) => ({ ...prev, [docType]: "PDF" }));
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const formatTimer = (seconds) => {
@@ -185,415 +267,461 @@ export default function SubmitApplication() {
 
   const handleNext = async (e) => {
     e.preventDefault();
+    if (isLocked) return;
+    setErrorMessage("");
 
-    if (!form.bloodGroup) {
-      alert("Blood group is required");
+    if (!form.usn.trim()) {
+      setErrorMessage("USN is required");
       return;
     }
 
-    if (!form.address.trim()) {
-      alert("Address is required");
+    if (!usnValid) {
+      setErrorMessage("Please enter a valid USN that is not already registered");
       return;
     }
 
-    if (!form.department) {
-      alert("Department is required");
+    if (!form.fullName.trim()) {
+      setErrorMessage("Full name is required");
       return;
     }
 
-    if (!form.yearOfStudy) {
-      alert("Year of study is required");
+    if (!form.collegeId) {
+      setErrorMessage("Please select your college");
       return;
     }
 
-    if (!form.semester) {
-      alert("Semester is required");
+    if (!form.email.trim()) {
+      setErrorMessage("Email is required");
+      return;
+    }
+
+    if (form.phone.length !== 10) {
+      setErrorMessage("Phone number must be 10 digits");
+      return;
+    }
+
+    if (!form.gender) {
+      setErrorMessage("Please select your gender");
       return;
     }
 
     try {
       setLoading(true);
-
-      const response = await fetch(API_BASE.submitApplication, {
+      const response = await fetch(API_ENDPOINTS.registration, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "init_application",
-          blood_group: form.bloodGroup,
-          address: form.address.trim(),
-          department: form.department,
-          year_of_study: parseInt(form.yearOfStudy),
-          semester: parseInt(form.semester),
+          action: "init",
+          usn: form.usn,
+          fullName: form.fullName,
+          collegeId: form.collegeId,
+          email: form.email,
+          phone: form.phone,
+          gender: form.gender,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        alert(data.error || "Failed to initialize application");
-        return;
+      if (response.ok && data.success) {
+        const sessionInfo = {
+          session_id: data.session_id,
+          expires_at: data.expires_at,
+          remaining_seconds: data.remaining_seconds,
+          formData: {
+            usn: form.usn,
+            fullName: form.fullName,
+            collegeId: form.collegeId,
+            email: form.email,
+            phone: form.phone,
+            gender: form.gender,
+          }
+        };
+
+        setSessionData(sessionInfo);
+        saveSessionToStorage(sessionInfo);
+        setTimer(data.remaining_seconds);
+        setShowUploadSection(true);
+        setErrorMessage("");
+      } else {
+        setErrorMessage(data.message || "Registration initialization failed");
       }
-
-      const sessionInfo = {
-        session_id: data.session_id,
-        upload_urls: data.upload_urls,
-        expires_at: data.expires_at,
-        remaining_seconds: data.remaining_seconds,
-        formData: form,
-      };
-
-      saveSessionToStorage(sessionInfo);
-      setSessionData(sessionInfo);
-      setTimer(data.remaining_seconds);
-      setShowUploadSection(true);
-
     } catch (error) {
-      console.error("Error initializing application:", error);
-      alert("Network error. Please try again.");
+      console.error("Error initializing registration:", error);
+      setErrorMessage("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const uploadDocument = async (docType, blobType) => {
-    const file = documents[docType];
-    if (!file || !sessionData) return;
-
-    const uploadUrl = sessionData.upload_urls[blobType];
-    if (!uploadUrl) {
-      alert("Upload URL not found. Please refresh the page.");
-      return;
-    }
+  const uploadPhoto = async () => {
+    if (isLocked) return;
+    if (!photoFile || !sessionData?.session_id) return;
 
     try {
-      setUploadStatus((prev) => ({ ...prev, [docType]: "uploading" }));
+      setLoading(true);
+      setUploadStatus("uploading");
+      setUploadProgress(0);
 
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-          "Content-Type": file.type,
-        },
-        body: file,
+      const formData = new FormData();
+      formData.append("photo", photoFile);
+      formData.append("session_id", sessionData.session_id);
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(progress);
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
+      xhr.addEventListener("load", () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success) {
+            setUploadStatus("success");
+            setUploadRetries(0);
+            setErrorMessage("");
+          } else {
+            setUploadStatus("failed");
+            setUploadRetries((prev) => prev + 1);
+            setErrorMessage(data.message || "Photo upload failed");
+          }
+        } else {
+          setUploadStatus("failed");
+          setUploadRetries((prev) => prev + 1);
+          setErrorMessage("Photo upload failed");
+        }
+        setLoading(false);
+      });
 
-      setUploadStatus((prev) => ({ ...prev, [docType]: "success" }));
-      
+      xhr.addEventListener("error", () => {
+        setUploadStatus("failed");
+        setUploadRetries((prev) => prev + 1);
+        setErrorMessage("Network error during photo upload");
+        setLoading(false);
+      });
+
+      xhr.open("POST", `${API_BASE_URL}/api/student/upload-photo`);
+      xhr.send(formData);
 
     } catch (error) {
-      console.error("Upload error:", error);
-      setUploadStatus((prev) => ({ ...prev, [docType]: "" }));
-      alert(`Failed to upload ${docType}. Please try again.`);
+      console.error("Error uploading photo:", error);
+      setUploadStatus("failed");
+      setUploadRetries((prev) => prev + 1);
+      setErrorMessage("Photo upload error");
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
+    if (isLocked) return;
+    setErrorMessage("");
 
-    if (uploadStatus.aadhaar !== "success" || 
-        uploadStatus.collegeId !== "success" || 
-        uploadStatus.marksCard !== "success") {
-      alert("Please upload all required documents first");
+    if (uploadStatus !== "success") {
+      setErrorMessage("Please upload your photo first");
       return;
     }
 
-    if (!sessionData?.session_id) {
-      alert("Session expired. Please restart the application process.");
+    if (form.password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setErrorMessage("Passwords do not match");
       return;
     }
 
     try {
       setLoading(true);
-
-      const response = await fetch(API_BASE.submitApplication, {
+      const response = await fetch(API_ENDPOINTS.registration, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "finalize_application",
+          action: "finalize",
           session_id: sessionData.session_id,
-          blood_group: form.bloodGroup,
-          address: form.address.trim(),
-          department: form.department,
-          year_of_study: parseInt(form.yearOfStudy),
-          semester: parseInt(form.semester),
+          password: form.password,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        alert(data.error || "Failed to submit application");
-        return;
+      if (response.ok && data.success) {
+        localStorage.removeItem("registration_session");
+        alert("Registration successful! Please login.");
+        navigate("/");
+      } else {
+        setErrorMessage(data.message || "Registration failed");
       }
-
-      alert(data.message || "Application submitted successfully!");
-      localStorage.removeItem("application_session");
-      navigate("/dashboard");
-
     } catch (error) {
-      console.error("Error submitting application:", error);
-      alert("Network error. Please try again.");
+      console.error("Error completing registration:", error);
+      setErrorMessage("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  const isUploadComplete = uploadStatus === "success";
+  const isUploadBlocked = () => uploadRetries >= 3 && uploadStatus !== "success";
+  
+  if (!lockCheckComplete) {
+    return (
+      <div className="register-page">
+        <div className="float-orb float-orb-1" />
+        <div className="float-orb float-orb-2" />
+        <div className="reg-loading">
+          Checking registration status...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="register-page">
-      <h2>Submit Application</h2>
+      {/* Floating background orbs */}
+      <div className="float-orb float-orb-1" />
+      <div className="float-orb float-orb-2" />
+      <div className="float-orb float-orb-3" />
 
-      {!showUploadSection ? (
-        <form className="register-card" onSubmit={handleNext}>
-          <label>USN / Registration Number</label>
-          <input
-            value={studentInfo?.usn || "Loading..."}
-            disabled
-            style={{ backgroundColor: "#f0f0f0" }}
-          />
-
-          {studentInfo?.college && (
-            <>
-              <label>College </label>
-              <input
-                value={`${studentInfo.college.college_name}, ${studentInfo.college.place}`}
-                disabled
-                style={{ backgroundColor: "#f0f0f0" }}
-              />
-            </>
-          )}
-
-          <label>Blood Group *</label>
-          <select
-            name="bloodGroup"
-            value={form.bloodGroup}
-            onChange={handleChange}
-            disabled={loading}
-            required
-          >
-            <option value="">Select Blood Group</option>
-            <option>A+</option>
-            <option>A-</option>
-            <option>B+</option>
-            <option>B-</option>
-            <option>AB+</option>
-            <option>AB-</option>
-            <option>O+</option>
-            <option>O-</option>
-          </select>
-
-          <label>Permanent Address *</label>
-          <textarea
-            name="address"
-            value={form.address}
-            onChange={handleChange}
-            placeholder="Enter your permanent address"
-            rows="3"
-            disabled={loading}
-            required
-          />
-
-          <label>Department *</label>
-          <input
-            type="text"
-            name="department"
-            value={form.department || ""}
-            onChange={handleChange}
-            placeholder="Enter your department"
-            disabled={loading}
-            required
-          />
-
-          <label>Year of Study *</label>
-          <select
-            name="yearOfStudy"
-            value={form.yearOfStudy}
-            onChange={handleChange}
-            disabled={loading}
-            required
-          >
-            <option value="">Select Year</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-
-          <label>Semester *</label>
-          <select
-            name="semester"
-            value={form.semester}
-            onChange={handleChange}
-            disabled={loading}
-            required
-          >
-            <option value="">Select Semester</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-              <option key={s} value={s}>
-                Semester {s}
-              </option>
-            ))}
-          </select>
-
-          <button type="submit" disabled={loading || !studentInfo}>
-            {loading ? "Processing..." : "Next"}
-          </button>
-
-          <p className="back-link" onClick={() => navigate("/dashboard")}>
-            ← Back to Dashboard
-          </p>
-        </form>
-      ) : (
-        <form className="register-card" onSubmit={handleSubmit}>
-          {timer !== null && !timerExpired && (
-            <div
-              style={{
-                textAlign: "center",
-                color: timer < 30 ? "red" : "green",
-                fontWeight: "bold",
-                marginBottom: "15px",
-              }}
-            >
-              Session expires in: {formatTimer(timer)}
+      {isLocked && (
+        <>
+          <div className="reg-lock-backdrop"></div>
+          <div className="reg-lock-container">
+            <div className="reg-lock-modal">
+              <div className="reg-lock-icon">🔒</div>
+              <h2 className="reg-lock-title">Registrations Are Closed</h2>
+              <p className="reg-lock-text">Please contact administration for further details.</p>
             </div>
-          )}
-
-          {timerExpired && (
-            <div
-              style={{
-                textAlign: "center",
-                color: "red",
-                fontWeight: "bold",
-                marginBottom: "15px",
-              }}
-            >
-              Session expired. Please restart.
-            </div>
-          )}
-
-          <label>Aadhaar Card * (PNG/JPG/PDF, max 5MB)</label>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,application/pdf"
-            onChange={handleDocumentChange("aadhaar")}
-            disabled={timerExpired || uploadStatus.aadhaar === "success"}
-          />
-          {documentPreviews.aadhaar && documentPreviews.aadhaar !== "PDF" && (
-            <div style={{ textAlign: "center", margin: "10px 0" }}>
-              <img
-                src={documentPreviews.aadhaar}
-                alt="Aadhaar Preview"
-                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
-              />
-            </div>
-          )}
-          {documents.aadhaar && uploadStatus.aadhaar !== "success" && (
-            <button
-              type="button"
-              onClick={() => uploadDocument("aadhaar", "aadhaar")}
-              disabled={timerExpired || loading}
-              style={{ marginTop: "10px" }}
-            >
-              {uploadStatus.aadhaar === "uploading" ? "Uploading..." : "Upload Aadhaar"}
-            </button>
-          )}
-          {uploadStatus.aadhaar === "success" && (
-            <p style={{ color: "green", fontSize: "14px" }}>✓ Aadhaar uploaded</p>
-          )}
-
-          <label>College ID Card * (PNG/JPG/PDF, max 5MB)</label>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,application/pdf"
-            onChange={handleDocumentChange("collegeId")}
-            disabled={timerExpired || uploadStatus.collegeId === "success"}
-          />
-          {documentPreviews.collegeId && documentPreviews.collegeId !== "PDF" && (
-            <div style={{ textAlign: "center", margin: "10px 0" }}>
-              <img
-                src={documentPreviews.collegeId}
-                alt="College ID Preview"
-                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
-              />
-            </div>
-          )}
-          {documents.collegeId && uploadStatus.collegeId !== "success" && (
-            <button
-              type="button"
-              onClick={() => uploadDocument("collegeId", "college_id_card")}
-              disabled={timerExpired || loading}
-              style={{ marginTop: "10px" }}
-            >
-              {uploadStatus.collegeId === "uploading" ? "Uploading..." : "Upload College ID"}
-            </button>
-          )}
-          {uploadStatus.collegeId === "success" && (
-            <p style={{ color: "green", fontSize: "14px" }}>✓ College ID uploaded</p>
-          )}
-
-          <label>10th Marks Card * (PNG/JPG/PDF, max 5MB)</label>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg,application/pdf"
-            onChange={handleDocumentChange("marksCard")}
-            disabled={timerExpired || uploadStatus.marksCard === "success"}
-          />
-          {documentPreviews.marksCard && documentPreviews.marksCard !== "PDF" && (
-            <div style={{ textAlign: "center", margin: "10px 0" }}>
-              <img
-                src={documentPreviews.marksCard}
-                alt="Marks Card Preview"
-                style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
-              />
-            </div>
-          )}
-          {documents.marksCard && uploadStatus.marksCard !== "success" && (
-            <button
-              type="button"
-              onClick={() => uploadDocument("marksCard", "marks_card_10th")}
-              disabled={timerExpired || loading}
-              style={{ marginTop: "10px" }}
-            >
-              {uploadStatus.marksCard === "uploading" ? "Uploading..." : "Upload Marks Card"}
-            </button>
-          )}
-          {uploadStatus.marksCard === "success" && (
-            <p style={{ color: "green", fontSize: "14px" }}>✓ Marks Card uploaded</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={
-              timerExpired ||
-              loading ||
-              uploadStatus.aadhaar !== "success" ||
-              uploadStatus.collegeId !== "success" ||
-              uploadStatus.marksCard !== "success"
-            }
-          >
-            {loading ? "Submitting..." : "Submit Application"}
-          </button>
-
-          <p
-            className="back-link"
-            onClick={() => {
-              setShowUploadSection(false);
-              localStorage.removeItem("application_session");
-            }}
-          >
-            ← Back to Form
-          </p>
-        </form>
+          </div>
+        </>
       )}
+
+      <div className={isLocked ? "reg-content-locked" : ""}>
+        <h2 className="register-title">Student Registration</h2>
+
+        {errorMessage && (
+          <div className="register-error">
+            ⚠️ {errorMessage}
+          </div>
+        )}
+
+        {!showUploadSection ? (
+          <form className="register-card" onSubmit={handleNext}>
+            <label>USN / Registration Number *</label>
+            <input
+              name="usn"
+              value={form.usn}
+              onChange={handleChange}
+              onBlur={(e) => checkUSN(e.target.value)}
+              placeholder="e.g., VTU2026CS001 (alphanumeric only)"
+              disabled={loading}
+              required
+            />
+            {usnChecking && <p className="reg-status-checking">Checking USN...</p>}
+            {usnError && (
+              <p className="reg-status-error">
+                {usnError}
+                {usnError.includes("already registered") && " Redirecting to login..."}
+              </p>
+            )}
+
+            <label>Full Name *</label>
+            <input
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
+
+            <label>College *</label>
+            <select
+              name="collegeId"
+              value={form.collegeId}
+              onChange={handleChange}
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            >
+              <option value="">Select College</option>
+              {colleges.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.college_name}, {c.place || "N/A"}
+                </option>
+              ))}
+            </select>
+
+            <label>Email Address *</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
+
+            <label>Mobile Number *</label>
+            <input
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="e.g., 9876543210 (10 digits)"
+              maxLength="10"
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            />
+
+            <label>Gender *</label>
+            <select
+              name="gender"
+              value={form.gender}
+              onChange={handleChange}
+              disabled={formDisabled || loading}
+              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              required
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <button type="submit" disabled={formDisabled || loading || usnChecking}>
+              {loading ? "Processing..." : "Next →"}
+            </button>
+
+            <p className="back-link" onClick={() => navigate("/")}>
+              ← Back to Login
+            </p>
+          </form>
+        ) : (
+          <form className="register-card" onSubmit={handleRegister}>
+            {timer !== null && !timerExpired && (
+              <div className={`reg-timer ${timer < 30 ? "warning" : "safe"}`}>
+                ⏱️ Session expires in: {formatTimer(timer)}
+              </div>
+            )}
+
+            {timerExpired && (
+              <div className="reg-timer warning">
+                ⚠️ Registration session expired. Please restart.
+              </div>
+            )}
+
+            <label>Passport Size Photo * (PNG/JPG, max 5MB)</label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handlePhotoChange}
+              disabled={timerExpired || uploadStatus === "success"}
+            />
+
+            {photoPreview && (
+              <div className="reg-photo-preview">
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                />
+              </div>
+            )}
+
+            {photoFile && uploadStatus !== "success" && (
+              <button
+                type="button"
+                onClick={uploadPhoto}
+                disabled={timerExpired || loading || uploadStatus === "uploading"}
+                style={{ marginTop: "10px" }}
+              >
+                {uploadStatus === "uploading"
+                  ? `Uploading... ${uploadProgress}%`
+                  : "📤 Upload Photo"}
+              </button>
+            )}
+
+            {uploadStatus === "success" && (
+              <p className="reg-status-success">
+                ✓ Photo uploaded successfully
+              </p>
+            )}
+
+            {uploadStatus === "failed" && uploadRetries < 3 && (
+              <p className="reg-status-failed">
+                ✗ Upload failed. Please try again (Attempt {uploadRetries}/3)
+              </p>
+            )}
+
+            <label>Create Password * (min 8 characters)</label>
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="Enter password"
+              disabled={timerExpired || loading}
+              required
+            />
+
+            <label>Confirm Password *</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm password"
+              disabled={timerExpired || loading}
+              required
+            />
+
+            {!isUploadComplete && !timerExpired && (
+              <p className="reg-upload-warning">
+                ⚠️ Please upload your photo to proceed
+              </p>
+            )}
+
+            <button
+              type="submit"
+              title={!isUploadComplete ? "Upload Photo to proceed" : ""}
+              disabled={
+                timerExpired ||
+                loading ||
+                !isUploadComplete ||
+                isUploadBlocked()
+              }
+              style={{
+                cursor: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
+                  ? "not-allowed"
+                  : "pointer",
+                opacity: (!isUploadComplete || timerExpired || loading || isUploadBlocked())
+                  ? 0.5
+                  : 1,
+                transition: "opacity 0.2s ease"
+              }}
+            >
+              {loading ? "Registering..." : "✓ Complete Registration"}
+            </button>
+
+            <p className="back-link" onClick={() => {
+              setShowUploadSection(false);
+              setSessionData(null);
+              setUploadStatus("");
+              setPhotoFile(null);
+              setPhotoPreview("");
+              localStorage.removeItem("registration_session");
+            }}>
+              ← Back to Form
+            </p>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

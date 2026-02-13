@@ -1,63 +1,197 @@
-// ForgotPassword.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/ForgotPassword.css";
+import "../styles/login.css";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
+/* ---------- JWT DECODE (NO LIB REQUIRED) ---------- */
+const decodeJwt = (token) => {
+  try {
+    const payload = token.split(".")[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+};
 
-export default function ForgotPassword() {
+export default function Login() {
   const navigate = useNavigate();
+
+  const [role, setRole] = useState("student");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  
+  const [showForceResetToast, setShowForceResetToast] = useState(false);
+  const [forceResetData, setForceResetData] = useState(null);
 
   useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (!role) {
-      window.location.href = "https://vtufest2026.acharyahabba.com/";
+    let currentRole = localStorage.getItem("role");
+    if (!currentRole) {
+      localStorage.setItem("role", "student");
+      currentRole = "student";
     }
-  }, []);
+    setRole(currentRole);
 
-  const handleSubmit = async (e) => {
+    const token = localStorage.getItem("vtufest_token");
+    const storedRole = localStorage.getItem("vtufest_role");
+
+    if (!token || !storedRole) {
+      localStorage.removeItem("vtufest_token");
+      localStorage.removeItem("vtufest_role");
+      return;
+    }
+
+    const decoded = decodeJwt(token);
+
+    if (!decoded || !decoded.exp) {
+      localStorage.removeItem("vtufest_token");
+      localStorage.removeItem("vtufest_role");
+      return;
+    }
+
+    const isExpired = decoded.exp * 1000 < Date.now();
+
+    if (isExpired) {
+      localStorage.removeItem("vtufest_token");
+      localStorage.removeItem("vtufest_role");
+      return;
+    }
+
+    redirectBasedOnRole(storedRole);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (showForceResetToast && forceResetData) {
+      const timer = setTimeout(() => {
+        handleForceResetRedirect();
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showForceResetToast, forceResetData]);
+
+  const redirectBasedOnRole = (userRole) => {
+    switch (userRole) {
+      case "principal":
+        navigate("/principal-dashboard");
+        break;
+      case "manager":
+        navigate("/manager-dashboard");
+        break;
+      case "student":
+      default:
+        navigate("/dashboard");
+        break;
+    }
+  };
+
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    localStorage.setItem("role", newRole);
+    setEmail("");
+    setPassword("");
+    setErrorMsg("");
+    setShowForceResetToast(false);
+    setForceResetData(null);
+  };
+
+  const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const handleForceResetRedirect = () => {
+    if (!forceResetData) return;
+
+    const { reset_token, email, role } = forceResetData;
+    
+    navigate(
+      `/changepassword?token=${encodeURIComponent(reset_token)}&email=${encodeURIComponent(email)}&role=${role}`
+    );
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    setSuccessMsg("");
+    setShowForceResetToast(false);
+    setForceResetData(null);
 
-    if (!email) {
-      setErrorMsg("Please enter your registered email");
+    if (!email || !password) {
+      setErrorMsg("Please enter email ID and password");
       return;
     }
 
-    const role = localStorage.getItem("role");
-    if (!role) {
-      window.location.href = "https://vtufest2026.acharyahabba.com/";
+    if (!isValidEmail(email)) {
+      setErrorMsg("Please enter a valid email ID");
       return;
     }
+
+    const loginApi = "https://vtu-festserver-production.up.railway.app/api/auth/login";
 
     try {
       setLoading(true);
 
-      const response = await fetch(
-        `${API_BASE_URL}auth/forgot-password/${role}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim().toLowerCase() }),
-        }
-      );
+      const response = await fetch(loginApi, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+          role,
+        }),
+      });
 
       const data = await response.json();
 
+      console.log("Login response:", data);
+
       if (!response.ok) {
-        setErrorMsg(data.error || data.message || "Request failed. Retry.");
+        setErrorMsg(data.message || "Login failed. Retry.");
         setLoading(false);
         return;
       }
 
-      setSuccessMsg(data.message);
-      setEmail("");
-    } catch {
+      if (data.status === "FORCE_RESET") {
+        setForceResetData({
+          reset_token: data.reset_token,
+          email: data.email,
+          role: data.role,
+        });
+        
+        setShowForceResetToast(true);
+        setLoading(false);
+        
+        return;
+      }
+
+      localStorage.setItem("vtufest_token", data.token);
+      localStorage.setItem("vtufest_role", role);
+
+      localStorage.setItem("should_fetch_dashboard", "true");
+
+      if (data.name) {
+        localStorage.setItem("name", data.name);
+        console.log("Name stored:", data.name);
+      }
+
+      if (data.college_id) {
+        localStorage.setItem("college_id", data.college_id);
+      }
+
+      if (data.usn) {
+        localStorage.setItem("usn", data.usn);
+      }
+
+      if (data.user_id) {
+        localStorage.setItem("user_id", data.user_id);
+      }
+
+      console.log("All localStorage after login:", {
+        name: localStorage.getItem("name"),
+        usn: localStorage.getItem("usn"),
+        role: localStorage.getItem("vtufest_role")
+      });
+
+      redirectBasedOnRole(role);
+    } catch (err) {
+      console.error("Login error:", err);
       setErrorMsg("Server not reachable. Retry.");
     } finally {
       setLoading(false);
@@ -65,44 +199,158 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="forgot-page">
-      <div className="forgot-card">
-        <h2>Forgot Password</h2>
-        <p>
-          Enter your registered email address. We will send you a password
-          reset link.
-        </p>
+    <div className="login-page">
+      {/* Floating background orbs */}
+      <div className="float-orb float-orb-1" />
+      <div className="float-orb float-orb-2" />
+      <div className="float-orb float-orb-3" />
 
-        <form onSubmit={handleSubmit}>
-          <label>Email Address</label>
-          <input
-            type="email"
-            placeholder="Enter your registered email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            required
-          />
-
-          {errorMsg && (
-            <div style={{ color: "red", marginTop: "8px" }}>{errorMsg}</div>
-          )}
-
-          {successMsg && (
-            <div style={{ color: "green", marginTop: "8px" }}>
-              {successMsg}
-            </div>
-          )}
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Sending reset link..." : "Send Reset Link"}
+      {/* ================= FORCED RESET TOAST ================= */}
+      {showForceResetToast && (
+        <div className="force-reset-toast">
+          <div className="toast-icon">👋</div>
+          <div className="toast-title">
+            Welcome! First-time login detected.
+          </div>
+          <div className="toast-text">
+            Please reset your password to continue.
+          </div>
+          <div className="toast-countdown">
+            Redirecting automatically in 3 seconds...
+          </div>
+          <button
+            className="toast-btn"
+            onClick={handleForceResetRedirect}
+          >
+            Reset Password Now
           </button>
-        </form>
+        </div>
+      )}
 
-        <div className="forgot-footer">
-          <span onClick={() => navigate("/")}>← Back to Login</span>
+      {/* ================= TOP NAVBAR ================= */}
+      <nav className="login-navbar">
+        <div className="login-brand">
+          <img src="/acharya.png" alt="Acharya Logo" />
+          <span className="logo-separator">|</span>
+          <img src="/vtu.png" alt="VTU Logo" />
+        </div>
+
+        <div className="brand-text">
+          <h3>VTU HABBA 2026</h3>
+          <span>Visvesvaraya Technological University</span>
+        </div>
+
+        <div className="login-contact">
+          Contact: <strong>adsa@acharya.ac.in</strong>
+          <br />
+          <strong>1234567890</strong>
+        </div>
+      </nav>
+
+      {/* ================= CENTER LOGIN CARD ================= */}
+      <div className="login-center">
+        <div className={`login-card ${role}`}>
+          {/* ROLE TABS */}
+          <div className="role-tabs">
+            <button
+              type="button"
+              className={role === "principal" ? "active" : ""}
+              onClick={() => handleRoleChange("principal")}
+              disabled={loading || showForceResetToast}
+            >
+              Principal
+            </button>
+
+            <button
+              type="button"
+              className={role === "manager" ? "active" : ""}
+              onClick={() => handleRoleChange("manager")}
+              disabled={loading || showForceResetToast}
+            >
+              Team Manager
+            </button>
+
+            <button
+              type="button"
+              className={role === "student" ? "active" : ""}
+              onClick={() => handleRoleChange("student")}
+              disabled={loading || showForceResetToast}
+            >
+              Student
+            </button>
+          </div>
+
+          {/* FORM */}
+          <form onSubmit={handleLogin}>
+            <label>Email ID</label>
+            <input
+              type="email"
+              placeholder={`Enter ${role} email ID`}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading || showForceResetToast}
+              required
+            />
+
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading || showForceResetToast}
+              required
+            />
+
+            {errorMsg && (
+              <div className="login-error">
+                {errorMsg}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="login-btn" 
+              disabled={loading || showForceResetToast}
+            >
+              {loading ? "Logging in..." : "Log In"}
+            </button>
+          </form>
+
+          {/* FOOTER LINKS */}
+          <div className="login-footer">
+            {role === "student" && (
+              <>
+                <span
+                  className="login-link"
+                  onClick={() => !showForceResetToast && navigate("/register-student")}
+                  style={{ 
+                    cursor: showForceResetToast ? "not-allowed" : "pointer",
+                    opacity: showForceResetToast ? 0.5 : 1 
+                  }}
+                >
+                  New Candidate Registration
+                </span>
+                <br />
+              </>
+            )}
+
+            <span
+              className="login-link"
+              onClick={() => !showForceResetToast && navigate("/forgot-password")}
+              style={{ 
+                cursor: showForceResetToast ? "not-allowed" : "pointer",
+                opacity: showForceResetToast ? 0.5 : 1 
+              }}
+            >
+              Forgot Password?
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* ================= BOTTOM FOOTER ================= */}
+      <footer className="login-bottom">© 2026 ACHARYA | VTU</footer>
     </div>
   );
 }
