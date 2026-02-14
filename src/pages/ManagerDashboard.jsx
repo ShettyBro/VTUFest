@@ -262,7 +262,7 @@ export default function ManagerDashboard() {
                 style={{ cursor: 'pointer', borderLeft: '4px solid #8B5CF6' }}
                 onClick={() => navigate("/accommodation")}
               >
-                <h4 style={{ color: '#8B5CF6', borderColor: 'rgba(139, 92, 246, 0.2)' }}>Accommodation</h4>
+                <h4 style={{ color: 'rgb(209 204 220)', borderColor: 'rgba(139, 92, 246, 0.2)' }}>Accommodation</h4>
                 {dashboardData?.accommodation ? (
                   <div style={{ marginTop: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
@@ -274,7 +274,7 @@ export default function ManagerDashboard() {
                     <small style={{ display: 'block', marginTop: '10px', color: '#A78BFA' }}>Status: {dashboardData.accommodation.status}</small>
                   </div>
                 ) : (
-                  <p style={{ marginTop: '10px', color: '#A78BFA' }}>Apply Now</p>
+                  <p style={{ marginTop: '10px', color: 'rgb(209 204 220)' }}>Apply Now</p>
                 )}
               </div>
 
