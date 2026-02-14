@@ -238,7 +238,7 @@ export default function ManagerDashboard() {
               <div
                 className="glass-card clickable"
                 style={{ cursor: 'pointer', borderLeft: '4px solid var(--accent-success)' }}
-                onClick={() => navigate("/approved-students")}
+                onClick={() => navigate("/approvals")}
               >
                 <h4 style={{ color: 'var(--accent-success)', borderColor: 'rgba(16, 185, 129, 0.2)' }}>Approved Students</h4>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-success)', margin: '10px 0' }}>
@@ -249,7 +249,7 @@ export default function ManagerDashboard() {
               <div
                 className="glass-card clickable"
                 style={{ cursor: 'pointer', borderLeft: '4px solid #EF5350' }}
-                onClick={() => navigate("/rejected-students")}
+                onClick={() => navigate("/approvals")}
               >
                 <h4 style={{ color: '#EF5350', borderColor: 'rgba(239, 83, 80, 0.2)' }}>Rejected Students</h4>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#EF5350', margin: '10px 0' }}>
