@@ -6,7 +6,7 @@
 
 :root {
     /* --- ACADEMIC DARK THEME --- */
-    --glass-nav-bg: rgba(138, 151, 163, 0.348);
+    --glass-nav-bg: rgba(138, 151, 163, 0.278);
     --glass-sidebar-bg: rgba(255, 255, 255, 0.04);
     --glass-border: rgba(255, 255, 255, 0.15);
 
@@ -99,8 +99,8 @@ body,
     height: 70px;
     width: 100%;
     background: var(--glass-nav-bg);
-    backdrop-filter: blur(17px);
-    -webkit-backdrop-filter: blur(17px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
