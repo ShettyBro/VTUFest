@@ -6,7 +6,7 @@
 
 :root {
     /* --- ACADEMIC DARK THEME --- */
-    --glass-nav-bg: rgba(240, 248, 255, 0.4);
+    --glass-nav-bg: rgba(230, 234, 239, 0.721);
     --glass-sidebar-bg: rgba(255, 255, 255, 0.04);
     --glass-border: rgba(255, 255, 255, 0.15);
 
@@ -57,10 +57,10 @@ body,
     position: relative;
     margin-left: 70px;
     /* Sidebar width (collapsed) */
-    margin-top: 90px;
+    margin-top: 70px;
     /* Navbar height */
     width: calc(100% - 70px);
-    height: calc(100vh - 90px);
+    height: calc(100vh - 70px);
     padding: 0;
     /* Dashboard handles its own padding */
     overflow-y: auto;
@@ -96,7 +96,7 @@ body,
     position: fixed;
     top: 0;
     left: 0;
-    height: 90px;
+    height: 70px;
     width: 100%;
     background: var(--glass-nav-bg);
     backdrop-filter: blur(20px);
