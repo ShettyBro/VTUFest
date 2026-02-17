@@ -20,7 +20,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  
+
   // ✅ NEW: State for forced password reset toast
   const [showForceResetToast, setShowForceResetToast] = useState(false);
   const [forceResetData, setForceResetData] = useState(null);
@@ -111,7 +111,7 @@ export default function Login() {
     if (!forceResetData) return;
 
     const { reset_token, email, role } = forceResetData;
-    
+
     // Navigate to reset password page with token
     navigate(
       `/changepassword?token=${encodeURIComponent(reset_token)}&email=${encodeURIComponent(email)}&role=${role}`
@@ -136,7 +136,7 @@ export default function Login() {
     }
 
     // Single unified login API endpoint
-    const loginApi = "https://vtu-festserver-production.up.railway.app/api/auth/login";
+    const loginApi = "https://api.vtufest2026.acharyahabba.com/api/auth/login";
 
     try {
       setLoading(true);
@@ -169,11 +169,11 @@ export default function Login() {
           email: data.email,
           role: data.role,
         });
-        
+
         // Show toast message
         setShowForceResetToast(true);
         setLoading(false);
-        
+
         // Auto-redirect handled by useEffect after 3 seconds
         return;
       }
@@ -351,9 +351,9 @@ export default function Login() {
               </div>
             )}
 
-            <button 
-              type="submit" 
-              className="login-btn" 
+            <button
+              type="submit"
+              className="login-btn"
               disabled={loading || showForceResetToast}
             >
               {loading ? "Logging in..." : "Log In"}
@@ -367,9 +367,9 @@ export default function Login() {
                 <span
                   className="login-link"
                   onClick={() => !showForceResetToast && navigate("/register-student")}
-                  style={{ 
+                  style={{
                     cursor: showForceResetToast ? "not-allowed" : "pointer",
-                    opacity: showForceResetToast ? 0.5 : 1 
+                    opacity: showForceResetToast ? 0.5 : 1
                   }}
                 >
                   New Candidate Registration
@@ -381,9 +381,9 @@ export default function Login() {
             <span
               className="login-link"
               onClick={() => !showForceResetToast && navigate("/forgot-password")}
-              style={{ 
+              style={{
                 cursor: showForceResetToast ? "not-allowed" : "pointer",
-                opacity: showForceResetToast ? 0.5 : 1 
+                opacity: showForceResetToast ? 0.5 : 1
               }}
             >
               Forgot Password?
