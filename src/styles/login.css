@@ -2,18 +2,20 @@
    GLOBAL LAYOUT
 ========================================================= */
 .login-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   font-family: "Segoe UI", sans-serif;
 
   /* Saffron-only gradient */
-  background: linear-gradient(
-    135deg,
-    #92400e 0%,    /* dark saffron */
-    #f59e0b 45%,   /* light saffron */
-    #78350f 100%   /* darker saffron */
-  );
+  background: linear-gradient(135deg,
+      #92400e 0%,
+      /* dark saffron */
+      #f59e0b 45%,
+      /* light saffron */
+      #78350f 100%
+      /* darker saffron */
+    );
 
   position: relative;
   overflow: hidden;
@@ -86,7 +88,8 @@
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  pointer-events: none; /* prevents overlap click issues */
+  pointer-events: none;
+  /* prevents overlap click issues */
 }
 
 /* CENTER TITLE */
@@ -264,6 +267,7 @@
     font-size: 16px;
   }
 }
+
 @media (max-width: 400px) {
   .role-tabs button {
     font-size: 12px;
@@ -276,6 +280,7 @@
    MOBILE RESPONSIVE (LOGIN PAGE)
 ========================================================= */
 @media (max-width: 768px) {
+
   /* NAVBAR STACKING */
   .login-navbar {
     flex-direction: column;
@@ -348,6 +353,7 @@
     font-size: 13px;
   }
 }
+
 /* =========================================================
    ROLE BASED LOGIN CARD COLORS
 ========================================================= */
@@ -361,13 +367,12 @@
 .login-card.student .role-tabs button.active {
   background: linear-gradient(to right, #f59e0b, #d97706);
 }
+
 .login-card.student {
-  background: linear-gradient(
-    135deg,
-    #fff7ed 0%,
-    #ffedd5 50%,
-    #fed7aa 100%
-  );
+  background: linear-gradient(135deg,
+      #fff7ed 0%,
+      #ffedd5 50%,
+      #fed7aa 100%);
   border-top: 6px solid #f59e0b;
 }
 
@@ -394,13 +399,12 @@
 .login-card.manager .login-link {
   color: #1e40af;
 }
+
 .login-card.manager {
-  background: linear-gradient(
-    135deg,
-    #eff6ff 0%,
-    #dbeafe 50%,
-    #bfdbfe 100%
-  );
+  background: linear-gradient(135deg,
+      #eff6ff 0%,
+      #dbeafe 50%,
+      #bfdbfe 100%);
   border-top: 6px solid #2563eb;
 }
 
@@ -427,13 +431,12 @@
 .login-card.principal .login-link {
   color: #166534;
 }
+
 .login-card.principal {
-  background: linear-gradient(
-    135deg,
-    #f0fdf4 0%,
-    #dcfce7 50%,
-    #bbf7d0 100%
-  );
+  background: linear-gradient(135deg,
+      #f0fdf4 0%,
+      #dcfce7 50%,
+      #bbf7d0 100%);
   border-top: 6px solid #16a34a;
 }
 
@@ -459,13 +462,15 @@
 
 /* Desktop */
 .login-brand img {
-  height: 56px;      /* was 42px */
+  height: 56px;
+  /* was 42px */
 }
 
 /* Tablet */
 @media (max-width: 768px) {
   .login-brand img {
-    height: 48px;    /* was 36px */
+    height: 48px;
+    /* was 36px */
   }
 }
 
@@ -475,6 +480,7 @@
     height: 44px;
   }
 }
+
 /* =========================================================
    PERFECT CENTERING OF VTU HABBA TEXT
 ========================================================= */
@@ -516,4 +522,3 @@
     margin-top: 6px;
   }
 }
-

@@ -87,6 +87,7 @@ body::before {
     height: 100vh;
     background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-medium) 50%, var(--navy-royal) 100%);
     background-size: 200% 200%;
+    will-change: background-position;
     animation: academicGradient 28s ease infinite;
     z-index: -2;
 }

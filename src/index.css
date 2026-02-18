@@ -17,3 +17,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Import Mobile Performance Overrides - MUST BE LAST */
+@import "./styles/mobile-performance.css";

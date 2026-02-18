@@ -1,0 +1,101 @@
+/* =========================================
+   MOBILE PERFORMANCE LAYER (Max-width: 1024px)
+   ========================================= */
+
+@media (max-width: 1024px) {
+
+    /* 1. DISABLE BACKGROUND ANIMATIONS & GRADIENTS */
+    body,
+    html,
+    #root,
+    .auth-page,
+    .dashboard-glass-wrapper,
+    .layout,
+    .login-page {
+        background-attachment: scroll !important;
+        background-size: 100% 100% !important;
+        animation: none !important;
+        transition: none !important;
+    }
+
+    /* Force static gradient for heavy animated backgrounds */
+    .auth-page,
+    body::before {
+        background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+    }
+
+    .login-page {
+        background: linear-gradient(135deg, #92400e, #78350f) !important;
+    }
+
+    /* 2. REMOVE GLASSMORPHISM & BLURS */
+    .glass-card,
+    .navbar,
+    .sidebar,
+    .auth-container,
+    .auth-info-panel,
+    .dashboard-header,
+    .glass-banner,
+    .map-card,
+    .block-item,
+    .notif-dropdown,
+    .profile-menu {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        /* Solid dark fallback */
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: none !important;
+    }
+
+    /* specific overrides for light theme containers if any, or specific colored cards */
+    .auth-container {
+        background: #1e293b !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* 3. HIDE DECORATIVE SHAPES & FLOATING ELEMENTS */
+    .shape,
+    .shape-1,
+    .shape-2,
+    body::after,
+    .login-page::before,
+    .login-page::after,
+    .dashboard-glass-container::before {
+        display: none !important;
+        animation: none !important;
+    }
+
+    /* 4. SIMPLIFY BOX SHADOWS */
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    /* Keep minimal shadows for depth where strictly necessary */
+    .auth-container,
+    .glass-card,
+    .navbar {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* 5. LAYOUT OPTIMIZATION */
+    .auth-page,
+    .layout,
+    .login-page {
+        min-height: 100dvh !important;
+        height: auto !important;
+    }
+
+    /* Ensure content is readable */
+    .auth-form-panel {
+        background: transparent !important;
+    }
+
+    /* Remove hover effects that might cause repaints on scroll */
+    .glass-card:hover,
+    .neon-btn:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+}

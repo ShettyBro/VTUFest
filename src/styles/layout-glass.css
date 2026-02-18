@@ -48,7 +48,7 @@ body,
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
@@ -60,7 +60,7 @@ body,
     margin-top: 70px;
     /* Navbar height */
     width: calc(100% - 70px);
-    height: calc(100vh - 70px);
+    height: calc(100dvh - 70px);
     padding: 0;
     /* Dashboard handles its own padding */
     overflow-y: auto;
