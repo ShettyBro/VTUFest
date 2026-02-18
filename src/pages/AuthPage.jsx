@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/auth.css";
 
 /* ================= UTILS & CONFIG ================= */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 const API_ENDPOINTS = {
     login: `${API_BASE_URL}/api/auth/login`,
