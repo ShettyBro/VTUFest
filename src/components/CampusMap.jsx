@@ -3,32 +3,32 @@ import "./CampusMap.css";
 import campusMapImage from "../assets/campus-map.png";
 
 const locations = [
-  {
+   {
     id: 1,
     name: "Main Auditorium",
-    top: "52%",
-    left: "78%",
+    top: "42%",
+    left: "82%",
     mapUrl: "https://maps.app.goo.gl/LevAPPbwxBt9FfhPA",
   },
   {
     id: 2,
     name: "ANA Block",
-    top: "59%",
-    left: "85%",
+    top: "50%",
+    left: "90%",
     mapUrl: "https://maps.app.goo.gl/vCnZWMyUV7ZGfwRq6",
   },
   {
     id: 3,
     name: "CSE Block",
-    top: "57%",
-    left: "74%",
+    top: "48%",
+    left: "77%",
     mapUrl: "https://maps.app.goo.gl/Zunmui1u3Z2GkqiLA",
   },
    {
     id: 4,
     name: "AIGS Block",
-    top: "65%",
-    left: "75%",
+    top: "58%",
+    left: "78%",
     mapUrl: "https://maps.app.goo.gl/YqU8CKkW17gE2YmL8",
   },
    {
@@ -48,67 +48,68 @@ const locations = [
    {
     id: 7,
     name: "Architecture Block",
-    top: "75%",
-    left: "63%",
+    top: "68%",
+    left: "60%",
     mapUrl: "https://maps.app.goo.gl/st2R3GxTR9HQDsk77",
   },
    {
     id: 8,
     name: "ECE Block",
-    top: "68%",
-    left: "50%",
+    top: "61%",
+    left: "47%",
     mapUrl: "https://maps.app.goo.gl/FSokPm7G2ji8F2qCA",
   },
   {
     id: 9,
     name: "Central Library",
-    top: "64%",
+    top: "56%",
     left: "58%",
     mapUrl: "https://maps.app.goo.gl/Sd6kestBth8uPAddA",
   },
    {
     id: 10,
     name: "Basketball Court",
-    top: "55%",
-    left: "62%",
+    top: "43%",
+    left: "63%",
     mapUrl: "https://maps.app.goo.gl/JivncAQiYyuZxDnM7",
   },
    {
     id: 11,
     name: "Student Activity Office",
-    top: "44%",
-    left: "60.5%",
+    top: "30%",
+    left: "63%",
     mapUrl: "https://maps.app.goo.gl/pgRScXDp7yhdBiyy6",
   },
   {
     id: 12,
     name: "Stadium",
-    top: "50%",
-    left: "43%",
+    top: "40%",
+    left: "40%",
     mapUrl: "https://maps.app.goo.gl/Pki5PMWdWpYDFxey9",
   },
   {
     id: 13,
     name: "Udupi Canteen",
-    top: "59%",
-    left: "32%",
+    top: "52%",
+    left: "30%",
     mapUrl: "https://maps.app.goo.gl/A9pEzM3KWzUwFYdF9",
-  },
-  {
-    id: 14,
-    name: "Snacks Lab Cafeteria",
-    top: "50%",
-    left: "73%",
-    mapUrl: "https://maps.app.goo.gl/FgXUJKYgPBAM9MJG6",
   },
   {
     id: 15,
     name: "Two-Wheeler Parking",
-    top: "50%",
-    left: "93%",
+    top: "41%",
+    left: "98%",
     mapUrl: "https://maps.app.goo.gl/FgXUJKYgPBAM9MJG6",
   },
+   {
+    id: 16,
+    name: "Indoor Stadium",
+    top: "08%",
+    left: "42.1%",
+    mapUrl: "https://maps.app.goo.gl/Disy6iC7qoVEZrEZA",
+  },
 ];
+
 
 export default function CampusMap() {
   return (

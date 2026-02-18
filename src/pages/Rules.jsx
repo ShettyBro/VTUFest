@@ -39,17 +39,6 @@ export default function Rules() {
                 accompanists, can have a maximum of 45 members.
               </li>
               <li style={{ marginBottom: '12px' }}>
-                Registration Fee:
-                <ul style={{ marginTop: '8px', marginBottom: '8px', listStyleType: 'disc', paddingLeft: '20px', color: 'var(--text-secondary)' }}>
-                  <li>₹4,000/- for participation in up to 10 events.</li>
-                  <li>₹8,000/- for participation in more than 10 events.</li>
-                  <li>
-                    A refundable caution deposit of ₹3,000/- must be paid offline
-                    at the registration desk.
-                  </li>
-                </ul>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
                 Accommodation:
                 <ul style={{ marginTop: '8px', marginBottom: '8px', listStyleType: 'disc', paddingLeft: '20px', color: 'var(--text-secondary)' }}>
                   <li>
