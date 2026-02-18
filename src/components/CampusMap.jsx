@@ -99,7 +99,7 @@ const locations = [
     name: "Two-Wheeler Parking",
     top: "41%",
     left: "98%",
-    mapUrl: "https://maps.app.goo.gl/FgXUJKYgPBAM9MJG6",
+    mapUrl: "https://maps.app.goo.gl/F2xDkQBpHrbPtpQq7",
   },
    {
     id: 16,
