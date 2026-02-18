@@ -104,9 +104,6 @@ export default function Dashboard() {
         { name: "Folk Tribal", room: "Main Stage", day: "Day 2" },
       ],
     },
-  ],
-
-  right: [
     {
       blockNo: 8,
       blockName: "Library 1st Floor",
@@ -122,6 +119,9 @@ export default function Dashboard() {
         { name: "Debate", room: "Hall of Fame", day: "Day 2" },
       ],
     },
+  ],
+
+  right: [
     {
       blockNo: 10,
       blockName: "CSE Block - Main Audi",
