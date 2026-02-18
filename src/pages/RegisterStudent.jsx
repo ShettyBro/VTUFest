@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 const API_ENDPOINTS = {
   registration: `${API_BASE_URL}/api/student/register`,
@@ -472,16 +472,16 @@ export default function RegisterStudent() {
 
   const isUploadComplete = uploadStatus === "success";
   const isUploadBlocked = () => uploadRetries >= 3 && uploadStatus !== "success";
-  
+
   if (!lockCheckComplete) {
-  return (
-    <div className="register-page">
-      <div style={{ marginTop: "120px", fontWeight: "600" }}>
-        Checking registration status...
+    return (
+      <div className="register-page">
+        <div style={{ marginTop: "120px", fontWeight: "600" }}>
+          Checking registration status...
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 
   return (

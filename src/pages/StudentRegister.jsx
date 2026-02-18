@@ -125,7 +125,7 @@ export default function SubmitApplication() {
     const fetchStudentInfo = async () => {
       try {
         const response = await fetch(
-          "https://vtu-festserver-production.up.railway.app/api/student/dashboard",
+          "https://api.vtufest2026.acharyahabba.com/api/student/dashboard",
           {
             method: "POST",
             headers: {

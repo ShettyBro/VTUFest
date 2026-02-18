@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/ManagerProfileModal.css";
 import { usePopup } from "../context/PopupContext";
 
-const API_URL = "https://vtu-festserver-production.up.railway.app/api/manager/manager-profile";
+const API_URL = "https://api.vtufest2026.acharyahabba.com/api/manager/manager-profile";
 
 export default function ManagerProfileModal({ onComplete }) {
   const navigate = useNavigate();

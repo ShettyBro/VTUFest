@@ -4,7 +4,7 @@ import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext"; // Imported usePopup
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student";
+const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student";
 
 // Event Mapping
 const EVENT_NAMES = {

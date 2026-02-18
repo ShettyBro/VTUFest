@@ -64,7 +64,7 @@ export default function ManagerDashboard() {
     try {
       setLoading(true);
 
-      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/manager/dashboard`, {
+      const response = await fetch(`https://api.vtufest2026.acharyahabba.com/api/manager/dashboard`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +94,7 @@ export default function ManagerDashboard() {
 
   const checkProfileCompletion = async () => {
     try {
-      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/manager/manager-profile`, {
+      const response = await fetch(`https://api.vtufest2026.acharyahabba.com/api/manager/manager-profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +122,7 @@ export default function ManagerDashboard() {
 
   const checkLockStatus = async () => {
     try {
-      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`, {
+      const response = await fetch(`https://api.vtufest2026.acharyahabba.com/api/principal/check-lock-status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -151,148 +151,148 @@ export default function ManagerDashboard() {
     }
   };
 
- const blockEvents = {
-  left: [
-    {
-      blockNo: 1,
-      blockName: "Mechanical Seminar Hall",
-      events: [
-        { name: "CL Vocal Solo", room: "MECH Semi", day: "Day 1" },
-      ],
-    },
-    {
-      blockNo: 2,
-      blockName: "CS Seminar Hall",
-      events: [
-        { name: "Light Vocal", room: "CS Semi", day: "Day 1" },
-        { name: "CL Instrumental Percussion", room: "CS Semi", day: "Day 1" },
-      ],
-    },
-    {
-      blockNo: 3,
-      blockName: "CPRD Lawn",
-      events: [
-        { name: "Group Indian", room: "CPRD Lawn", day: "Day 1" },
-        { name: "Folk Orchestra", room: "CPRD Lawn", day: "Day 1" },
-      ],
-    },
-    {
-      blockNo: 4,
-      blockName: "Pharmacy Road",
-      events: [
-        { name: "Group Western", room: "Pharmacy Road", day: "Day 1" },
-        { name: "Western Solo", room: "Pharmacy Road", day: "Day 1" },
-      ],
-    },
-    {
-      blockNo: 5,
-      blockName: "E.C Seminar Hall",
-      events: [
-        { name: "CL Instrumental Non-Percussion", room: "E.C Semi", day: "Day 1" },
-      ],
-    },
-    {
-      blockNo: 6,
-      blockName: "Indoor Stadium",
-      events: [
-        { name: "One Act", room: "Indoor Stadium", day: "Day 2" },
-      ],
-    },
-    {
-      blockNo: 7,
-      blockName: "Main Auditorium",
-      events: [
-        { name: "Skit", room: "Main Audi", day: "Day 2" },
-        { name: "Mime", room: "Main Audi", day: "Day 2" },
-        { name: "Folk Tribal", room: "Main Stage", day: "Day 2" },
-      ],
-    },
-    {
-      blockNo: 8,
-      blockName: "Library 1st Floor",
-      events: [
-        { name: "Mimicry", room: "Library 1st Floor", day: "Day 2" },
-        { name: "Elocution", room: "Library 1st Floor", day: "Day 2" },
-      ],
-    },
-    {
-      blockNo: 9,
-      blockName: "Hall of Fame",
-      events: [
-        { name: "Debate", room: "Hall of Fame", day: "Day 2" },
-      ],
-    },
-  ],
+  const blockEvents = {
+    left: [
+      {
+        blockNo: 1,
+        blockName: "Mechanical Seminar Hall",
+        events: [
+          { name: "CL Vocal Solo", room: "MECH Semi", day: "Day 1" },
+        ],
+      },
+      {
+        blockNo: 2,
+        blockName: "CS Seminar Hall",
+        events: [
+          { name: "Light Vocal", room: "CS Semi", day: "Day 1" },
+          { name: "CL Instrumental Percussion", room: "CS Semi", day: "Day 1" },
+        ],
+      },
+      {
+        blockNo: 3,
+        blockName: "CPRD Lawn",
+        events: [
+          { name: "Group Indian", room: "CPRD Lawn", day: "Day 1" },
+          { name: "Folk Orchestra", room: "CPRD Lawn", day: "Day 1" },
+        ],
+      },
+      {
+        blockNo: 4,
+        blockName: "Pharmacy Road",
+        events: [
+          { name: "Group Western", room: "Pharmacy Road", day: "Day 1" },
+          { name: "Western Solo", room: "Pharmacy Road", day: "Day 1" },
+        ],
+      },
+      {
+        blockNo: 5,
+        blockName: "E.C Seminar Hall",
+        events: [
+          { name: "CL Instrumental Non-Percussion", room: "E.C Semi", day: "Day 1" },
+        ],
+      },
+      {
+        blockNo: 6,
+        blockName: "Indoor Stadium",
+        events: [
+          { name: "One Act", room: "Indoor Stadium", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 7,
+        blockName: "Main Auditorium",
+        events: [
+          { name: "Skit", room: "Main Audi", day: "Day 2" },
+          { name: "Mime", room: "Main Audi", day: "Day 2" },
+          { name: "Folk Tribal", room: "Main Stage", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 8,
+        blockName: "Library 1st Floor",
+        events: [
+          { name: "Mimicry", room: "Library 1st Floor", day: "Day 2" },
+          { name: "Elocution", room: "Library 1st Floor", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 9,
+        blockName: "Hall of Fame",
+        events: [
+          { name: "Debate", room: "Hall of Fame", day: "Day 2" },
+        ],
+      },
+    ],
 
-  right: [
-    {
-      blockNo: 10,
-      blockName: "CSE Block - Main Audi",
-      events: [
-        { name: "Quiz", room: "C.S.E Finals (Main Audi)", day: "Day 2" },
-      ],
-    },
-    {
-      blockNo: 11,
-      blockName: "MBA Seminar Hall",
-      events: [
-        { name: "CL Solo", room: "MBA Semi", day: "Day 2" },
-      ],
-    },
-    {
-      blockNo: 12,
-      blockName: "AIHS Corridor",
-      events: [
-        { name: "Rangoli", room: "AIHS Corridor", day: "Day 3" },
-      ],
-    },
-    {
-      blockNo: 13,
-      blockName: "Campus",
-      events: [
-        { name: "Photo", room: "Campus", day: "Day 3" },
-      ],
-    },
-    {
-      blockNo: 14,
-      blockName: "ASD Workshop Arena",
-      events: [
-        { name: "Clay Modeling", room: "ASD Workshop Arena", day: "Day 3" },
-        { name: "Collage", room: "ASD Studio", day: "Day 3" },
-        { name: "Spot Painting", room: "ASD Studio", day: "Day 3" },
-      ],
-    },
-    {
-      blockNo: 15,
-      blockName: "Architecture Block",
-      events: [
-        { name: "Cartooning", room: "ARCH Block", day: "Day 3" },
-        { name: "Poster Making", room: "ARCH Block", day: "Day 3" },
-      ],
-    },
-    {
-      blockNo: 16,
-      blockName: "E.C Block Corridor",
-      events: [
-        { name: "Installation", room: "E.C Block Corridor", day: "Day 3" },
-      ],
-    },
-    {
-      blockNo: 17,
-      blockName: "Registration Area",
-      events: [
-        { name: "Registration", room: "CPRD Registration Area", day: "All Days" },
-      ],
-    },
-    {
-      blockNo: 18,
-      blockName: "Food Court",
-      events: [
-        { name: "Food Distribution", room: "Kho Kho Court / Basketball", day: "All Days" },
-      ],
-    },
-  ],
-};
+    right: [
+      {
+        blockNo: 10,
+        blockName: "CSE Block - Main Audi",
+        events: [
+          { name: "Quiz", room: "C.S.E Finals (Main Audi)", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 11,
+        blockName: "MBA Seminar Hall",
+        events: [
+          { name: "CL Solo", room: "MBA Semi", day: "Day 2" },
+        ],
+      },
+      {
+        blockNo: 12,
+        blockName: "AIHS Corridor",
+        events: [
+          { name: "Rangoli", room: "AIHS Corridor", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 13,
+        blockName: "Campus",
+        events: [
+          { name: "Photo", room: "Campus", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 14,
+        blockName: "ASD Workshop Arena",
+        events: [
+          { name: "Clay Modeling", room: "ASD Workshop Arena", day: "Day 3" },
+          { name: "Collage", room: "ASD Studio", day: "Day 3" },
+          { name: "Spot Painting", room: "ASD Studio", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 15,
+        blockName: "Architecture Block",
+        events: [
+          { name: "Cartooning", room: "ARCH Block", day: "Day 3" },
+          { name: "Poster Making", room: "ARCH Block", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 16,
+        blockName: "E.C Block Corridor",
+        events: [
+          { name: "Installation", room: "E.C Block Corridor", day: "Day 3" },
+        ],
+      },
+      {
+        blockNo: 17,
+        blockName: "Registration Area",
+        events: [
+          { name: "Registration", room: "CPRD Registration Area", day: "All Days" },
+        ],
+      },
+      {
+        blockNo: 18,
+        blockName: "Food Court",
+        events: [
+          { name: "Food Distribution", room: "Kho Kho Court / Basketball", day: "All Days" },
+        ],
+      },
+    ],
+  };
 
   return (
     <Layout hasApplication={false} collegeLocked={null}>

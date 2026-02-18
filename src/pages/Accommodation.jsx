@@ -43,7 +43,7 @@ export default function Accommodation() {
   const checkLockStatus = async () => {
     try {
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`,
+        `https://api.vtufest2026.acharyahabba.com/api/principal/check-lock-status`,
         {
           method: "POST",
           headers: {
@@ -68,7 +68,7 @@ export default function Accommodation() {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/accommodation`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/accommodation`,
         {
           method: "POST",
           headers: {
@@ -114,7 +114,7 @@ export default function Accommodation() {
     try {
       setSubmitting(true);
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/accommodation`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/accommodation`,
         {
           method: "POST",
           headers: {

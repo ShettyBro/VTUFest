@@ -4,7 +4,7 @@ import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api";
+const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api";
 
 // Helper component matching StudentRegister.jsx
 const FileUploadField = ({ label, docType, accept, title, documents, documentPreviews, uploadStatus, handleDocumentChange, uploadDocument, loading }) => (

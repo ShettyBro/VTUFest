@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://vtu-festserver-production.up.railway.app";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 const LOGIN_URL = `${API_BASE_URL}/api/auth/login`;
 
 export default function EventManagerLogin() {

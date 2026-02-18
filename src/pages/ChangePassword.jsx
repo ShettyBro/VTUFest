@@ -6,7 +6,7 @@ import "../styles/auth.css";
 // ✅ Import popup hook
 import { usePopup } from "../context/PopupContext";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/";
+const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/";
 
 export default function ResetPassword() {
   const navigate = useNavigate();

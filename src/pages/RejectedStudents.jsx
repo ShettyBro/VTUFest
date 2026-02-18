@@ -4,7 +4,7 @@ import Layout from "../components/layout/layout";
 import "../styles/rejectedStudents.css";
 import { usePopup } from "../context/PopupContext";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/manager";
+const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/manager";
 export default function RejectedStudents() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");

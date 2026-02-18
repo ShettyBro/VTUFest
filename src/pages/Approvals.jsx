@@ -71,7 +71,7 @@ export default function Approvals() {
   const fetchCollegeQuota = async () => {
     try {
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/dashboard`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/dashboard`,
         {
           method: "POST",
           headers: {
@@ -105,7 +105,7 @@ export default function Approvals() {
   const checkLockStatus = async () => {
     try {
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`,
+        `https://api.vtufest2026.acharyahabba.com/api/principal/check-lock-status`,
         {
           method: "POST",
           headers: {
@@ -138,7 +138,7 @@ export default function Approvals() {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/review-applications`,
         {
           method: "POST",
           headers: {
@@ -171,7 +171,7 @@ export default function Approvals() {
 
     try {
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/approved-students`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/approved-students`,
         {
           method: "POST",
           headers: {
@@ -203,7 +203,7 @@ export default function Approvals() {
 
     try {
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/rejected-students`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/rejected-students`,
         {
           method: "POST",
           headers: {
@@ -273,7 +273,7 @@ export default function Approvals() {
     try {
       setSavingEdit(true);
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/review-applications`,
         {
           method: "POST",
           headers: {
@@ -336,7 +336,7 @@ export default function Approvals() {
     try {
       setProcessingAction(true);
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/review-applications`,
         {
           method: "POST",
           headers: {
@@ -442,7 +442,7 @@ export default function Approvals() {
     try {
       setSavingEdit(true);
       const response = await fetch(
-        `https://vtu-festserver-production.up.railway.app/api/manager/approved-students`,
+        `https://api.vtufest2026.acharyahabba.com/api/manager/approved-students`,
         {
           method: "POST",
           headers: {
@@ -518,7 +518,7 @@ export default function Approvals() {
 
       if (rejectTarget.type === "pending") {
         const response = await fetch(
-          `https://vtu-festserver-production.up.railway.app/api/manager/review-applications`,
+          `https://api.vtufest2026.acharyahabba.com/api/manager/review-applications`,
           {
             method: "POST",
             headers: {
@@ -560,7 +560,7 @@ export default function Approvals() {
         }
       } else if (rejectTarget.type === "approved") {
         const response = await fetch(
-          `https://vtu-festserver-production.up.railway.app/api/manager/approved-students`,
+          `https://api.vtufest2026.acharyahabba.com/api/manager/approved-students`,
           {
             method: "POST",
             headers: {
