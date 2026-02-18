@@ -406,6 +406,11 @@ export default function AssignEvents() {
       return;
     }
 
+    if (isReadOnlyMode) {
+      showPopup("Registration is locked. Final approval is disabled.", "warning");
+      return;
+    }
+
     try {
       setFinalApproving(true);
 
@@ -473,7 +478,9 @@ export default function AssignEvents() {
   const showFinalApprovalButton =
     role === "principal" &&
     participatingCount >= 1 &&
-    dashboardData?.is_final_approved === false;
+    dashboardData?.is_final_approved === false &&
+    !isReadOnlyMode;
+
 
   return (
     <Layout>
