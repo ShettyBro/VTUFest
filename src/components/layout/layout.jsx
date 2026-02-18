@@ -3,7 +3,7 @@ import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import "../../styles/layout-glass.css";
 
-const API_BASE_URL = "https://vtu-festserver-production.up.railway.app/api/student/dashboard";
+const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
 export default function Layout({ children, hasApplication: hasApplicationProp, collegeLocked: collegeLockedProp }) {
   const role = localStorage.getItem("role") || "student";

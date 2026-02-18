@@ -52,7 +52,7 @@ export default function Navbar() {
     const fetchCollege = async () => {
       try {
         const response = await fetch(
-          `https://vtu-festserver-production.up.railway.app/api/shared/college-and-usn/college/${storedCollegeId}`
+          `https://api.vtufest2026.acharyahabba.com/api/shared/college-and-usn/college/${storedCollegeId}`
         );
 
         if (!response.ok) {
