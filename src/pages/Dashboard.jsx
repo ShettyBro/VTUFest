@@ -6,14 +6,16 @@ import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 
-const [notificationsData, setNotificationsData] = useState([]);
-const [eventsCalendarData, setEventsCalendarData] = useState({ calendarEvents: [] });
-const [settingsData, setSettingsData] = useState({ allocated_events_visible: false });
+
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
+  const [notificationsData, setNotificationsData] = useState([]);
+  const [eventsCalendarData, setEventsCalendarData] = useState({ calendarEvents: [] });
+  const [settingsData, setSettingsData] = useState({ allocated_events_visible: false });
 
   const [loading, setLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
