@@ -1,9 +1,8 @@
+// AdminLogin.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext";
-
-// Removed Layout import to ensure standalone full-screen page
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 const LOGIN_URL = `${API_BASE_URL}/api/auth/admin-login`;
@@ -25,26 +24,25 @@ export default function AdminLogin() {
       const response = await fetch(LOGIN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          role
-        }),
+        body: JSON.stringify({ email, password, role }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         if (data.status === "FORCE_RESET") {
           localStorage.setItem("force_reset_token", data.reset_token);
           localStorage.setItem("force_reset_email", data.email);
-          localStorage.setItem("force_reset_role", data.role);
+          // ── Always store role lowercase ──────────────────────────────────
+          localStorage.setItem("force_reset_role", (data.role || "").trim().toLowerCase());
           navigate("/force-reset-password");
           return;
         }
 
+        // ── CRITICAL: use vtufest_* namespace, never "token" / "role" ─────
         localStorage.setItem("vtufest_token", data.token);
-        localStorage.setItem("vtufest_role", data.role);
+        // role from server is already lowercase (admin-login.js guarantees this)
+        localStorage.setItem("vtufest_role", (data.role || "").trim().toLowerCase());
         localStorage.setItem("admin_name", data.name);
         localStorage.setItem("admin_id", String(data.admin_id));
 
@@ -62,7 +60,6 @@ export default function AdminLogin() {
 
   return (
     <div className="auth-page">
-      {/* Background Shapes */}
       <div className="shape shape-1"></div>
       <div className="shape shape-2"></div>
 

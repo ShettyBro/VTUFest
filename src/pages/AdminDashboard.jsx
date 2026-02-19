@@ -1,3 +1,4 @@
+// AdminDashboard.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
@@ -18,28 +19,40 @@ const AdminDashboard = () => {
 
     const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
+    const handleLogout = () => {
+        [
+            "vtufest_token", "vtufest_role", "admin_name", "admin_id",
+            // Do NOT clear student keys here — separate namespaces
+        ].forEach(k => localStorage.removeItem(k));
+        navigate("/admin-login");
+    };
+
     useEffect(() => {
+        // ── ALWAYS read from vtufest_token, never from "token" ──────────────
         const token = localStorage.getItem("vtufest_token");
         if (!token) {
             navigate("/admin-login");
             return;
         }
 
+        // AbortController prevents double-fetch in React 18 StrictMode
+        const controller = new AbortController();
+
         const fetchData = async () => {
             try {
                 const headers = {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`,
                 };
 
                 const [resStats, resReg, resEvent, resCollege] = await Promise.all([
-                    fetch(`${API_BASE}/api/admin/dashboard`, { headers }),
-                    fetch(`${API_BASE}/api/admin/analytics/registrations`, { headers }),
-                    fetch(`${API_BASE}/api/admin/analytics/event-popularity`, { headers }),
-                    fetch(`${API_BASE}/api/admin/analytics/college-participation`, { headers })
+                    fetch(`${API_BASE}/api/admin/dashboard`, { headers, signal: controller.signal }),
+                    fetch(`${API_BASE}/api/admin/analytics/registrations`, { headers, signal: controller.signal }),
+                    fetch(`${API_BASE}/api/admin/analytics/event-popularity`, { headers, signal: controller.signal }),
+                    fetch(`${API_BASE}/api/admin/analytics/college-participation`, { headers, signal: controller.signal }),
                 ]);
 
-                if (resStats.status === 401 || resReg.status === 401) {
+                if (resStats.status === 401) {
                     handleLogout();
                     return;
                 }
@@ -49,10 +62,12 @@ const AdminDashboard = () => {
                     return;
                 }
 
-                const dataStats = await resStats.json();
-                const dataReg = await resReg.json();
-                const dataEvent = await resEvent.json();
-                const dataCollege = await resCollege.json();
+                const [dataStats, dataReg, dataEvent, dataCollege] = await Promise.all([
+                    resStats.json(),
+                    resReg.json(),
+                    resEvent.json(),
+                    resCollege.json(),
+                ]);
 
                 if (dataStats.success) setStats(dataStats.data);
                 if (dataReg.success) setRegAnalytics(dataReg.data);
@@ -60,6 +75,7 @@ const AdminDashboard = () => {
                 if (dataCollege.success) setCollegeAnalytics(dataCollege.data);
 
             } catch (error) {
+                if (error.name === "AbortError") return; // StrictMode cleanup — ignore
                 console.error("Dashboard fetch error:", error);
                 showPopup("Failed to load dashboard data", "error");
             } finally {
@@ -68,12 +84,10 @@ const AdminDashboard = () => {
         };
 
         fetchData();
-    }, [navigate, showPopup]);
 
-    const handleLogout = () => {
-        ["vtufest_token", "vtufest_role", "admin_name", "manager_name", "volunteer_name", "admin_id", "user_id"].forEach(k => localStorage.removeItem(k));
-        navigate("/");
-    };
+        // Cleanup: abort in-flight requests on unmount (fixes StrictMode double-invoke)
+        return () => controller.abort();
+    }, [navigate]); // showPopup intentionally omitted — stable ref not guaranteed
 
     if (loading) {
         return (
@@ -165,14 +179,16 @@ const AdminDashboard = () => {
                     <div className="glass-card chart-card">
                         <h3>Registration Trend</h3>
                         <div className="simple-bar-chart">
-                            {regAnalytics?.registrations.map((item, index) => (
+                            {regAnalytics?.registrations?.map((item, index) => (
                                 <div key={index} className="bar-group">
                                     <div className="bar" style={{ height: `${Math.min(item.count * 5, 100)}%` }}></div>
                                     <span className="label">{new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                                     <span className="value">{item.count}</span>
                                 </div>
                             ))}
-                            {(!regAnalytics?.registrations || regAnalytics.registrations.length === 0) && <p className="no-data">No data found.</p>}
+                            {(!regAnalytics?.registrations || regAnalytics.registrations.length === 0) && (
+                                <p className="no-data">No data found.</p>
+                            )}
                         </div>
                     </div>
 
@@ -180,13 +196,15 @@ const AdminDashboard = () => {
                     <div className="glass-card list-card">
                         <h3>Top 5 Events</h3>
                         <ol className="styled-list">
-                            {eventAnalytics?.events.slice(0, 5).map((evt, idx) => (
+                            {eventAnalytics?.events?.slice(0, 5).map((evt, idx) => (
                                 <li key={idx}>
                                     <span className="name">{evt.event_name}</span>
                                     <span className="count">{evt.participant_count}</span>
                                 </li>
                             ))}
-                            {(!eventAnalytics?.events || eventAnalytics.events.length === 0) && <p className="no-data">No data found.</p>}
+                            {(!eventAnalytics?.events || eventAnalytics.events.length === 0) && (
+                                <p className="no-data">No data found.</p>
+                            )}
                         </ol>
                     </div>
                 </div>
@@ -204,7 +222,7 @@ const AdminDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {collegeAnalytics?.colleges.slice(0, 10).map((col, idx) => (
+                                {collegeAnalytics?.colleges?.slice(0, 10).map((col, idx) => (
                                     <tr key={idx}>
                                         <td>{col.college_name}</td>
                                         <td>{col.college_code}</td>
@@ -212,13 +230,14 @@ const AdminDashboard = () => {
                                     </tr>
                                 ))}
                                 {(!collegeAnalytics?.colleges || collegeAnalytics.colleges.length === 0) && (
-                                    <tr><td colSpan="3" style={{ textAlign: 'center' }}>No data found.</td></tr>
+                                    <tr>
+                                        <td colSpan="3" style={{ textAlign: 'center' }}>No data found.</td>
+                                    </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
                 </div>
-
             </div>
         </Layout>
     );
