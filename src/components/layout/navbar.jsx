@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/layout-glass.css";
 
-import notificationsData from "../../data/notifications.json";
+
 
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -10,6 +10,7 @@ export default function Navbar() {
   const [collegeName, setCollegeName] = useState("");
   const [collegeCode, setCollegeCode] = useState("");
   const [sortedNotifications, setSortedNotifications] = useState([]);
+  const [notificationsData, setNotificationsData] = useState([]);
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
@@ -27,6 +28,14 @@ export default function Navbar() {
   const userPhoto = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
   /* ================= SORT NOTIFICATIONS ================= */
+  useEffect(() => {
+    // Fetch Notifications
+    fetch("https://api.vtufest2026.acharyahabba.com/api/shared/notifications")
+      .then(r => r.json())
+      .then(d => { if (d.success) setNotificationsData(d.data); })
+      .catch(() => { });
+  }, []);
+
   useEffect(() => {
     // Filter priority 2+ notifications and sort them
     const priority2Plus = notificationsData
