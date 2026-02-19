@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
 
@@ -28,6 +28,14 @@ import ForceResetPassword from "../pages/ForceResetPassword";
 
 
 // Admin Imports
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminLayout from "../pages/admin/AdminLayout";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import AdminNotifications from "../pages/admin/AdminNotifications";
+import AdminCalendar from "../pages/admin/AdminCalendar";
+import AdminSettings from "../pages/admin/AdminSettings";
+import AdminColleges from "../pages/admin/AdminColleges";
+import AdminPayments from "../pages/admin/AdminPayments";
 
 
 export default function AppRoutes() {
@@ -38,6 +46,26 @@ export default function AppRoutes() {
       <Route path="/register-student" element={<AuthPage initialView="register" />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/assign-events" element={<AssignEvents />} />
+
+      {/* ================= ADMIN ================= */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="calendar" element={<AdminCalendar />} />
+        <Route path="settings" element={<AdminSettings />} />
+        <Route path="colleges" element={<AdminColleges />} />
+        <Route path="payments" element={<AdminPayments />} />
+      </Route>
 
 
 
