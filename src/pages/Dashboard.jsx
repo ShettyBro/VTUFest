@@ -6,9 +6,9 @@ import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 
-import settingsData from "../data/settings.json";
-import notificationsData from "../data/notifications.json";
-import eventsCalendarData from "../data/events-calendar.json";
+const [notificationsData, setNotificationsData] = useState([]);
+const [eventsCalendarData, setEventsCalendarData] = useState({ calendarEvents: [] });
+const [settingsData, setSettingsData] = useState({ allocated_events_visible: false });
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
@@ -26,8 +26,10 @@ export default function Dashboard() {
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+
   // Rotate through priority 1 notifications every 6 seconds
   useEffect(() => {
+
     if (priority1Notifications.length > 1) {
       const interval = setInterval(() => {
         setCurrentPriority1Index((prevIndex) =>
@@ -256,6 +258,21 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+
+    // ADD THIS — fetch notifications + calendar from server
+    fetch("https://api.vtufest2026.acharyahabba.com/api/shared/notifications")
+      .then(r => r.json())
+      .then(d => { if (d.success) setNotificationsData(d.data); });
+
+    fetch("https://api.vtufest2026.acharyahabba.com/api/shared/calendar-events")
+      .then(r => r.json())
+      .then(d => { if (d.success) setEventsCalendarData(d.data); });
+
+    // Also fetch settings for allocated_events_visible
+    fetch("https://api.vtufest2026.acharyahabba.com/api/shared/settings")
+      .then(r => r.json())
+      .then(d => { if (d.success) setSettingsData(d.data); })
+      .catch(() => { }); // silent fallback, keep default false
   }, []);
 
   // --- REMOVED AUTO-ROTATION FOR TICKER ---
