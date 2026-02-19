@@ -669,7 +669,7 @@ export default function AuthPage({ initialView = "login" }) {
                     backgroundColor: "#4CAF50", color: "white", padding: "15px 30px",
                     borderRadius: "8px", zIndex: 9999, boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
                 }}>
-                    👋 Redirecting to password reset...
+                    👋  Welcome! First-time login detected. Redirecting to password reset...
                 </div>
             )}
         </div>
