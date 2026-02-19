@@ -16,11 +16,11 @@ import { Navigate, useSearchParams } from "react-router-dom";
  */
 export default function ProtectedRoute({ children, allowedRoles, isResetPage = false }) {
   const [searchParams] = useSearchParams();
-  
+
   const role = localStorage.getItem("role");
   const vtufest_token = localStorage.getItem("vtufest_token");
 
-  
+
   // Extract reset parameters from URL (only relevant for ChangePassword)
   const resetToken = searchParams.get("token");
   const resetEmail = searchParams.get("email");
@@ -46,7 +46,7 @@ export default function ProtectedRoute({ children, allowedRoles, isResetPage = f
       // Allow access - backend validates token authenticity
       return children;
     }
-    
+
     /**
      * SECURITY: If no reset parameters, redirect to login
      * This prevents direct access to /changepassword without token
@@ -57,7 +57,7 @@ export default function ProtectedRoute({ children, allowedRoles, isResetPage = f
   // ============================================
   // STATE 1 & 3: AUTHENTICATED or UNAUTHENTICATED
   // ============================================
-  
+
   // STATE 3: Not logged in → Redirect to login
   if (!role || !vtufest_token) {
     return <Navigate to="/" replace />;
@@ -69,7 +69,7 @@ export default function ProtectedRoute({ children, allowedRoles, isResetPage = f
     if (role === "principal") return <Navigate to="/principal-dashboard" replace />;
     if (role === "subadmin") return <Navigate to="/subadmin-dashboard" replace />;
     if (role === "manager") return <Navigate to="/manager-dashboard" replace />;
-    
+
     // Fallback to login
     return <Navigate to="/" replace />;
   }

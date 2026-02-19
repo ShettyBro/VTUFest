@@ -6,7 +6,7 @@ import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import "../styles/dashboard-glass.css";
 
-import eventsCalendarData from "../data/events-calendar.json";
+
 import { usePopup } from "../context/PopupContext";
 
 export default function ManagerDashboard() {
