@@ -50,32 +50,29 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="shape shape-1"></div>
-      <div className="shape shape-2"></div>
-
+    <Layout>
       <div className="auth-container">
-        {/* LEFT PANEL */}
-        <div className="auth-info-panel">
-          <div className="auth-brand">
-            <img src="/main.webp" alt="VTU Fest Logo" style={{ maxWidth: '100%', maxHeight: '120px' }} />
-          </div>
-          <div className="brand-text">
-            <h3>Admin Portal</h3>
-            <span>VTU HABBA 2026 Administration</span>
-          </div>
-          <div className="auth-toggle-msg">
-            <p>Authorized personnel only.</p>
-          </div>
-        </div>
+        <div className="glass-card auth-card">
+          <h2 className="auth-title">Admin Login</h2>
 
-        {/* RIGHT PANEL */}
-        <div className="auth-form-panel">
-          <form className="auth-form" onSubmit={handleLogin}>
-            <h2 className="form-title">Admin Login</h2>
+          <div className="role-tabs">
+            <button
+              className={`role-tab ${role === "super_admin" ? "active" : ""}`}
+              onClick={() => setRole("super_admin")}
+            >
+              Super Admin
+            </button>
+            <button
+              className={`role-tab ${role === "sub_admin" ? "active" : ""}`}
+              onClick={() => setRole("sub_admin")}
+            >
+              Sub Admin
+            </button>
+          </div>
 
+          <form onSubmit={handleSubmit} className="auth-form">
             <div className="input-group">
-              <label>Email Address</label>
+              <label>Email</label>
               <input
                 type="email"
                 placeholder="admin@vtufest.com"
@@ -89,23 +86,19 @@ export default function AdminLogin() {
               <label>Password</label>
               <input
                 type="password"
-                placeholder="Enter password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
 
-            <button className="auth-btn" disabled={loading}>
-              {loading ? "Verifying..." : "Login to Dashboard"}
+            <button type="submit" className="neon-btn auth-btn" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
             </button>
-
-            <p style={{ textAlign: 'center', marginTop: '15px', fontSize: '0.8rem', opacity: 0.7 }}>
-              Contact System Administrator for access issues.
-            </p>
           </form>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

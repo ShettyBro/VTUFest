@@ -1,78 +1,68 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext";
+import Layout from "../components/layout/layout";
+import "../styles/auth.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
-const LOGIN_URL = `${API_BASE_URL}/api/auth/login`;
-
-export default function EventManagerLogin() {
-    const navigate = useNavigate();
-    const { showPopup } = usePopup();
-
+const EventManagerLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const { showPopup } = usePopup();
+    const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const response = await fetch(LOGIN_URL, {
+            const response = await fetch(`${API_BASE}/api/auth/admin-login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    role: "event_manager" // Dedicated role
-                }),
+                body: JSON.stringify({ email, password, role: "event_manager" }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                localStorage.setItem("vtufest_token", data.token);
-                localStorage.setItem("vtufest_role", "event_manager");
-                localStorage.setItem("manager_name", data.name || "Event Manager");
+                if (data.status === "FORCE_RESET") {
+                    localStorage.setItem("force_reset_token", data.reset_token);
+                    localStorage.setItem("force_reset_email", data.email);
+                    localStorage.setItem("force_reset_role", data.role);
+                    showPopup("First-time login. Please set your password.", "info");
+                    navigate("/force-reset-password");
+                } else {
+                    localStorage.setItem("vtufest_token", data.token);
+                    localStorage.setItem("vtufest_role", "event_manager");
+                    localStorage.setItem("manager_name", data.name);
+                    localStorage.setItem("user_id", data.user_id);
 
-                showPopup("Welcome, Event Manager!", "success");
-                navigate("/event-manager-dashboard");
+                    showPopup(`Welcome, ${data.name}!`, "success");
+                    navigate("/event-manager-dashboard");
+                }
             } else {
-                showPopup(data.message || "Invalid credentials", "error");
+                showPopup(data.message || "Login failed", "error");
             }
         } catch (error) {
-            showPopup("Server error. Check connection.", "error");
+            showPopup("Network error. Please try again.", "error");
+            console.error("Login error:", error);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="auth-page">
-            <div className="shape shape-1"></div>
-            <div className="shape shape-2"></div>
-
+        <Layout>
             <div className="auth-container">
-                {/* LEFT PANEL */}
-                <div className="auth-info-panel">
-                    <div className="auth-brand">
-                        <img src="/main.webp" alt="VTU Fest Logo" style={{ maxWidth: '100%', maxHeight: '120px' }} />
-                    </div>
-                    <div className="brand-text">
-                        <h3>Event Manager</h3>
-                        <span>Event Coordination & Logistics</span>
-                    </div>
-                </div>
+                <div className="glass-card auth-card">
+                    <h2 className="auth-title">Event Manager Login</h2>
+                    <p className="auth-subtitle">Manage Events & Accommodation</p>
 
-                {/* RIGHT PANEL */}
-                <div className="auth-form-panel">
-                    <form className="auth-form" onSubmit={handleLogin}>
-                        <h2 className="form-title">Manager Login</h2>
-
+                    <form onSubmit={handleSubmit} className="auth-form">
                         <div className="input-group">
-                            <label>Official Email</label>
+                            <label>Email Address</label>
                             <input
                                 type="email"
                                 placeholder="manager@vtufest.com"
@@ -86,19 +76,21 @@ export default function EventManagerLogin() {
                             <label>Password</label>
                             <input
                                 type="password"
-                                placeholder="Enter password"
+                                placeholder="Enter your password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
                         </div>
 
-                        <button className="auth-btn" disabled={loading}>
-                            {loading ? "Authenticating..." : "Access Event Panel"}
+                        <button type="submit" className="neon-btn auth-btn" disabled={loading}>
+                            {loading ? "Logging in..." : "Login"}
                         </button>
                     </form>
                 </div>
             </div>
-        </div>
+        </Layout>
     );
-}
+};
+
+export default EventManagerLogin;

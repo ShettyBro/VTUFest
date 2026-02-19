@@ -1,114 +1,93 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext";
+import Layout from "../components/layout/layout";
+import "../styles/auth.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
-const LOGIN_URL = `${API_BASE_URL}/api/auth/login`;
-
-export default function VolunteerLogin() {
-    const navigate = useNavigate();
-    const { showPopup } = usePopup();
-
-    // "registration_desk", "helpdesk", "inevent"
-    const [volunteerType, setVolunteerType] = useState("volunteer_registration");
+const VolunteerLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [activeTab, setActiveTab] = useState("registration"); // registration, helpdesk, event
     const [loading, setLoading] = useState(false);
+    const { showPopup } = usePopup();
+    const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
+
+    const getRolePayload = () => {
+        switch (activeTab) {
+            case "registration":
+                return "volunteer_registration";
+            case "helpdesk":
+                return "volunteer_helpdesk";
+            case "event":
+                return "volunteer_event";
+            default:
+                return "volunteer_registration";
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const response = await fetch(LOGIN_URL, {
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    role: volunteerType // Sending specific volunteer role
-                }),
+                body: JSON.stringify({ email, password, role: getRolePayload() }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 localStorage.setItem("vtufest_token", data.token);
-                localStorage.setItem("vtufest_role", volunteerType);
-                localStorage.setItem("volunteer_name", data.name || "Volunteer");
+                localStorage.setItem("vtufest_role", data.role); // Backend returns exact role
+                localStorage.setItem("volunteer_name", data.name);
 
-                showPopup(`Logged in as ${volunteerType.replace('volunteer_', '').toUpperCase()}`, "success");
+                showPopup(`Welcome, ${data.name}!`, "success");
                 navigate("/volunteer-dashboard");
             } else {
                 showPopup(data.message || "Login failed", "error");
             }
         } catch (error) {
-            showPopup("Connection failed.", "error");
+            showPopup("Network error. Please try again.", "error");
+            console.error("Login error:", error);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="auth-page">
-            <div className="shape shape-1"></div>
-            <div className="shape shape-2"></div>
-
+        <Layout>
             <div className="auth-container">
-                {/* LEFT PANEL */}
-                <div className="auth-info-panel">
-                    <div className="auth-brand">
-                        <img src="/main.webp" alt="VTU Fest Logo" style={{ maxWidth: '100%', maxHeight: '120px' }} />
-                    </div>
-                    <div className="brand-text">
-                        <h3>Volunteer Portal</h3>
-                        <span>Registration • Helpdesk • In-Event</span>
-                    </div>
-                    <div className="auth-toggle-msg">
-                        <p>Support Team Access</p>
-                    </div>
-                </div>
+                <div className="glass-card auth-card">
+                    <h2 className="auth-title">Volunteer Login</h2>
 
-                {/* RIGHT PANEL */}
-                <div className="auth-form-panel">
-                    <form className="auth-form" onSubmit={handleLogin}>
-                        <h2 className="form-title">Volunteer Login</h2>
+                    <div className="role-tabs">
+                        <button
+                            className={`role-tab ${activeTab === "registration" ? "active" : ""}`}
+                            onClick={() => setActiveTab("registration")}
+                        >
+                            Registration
+                        </button>
+                        <button
+                            className={`role-tab ${activeTab === "helpdesk" ? "active" : ""}`}
+                            onClick={() => setActiveTab("helpdesk")}
+                        >
+                            Help Desk
+                        </button>
+                        <button
+                            className={`role-tab ${activeTab === "event" ? "active" : ""}`}
+                            onClick={() => setActiveTab("event")}
+                        >
+                            In-Event
+                        </button>
+                    </div>
 
-                        {/* Volunteer Type Selector */}
-                        <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-                            <label>Select Department</label>
-                            <div className="role-tabs" style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                                <button
-                                    type="button"
-                                    className={`role-tab ${volunteerType === "volunteer_registration" ? "active" : ""}`}
-                                    onClick={() => setVolunteerType("volunteer_registration")}
-                                    style={{ flex: 1, fontSize: '0.8rem' }}
-                                >
-                                    Registration
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`role-tab ${volunteerType === "volunteer_helpdesk" ? "active" : ""}`}
-                                    onClick={() => setVolunteerType("volunteer_helpdesk")}
-                                    style={{ flex: 1, fontSize: '0.8rem' }}
-                                >
-                                    Help Desk
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`role-tab ${volunteerType === "volunteer_inevent" ? "active" : ""}`}
-                                    onClick={() => setVolunteerType("volunteer_inevent")}
-                                    style={{ flex: 1, fontSize: '0.8rem' }}
-                                >
-                                    In-Event
-                                </button>
-                            </div>
-                        </div>
-
+                    <form onSubmit={handleSubmit} className="auth-form">
                         <div className="input-group">
-                            <label>Registered Email</label>
+                            <label>Email Address</label>
                             <input
                                 type="email"
                                 placeholder="volunteer@vtufest.com"
@@ -122,19 +101,21 @@ export default function VolunteerLogin() {
                             <label>Password</label>
                             <input
                                 type="password"
-                                placeholder="Enter password"
+                                placeholder="Enter your password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
                         </div>
 
-                        <button className="auth-btn" disabled={loading}>
-                            {loading ? "Checking details..." : "Start Shift"}
+                        <button type="submit" className="neon-btn auth-btn" disabled={loading}>
+                            {loading ? "Logging in..." : "Login"}
                         </button>
                     </form>
                 </div>
             </div>
-        </div>
+        </Layout>
     );
-}
+};
+
+export default VolunteerLogin;

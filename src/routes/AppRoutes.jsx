@@ -22,14 +22,29 @@ import Rules from "../pages/Rules";
 import FeePayment from "../pages/FeePayment";
 import ManagerDashboard from "../pages/ManagerDashboard";
 
-// New Logins
+/* ================= NEW PANELS ================= */
+// Logins
 import AdminLogin from "../pages/AdminLogin";
 import EventManagerLogin from "../pages/EventManagerLogin";
 import VolunteerLogin from "../pages/VolunteerLogin";
+import ForceResetPassword from "../pages/ForceResetPassword";
 
-// New Dashboards
+// Admin
 import AdminDashboard from "../pages/AdminDashboard";
+import AdminPayments from "../pages/AdminPayments";
+import AdminVolunteers from "../pages/AdminVolunteers";
+import AdminFind from "../pages/AdminFind";
+import AdminNotifications from "../pages/AdminNotifications";
+import AdminCalendar from "../pages/AdminCalendar";
+import AdminSettings from "../pages/AdminSettings";
+import AdminUsers from "../pages/AdminUsers";
+
+// Event Manager
 import EventManagerDashboard from "../pages/EventManagerDashboard";
+import EventManagerAccommodation from "../pages/EventManagerAccommodation";
+import EventManagerFind from "../pages/EventManagerFind";
+
+// Volunteer
 import VolunteerDashboard from "../pages/VolunteerDashboard";
 
 export default function AppRoutes() {
@@ -41,29 +56,37 @@ export default function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/assign-events" element={<AssignEvents />} />
 
-      {/* ================= NEW LOGIN PAGES ================= */}
+      {/* ================= AUTH / LOGIN ROUTES ================= */}
+      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/event-manager-login" element={<EventManagerLogin />} />
+      <Route path="/volunteer-login" element={<VolunteerLogin />} />
+
+      {/* Aliases for convenience if needed, or keep legacy support */}
       <Route path="/admin" element={<AdminLogin />} />
       <Route path="/manager" element={<EventManagerLogin />} />
       <Route path="/volunteer" element={<VolunteerLogin />} />
 
-      {/* ================= NEW DASHBOARDS (PLACEHOLDERS) ================= */}
-      {/* Note: In a real app, these would be protected routes */}
+      <Route path="/force-reset-password" element={<ForceResetPassword />} />
+
+      {/* ================= ADMIN PANEL ================= */}
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/payments" element={<AdminPayments />} />
+      <Route path="/admin/volunteers" element={<AdminVolunteers />} />
+      <Route path="/admin/find" element={<AdminFind />} />
+      <Route path="/admin/notifications" element={<AdminNotifications />} />
+      <Route path="/admin/calendar" element={<AdminCalendar />} />
+      <Route path="/admin/settings" element={<AdminSettings />} />
+      <Route path="/admin/users" element={<AdminUsers />} />
+
+      {/* ================= EVENT MANAGER PANEL ================= */}
       <Route path="/event-manager-dashboard" element={<EventManagerDashboard />} />
+      <Route path="/event-manager/accommodation" element={<EventManagerAccommodation />} />
+      <Route path="/event-manager/find" element={<EventManagerFind />} />
+
+      {/* ================= VOLUNTEER PANEL ================= */}
       <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
 
       {/* ================= RESET PASSWORD (RESET-AUTHORIZED) ================= */}
-      {/* 
-        SECURITY DECISION: ChangePassword uses ProtectedRoute with isResetPage=true
-        
-        WHY:
-        - NOT fully public (requires token + email + role in URL)
-        - Allows forced reset without JWT
-        - Backend validates token authenticity
-        - Works for both forced-reset and forgot-password flows
-        
-        Path changed from /reset-password to /changepassword to match Login.jsx redirect
-      */}
       <Route
         path="/changepassword"
         element={
@@ -147,7 +170,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ACCOMPANIST – PRINCIPAL + MANAGER ONLY */}
       <Route
         path="/accompanist-form"
         element={
@@ -157,7 +179,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* FEE PAYMENT – PRINCIPAL + MANAGER ONLY */}
       <Route
         path="/fee-payment"
         element={

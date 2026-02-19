@@ -1,45 +1,99 @@
-
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { usePopup } from "../context/PopupContext";
 import Layout from "../components/layout/layout";
-import { useNavigate } from "react-router-dom";
 import "../styles/dashboard-glass.css";
 
-export default function EventManagerDashboard() {
+const EventManagerDashboard = () => {
+    const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, boys: 0, girls: 0 });
+    const [loading, setLoading] = useState(true);
+
+    const { showPopup } = usePopup();
     const navigate = useNavigate();
-    const name = localStorage.getItem("manager_name") || "Manager";
+    const managerName = localStorage.getItem("manager_name") || "Event Manager";
+
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        const token = localStorage.getItem("vtufest_token");
+        if (!token) { navigate("/event-manager-login"); return; }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/event-manager/accommodation`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                const reqs = data.data;
+                const s = {
+                    total: reqs.length,
+                    pending: reqs.filter(r => r.status === "pending").length,
+                    approved: reqs.filter(r => r.status === "approved").length,
+                    rejected: reqs.filter(r => r.status === "rejected").length,
+                    boys: reqs.reduce((acc, r) => acc + (r.total_boys || 0), 0),
+                    girls: reqs.reduce((acc, r) => acc + (r.total_girls || 0), 0)
+                };
+                setStats(s);
+            } else if (response.status === 401) {
+                localStorage.clear();
+                navigate("/event-manager-login");
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate("/");
+    };
+
+    if (loading) return <div className="loading-screen">Loading...</div>;
 
     return (
         <Layout>
             <div className="dashboard-glass-wrapper">
                 <div className="dashboard-header">
-                    <div className="welcome-text">
-                        <h1>Event Manager Dashboard</h1>
-                        <p>Welcome, {name}</p>
+                    <div>
+                        <h1>Welcome, {managerName}</h1>
+                        <p>Event & Accommodation Management</p>
                     </div>
-                    <div className="header-actions">
-                        <button className="neon-btn" onClick={() => navigate("/")}>Logout</button>
-                    </div>
+                    <button className="logout-btn" onClick={handleLogout}>Logout</button>
                 </div>
 
-                <div className="glass-card">
-                    <h3>Event Coordination</h3>
-                    <p>Manage event schedules, logistics, and on-ground operations.</p>
+                <div className="glass-card nav-grid">
+                    <Link to="/event-manager/accommodation" className="nav-item">Accommodation</Link>
+                    <Link to="/event-manager/find" className="nav-item">Find Person/College</Link>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '20px' }}>
-                    <div className="glass-card">
-                        <h3>📅 Schedule</h3>
-                        <p>View and update event timings.</p>
+                <div className="stats-grid">
+                    <div className="glass-card stat-card">
+                        <h3>{stats.total}</h3>
+                        <p>Total Requests</p>
                     </div>
-                    <div className="glass-card">
-                        <h3>🎙️ Logistics</h3>
-                        <p>Manage venue and equipment.</p>
+                    <div className="glass-card stat-card">
+                        <h3>{stats.pending}</h3>
+                        <p>Pending</p>
                     </div>
-                    <div className="glass-card">
-                        <h3>📣 Announcements</h3>
-                        <p>Broadcast updates to participants.</p>
+                    <div className="glass-card stat-card">
+                        <h3>{stats.approved}</h3>
+                        <p>Approved</p>
+                    </div>
+                    <div className="glass-card stat-card">
+                        <h3>{stats.boys + stats.girls}</h3>
+                        <p>Total People (B:{stats.boys} / G:{stats.girls})</p>
                     </div>
                 </div>
             </div>
         </Layout>
     );
-}
+};
+
+export default EventManagerDashboard;
