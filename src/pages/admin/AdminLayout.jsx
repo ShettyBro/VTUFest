@@ -3,12 +3,12 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../../styles/dashboard-glass.css";
 
 const NAV_ITEMS = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/notifications", label: "Notifications", icon: "🔔" },
-    { path: "/admin/calendar", label: "Calendar", icon: "📅" },
-    { path: "/admin/settings", label: "Settings", icon: "⚙️" },
-    { path: "/admin/colleges", label: "Colleges", icon: "🏫" },
-    { path: "/admin/payments", label: "Payments", icon: "💳" },
+    { path: "/ad-dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/ad-notifications", label: "Notifications", icon: "🔔" },
+    { path: "/ad-calendar", label: "Calendar", icon: "📅" },
+    { path: "/ad-settings", label: "Settings", icon: "⚙️" },
+    { path: "/ad-colleges", label: "Colleges", icon: "🏫" },
+    { path: "/ad-payments", label: "Payments", icon: "💳" },
 ];
 
 export default function AdminLayout({ children }) {
@@ -22,14 +22,14 @@ export default function AdminLayout({ children }) {
 
     // Route protection
     useEffect(() => {
-        if (!token || !role) navigate("/admin/login");
+        if (!token || !role) navigate("/ad-login");
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("vtufest_admin_token");
         localStorage.removeItem("vtufest_admin_role");
         localStorage.removeItem("vtufest_admin_name");
-        navigate("/admin/login");
+        navigate("/ad-login");
     };
 
     return (

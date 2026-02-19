@@ -16,7 +16,7 @@ export default function AdminLogin() {
     useEffect(() => {
         const token = localStorage.getItem("vtufest_admin_token");
         const role = localStorage.getItem("vtufest_admin_role");
-        if (token && role) navigate("/admin/dashboard");
+        if (token && role) navigate("/ad-dashboard");
     }, []);
 
     const handleLogin = async (e) => {
@@ -37,7 +37,7 @@ export default function AdminLogin() {
             localStorage.setItem("vtufest_admin_token", data.data.token);
             localStorage.setItem("vtufest_admin_role", data.data.role);
             localStorage.setItem("vtufest_admin_name", data.data.name);
-            navigate("/admin/dashboard");
+            navigate("/ad-dashboard");
         } catch (err) {
             setError(err.message);
         } finally {

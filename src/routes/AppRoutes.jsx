@@ -1,8 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 
-
-
 /* PUBLIC */
 import AuthPage from "../pages/AuthPage";
 import ForgotPassword from "../pages/ForgotPassword";
@@ -23,13 +21,10 @@ import AccompanistForm from "../pages/AccompanistForm";
 import Rules from "../pages/Rules";
 import FeePayment from "../pages/FeePayment";
 import ManagerDashboard from "../pages/ManagerDashboard";
-
 import ForceResetPassword from "../pages/ForceResetPassword";
 
-
-// Admin Imports
+/* ADMIN */
 import AdminLogin from "../pages/admin/AdminLogin";
-import AdminLayout from "../pages/admin/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminNotifications from "../pages/admin/AdminNotifications";
 import AdminCalendar from "../pages/admin/AdminCalendar";
@@ -37,6 +32,15 @@ import AdminSettings from "../pages/admin/AdminSettings";
 import AdminColleges from "../pages/admin/AdminColleges";
 import AdminPayments from "../pages/admin/AdminPayments";
 
+/* Admin Route Guard */
+function AdminRoute({ children }) {
+  const token = localStorage.getItem("vtufest_admin_token");
+  const role = localStorage.getItem("vtufest_admin_role");
+  if (!token || !["SUPER_ADMIN", "SUB_ADMIN"].includes(role)) {
+    return <Navigate to="/ad-login" replace />;
+  }
+  return children;
+}
 
 export default function AppRoutes() {
   return (
@@ -46,34 +50,9 @@ export default function AppRoutes() {
       <Route path="/register-student" element={<AuthPage initialView="register" />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/assign-events" element={<AssignEvents />} />
-
-      {/* ================= ADMIN ================= */}
-      <Route path="/admin/login" element={<AdminLogin />} />
-
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="notifications" element={<AdminNotifications />} />
-        <Route path="calendar" element={<AdminCalendar />} />
-        <Route path="settings" element={<AdminSettings />} />
-        <Route path="colleges" element={<AdminColleges />} />
-        <Route path="payments" element={<AdminPayments />} />
-      </Route>
-
-
-
       <Route path="/force-reset-password" element={<ForceResetPassword />} />
 
-
-
-      {/* ================= RESET PASSWORD (RESET-AUTHORIZED) ================= */}
+      {/* ================= RESET PASSWORD ================= */}
       <Route
         path="/changepassword"
         element={
@@ -83,7 +62,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ================= STUDENT (JWT REQUIRED) ================= */}
+      {/* ================= STUDENT ================= */}
       <Route
         path="/dashboard"
         element={
@@ -92,7 +71,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/student-register"
         element={
@@ -102,7 +80,7 @@ export default function AppRoutes() {
         }
       />
 
-      {/* ================= PRINCIPAL + MANAGER (JWT REQUIRED) ================= */}
+      {/* ================= PRINCIPAL + MANAGER ================= */}
       <Route
         path="/principal-dashboard"
         element={
@@ -111,7 +89,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/manager-dashboard"
         element={
@@ -120,7 +97,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/approvals"
         element={
@@ -129,7 +105,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/approved-students"
         element={
@@ -138,7 +113,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/rejected-students"
         element={
@@ -147,7 +121,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/accommodation"
         element={
@@ -156,7 +129,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/accompanist-form"
         element={
@@ -165,7 +137,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       <Route
         path="/fee-payment"
         element={
@@ -174,8 +145,6 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
-      {/* RULES – ALL AUTHENTICATED USERS */}
       <Route
         path="/rules"
         element={
@@ -184,6 +153,18 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* ================= ADMIN ================= */}
+      <Route path="/ad-login" element={<AdminLogin />} />
+      <Route path="/ad-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/ad-notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+      <Route path="/ad-calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
+      <Route path="/ad-settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+      <Route path="/ad-colleges" element={<AdminRoute><AdminColleges /></AdminRoute>} />
+      <Route path="/ad-payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
+
+      {/* Redirect /admin → /ad-login */}
+      <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
     </Routes>
   );
 }

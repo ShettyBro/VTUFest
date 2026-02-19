@@ -67,11 +67,11 @@ export default function AdminDashboard() {
                 <h3 style={{ color: "var(--text-primary)", margin: "32px 0 16px" }}>Quick Actions</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
                     {[
-                        { label: "Manage Notifications", path: "/admin/notifications", icon: "🔔" },
-                        { label: "Manage Calendar", path: "/admin/calendar", icon: "📅" },
-                        { label: "Settings & Toggles", path: "/admin/settings", icon: "⚙️" },
-                        { label: "View Colleges", path: "/admin/colleges", icon: "🏫" },
-                        { label: "Pending Payments", path: "/admin/payments", icon: "💳" },
+                        { label: "Manage Notifications", path: "/ad-notifications", icon: "🔔" },
+                        { label: "Manage Calendar", path: "/ad-calendar", icon: "📅" },
+                        { label: "Settings & Toggles", path: "/ad-settings", icon: "⚙️" },
+                        { label: "View Colleges", path: "/ad-colleges", icon: "🏫" },
+                        { label: "Pending Payments", path: "/ad-payments", icon: "💳" },
                     ].map(item => (
                         <a
                             key={item.path}
