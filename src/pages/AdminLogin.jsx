@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext";
-import Layout from "../components/layout/layout";
+
+// Removed Layout import to ensure standalone full-screen page
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 const LOGIN_URL = `${API_BASE_URL}/api/auth/admin-login`;
@@ -60,70 +61,83 @@ export default function AdminLogin() {
   };
 
   return (
-    <Layout>
-      <div className="auth-page">
-        <div className="auth-container">
-          <div className="auth-info-panel">
-            <div className="glass-card info-content">
-              <h1>VTU HABBA 2026</h1>
-              <h2>ADMIN PORTAL</h2>
-              <p>Secure access for System Administrators.</p>
-            </div>
+    <div className="auth-page">
+      {/* Background Shapes */}
+      <div className="shape shape-1"></div>
+      <div className="shape shape-2"></div>
+
+      <div className="auth-container">
+        {/* Left Panel: Branding */}
+        <div className="auth-info-panel">
+          <div className="auth-brand">
+            <img src="/main.webp" alt="VTU Fest Logos" style={{ height: 'auto', maxWidth: '100%', maxHeight: '120px' }} />
           </div>
-
-          <div className="auth-form-panel">
-            <div className="glass-card auth-card">
-              <h2 className="auth-title">Admin Login</h2>
-
-              <div className="role-tabs">
-                <button
-                  type="button"
-                  className={`role-tab ${role === "super_admin" ? "active" : ""}`}
-                  onClick={() => setRole("super_admin")}
-                >
-                  Super Admin
-                </button>
-                <button
-                  type="button"
-                  className={`role-tab ${role === "sub_admin" ? "active" : ""}`}
-                  onClick={() => setRole("sub_admin")}
-                >
-                  Sub Admin
-                </button>
-              </div>
-
-              <form onSubmit={handleLogin} className="auth-form">
-                <div className="input-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    placeholder="admin@vtufest.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="input-group">
-                  <label>Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="neon-btn auth-btn" disabled={loading}>
-                  {loading ? "Logging in..." : "Login"}
-                </button>
-              </form>
-              <p className="auth-footer">Contact System Administrator for access issues.</p>
-            </div>
+          <div className="brand-text">
+            <h3>Acharya VTU HABBA 2026</h3>
+            <span className="badge" style={{ fontSize: '1rem', marginTop: '10px', display: 'inline-block' }}>
+              Admin Portal
+            </span>
+            <p style={{ marginTop: '20px', opacity: 0.8 }}>
+              Secure access for System Administrators.
+              Warning: Unauthorized access is prohibited.
+            </p>
           </div>
         </div>
+
+        {/* Right Panel: Login Form */}
+        <div className="auth-form-panel">
+          <form onSubmit={handleLogin} className="auth-form">
+            <h2 className="form-title">Admin Login</h2>
+
+            <div className="role-tabs">
+              <button
+                type="button"
+                className={`role-tab ${role === "super_admin" ? "active" : ""}`}
+                onClick={() => setRole("super_admin")}
+              >
+                Super Admin
+              </button>
+              <button
+                type="button"
+                className={`role-tab ${role === "sub_admin" ? "active" : ""}`}
+                onClick={() => setRole("sub_admin")}
+              >
+                Sub Admin
+              </button>
+            </div>
+
+            <div className="input-group">
+              <label>Email Address</label>
+              <input
+                type="email"
+                placeholder="admin@vtufest.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="input-group">
+              <label>Password</label>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? "Logging in..." : "Access Dashboard"}
+            </button>
+
+            <p className="auth-footer" style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.8rem', opacity: 0.6 }}>
+              Contact System Administrator for access issues.
+            </p>
+          </form>
+        </div>
       </div>
-    </Layout>
+    </div>
   );
 }
