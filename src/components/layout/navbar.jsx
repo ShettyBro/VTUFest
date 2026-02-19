@@ -2,14 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/layout-glass.css";
 
-
-
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [collegeName, setCollegeName] = useState("");
-  const [collegeCode, setCollegeCode] = useState("");
-  const [sortedNotifications, setSortedNotifications] = useState([]);
   const [notificationsData, setNotificationsData] = useState([]);
 
   const profileRef = useRef(null);
@@ -27,33 +23,23 @@ export default function Navbar() {
   const avatarSeed = userUsn || userName || "default";
   const userPhoto = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
-  /* ================= SORT NOTIFICATIONS ================= */
+  /* ================= NOTIFICATIONS ================= */
   useEffect(() => {
-    // Fetch Notifications
     fetch("https://api.vtufest2026.acharyahabba.com/api/shared/notifications")
       .then(r => r.json())
       .then(d => { if (d.success) setNotificationsData(d.data); })
       .catch(() => { });
   }, []);
 
-  useEffect(() => {
-    // Filter priority 2+ notifications and sort them
-    const priority2Plus = notificationsData
-      .filter(n => n.priority >= 2)
-      .sort((a, b) => {
-        // First sort by priority (ascending: 2, 3, 4...)
-        if (a.priority !== b.priority) {
-          return a.priority - b.priority;
-        }
-        // If same priority, sort by date (most recent first)
-        return new Date(b.date) - new Date(a.date);
-      });
-
-    setSortedNotifications(priority2Plus);
-  }, []);
+  // Computed directly — always in sync with notificationsData
+  const sortedNotifications = notificationsData
+    .filter(n => n.priority >= 2)
+    .sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      return new Date(b.date) - new Date(a.date);
+    });
 
   /* ================= COLLEGE DATA ================= */
-
   useEffect(() => {
     const storedCollegeId = localStorage.getItem("college_id");
     if (!storedCollegeId) return;
@@ -64,21 +50,14 @@ export default function Navbar() {
           `https://api.vtufest2026.acharyahabba.com/api/shared/college-and-usn/college/${storedCollegeId}`
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch college");
-        }
+        if (!response.ok) throw new Error("Failed to fetch college");
 
         const result = await response.json();
-
-        // 👇 Correct path
         const college = result?.data?.college;
 
         if (college) {
-          setCollegeName(
-            `${college.college_name}, ${college.place}`
-          );
+          setCollegeName(`${college.college_name}, ${college.place}`);
         }
-
       } catch (err) {
         console.error("Error loading college:", err);
       }
@@ -86,8 +65,6 @@ export default function Navbar() {
 
     fetchCollege();
   }, []);
-
-
 
   /* ================= CLOSE DROPDOWNS ON OUTSIDE CLICK ================= */
   useEffect(() => {
@@ -116,14 +93,12 @@ export default function Navbar() {
         <img src="/main.webp" alt="VTU Fest" className="logo main-logo" style={{ height: '80px' }} />
       </div>
 
-      {/* CENTER – COLLEGE CODE */}
-      {
-        <div className="navbar-center">
-          <span className="college-code">
-            <strong>{collegeName}</strong>
-          </span>
-        </div>
-      }
+      {/* CENTER – COLLEGE NAME */}
+      <div className="navbar-center">
+        <span className="college-code">
+          <strong>{collegeName}</strong>
+        </span>
+      </div>
 
       {/* RIGHT ACTIONS */}
       <div className="navbar-right">
