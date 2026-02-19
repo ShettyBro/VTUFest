@@ -1,11 +1,11 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext";
+import Layout from "../components/layout/layout";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
-const LOGIN_URL = `${API_BASE_URL}/api/auth/login`;
+const LOGIN_URL = `${API_BASE_URL}/api/auth/admin-login`;
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ export default function AdminLogin() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("super_admin");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
@@ -26,19 +27,28 @@ export default function AdminLogin() {
         body: JSON.stringify({
           email,
           password,
-          role: "admin" // Hardcoded role
+          role
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        if (data.status === "FORCE_RESET") {
+          localStorage.setItem("force_reset_token", data.reset_token);
+          localStorage.setItem("force_reset_email", data.email);
+          localStorage.setItem("force_reset_role", data.role);
+          navigate("/force-reset-password");
+          return;
+        }
+
         localStorage.setItem("vtufest_token", data.token);
-        localStorage.setItem("vtufest_role", "admin");
-        localStorage.setItem("admin_name", data.name || "Admin");
+        localStorage.setItem("vtufest_role", data.role);
+        localStorage.setItem("admin_name", data.name);
+        localStorage.setItem("admin_id", String(data.admin_id));
 
         showPopup("Login Successful!", "success");
-        navigate("/admin-dashboard"); // Assuming this route will exist
+        navigate("/admin-dashboard");
       } else {
         showPopup(data.message || "Login failed", "error");
       }
@@ -51,52 +61,67 @@ export default function AdminLogin() {
 
   return (
     <Layout>
-      <div className="auth-container">
-        <div className="glass-card auth-card">
-          <h2 className="auth-title">Admin Login</h2>
-
-          <div className="role-tabs">
-            <button
-              className={`role-tab ${role === "super_admin" ? "active" : ""}`}
-              onClick={() => setRole("super_admin")}
-            >
-              Super Admin
-            </button>
-            <button
-              className={`role-tab ${role === "sub_admin" ? "active" : ""}`}
-              onClick={() => setRole("sub_admin")}
-            >
-              Sub Admin
-            </button>
+      <div className="auth-page">
+        <div className="auth-container">
+          <div className="auth-info-panel">
+            <div className="glass-card info-content">
+              <h1>VTU HABBA 2026</h1>
+              <h2>ADMIN PORTAL</h2>
+              <p>Secure access for System Administrators.</p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="input-group">
-              <label>Email</label>
-              <input
-                type="email"
-                placeholder="admin@vtufest.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+          <div className="auth-form-panel">
+            <div className="glass-card auth-card">
+              <h2 className="auth-title">Admin Login</h2>
 
-            <div className="input-group">
-              <label>Password</label>
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+              <div className="role-tabs">
+                <button
+                  type="button"
+                  className={`role-tab ${role === "super_admin" ? "active" : ""}`}
+                  onClick={() => setRole("super_admin")}
+                >
+                  Super Admin
+                </button>
+                <button
+                  type="button"
+                  className={`role-tab ${role === "sub_admin" ? "active" : ""}`}
+                  onClick={() => setRole("sub_admin")}
+                >
+                  Sub Admin
+                </button>
+              </div>
 
-            <button type="submit" className="neon-btn auth-btn" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
+              <form onSubmit={handleLogin} className="auth-form">
+                <div className="input-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    placeholder="admin@vtufest.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="neon-btn auth-btn" disabled={loading}>
+                  {loading ? "Logging in..." : "Login"}
+                </button>
+              </form>
+              <p className="auth-footer">Contact System Administrator for access issues.</p>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>
