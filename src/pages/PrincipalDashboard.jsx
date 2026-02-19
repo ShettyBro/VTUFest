@@ -4,7 +4,7 @@ import Layout from "../components/layout/layout";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import "../styles/dashboard-glass.css"; // UPDATED CSS IMPORT
-import notificationsData from "../data/notifications.json";
+
 import { usePopup } from "../context/PopupContext";
 
 export default function PrincipalDashboard() {
@@ -17,7 +17,9 @@ export default function PrincipalDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
+
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
+  const [notificationsData, setNotificationsData] = useState([]);
 
   const priority1Notifications = notificationsData
     .filter(n => n.priority === 1)
@@ -50,19 +52,25 @@ export default function PrincipalDashboard() {
     }
 
     fetchDashboardData();
+    fetchDashboardData();
     checkLockStatus();
+
+    // Fetch Notifications
+    fetch("https://api.vtufest2026.acharyahabba.com/api/shared/notifications")
+      .then(r => r.json())
+      .then(d => { if (d.success) setNotificationsData(d.data); });
+
   }, []);
 
   useEffect(() => {
-    if (priority1Notifications.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentPriority1Index(prev =>
-        (prev + 1) % priority1Notifications.length
-      );
-    }, 20000);
-
-    return () => clearInterval(interval);
+    if (priority1Notifications.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentPriority1Index(prev =>
+          (prev + 1) % priority1Notifications.length
+        );
+      }, 6000);
+      return () => clearInterval(interval);
+    }
   }, [priority1Notifications.length]);
 
   const fetchDashboardData = async () => {

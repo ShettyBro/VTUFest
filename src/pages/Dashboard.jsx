@@ -6,8 +6,6 @@ import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 
-
-
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
 export default function Dashboard() {
@@ -28,17 +26,14 @@ export default function Dashboard() {
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-
   // Rotate through priority 1 notifications every 6 seconds
   useEffect(() => {
-
     if (priority1Notifications.length > 1) {
       const interval = setInterval(() => {
         setCurrentPriority1Index((prevIndex) =>
           (prevIndex + 1) % priority1Notifications.length
         );
-      }, 6000); // Change notification every 6 seconds
-
+      }, 6000);
       return () => clearInterval(interval);
     }
   }, [priority1Notifications.length]);
@@ -195,8 +190,6 @@ export default function Dashboard() {
     ],
   };
 
-
-
   const fetchDashboardData = async (isManualRefresh = false) => {
     const token = localStorage.getItem("vtufest_token");
 
@@ -221,7 +214,6 @@ export default function Dashboard() {
 
       if (response.status === 401 && data.redirect) {
         showPopup(data.message || "Session expired. Redirecting to login...", "error");
-
         setTimeout(() => {
           localStorage.clear();
           window.location.href = data.redirect;
@@ -261,25 +253,21 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
 
-    // ADD THIS — fetch notifications + calendar from server
     fetch("https://api.vtufest2026.acharyahabba.com/api/shared/notifications")
       .then(r => r.json())
-      .then(d => { if (d.success) setNotificationsData(d.data); });
+      .then(d => { if (d.success) setNotificationsData(d.data); })
+      .catch(() => { });
 
     fetch("https://api.vtufest2026.acharyahabba.com/api/shared/calendar-events")
       .then(r => r.json())
-      .then(d => { if (d.success) setEventsCalendarData(d.data); });
+      .then(d => { if (d.success) setEventsCalendarData(d.data); })
+      .catch(() => { });
 
-    // Also fetch settings for allocated_events_visible
     fetch("https://api.vtufest2026.acharyahabba.com/api/shared/settings")
       .then(r => r.json())
       .then(d => { if (d.success) setSettingsData(d.data); })
-      .catch(() => { }); // silent fallback, keep default false
+      .catch(() => { });
   }, []);
-
-  // --- REMOVED AUTO-ROTATION FOR TICKER ---
-  // The priority1Notifications are now joined in the render for smooth scrolling
-  // and no sudden content changes. 
 
   const handleSubmitApplication = () => {
     navigate("/Student-Register");
@@ -342,7 +330,6 @@ export default function Dashboard() {
         <div className="dashboard-header relative-header">
           <div className="welcome-text">
             <h1>Welcome, {dashboardData?.student?.full_name?.split(' ')[0] || "Student"}</h1>
-            {/* <p>Dashboard Overview</p> */}
           </div>
 
           {/* QR CODE - RIGHT SIDE */}
