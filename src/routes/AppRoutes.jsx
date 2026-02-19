@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+import AdminProtectedRoute from "./AdminProtectedRoute";
+
 
 /* PUBLIC */
 import AuthPage from "../pages/AuthPage";
@@ -29,7 +31,7 @@ import EventManagerLogin from "../pages/EventManagerLogin";
 import VolunteerLogin from "../pages/VolunteerLogin";
 import ForceResetPassword from "../pages/ForceResetPassword";
 
-// Admin
+// Admin Imports
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminPayments from "../pages/AdminPayments";
 import AdminVolunteers from "../pages/AdminVolunteers";
@@ -38,6 +40,9 @@ import AdminNotifications from "../pages/AdminNotifications";
 import AdminCalendar from "../pages/AdminCalendar";
 import AdminSettings from "../pages/AdminSettings";
 import AdminUsers from "../pages/AdminUsers";
+
+
+
 
 // Event Manager
 import EventManagerDashboard from "../pages/EventManagerDashboard";
@@ -69,14 +74,70 @@ export default function AppRoutes() {
       <Route path="/force-reset-password" element={<ForceResetPassword />} />
 
       {/* ================= ADMIN PANEL ================= */}
-      <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      <Route path="/admin/payments" element={<AdminPayments />} />
-      <Route path="/admin/volunteers" element={<AdminVolunteers />} />
-      <Route path="/admin/find" element={<AdminFind />} />
-      <Route path="/admin/notifications" element={<AdminNotifications />} />
-      <Route path="/admin/calendar" element={<AdminCalendar />} />
-      <Route path="/admin/settings" element={<AdminSettings />} />
-      <Route path="/admin/users" element={<AdminUsers />} />
+      <Route
+        path="/admin-dashboard"
+        element={
+          <AdminProtectedRoute>
+            <AdminDashboard />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/payments"
+        element={
+          <AdminProtectedRoute>
+            <AdminPayments />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/volunteers"
+        element={
+          <AdminProtectedRoute>
+            <AdminVolunteers />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/find"
+        element={
+          <AdminProtectedRoute>
+            <AdminFind />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notifications"
+        element={
+          <AdminProtectedRoute>
+            <AdminNotifications />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/calendar"
+        element={
+          <AdminProtectedRoute>
+            <AdminCalendar />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <AdminProtectedRoute>
+            <AdminSettings />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <AdminProtectedRoute>
+            <AdminUsers />
+          </AdminProtectedRoute>
+        }
+      />
 
       {/* ================= EVENT MANAGER PANEL ================= */}
       <Route path="/event-manager-dashboard" element={<EventManagerDashboard />} />
