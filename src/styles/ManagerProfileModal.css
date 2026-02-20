@@ -28,6 +28,8 @@
 
   /* Blue accent border */
   border-top: 6px solid #1e40af;
+  color: #1f2937;
+  /* Ensure dark text on white background */
 }
 
 .modal-card h3 {
@@ -54,39 +56,70 @@
   margin-bottom: 25px;
 }
 
-.file-upload-section label {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.file-upload-section .upload-box {
+  display: block;
   padding: 20px;
   border: 2px dashed #bfdbfe;
   border-radius: 10px;
   background: #eff6ff;
   transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
 }
 
-.file-upload-section label:hover {
+.file-upload-section .upload-box:hover {
   border-color: #2563eb;
   background: #dbeafe;
 }
 
-.file-upload-section strong {
+.file-upload-section .upload-box.uploaded {
+  border-style: solid;
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-label {
   color: #1e40af;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
+  display: block;
 }
 
-.file-upload-section input[type="file"] {
-  font-size: 14px;
-  padding: 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #ffffff;
-  cursor: pointer;
+.upload-hint {
+  color: #6b7280;
+  font-size: 12px;
+  display: block;
 }
 
-.file-upload-section input[type="file"]:hover {
-  border-color: #2563eb;
+.upload-preview {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 8px;
+  margin-top: 10px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+  color: #4b5563;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+  color: #9ca3af;
 }
 
 /* =========================================================
@@ -250,6 +283,7 @@
     font-size: 14px;
   }
 }
+
 .lock-banner {
   background: #ff4444;
   color: white;

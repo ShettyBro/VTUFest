@@ -252,45 +252,57 @@ export default function ManagerProfileModal({ onComplete }) {
 
   const renderFileUpload = (key, label) => (
     <div className="file-upload-item">
-      <label>
-        <strong>{label}</strong> (PNG/JPG/PDF, max 5MB)
-      </label>
       <input
         type="file"
+        id={`file-${key}`}
         accept="image/png,image/jpeg,image/jpg,application/pdf"
         onChange={(e) => handleFileChange(e, key)}
         disabled={timerExpired || uploadStatus[key] === "done"}
+        style={{ display: "none" }}
       />
+      <label htmlFor={`file-${key}`} className={`upload-box ${uploadStatus[key] === "done" ? "uploaded" : ""}`}>
+        <div className="upload-content">
+          <strong className="upload-label">{label}</strong>
+          <span className="upload-hint">(PNG/JPG/PDF, max 5MB)</span>
 
-      {filePreviews[key] && filePreviews[key] !== "PDF" && (
-        <div style={{ textAlign: "center", margin: "10px 0" }}>
-          <img
-            src={filePreviews[key]}
-            alt={`${label} Preview`}
-            style={{ maxWidth: "150px", maxHeight: "150px", borderRadius: "8px" }}
-          />
+          {filePreviews[key] ? (
+            filePreviews[key] !== "PDF" ? (
+              <img
+                src={filePreviews[key]}
+                alt="Preview"
+                className="upload-preview"
+              />
+            ) : (
+              <div className="pdf-preview">
+                <span style={{ fontSize: "24px" }}>📄</span>
+                <span>PDF Selected</span>
+              </div>
+            )
+          ) : (
+            <div className="upload-placeholder">
+              <span style={{ fontSize: "24px" }}>☁️</span>
+              <span>Click to Upload</span>
+            </div>
+          )}
         </div>
-      )}
-      {filePreviews[key] === "PDF" && (
-        <p style={{ color: "#666", fontSize: "14px" }}>📄 PDF selected</p>
-      )}
+      </label>
 
       {files[key] && uploadStatus[key] !== "done" && (
         <button
           type="button"
           onClick={() => uploadFile(key)}
           disabled={timerExpired || loading}
-          style={{ marginTop: "10px" }}
+          style={{ marginTop: "10px", width: "100%" }}
         >
-          {uploadStatus[key] === "uploading" ? "Uploading..." : `Upload ${label}`}
+          {uploadStatus[key] === "uploading" ? "Uploading..." : "Click to Confirm Upload"}
         </button>
       )}
 
       {uploadStatus[key] === "done" && (
-        <p style={{ color: "green", fontSize: "14px" }}>✓ {label} uploaded</p>
+        <p style={{ color: "green", fontSize: "14px", textAlign: "center", marginTop: "5px" }}>✓ {label} uploaded</p>
       )}
       {uploadStatus[key] === "failed" && (
-        <p style={{ color: "red", fontSize: "14px" }}>✗ Upload failed - try again</p>
+        <p style={{ color: "red", fontSize: "14px", textAlign: "center", marginTop: "5px" }}>✗ Upload failed - try again</p>
       )}
     </div>
   );
