@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
+import SparkleEffect from "../components/SparkleEffect";
 import "../styles/dashboard-glass.css"; // UPDATED CSS IMPORT
 
 import { usePopup } from "../context/PopupContext";
@@ -389,6 +390,7 @@ export default function PrincipalDashboard() {
         {/* --- TICKER --- */}
         {priority1Notifications.length > 0 && (
           <div className="glass-banner">
+            <SparkleEffect trigger={currentPriority1Index} />
             <span className="ticker-label">IMP Notification</span>
             <div className="ticker-single">
               <span className="ticker-message">

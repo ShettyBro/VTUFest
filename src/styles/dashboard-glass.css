@@ -316,6 +316,28 @@ body::after {
     }
 }
 
+/* --- SPARKLE BURST (Gold Star Effect on Notification Switch) --- */
+@keyframes sparkleBurst {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translate(0px, 0px) scale(1);
+    }
+
+    80% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0.3);
+    }
+}
+
+/* Wrapper that contains sparkle particles */
+.glass-banner {
+    position: relative;
+}
+
 /* --- MAIN GRID LAYOUT --- */
 .dashboard-grid {
     display: grid;

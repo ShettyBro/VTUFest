@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import CampusMap from "../components/CampusMap";
 import AllocatedEventsModal from "../components/Allocatedeventsmodal";
+import SparkleEffect from "../components/SparkleEffect";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 
@@ -356,6 +357,7 @@ export default function Dashboard() {
         {/* --- TICKER --- */}
         {priority1Notifications.length > 0 && (
           <div className="glass-banner">
+            <SparkleEffect trigger={currentPriority1Index} />
             <span className="ticker-label">Important</span>
             <div className="ticker-single">
               <span className="ticker-message" key={currentPriority1Index}>
