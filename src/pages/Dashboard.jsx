@@ -377,7 +377,19 @@ export default function Dashboard() {
               <h3>Upcoming Events</h3>
               <div className="calendar-list">
                 {eventsCalendarData.calendarEvents
-                  .sort((a, b) => new Date(a.date) - new Date(b.date))
+                  .slice()
+                  .sort((a, b) => {
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
+                    const da = new Date(a.date);
+                    const db = new Date(b.date);
+                    const aUpcoming = da >= today;
+                    const bUpcoming = db >= today;
+                    // Upcoming first (ASC), past events after (DESC — most recent past at top)
+                    if (aUpcoming && !bUpcoming) return -1;
+                    if (!aUpcoming && bUpcoming) return 1;
+                    if (aUpcoming && bUpcoming) return da - db;   // nearest upcoming first
+                    return db - da;                                // most recent past first
+                  })
                   .map((event, idx) => (
                     <div key={idx} className="calendar-item">
                       <span className="cal-date">{new Date(event.date).toLocaleDateString("en-IN", { month: 'short', day: 'numeric' })} • {event.time}</span>
