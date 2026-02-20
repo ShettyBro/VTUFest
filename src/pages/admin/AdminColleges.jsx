@@ -7,10 +7,6 @@ const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
 const fmt = (d) => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
 
-const fmtMoney = (n) => n != null
-    ? "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 })
-    : "—";
-
 // Prettify event_snake_case → "Event Name"
 const fmtEvent = (name) =>
     name.replace(/^event_/, "").split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -127,8 +123,7 @@ function CollegeDetailsModal({ college, token, onClose }) {
 
                 {data && !loading && (() => {
                     const { counts, events, payment } = data;
-                    const totalPaid = payment.receipts.filter(r => r.payment_status === "SUCCESS" || r.payment_status === "VERIFIED").reduce((s, r) => s + Number(r.amount || 0), 0);
-                    const hasPaid = totalPaid > 0;
+                    const hasPaid = payment.receipts.some(r => r.status === "verified");
 
                     return (
                         <>
@@ -160,31 +155,51 @@ function CollegeDetailsModal({ college, token, onClose }) {
                                 ) : (
                                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                         {payment.receipts.map((r) => {
-                                            const isPaid = r.payment_status === "SUCCESS" || r.payment_status === "VERIFIED";
+                                            const isVerified = r.status === "verified";
+                                            const isPending = r.status === "waiting_for_verification";
+                                            const statusColor = isVerified ? "#10b981" : isPending ? "#fbbf24" : "#f87171";
+                                            const statusBg = isVerified ? "rgba(16,185,129,0.15)" : isPending ? "rgba(251,191,36,0.15)" : "rgba(239,68,68,0.15)";
                                             return (
-                                                <div key={r.id} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${isPaid ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: "8px", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                                                <div key={r.id} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${isVerified ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: "8px", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                                                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                                        <span style={{ fontSize: "1.1rem" }}>{isPaid ? "✅" : "⏳"}</span>
+                                                        <span style={{ fontSize: "1.1rem" }}>{isVerified ? "✅" : isPending ? "⏳" : "❌"}</span>
                                                         <div>
-                                                            <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.9rem" }}>{fmtMoney(r.amount)}</div>
-                                                            <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "2px" }}>
-                                                                {r.payment_method || "—"} · {fmt(r.created_at)}
+                                                            <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.9rem" }}>
+                                                                ₹{Number(r.amount_paid).toLocaleString("en-IN")}
                                                             </div>
-                                                            {r.transaction_id && (
-                                                                <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
-                                                                    TXN: <code style={{ background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: "3px" }}>{r.transaction_id}</code>
+                                                            <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "2px" }}>
+                                                                Uploaded by {r.uploaded_by_name} ({r.uploaded_by_type}) · {fmt(r.uploaded_at)}
+                                                            </div>
+                                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginTop: "2px" }}>
+                                                                UTR: <code style={{ background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: "3px" }}>{r.utr_reference_number}</code>
+                                                            </div>
+                                                            {r.verified_at && (
+                                                                <div style={{ color: "#34d399", fontSize: "0.72rem", marginTop: "2px" }}>
+                                                                    Verified on {fmt(r.verified_at)}
+                                                                </div>
+                                                            )}
+                                                            {r.admin_remarks && (
+                                                                <div style={{ color: "#fbbf24", fontSize: "0.72rem", marginTop: "2px" }}>
+                                                                    Remarks: {r.admin_remarks}
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <span style={{ background: isPaid ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: isPaid ? "#10b981" : "#f87171", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>
-                                                        {r.payment_status}
-                                                    </span>
+                                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+                                                        <span style={{ background: statusBg, color: statusColor, padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                                            {r.status.replace(/_/g, " ").toUpperCase()}
+                                                        </span>
+                                                        {r.receipt_url && (
+                                                            <a href={r.receipt_url} target="_blank" rel="noreferrer" style={{ color: "#818cf8", fontSize: "0.72rem", textDecoration: "none" }}>
+                                                                📄 View Receipt
+                                                            </a>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
                                         <div style={{ textAlign: "right", color: "#34d399", fontWeight: 700, fontSize: "0.85rem", marginTop: "4px" }}>
-                                            Total Paid: {fmtMoney(totalPaid)}
+                                            Total Paid: ₹{payment.receipts.filter(r => r.status === "verified").reduce((s, r) => s + Number(r.amount_paid || 0), 0).toLocaleString("en-IN")}
                                         </div>
                                     </div>
                                 )}
@@ -192,11 +207,14 @@ function CollegeDetailsModal({ college, token, onClose }) {
                                 {/* Pending sessions */}
                                 {payment.sessions.length > 0 && (
                                     <div style={{ marginTop: "12px" }}>
-                                        <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pending Sessions</div>
+                                        <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pending Upload Sessions</div>
                                         {payment.sessions.map((s) => (
                                             <div key={s.session_id} style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "6px", padding: "8px 12px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem" }}>
-                                                <span style={{ color: "#fbbf24" }}>{s.status}</span>
-                                                <span style={{ color: "var(--text-muted)" }}>{fmtMoney(s.amount)} · expires {fmt(s.expires_at)}</span>
+                                                <div>
+                                                    <span style={{ color: "#fbbf24" }}>₹{Number(s.amount_paid).toLocaleString("en-IN")}</span>
+                                                    <span style={{ color: "var(--text-muted)", marginLeft: "8px" }}>UTR: {s.utr_reference_number}</span>
+                                                </div>
+                                                <span style={{ color: "var(--text-muted)" }}>expires {fmt(s.expires_at)}</span>
                                             </div>
                                         ))}
                                     </div>
