@@ -189,11 +189,7 @@ function CollegeDetailsModal({ college, token, onClose }) {
                                                         <span style={{ background: statusBg, color: statusColor, padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                                                             {r.status.replace(/_/g, " ").toUpperCase()}
                                                         </span>
-                                                        {r.receipt_url && (
-                                                            <a href={r.receipt_url} target="_blank" rel="noreferrer" style={{ color: "#818cf8", fontSize: "0.72rem", textDecoration: "none" }}>
-                                                                📄 View Receipt
-                                                            </a>
-                                                        )}
+
                                                     </div>
                                                 </div>
                                             );
