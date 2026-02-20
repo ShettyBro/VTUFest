@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/auth.css";
+import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
 /* ================= UTILS & CONFIG ================= */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
@@ -239,6 +240,9 @@ export default function AuthPage({ initialView = "login" }) {
     const handleRegStep1 = async (e) => {
         e.preventDefault();
         if (usnStatus !== "valid") return setGlobalError("Please enter a valid, new USN.");
+        if (!isValidIndianPhone(regForm.phone)) {
+            return setGlobalError("Phone must be exactly 10 digits and start with 6, 7, 8, or 9");
+        }
         setGlobalError("");
         setLoading(true);
 
@@ -535,14 +539,19 @@ export default function AuthPage({ initialView = "login" }) {
                                             <div className="input-group">
                                                 <label>Phone *</label>
                                                 <input
+                                                    type="tel"
+                                                    inputMode="numeric"
                                                     name="phone"
                                                     value={regForm.phone}
                                                     maxLength={10}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
+                                                    pattern="[6-9][0-9]{9}"
+                                                    placeholder="e.g. 9876543210 (start with 6-9)"
+                                                    onChange={e => setRegForm(prev => ({ ...prev, phone: sanitizePhone(e.target.value) }))}
                                                     disabled={usnStatus !== "valid"}
                                                     style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
                                                     required
                                                 />
+                                                <small style={{ color: 'rgba(168,237,234,0.7)', fontSize: '0.75rem' }}>Must be 10 digits starting with 6, 7, 8, or 9</small>
                                             </div>
 
                                             <div className="input-group">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
+import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
@@ -230,7 +231,7 @@ export default function RegisterStudent() {
     if (name === "usn") {
       setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
     } else if (name === "phone") {
-      const digits = value.replace(/\D/g, "").slice(0, 10);
+      const digits = sanitizePhone(value);
       setForm((prev) => ({ ...prev, [name]: digits }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
@@ -301,8 +302,8 @@ export default function RegisterStudent() {
       return;
     }
 
-    if (form.phone.length !== 10) {
-      setErrorMessage("Phone number must be 10 digits");
+    if (!isValidIndianPhone(form.phone)) {
+      setErrorMessage("Phone must be exactly 10 digits and start with 6, 7, 8, or 9");
       return;
     }
 
@@ -580,11 +581,14 @@ export default function RegisterStudent() {
 
             <label>Mobile Number *</label>
             <input
+              type="tel"
+              inputMode="numeric"
               name="phone"
               value={form.phone}
               onChange={handleChange}
-              placeholder="e.g., 9876543210 (10 digits)"
+              placeholder="e.g. 9876543210 (start with 6-9)"
               maxLength="10"
+              pattern="[6-9][0-9]{9}"
               disabled={formDisabled || loading}
               style={{ opacity: formDisabled ? 0.5 : 1 }}
               required

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
+import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
 export default function Accommodation() {
   const navigate = useNavigate();
@@ -98,7 +99,11 @@ export default function Accommodation() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "contact_person_phone") {
+      setFormData((prev) => ({ ...prev, [name]: sanitizePhone(value) }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -108,6 +113,10 @@ export default function Accommodation() {
 
     if (!formData.total_girls || !formData.total_boys || !formData.contact_person_name || !formData.contact_person_phone) {
       showPopup("Please fill all required fields", "warning");
+      return;
+    }
+    if (!isValidIndianPhone(formData.contact_person_phone)) {
+      showPopup("Contact phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
       return;
     }
 
@@ -303,11 +312,14 @@ export default function Accommodation() {
                   <label style={labelStyle}>Contact Phone *</label>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     name="contact_person_phone"
                     value={formData.contact_person_phone}
                     onChange={handleInputChange}
                     style={inputStyle}
-                    placeholder="10-digit mobile number"
+                    maxLength={10}
+                    pattern="[6-9][0-9]{9}"
+                    placeholder="e.g. 9876543210 (start with 6-9)"
                     required
                     disabled={isReadOnlyMode}
                   />

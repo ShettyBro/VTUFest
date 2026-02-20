@@ -5,8 +5,8 @@ import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import SparkleEffect from "../components/SparkleEffect";
 import "../styles/dashboard-glass.css"; // UPDATED CSS IMPORT
-
 import { usePopup } from "../context/PopupContext";
+import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
 export default function PrincipalDashboard() {
   const navigate = useNavigate();
@@ -140,6 +140,10 @@ export default function PrincipalDashboard() {
   const handleAssignManager = async () => {
     if (!managerForm.name || !managerForm.email || !managerForm.phone) {
       showPopup("All fields are required", "warning");
+      return;
+    }
+    if (!isValidIndianPhone(managerForm.phone)) {
+      showPopup("Phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
       return;
     }
 
@@ -557,11 +561,15 @@ export default function PrincipalDashboard() {
             <div>
               <label style={labelStyle}>Manager Mobile</label>
               <input
+                type="tel"
+                inputMode="numeric"
                 value={managerForm.phone}
-                onChange={(e) => setManagerForm({ ...managerForm, phone: e.target.value })}
+                onChange={(e) => setManagerForm({ ...managerForm, phone: sanitizePhone(e.target.value) })}
                 disabled={assigningManager}
                 style={inputStyle}
-                placeholder="Enter 10-digit Mobile"
+                maxLength={10}
+                pattern="[6-9][0-9]{9}"
+                placeholder="e.g. 9876543210 (start with 6-9)"
               />
             </div>
 

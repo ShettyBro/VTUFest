@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
-import { usePopup } from "../context/PopupContext"; // UPDATED CSS
+import { usePopup } from "../context/PopupContext";
+import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation"; // UPDATED CSS
 
 export default function Approvals() {
   const navigate = useNavigate();
@@ -268,7 +269,11 @@ export default function Approvals() {
   };
 
   const saveEditPending = async (application_id) => {
-    if (isReadOnly) return;
+    if (isReadOnly || isReadOnlyMode) return;
+    if (!isValidIndianPhone(editFormPending.phone)) {
+      showPopup("Phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
+      return;
+    }
 
     try {
       setSavingEdit(true);
@@ -438,6 +443,10 @@ export default function Approvals() {
 
   const saveEditApproved = async (student_id) => {
     if (isReadOnly) return;
+    if (!isValidIndianPhone(editFormApproved.phone)) {
+      showPopup("Phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
+      return;
+    }
 
     try {
       setSavingEdit(true);
@@ -670,12 +679,15 @@ export default function Approvals() {
         <span>Phone:</span>
         {isEditing ? (
           <input
-            type="text"
+            type="tel"
+            inputMode="numeric"
             value={editForm.phone}
             onChange={(e) =>
-              setEditForm({ ...editForm, phone: e.target.value })
+              setEditForm({ ...editForm, phone: sanitizePhone(e.target.value) })
             }
             disabled={savingEdit}
+            maxLength={10}
+            placeholder="e.g. 9876543210"
             style={{ padding: "5px 10px", borderRadius: "5px", border: "1px solid var(--glass-border)", background: "rgba(255,255,255,0.05)", color: "white", width: "100%" }}
           />
         ) : (

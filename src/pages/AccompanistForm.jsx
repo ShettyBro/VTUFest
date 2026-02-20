@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
+import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api";
 
@@ -268,7 +269,11 @@ export default function AccompanistForm() {
 
   const handleModalFormChange = (e) => {
     const { name, value } = e.target;
-    setModalForm({ ...modalForm, [name]: value });
+    if (name === "phone") {
+      setModalForm({ ...modalForm, [name]: sanitizePhone(value) });
+    } else {
+      setModalForm({ ...modalForm, [name]: value });
+    }
   };
 
   const handleFileChange = (e, key) => {
@@ -302,6 +307,10 @@ export default function AccompanistForm() {
   const handleNext = async () => {
     if (!modalForm.full_name || !modalForm.phone) {
       showPopup("Name and Phone are required", "warning");
+      return;
+    }
+    if (!isValidIndianPhone(modalForm.phone)) {
+      showPopup("Phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
       return;
     }
     if (!["faculty", "professional"].includes(modalForm.accompanist_type)) {
@@ -557,7 +566,17 @@ export default function AccompanistForm() {
                   </div>
                   <div>
                     <label style={labelStyle}>Phone *</label>
-                    <input name="phone" value={modalForm.phone} onChange={handleModalFormChange} style={inputStyle} placeholder="10-digit Mobile" />
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      name="phone"
+                      value={modalForm.phone}
+                      onChange={handleModalFormChange}
+                      style={inputStyle}
+                      maxLength={10}
+                      pattern="[6-9][0-9]{9}"
+                      placeholder="e.g. 9876543210 (start with 6-9)"
+                    />
                   </div>
                   <div>
                     <label style={labelStyle}>Email</label>
