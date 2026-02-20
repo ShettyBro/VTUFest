@@ -441,7 +441,7 @@ export default function FeePayment() {
 
   // STATUS VIEW logic
   const isPaymentLocked = paymentInfo.can_upload === false;
-  const hasStatus = paymentInfo.status;
+  const hasStatus = paymentInfo.payment_status;
 
   return (
     <Layout>
