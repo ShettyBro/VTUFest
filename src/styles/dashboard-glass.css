@@ -384,27 +384,15 @@ body::after {
     gap: 12px;
     max-height: 300px;
     overflow-y: auto;
-    padding-right: 5px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--academic-gold) rgba(255, 255, 255, 0.1);
+    padding-right: 0;
+    /* Hide scrollbar — Firefox */
+    scrollbar-width: none;
 }
 
+/* Hide scrollbar — Chrome / Safari / Edge */
 .calendar-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.calendar-list::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
-}
-
-.calendar-list::-webkit-scrollbar-thumb {
-    background: var(--academic-gold);
-    border-radius: 3px;
-}
-
-.calendar-list::-webkit-scrollbar-thumb:hover {
-    background: var(--gold-light);
+    width: 0;
+    display: none;
 }
 
 .calendar-item {
@@ -440,6 +428,35 @@ body::after {
     font-size: 0.8rem;
     color: var(--accent-success);
     font-weight: 500;
+}
+
+/* Calendar tier colours */
+.calendar-item.cal-today {
+    border-left-color: var(--accent-success);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.calendar-item.cal-upcoming {
+    border-left-color: var(--gold-solid);
+}
+
+.calendar-item.cal-past {
+    opacity: 0.55;
+    border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+/* "Today" pill badge */
+.cal-badge {
+    display: inline-block;
+    background: var(--accent-success);
+    color: #0f172a;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 4px;
 }
 
 /* --- HERO CARD (Status) --- */

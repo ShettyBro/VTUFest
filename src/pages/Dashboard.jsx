@@ -379,24 +379,39 @@ export default function Dashboard() {
                 {eventsCalendarData.calendarEvents
                   .slice()
                   .sort((a, b) => {
-                    const today = new Date(); today.setHours(0, 0, 0, 0);
+                    const now = new Date();
+                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+                    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
                     const da = new Date(a.date);
                     const db = new Date(b.date);
-                    const aUpcoming = da >= today;
-                    const bUpcoming = db >= today;
-                    // Upcoming first (ASC), past events after (DESC — most recent past at top)
-                    if (aUpcoming && !bUpcoming) return -1;
-                    if (!aUpcoming && bUpcoming) return 1;
-                    if (aUpcoming && bUpcoming) return da - db;   // nearest upcoming first
-                    return db - da;                                // most recent past first
+                    const aIsToday = da >= todayStart && da <= todayEnd;
+                    const bIsToday = db >= todayStart && db <= todayEnd;
+                    const aIsFuture = da > todayEnd;
+                    const bIsFuture = db > todayEnd;
+                    // Tier: today (0) → upcoming/future (1) → past (2)
+                    const tier = (isToday, isFuture) => isToday ? 0 : isFuture ? 1 : 2;
+                    const ta = tier(aIsToday, aIsFuture);
+                    const tb = tier(bIsToday, bIsFuture);
+                    if (ta !== tb) return ta - tb;
+                    if (ta === 0 || ta === 1) return da - db; // earliest first within today/future
+                    return db - da; // most recent past first
                   })
-                  .map((event, idx) => (
-                    <div key={idx} className="calendar-item">
-                      <span className="cal-date">{new Date(event.date).toLocaleDateString("en-IN", { month: 'short', day: 'numeric' })} • {event.time}</span>
-                      <span className="cal-title">{event.title}</span>
-                      <span className="cal-loc">📍 {event.place}</span>
-                    </div>
-                  ))}
+                  .map((event, idx) => {
+                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+                    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+                    const d = new Date(event.date);
+                    const isToday = d >= todayStart && d <= todayEnd;
+                    const isFuture = d > todayEnd;
+                    const tierClass = isToday ? "cal-today" : isFuture ? "cal-upcoming" : "cal-past";
+                    return (
+                      <div key={idx} className={`calendar-item ${tierClass}`}>
+                        {isToday && <span className="cal-badge">Today</span>}
+                        <span className="cal-date">{new Date(event.date).toLocaleDateString("en-IN", { month: 'short', day: 'numeric' })} • {event.time}</span>
+                        <span className="cal-title">{event.title}</span>
+                        <span className="cal-loc">📍 {event.place}</span>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
 
