@@ -68,29 +68,20 @@ export default function AdminColleges() {
 This will mark the college as final-approved.`)) return;
         } else {
             const confirmed = window.confirm(
-                "WARNING — DESTRUCTIVE ACTION
+                `WARNING — DESTRUCTIVE ACTION
 
-" +
-                    `You are about to UNLOCK "${college?.college_name}".
+You are about to UNLOCK "${college?.college_name}".
 
-` +
-                "This will permanently delete:
-" +
-        "  * All master participant records
-" +
-        "  * All event participation snapshots
-" +
-        "  * All QR code assignments for this college
-" +
-        "  * Payment receipt record
-" +
-        "  * Pending payment sessions
+This will permanently delete:
+  * All master participant records
+  * All event participation snapshots
+  * All QR code assignments for this college
+  * Payment receipt record
+  * Pending payment sessions
 
-" +
-        "The college can re-submit final approval from scratch.
+The college can re-submit final approval from scratch.
 
-" +
-        "Are you absolutely sure?"
+Are you absolutely sure?`
             );
             if (!confirmed) return;
         }
