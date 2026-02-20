@@ -395,29 +395,27 @@ export default function PrincipalDashboard() {
 
         {/* --- ASSIGN MANAGER CARD (hidden when manager exists) --- */}
         {dashboardData && !dashboardData.has_team_manager && (
-          <div className="glass-card" style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '16px',
-            borderLeft: '4px solid var(--academic-gold)',
-            marginBottom: '10px',
-            flexWrap: 'wrap',
-          }}>
-            <div>
-              <h4 style={{ margin: '0 0 4px', color: 'var(--academic-gold)' }}>👤 No Manager Assigned</h4>
-              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-                Assign a team manager to handle student approvals and accompan attendant forms.
-              </p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+            <div className="glass-card" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '14px',
+              padding: '10px 16px',
+              borderLeft: '3px solid var(--academic-gold)',
+              width: 'fit-content',
+            }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                👤 No manager assigned
+              </span>
+              <button
+                className="neon-btn"
+                onClick={() => setShowAssignModal(true)}
+                disabled={assigningManager}
+                style={{ padding: '6px 18px', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
+              >
+                {assigningManager ? 'Assigning...' : '+ Assign Manager'}
+              </button>
             </div>
-            <button
-              className="neon-btn"
-              onClick={() => setShowAssignModal(true)}
-              disabled={assigningManager}
-              style={{ padding: '10px 24px', fontSize: '0.9rem', whiteSpace: 'nowrap', flexShrink: 0 }}
-            >
-              {assigningManager ? 'Assigning...' : '+ Assign Manager'}
-            </button>
           </div>
         )}
 
