@@ -400,7 +400,7 @@ export default function PrincipalDashboard() {
               className="neon-btn"
               onClick={() => setShowAssignModal(true)}
               disabled={assigningManager}
-              style={{ padding: '7px 20px', fontSize: '0.85rem' }}
+              style={{ padding: '7px 20px', fontSize: '0.85rem', width: 'fit-content' }}
             >
               {assigningManager ? 'Assigning...' : '+ Assign Manager'}
             </button>
