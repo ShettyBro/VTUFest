@@ -316,30 +316,51 @@ body::after {
     }
 }
 
-/* --- SPARKLE SWEEP (Left→Right ✨ wave on notification change) --- */
-@keyframes sparkleSweep {
+/* ── SHIMMER WIPE: gold light sweeps left→right across the banner ── */
+@keyframes shimmerWipe {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(260%);
+        opacity: 0;
+    }
+}
+
+/* ── EMBER RISE: ✨ particles float upward and fade ── */
+@keyframes emberRise {
     0% {
         opacity: 0;
-        transform: translateY(0px) scale(0.4);
+        transform: translate(0px, 0px) scale(0.5);
     }
 
-    20% {
+    15% {
         opacity: 1;
-        transform: translateY(-6px) scale(1.2);
+        transform: translate(calc(var(--wobble) * 0.3), calc(var(--rise) * 0.2)) scale(1.15);
     }
 
-    70% {
-        opacity: 0.9;
-        transform: translateY(-10px) scale(1);
+    80% {
+        opacity: 0.85;
+        transform: translate(var(--wobble), calc(var(--rise) * 0.85)) scale(1);
     }
 
     100% {
         opacity: 0;
-        transform: translateY(-18px) scale(0.5);
+        transform: translate(var(--wobble), var(--rise)) scale(0.4);
     }
 }
 
-/* Wrapper that contains sparkle particles */
+/* Ensure banner is a positioned container for the effect layers */
 .glass-banner {
     position: relative;
 }

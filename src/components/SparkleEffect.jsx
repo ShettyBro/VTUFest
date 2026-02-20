@@ -1,76 +1,127 @@
 import { useEffect, useState, useRef } from "react";
 
 /**
- * SparkleEffect – Left-to-Right ✨ sweep on every notification change.
+ * SparkleEffect – Premium notification attention effect.
+ *
+ * TWO layers on every notification switch:
+ *  1. Gold shimmer wipe  – a bright golden light sweeps left→right across
+ *     the entire banner, like sunlight glinting off glass.
+ *  2. Rising ✨ embers   – 10 sparkle glyphs rise from the banner floor
+ *     and fade out, staggered at random horizontal positions.
  *
  * Props:
- *   trigger  – any value; changing it fires a new sweep wave
- *   count    – number of sparkle glyphs in the wave (default 12)
+ *   trigger – any value; change fires a new effect cycle.
  */
-export default function SparkleEffect({ trigger, count = 12 }) {
-    const [sparkles, setSparkles] = useState([]);
+export default function SparkleEffect({ trigger }) {
+    const [visible, setVisible] = useState(false);
+    const [particles, setParticles] = useState([]);
     const waveId = useRef(0);
 
     useEffect(() => {
         waveId.current += 1;
         const id = waveId.current;
 
-        const GLYPHS = ["✨", "⋆", "✦", "✧", "★", "✨"];
+        // 1. Trigger shimmer wipe
+        setVisible(false);
+        // force reflow so animation restarts
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                if (waveId.current === id) setVisible(true);
+            });
+        });
 
-        // Stagger each sparkle so they travel left → right as a wave
-        const newSparkles = Array.from({ length: count }, (_, i) => ({
+        // 2. Generate rising ember particles
+        const GLYPHS = ["✨", "✨", "⋆", "✦", "✧", "✨", "★", "✨", "⋆", "✦"];
+        const newParticles = GLYPHS.map((g, i) => ({
             id: `${id}-${i}`,
-            glyph: GLYPHS[i % GLYPHS.length],
-            // Spread evenly across 0% → 100% width, each starting slightly later
-            startX: (i / (count - 1)) * 100, // percent X position across banner
-            // vertically scattered between 10% and 90%
-            topPct: 10 + Math.random() * 70,
-            size: 14 + Math.random() * 10,
-            // delay increases left → right so the sweep travels across
-            delay: (i / (count - 1)) * 600,
-            dur: 700 + Math.random() * 300,
+            glyph: g,
+            leftPct: 4 + Math.random() * 92,   // spread across full width
+            size: 13 + Math.random() * 9,
+            delay: Math.random() * 500,         // staggered start
+            dur: 900 + Math.random() * 400,
+            riseHeight: 30 + Math.random() * 35, // px rise upward
+            wobble: (Math.random() - 0.5) * 20,  // slight horizontal drift
         }));
+        setParticles(newParticles);
 
-        setSparkles(newSparkles);
+        // Clean up after all animations finish
+        const cleanup = setTimeout(() => {
+            if (waveId.current === id) {
+                setVisible(false);
+                setParticles([]);
+            }
+        }, 1600);
 
-        // Clean up after all animations finish (max delay + max dur + buffer)
-        const cleanup = setTimeout(() => setSparkles([]), 1600);
         return () => clearTimeout(cleanup);
     }, [trigger]);
 
-    if (sparkles.length === 0) return null;
-
     return (
-        <div
-            aria-hidden="true"
-            style={{
-                position: "absolute",
-                inset: 0,
-                pointerEvents: "none",
-                overflow: "hidden",
-                zIndex: 10,
-                borderRadius: "inherit",
-            }}
-        >
-            {sparkles.map((s) => (
-                <span
-                    key={s.id}
+        <>
+            {/* ── Layer 1: Gold shimmer wipe ── */}
+            {visible && (
+                <div
+                    aria-hidden="true"
                     style={{
                         position: "absolute",
-                        left: `${s.startX}%`,
-                        top: `${s.topPct}%`,
-                        fontSize: `${s.size}px`,
-                        lineHeight: 1,
-                        display: "inline-block",
-                        animation: `sparkleSweep ${s.dur}ms ease-out ${s.delay}ms both`,
+                        inset: 0,
+                        borderRadius: "inherit",
                         pointerEvents: "none",
-                        userSelect: "none",
-                        filter: "drop-shadow(0 0 4px rgba(255,220,50,0.9))",
+                        overflow: "hidden",
+                        zIndex: 5,
                     }}
                 >
-                    {s.glyph}
-                </span>
-            ))}
-        </div>
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "60%",
+                            height: "100%",
+                            background:
+                                "linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.18) 40%, rgba(255, 255, 200, 0.35) 50%, rgba(255, 215, 0, 0.18) 60%, transparent 100%)",
+                            animation: "shimmerWipe 0.85s cubic-bezier(0.4, 0, 0.2, 1) both",
+                        }}
+                    />
+                </div>
+            )}
+
+            {/* ── Layer 2: Rising ✨ ember particles ── */}
+            {particles.length > 0 && (
+                <div
+                    aria-hidden="true"
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "inherit",
+                        pointerEvents: "none",
+                        overflow: "hidden",
+                        zIndex: 6,
+                    }}
+                >
+                    {particles.map((p) => (
+                        <span
+                            key={p.id}
+                            style={{
+                                position: "absolute",
+                                left: `${p.leftPct}%`,
+                                bottom: "0%",
+                                fontSize: `${p.size}px`,
+                                lineHeight: 1,
+                                display: "inline-block",
+                                pointerEvents: "none",
+                                userSelect: "none",
+                                animation: `emberRise ${p.dur}ms ease-out ${p.delay}ms both`,
+                                filter: "drop-shadow(0 0 5px rgba(255, 210, 0, 0.95))",
+                                // pass CSS custom props for keyframe targets
+                                "--rise": `-${p.riseHeight}px`,
+                                "--wobble": `${p.wobble}px`,
+                            }}
+                        >
+                            {p.glyph}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </>
     );
 }
