@@ -34,6 +34,7 @@ export default function AdminColleges() {
     const [colleges, setColleges] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [successMsg, setSuccessMsg] = useState("");
     const [search, setSearch] = useState("");
     const [togglingId, setTogglingId] = useState(null);
     const [sortKey, setSortKey] = useState("college_name");
@@ -57,16 +58,55 @@ export default function AdminColleges() {
 
     const handleToggleLock = async (id) => {
         if (!isSuperAdmin) return;
-        if (!window.confirm("Toggle lock status for this college?")) return;
+
+        const college = colleges.find((c) => c.id === id);
+        const isLocking = !college?.is_final_approved;
+
+        if (isLocking) {
+            if (!window.confirm(`Lock "${college?.college_name}"?
+
+This will mark the college as final-approved.`)) return;
+        } else {
+            const confirmed = window.confirm(
+                "WARNING — DESTRUCTIVE ACTION
+
+" +
+                    `You are about to UNLOCK "${college?.college_name}".
+
+` +
+                "This will permanently delete:
+" +
+        "  * All master participant records
+" +
+        "  * All event participation snapshots
+" +
+        "  * All QR code assignments for this college
+" +
+        "  * Payment receipt record
+" +
+        "  * Pending payment sessions
+
+" +
+        "The college can re-submit final approval from scratch.
+
+" +
+        "Are you absolutely sure?"
+            );
+            if (!confirmed) return;
+        }
+
         setTogglingId(id);
         try {
             const res = await fetch(`${API_BASE}/api/admin/colleges/${id}/toggle-lock`, { method: "PATCH", headers });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
-            // Optimistic update
             setColleges((prev) =>
                 prev.map((c) => c.id === id ? { ...c, is_final_approved: data.data.is_final_approved } : c)
             );
+            if (!isLocking) {
+                setSuccessMsg(data.data?.message || "College unlocked. All associated data has been cleared.");
+                setTimeout(() => setSuccessMsg(""), 8000);
+            }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -204,6 +244,14 @@ export default function AdminColleges() {
                     <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "12px 16px", borderRadius: "8px", marginBottom: "14px", display: "flex", justifyContent: "space-between" }}>
                         <span>{error}</span>
                         <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer" }}>✕</button>
+                    </div>
+                )}
+
+                {/* ── Success (unlock confirmation) ── */}
+                {successMsg && (
+                    <div style={{ background: "rgba(16,185,129,0.12)", border: "1px solid #10b981", color: "#34d399", padding: "12px 16px", borderRadius: "8px", marginBottom: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>✅ {successMsg}</span>
+                        <button onClick={() => setSuccessMsg("")} style={{ background: "none", border: "none", color: "#34d399", cursor: "pointer" }}>✕</button>
                     </div>
                 )}
 
