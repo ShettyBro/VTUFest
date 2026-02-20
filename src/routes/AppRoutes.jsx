@@ -34,129 +34,79 @@ import AdminPayments from "../pages/admin/AdminPayments";
 import AdminFindPerson from "../pages/admin/Adminfindperson";
 import AdminAccommodation from "../pages/admin/AdminAccommodation";
 
-/* Admin Route Guard */
+/* EVENT MANAGER */
+import EMLogin from "../pages/em/EMLogin";
+import EMDashboard from "../pages/em/EMDashboard";
+import EMAccommodation from "../pages/em/EMAccommodation";
+
+/* ── Route Guards ──────────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
   const token = localStorage.getItem("vtufest_admin_token");
   const role = localStorage.getItem("vtufest_admin_role");
-  if (!token || !["SUPER_ADMIN", "SUB_ADMIN"].includes(role)) {
+  if (!token || !["SUPER_ADMIN", "SUB_ADMIN"].includes(role))
     return <Navigate to="/ad-login" replace />;
-  }
+  return children;
+}
+
+function EMRoute({ children }) {
+  const token = localStorage.getItem("vtufest_em_token");
+  if (!token) return <Navigate to="/em-login" replace />;
   return children;
 }
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* ================= PUBLIC ================= */}
+      {/* ── PUBLIC ──────────────────────────────────────────────────── */}
       <Route path="/" element={<AuthPage initialView="login" />} />
       <Route path="/register-student" element={<AuthPage initialView="register" />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/assign-events" element={<AssignEvents />} />
       <Route path="/force-reset-password" element={<ForceResetPassword />} />
 
-      {/* ================= RESET PASSWORD ================= */}
-      <Route
-        path="/changepassword"
-        element={
-          <ProtectedRoute isResetPage={true}>
-            <ResetPassword />
-          </ProtectedRoute>
-        }
-      />
+      {/* ── RESET PASSWORD ──────────────────────────────────────────── */}
+      <Route path="/changepassword" element={
+        <ProtectedRoute isResetPage={true}><ResetPassword /></ProtectedRoute>
+      } />
 
-      {/* ================= STUDENT ================= */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/student-register"
-        element={
-          <ProtectedRoute allowedRoles={["student"]}>
-            <StudentRegister />
-          </ProtectedRoute>
-        }
-      />
+      {/* ── STUDENT ─────────────────────────────────────────────────── */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute allowedRoles={["student"]}><Dashboard /></ProtectedRoute>
+      } />
+      <Route path="/student-register" element={
+        <ProtectedRoute allowedRoles={["student"]}><StudentRegister /></ProtectedRoute>
+      } />
 
-      {/* ================= PRINCIPAL + MANAGER ================= */}
-      <Route
-        path="/principal-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["principal"]}>
-            <PrincipalDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/manager-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={["manager"]}>
-            <ManagerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/approvals"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <Approvals />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/approved-students"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <ApprovedStudents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/rejected-students"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <RejectedStudents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/accommodation"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <Accommodation />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/accompanist-form"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <AccompanistForm />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/fee-payment"
-        element={
-          <ProtectedRoute allowedRoles={["principal", "manager"]}>
-            <FeePayment />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/rules"
-        element={
-          <ProtectedRoute allowedRoles={["student", "principal", "manager"]}>
-            <Rules />
-          </ProtectedRoute>
-        }
-      />
+      {/* ── PRINCIPAL + MANAGER ─────────────────────────────────────── */}
+      <Route path="/principal-dashboard" element={
+        <ProtectedRoute allowedRoles={["principal"]}><PrincipalDashboard /></ProtectedRoute>
+      } />
+      <Route path="/manager-dashboard" element={
+        <ProtectedRoute allowedRoles={["manager"]}><ManagerDashboard /></ProtectedRoute>
+      } />
+      <Route path="/approvals" element={
+        <ProtectedRoute allowedRoles={["principal", "manager"]}><Approvals /></ProtectedRoute>
+      } />
+      <Route path="/approved-students" element={
+        <ProtectedRoute allowedRoles={["principal", "manager"]}><ApprovedStudents /></ProtectedRoute>
+      } />
+      <Route path="/rejected-students" element={
+        <ProtectedRoute allowedRoles={["principal", "manager"]}><RejectedStudents /></ProtectedRoute>
+      } />
+      <Route path="/accommodation" element={
+        <ProtectedRoute allowedRoles={["principal", "manager"]}><Accommodation /></ProtectedRoute>
+      } />
+      <Route path="/accompanist-form" element={
+        <ProtectedRoute allowedRoles={["principal", "manager"]}><AccompanistForm /></ProtectedRoute>
+      } />
+      <Route path="/fee-payment" element={
+        <ProtectedRoute allowedRoles={["principal", "manager"]}><FeePayment /></ProtectedRoute>
+      } />
+      <Route path="/rules" element={
+        <ProtectedRoute allowedRoles={["student", "principal", "manager"]}><Rules /></ProtectedRoute>
+      } />
 
-      {/* ================= ADMIN ================= */}
+      {/* ── ADMIN ───────────────────────────────────────────────────── */}
       <Route path="/ad-login" element={<AdminLogin />} />
       <Route path="/ad-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/ad-notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
@@ -166,9 +116,12 @@ export default function AppRoutes() {
       <Route path="/ad-payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
       <Route path="/ad-find-person" element={<AdminRoute><AdminFindPerson /></AdminRoute>} />
       <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
-
-      {/* Redirect /admin → /ad-login */}
       <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
+
+      {/* ── EVENT MANAGER ───────────────────────────────────────────── */}
+      <Route path="/em-login" element={<EMLogin />} />
+      <Route path="/em-dashboard" element={<EMRoute><EMDashboard /></EMRoute>} />
+      <Route path="/em-accommodation" element={<EMRoute><EMAccommodation /></EMRoute>} />
     </Routes>
   );
 }
