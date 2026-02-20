@@ -1,7 +1,34 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AdminLayout from "./AdminLayout";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
+
+// Summary stat pill
+const Stat = ({ label, value, color }) => (
+    <div style={{
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "10px",
+        padding: "12px 18px",
+        minWidth: "130px",
+        textAlign: "center",
+    }}>
+        <div style={{ fontSize: "1.5rem", fontWeight: 800, color }}>{value}</div>
+        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+    </div>
+);
+
+const COLS = [
+    { key: "college_code", label: "Code", align: "left" },
+    { key: "college_name", label: "College Name", align: "left" },
+    { key: "place", label: "Place", align: "left" },
+    { key: "total_students", label: "Students", align: "center" },
+    { key: "total_applications", label: "Applications", align: "center" },
+    { key: "approved_applications", label: "Approved", align: "center" },
+    { key: "participating_events", label: "Events", align: "center" },
+    { key: "status", label: "Status", align: "center" },
+    { key: "actions", label: "Actions", align: "center" },
+];
 
 export default function AdminColleges() {
     const [colleges, setColleges] = useState([]);
@@ -9,6 +36,8 @@ export default function AdminColleges() {
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [togglingId, setTogglingId] = useState(null);
+    const [sortKey, setSortKey] = useState("college_name");
+    const [sortDir, setSortDir] = useState("asc");
 
     const token = localStorage.getItem("vtufest_admin_token");
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
@@ -16,10 +45,11 @@ export default function AdminColleges() {
 
     const fetchColleges = () => {
         setLoading(true);
+        setError("");
         fetch(`${API_BASE}/api/admin/colleges`, { headers })
-            .then(r => r.json())
-            .then(d => { if (d.success) setColleges(d.data); else setError(d.message); })
-            .catch(() => setError("Network error"))
+            .then((r) => r.json())
+            .then((d) => { if (d.success) setColleges(d.data); else setError(d.message); })
+            .catch(() => setError("Network error — could not fetch colleges"))
             .finally(() => setLoading(false));
     };
 
@@ -33,90 +63,311 @@ export default function AdminColleges() {
             const res = await fetch(`${API_BASE}/api/admin/colleges/${id}/toggle-lock`, { method: "PATCH", headers });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
-            fetchColleges();
-        } catch (err) { setError(err.message); } finally { setTogglingId(null); }
+            // Optimistic update
+            setColleges((prev) =>
+                prev.map((c) => c.id === id ? { ...c, is_final_approved: data.data.is_final_approved } : c)
+            );
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setTogglingId(null);
+        }
     };
 
-    const filtered = colleges.filter(c =>
-        c.college_name.toLowerCase().includes(search.toLowerCase()) ||
-        c.college_code.toLowerCase().includes(search.toLowerCase()) ||
-        c.place?.toLowerCase().includes(search.toLowerCase())
-    );
+    const handleSort = (key) => {
+        if (key === sortKey) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        else { setSortKey(key); setSortDir("asc"); }
+    };
+
+    const filtered = useMemo(() => {
+        const q = search.toLowerCase();
+        return colleges.filter(
+            (c) =>
+                c.college_name.toLowerCase().includes(q) ||
+                c.college_code.toLowerCase().includes(q) ||
+                (c.place || "").toLowerCase().includes(q)
+        );
+    }, [colleges, search]);
+
+    const sorted = useMemo(() => {
+        return [...filtered].sort((a, b) => {
+            let av = a[sortKey] ?? "";
+            let bv = b[sortKey] ?? "";
+            if (typeof av === "string") av = av.toLowerCase();
+            if (typeof bv === "string") bv = bv.toLowerCase();
+            if (av < bv) return sortDir === "asc" ? -1 : 1;
+            if (av > bv) return sortDir === "asc" ? 1 : -1;
+            return 0;
+        });
+    }, [filtered, sortKey, sortDir]);
+
+    // Summary stats
+    const totalStudents = colleges.reduce((s, c) => s + Number(c.total_students || 0), 0);
+    const totalApproved = colleges.reduce((s, c) => s + Number(c.approved_applications || 0), 0);
+    const totalLocked = colleges.filter((c) => c.is_final_approved).length;
+    const activeColleges = colleges.filter((c) => Number(c.total_students) > 0).length;
+
+    const sortIcon = (key) => {
+        if (sortKey !== key) return <span style={{ opacity: 0.3 }}>↕</span>;
+        return <span style={{ color: "#818cf8" }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
+    };
+
+    const thStyle = (align = "left") => ({
+        padding: "13px 14px",
+        textAlign: align,
+        color: "var(--text-muted)",
+        fontSize: "0.75rem",
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.6px",
+        whiteSpace: "nowrap",
+        cursor: "pointer",
+        userSelect: "none",
+        background: "rgba(15,23,42,0.97)",   // opaque for sticky
+        borderBottom: "1px solid rgba(255,255,255,0.1)",
+        position: "sticky",
+        top: 0,
+        zIndex: 2,
+    });
+
+    const tdStyle = (align = "left", extra = {}) => ({
+        padding: "13px 14px",
+        textAlign: align,
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        verticalAlign: "middle",
+        ...extra,
+    });
 
     return (
         <AdminLayout>
-            <div style={{ padding: "10px 0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", gap: "16px", flexWrap: "wrap" }}>
-                    <h3 style={{ margin: 0, color: "var(--text-primary)" }}>Colleges ({colleges.length})</h3>
-                    <input
-                        placeholder="Search by name, code or place..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        style={{ padding: "10px 16px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.9rem", width: "280px" }}
-                    />
+            <div style={{ padding: "10px 0", display: "flex", flexDirection: "column", height: "100%" }}>
+
+                {/* ── Header ── */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px", flexWrap: "wrap", gap: "14px" }}>
+                    <div>
+                        <h3 style={{ margin: 0, color: "var(--text-primary)" }}>
+                            🏫 Colleges
+                            <span style={{ marginLeft: "10px", color: "var(--text-muted)", fontWeight: 400, fontSize: "1rem" }}>
+                                ({filtered.length} of {colleges.length})
+                            </span>
+                        </h3>
+                        <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                            Manage and monitor all affiliated colleges
+                        </p>
+                    </div>
+                    <button
+                        onClick={fetchColleges}
+                        style={{ padding: "9px 18px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontSize: "0.83rem" }}
+                    >
+                        🔄 Refresh
+                    </button>
                 </div>
 
+                {/* ── Summary Stats ── */}
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
+                    <Stat label="Total Colleges" value={colleges.length} color="#818cf8" />
+                    <Stat label="With Students" value={activeColleges} color="#60a5fa" />
+                    <Stat label="Total Students" value={totalStudents} color="#34d399" />
+                    <Stat label="Approved Apps" value={totalApproved} color="#10b981" />
+                    <Stat label="Locked" value={totalLocked} color="#f87171" />
+                </div>
+
+                {/* ── Search bar ── */}
+                <div style={{ marginBottom: "16px", position: "relative" }}>
+                    <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "1rem", pointerEvents: "none" }}>🔍</span>
+                    <input
+                        placeholder="Search by college name, code or place…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            padding: "11px 16px 11px 40px",
+                            background: "rgba(255,255,255,0.07)",
+                            border: "1px solid rgba(255,255,255,0.15)",
+                            borderRadius: "10px",
+                            color: "#f1f5f9",
+                            fontSize: "0.92rem",
+                            outline: "none",
+                        }}
+                    />
+                    {search && (
+                        <button
+                            onClick={() => setSearch("")}
+                            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1rem" }}
+                        >✕</button>
+                    )}
+                </div>
+
+                {/* ── Error ── */}
                 {error && (
-                    <div style={{ background: "rgba(239,68,68,0.15)", border: "1px solid #ef4444", color: "#f87171", padding: "12px 16px", borderRadius: "8px", marginBottom: "16px" }}>
-                        {error} <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", float: "right" }}>✕</button>
+                    <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "12px 16px", borderRadius: "8px", marginBottom: "14px", display: "flex", justifyContent: "space-between" }}>
+                        <span>{error}</span>
+                        <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer" }}>✕</button>
                     </div>
                 )}
 
+                {/* ── Table ── */}
                 {loading ? (
-                    <div className="glass-card" style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>Loading...</div>
+                    <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>
+                        <div style={{ fontSize: "2rem", marginBottom: "12px" }}>⏳</div>Loading colleges…
+                    </div>
                 ) : (
-                    <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <div style={{
+                        flex: 1,
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        border: "1px solid rgba(255,255,255,0.09)",
+                        borderRadius: "14px",
+                        background: "rgba(255,255,255,0.03)",
+                        // Custom scrollbar
+                        scrollbarWidth: "thin",
+                        scrollbarColor: "rgba(129,140,248,0.4) transparent",
+                    }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
                             <thead>
-                                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                                    {["Code", "College Name", "Place", "Students", "Applications", "Approved", "Status", "Actions"].map(h => (
-                                        <th key={h} style={{ padding: "14px 16px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>{h}</th>
+                                <tr>
+                                    {COLS.map((col) => (
+                                        <th
+                                            key={col.key}
+                                            style={thStyle(col.align)}
+                                            onClick={() => !["status", "actions"].includes(col.key) && handleSort(col.key)}
+                                        >
+                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                                {col.label}
+                                                {!["status", "actions"].includes(col.key) && sortIcon(col.key)}
+                                            </span>
+                                        </th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
-                                {filtered.map(c => (
-                                    <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
-                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
-                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                                        <td style={{ padding: "14px 16px", color: "var(--text-muted)", fontSize: "0.8rem", fontFamily: "monospace" }}>{c.college_code}</td>
-                                        <td style={{ padding: "14px 16px", color: "var(--text-primary)", fontWeight: 500, fontSize: "0.9rem" }}>{c.college_name}</td>
-                                        <td style={{ padding: "14px 16px", color: "var(--text-secondary)", fontSize: "0.85rem" }}>{c.place || "—"}</td>
-                                        <td style={{ padding: "14px 16px", color: "var(--accent-info)", fontWeight: 700, textAlign: "center" }}>{c.total_students}</td>
-                                        <td style={{ padding: "14px 16px", color: "#a78bfa", fontWeight: 700, textAlign: "center" }}>{c.total_applications}</td>
-                                        <td style={{ padding: "14px 16px", color: "var(--accent-success)", fontWeight: 700, textAlign: "center" }}>{c.approved_count}</td>
-                                        <td style={{ padding: "14px 16px" }}>
-                                            <span style={{
-                                                background: c.is_final_approved ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)",
-                                                color: c.is_final_approved ? "#f87171" : "#10b981",
-                                                padding: "4px 12px", borderRadius: "12px", fontSize: "0.8rem", fontWeight: 600
-                                            }}>
-                                                {c.is_final_approved ? "🔒 Locked" : "🟢 Open"}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: "14px 16px" }}>
-                                            {isSuperAdmin ? (
-                                                <button
-                                                    onClick={() => handleToggleLock(c.id)}
-                                                    disabled={togglingId === c.id}
-                                                    style={{
-                                                        padding: "5px 14px",
-                                                        background: c.is_final_approved ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)",
-                                                        border: `1px solid ${c.is_final_approved ? "#10b981" : "#ef4444"}`,
-                                                        color: c.is_final_approved ? "#10b981" : "#f87171",
-                                                        borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600
-                                                    }}>
-                                                    {togglingId === c.id ? "..." : c.is_final_approved ? "Unlock" : "Lock"}
-                                                </button>
-                                            ) : <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>View only</span>}
+                                {sorted.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={COLS.length} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                                            {search ? `No colleges matching "${search}"` : "No colleges found"}
                                         </td>
                                     </tr>
-                                ))}
-                                {filtered.length === 0 && (
-                                    <tr><td colSpan={8} style={{ padding: "32px", textAlign: "center", color: "var(--text-muted)" }}>No colleges found</td></tr>
-                                )}
+                                ) : sorted.map((c) => {
+                                    const isLocked = c.is_final_approved;
+                                    return (
+                                        <tr
+                                            key={c.id}
+                                            style={{ transition: "background 0.15s" }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                                        >
+                                            {/* Code */}
+                                            <td style={tdStyle("left")}>
+                                                <code style={{ color: "var(--text-muted)", fontSize: "0.78rem", background: "rgba(255,255,255,0.06)", padding: "2px 7px", borderRadius: "4px" }}>
+                                                    {c.college_code}
+                                                </code>
+                                            </td>
+
+                                            {/* Name */}
+                                            <td style={tdStyle("left")}>
+                                                <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.88rem" }}>
+                                                    {c.college_name}
+                                                </span>
+                                            </td>
+
+                                            {/* Place */}
+                                            <td style={tdStyle("left", { color: "var(--text-secondary)", fontSize: "0.85rem" })}>
+                                                {c.place || "—"}
+                                            </td>
+
+                                            {/* Students */}
+                                            <td style={tdStyle("center")}>
+                                                <span style={{ color: "#60a5fa", fontWeight: 700, fontSize: "0.95rem" }}>
+                                                    {c.total_students}
+                                                </span>
+                                            </td>
+
+                                            {/* Applications */}
+                                            <td style={tdStyle("center")}>
+                                                <span style={{ color: "#a78bfa", fontWeight: 700, fontSize: "0.95rem" }}>
+                                                    {c.total_applications}
+                                                </span>
+                                            </td>
+
+                                            {/* Approved Applications */}
+                                            <td style={tdStyle("center")}>
+                                                <span style={{
+                                                    color: Number(c.approved_applications) > 0 ? "#10b981" : "var(--text-muted)",
+                                                    fontWeight: 700,
+                                                    fontSize: "0.95rem",
+                                                }}>
+                                                    {c.approved_applications}
+                                                </span>
+                                            </td>
+
+                                            {/* Participating Events */}
+                                            <td style={tdStyle("center")}>
+                                                <span style={{
+                                                    background: Number(c.participating_events) > 0 ? "rgba(251,191,36,0.15)" : "rgba(255,255,255,0.05)",
+                                                    color: Number(c.participating_events) > 0 ? "#fbbf24" : "var(--text-muted)",
+                                                    padding: "3px 10px",
+                                                    borderRadius: "12px",
+                                                    fontWeight: 700,
+                                                    fontSize: "0.85rem",
+                                                }}>
+                                                    {c.participating_events} / 25
+                                                </span>
+                                            </td>
+
+                                            {/* Lock Status */}
+                                            <td style={tdStyle("center")}>
+                                                <span style={{
+                                                    background: isLocked ? "rgba(239,68,68,0.15)" : "rgba(16,185,129,0.15)",
+                                                    color: isLocked ? "#f87171" : "#10b981",
+                                                    padding: "4px 12px",
+                                                    borderRadius: "20px",
+                                                    fontSize: "0.78rem",
+                                                    fontWeight: 700,
+                                                    whiteSpace: "nowrap",
+                                                }}>
+                                                    {isLocked ? "🔒 Locked" : "🟢 Open"}
+                                                </span>
+                                            </td>
+
+                                            {/* Actions */}
+                                            <td style={tdStyle("center")}>
+                                                {isSuperAdmin ? (
+                                                    <button
+                                                        onClick={() => handleToggleLock(c.id)}
+                                                        disabled={togglingId === c.id}
+                                                        style={{
+                                                            padding: "5px 14px",
+                                                            background: isLocked ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+                                                            border: `1px solid ${isLocked ? "#10b981" : "#ef4444"}`,
+                                                            color: isLocked ? "#10b981" : "#f87171",
+                                                            borderRadius: "6px",
+                                                            cursor: "pointer",
+                                                            fontSize: "0.78rem",
+                                                            fontWeight: 700,
+                                                            whiteSpace: "nowrap",
+                                                            opacity: togglingId === c.id ? 0.6 : 1,
+                                                        }}
+                                                    >
+                                                        {togglingId === c.id ? "…" : isLocked ? "🔓 Unlock" : "🔒 Lock"}
+                                                    </button>
+                                                ) : (
+                                                    <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>View only</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {/* ── Footer count ── */}
+                {!loading && sorted.length > 0 && (
+                    <div style={{ marginTop: "10px", color: "var(--text-muted)", fontSize: "0.78rem", textAlign: "right" }}>
+                        Showing {sorted.length} of {colleges.length} colleges
+                        {search && ` · filtered by "${search}"`}
                     </div>
                 )}
             </div>
