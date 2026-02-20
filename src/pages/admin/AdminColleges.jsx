@@ -123,7 +123,7 @@ function CollegeDetailsModal({ college, token, onClose }) {
 
                 {data && !loading && (() => {
                     const { counts, events, payment } = data;
-                    const hasPaid = payment.receipts.some(r => r.status === "verified");
+                    const hasPaid = payment.receipts.some(r => r.status?.toLowerCase() === "verified");
 
                     return (
                         <>
@@ -155,8 +155,8 @@ function CollegeDetailsModal({ college, token, onClose }) {
                                 ) : (
                                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                         {payment.receipts.map((r) => {
-                                            const isVerified = r.status === "verified";
-                                            const isPending = r.status === "waiting_for_verification";
+                                            const isVerified = r.status?.toLowerCase() === "verified";
+                                            const isPending = r.status?.toLowerCase() === "waiting_for_verification";
                                             const statusColor = isVerified ? "#10b981" : isPending ? "#fbbf24" : "#f87171";
                                             const statusBg = isVerified ? "rgba(16,185,129,0.15)" : isPending ? "rgba(251,191,36,0.15)" : "rgba(239,68,68,0.15)";
                                             return (
@@ -199,7 +199,7 @@ function CollegeDetailsModal({ college, token, onClose }) {
                                             );
                                         })}
                                         <div style={{ textAlign: "right", color: "#34d399", fontWeight: 700, fontSize: "0.85rem", marginTop: "4px" }}>
-                                            Total Paid: ₹{payment.receipts.filter(r => r.status === "verified").reduce((s, r) => s + Number(r.amount_paid || 0), 0).toLocaleString("en-IN")}
+                                            Total Paid: ₹{payment.receipts.filter(r => r.status?.toLowerCase() === "verified").reduce((s, r) => s + Number(r.amount_paid || 0), 0).toLocaleString("en-IN")}
                                         </div>
                                     </div>
                                 )}
