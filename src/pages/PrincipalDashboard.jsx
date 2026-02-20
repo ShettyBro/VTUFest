@@ -393,29 +393,17 @@ export default function PrincipalDashboard() {
           </div>
         )}
 
-        {/* --- ASSIGN MANAGER CARD (hidden when manager exists) --- */}
+        {/* --- ASSIGN MANAGER (hidden when manager exists) --- */}
         {dashboardData && !dashboardData.has_team_manager && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-            <div className="glass-card" style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '14px',
-              padding: '10px 16px',
-              borderLeft: '3px solid var(--academic-gold)',
-              width: 'fit-content',
-            }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                👤 No manager assigned
-              </span>
-              <button
-                className="neon-btn"
-                onClick={() => setShowAssignModal(true)}
-                disabled={assigningManager}
-                style={{ padding: '6px 18px', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
-              >
-                {assigningManager ? 'Assigning...' : '+ Assign Manager'}
-              </button>
-            </div>
+          <div style={{ marginBottom: '16px' }}>
+            <button
+              className="neon-btn"
+              onClick={() => setShowAssignModal(true)}
+              disabled={assigningManager}
+              style={{ padding: '7px 20px', fontSize: '0.85rem' }}
+            >
+              {assigningManager ? 'Assigning...' : '+ Assign Manager'}
+            </button>
           </div>
         )}
 
