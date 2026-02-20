@@ -22,83 +22,6 @@ const SumCard = ({ icon, label, value, color }) => (
     </div>
 );
 
-// ─── Action Modal ─────────────────────────────────────────────────────────────
-function ActionModal({ request, onClose, onDone, token }) {
-    const [status, setStatus] = useState(request.status || "PENDING");
-    const [remarks, setRemarks] = useState(request.admin_remarks || "");
-    const [saving, setSaving] = useState(false);
-    const [err, setErr] = useState("");
-
-    const handleSubmit = async () => {
-        setSaving(true);
-        setErr("");
-        try {
-            const res = await fetch(`${API_BASE}/api/admin/accommodation/${request.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ status, admin_remarks: remarks }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message);
-            onDone();
-        } catch (e) {
-            setErr(e.message);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-            <div className="glass-card" style={{ width: "100%", maxWidth: "480px", position: "relative" }}>
-                <button onClick={onClose} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
-
-                <h4 style={{ margin: "0 0 4px", color: "var(--text-primary)" }}>Update Request</h4>
-                <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginBottom: "20px" }}>
-                    {request.college_name} ({request.college_code})
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-                    {["PENDING", "APPROVED", "REJECTED"].map(s => {
-                        const c = STATUS_CFG[s];
-                        return (
-                            <button key={s} onClick={() => setStatus(s)}
-                                style={{
-                                    padding: "10px", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.78rem", transition: "all 0.2s",
-                                    background: status === s ? c.bg : "rgba(255,255,255,0.05)",
-                                    border: `2px solid ${status === s ? c.color : "rgba(255,255,255,0.1)"}`,
-                                    color: status === s ? c.color : "var(--text-muted)"
-                                }}>
-                                {c.label}
-                            </button>
-                        );
-                    })}
-                </div>
-
-                <div style={{ marginBottom: "16px" }}>
-                    <label style={{ color: "var(--text-secondary)", fontSize: "0.82rem", display: "block", marginBottom: "6px" }}>Admin Remarks (optional)</label>
-                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} rows={3}
-                        placeholder="Add notes about this accommodation request…"
-                        style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.88rem", resize: "vertical", boxSizing: "border-box" }} />
-                </div>
-
-                {err && <div style={{ color: "#f87171", fontSize: "0.82rem", marginBottom: "12px" }}>{err}</div>}
-
-                <div style={{ display: "flex", gap: "10px" }}>
-                    <button onClick={handleSubmit} disabled={saving}
-                        style={{ flex: 1, padding: "11px", background: "rgba(212,175,55,0.2)", border: "1px solid #d4af37", color: "#d4af37", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.88rem" }}>
-                        {saving ? "Saving…" : "Save Changes"}
-                    </button>
-                    <button onClick={onClose}
-                        style={{ padding: "11px 20px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem" }}>
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 // ─── Row Detail Expand ────────────────────────────────────────────────────────
 function RowDetail({ r }) {
@@ -152,11 +75,9 @@ export default function AdminAccommodation() {
     const [error, setError] = useState("");
     const [filter, setFilter] = useState("ALL");
     const [expandedId, setExpandedId] = useState(null);
-    const [actionTarget, setActionTarget] = useState(null);
     const [search, setSearch] = useState("");
 
     const token = localStorage.getItem("vtufest_admin_token");
-    const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
     const headers = { Authorization: `Bearer ${token}` };
 
     const fetchAll = useCallback(() => {
@@ -258,7 +179,7 @@ export default function AdminAccommodation() {
                             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
                                 <thead>
                                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                                        {["College", "Code", "Status", "Boys", "Girls", "Total", "Applied At", "Actions", ""].map(h => (
+                                        {["College", "Code", "Status", "Boys", "Girls", "Total", "Applied At", ""].map(h => (
                                             <th key={h} style={{ padding: "13px 14px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>{h}</th>
                                         ))}
                                     </tr>
@@ -290,15 +211,6 @@ export default function AdminAccommodation() {
                                                     <td style={{ padding: "13px 14px", color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>{fmt(r.applied_at)}</td>
 
                                                     <td style={{ padding: "13px 14px" }}>
-                                                        {isSuperAdmin ? (
-                                                            <button onClick={() => setActionTarget(r)}
-                                                                style={{ padding: "5px 14px", background: "rgba(212,175,55,0.15)", border: "1px solid #d4af37", color: "#d4af37", borderRadius: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap" }}>
-                                                                ✏️ Update
-                                                            </button>
-                                                        ) : <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>View only</span>}
-                                                    </td>
-
-                                                    <td style={{ padding: "13px 14px" }}>
                                                         <button onClick={() => setExpandedId(isExpanded ? null : r.id)}
                                                             style={{ padding: "4px 10px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "6px", cursor: "pointer", fontSize: "0.78rem", transition: "all 0.2s" }}>
                                                             {isExpanded ? "▲" : "▼"}
@@ -328,7 +240,7 @@ export default function AdminAccommodation() {
                                             <td style={{ padding: "12px 14px", color: "#60a5fa", fontWeight: 800 }}>{totalBoys}</td>
                                             <td style={{ padding: "12px 14px", color: "#fb7185", fontWeight: 800 }}>{totalGirls}</td>
                                             <td style={{ padding: "12px 14px", color: "#a78bfa", fontWeight: 800 }}>{totalBoys + totalGirls}</td>
-                                            <td colSpan={3} />
+                                            <td colSpan={2} />
                                         </tr>
                                     </tfoot>
                                 )}
@@ -337,15 +249,6 @@ export default function AdminAccommodation() {
                     </div>
                 )}
 
-                {/* Action Modal */}
-                {actionTarget && (
-                    <ActionModal
-                        request={actionTarget}
-                        token={token}
-                        onClose={() => setActionTarget(null)}
-                        onDone={() => { setActionTarget(null); fetchAll(); }}
-                    />
-                )}
             </div>
         </AdminLayout>
     );
