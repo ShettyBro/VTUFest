@@ -3,6 +3,18 @@ import AdminLayout from "./AdminLayout";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const fmt = (d) => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+const fmtMoney = (n) => n != null
+    ? "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 })
+    : "—";
+
+// Prettify event_snake_case → "Event Name"
+const fmtEvent = (name) =>
+    name.replace(/^event_/, "").split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+
 // Summary stat pill
 const Stat = ({ label, value, color }) => (
     <div style={{
@@ -18,6 +30,214 @@ const Stat = ({ label, value, color }) => (
     </div>
 );
 
+// ─── College Details Modal ───────────────────────────────────────────────────
+
+function CollegeDetailsModal({ college, token, onClose }) {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [err, setErr] = useState("");
+
+    useEffect(() => {
+        fetch(`${API_BASE}/api/admin/colleges/${college.id}/details`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then(r => r.json())
+            .then(d => { if (d.success) setData(d.data); else setErr(d.message); })
+            .catch(() => setErr("Network error — could not load details"))
+            .finally(() => setLoading(false));
+    }, [college.id]);
+
+    // close on backdrop click
+    const handleBackdrop = (e) => { if (e.target === e.currentTarget) onClose(); };
+
+    const sectionTitle = (text) => (
+        <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "10px", marginTop: "4px" }}>
+            {text}
+        </div>
+    );
+
+    const pill = (label, value, color = "#60a5fa") => (
+        <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "12px 16px", textAlign: "center", minWidth: "100px" }}>
+            <div style={{ fontSize: "1.4rem", fontWeight: 800, color }}>{value ?? "—"}</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: "2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+        </div>
+    );
+
+    return (
+        <div
+            onClick={handleBackdrop}
+            style={{
+                position: "fixed", inset: 0, zIndex: 1000,
+                background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "20px",
+            }}
+        >
+            <div style={{
+                background: "#0f172a",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "16px",
+                width: "100%",
+                maxWidth: "800px",
+                maxHeight: "90vh",
+                overflowY: "auto",
+                padding: "28px",
+                scrollbarWidth: "thin",
+                scrollbarColor: "rgba(129,140,248,0.4) transparent",
+            }}>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "22px" }}>
+                    <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <span style={{ fontSize: "1.3rem" }}>🏫</span>
+                            <h2 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.15rem" }}>
+                                {college.college_name}
+                            </h2>
+                            <span style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", padding: "3px 10px", borderRadius: "20px", fontSize: "0.72rem", fontWeight: 700 }}>
+                                🔒 Locked
+                            </span>
+                        </div>
+                        <div style={{ marginTop: "5px", color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                            <code style={{ background: "rgba(255,255,255,0.07)", padding: "2px 7px", borderRadius: "4px", marginRight: "10px" }}>
+                                {college.college_code}
+                            </code>
+                            {college.place && <span>📍 {college.place}</span>}
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", fontSize: "0.85rem" }}
+                    >
+                        ✕ Close
+                    </button>
+                </div>
+
+                {loading && (
+                    <div style={{ textAlign: "center", padding: "50px", color: "var(--text-secondary)" }}>
+                        <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>⏳</div>
+                        Loading details…
+                    </div>
+                )}
+
+                {err && (
+                    <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "14px", borderRadius: "8px" }}>
+                        {err}
+                    </div>
+                )}
+
+                {data && !loading && (() => {
+                    const { counts, events, payment } = data;
+                    const totalPaid = payment.receipts.filter(r => r.payment_status === "SUCCESS" || r.payment_status === "VERIFIED").reduce((s, r) => s + Number(r.amount || 0), 0);
+                    const hasPaid = totalPaid > 0;
+
+                    return (
+                        <>
+                            {/* ── Approval info ── */}
+                            {data.college.final_approved_at && (
+                                <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "8px", padding: "10px 14px", marginBottom: "20px", color: "#34d399", fontSize: "0.82rem" }}>
+                                    ✅ Final approved on {fmt(data.college.final_approved_at)}
+                                </div>
+                            )}
+
+                            {/* ── Participant Counts ── */}
+                            {sectionTitle("👥 Participants")}
+                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "24px" }}>
+                                {pill("Students", counts.total_students, "#60a5fa")}
+                                {pill("Accompanists", counts.total_accompanists, "#a78bfa")}
+                                {pill("Faculty Acc.", counts.faculty_accompanists, "#34d399")}
+                                {pill("Professional Acc.", counts.professional_accompanists, "#f59e0b")}
+                                {pill("Team Managers", counts.team_managers, "#f87171")}
+                                {pill("Total", Number(counts.total_students) + Number(counts.total_accompanists), "#818cf8")}
+                            </div>
+
+                            {/* ── Payment Status ── */}
+                            {sectionTitle("💰 Payment")}
+                            <div style={{ marginBottom: "24px" }}>
+                                {payment.receipts.length === 0 ? (
+                                    <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: "8px", padding: "12px 16px", color: "#f87171", fontSize: "0.85rem" }}>
+                                        ❌ No payment receipts found for this college.
+                                    </div>
+                                ) : (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                        {payment.receipts.map((r) => {
+                                            const isPaid = r.payment_status === "SUCCESS" || r.payment_status === "VERIFIED";
+                                            return (
+                                                <div key={r.id} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${isPaid ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}`, borderRadius: "8px", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                                        <span style={{ fontSize: "1.1rem" }}>{isPaid ? "✅" : "⏳"}</span>
+                                                        <div>
+                                                            <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.9rem" }}>{fmtMoney(r.amount)}</div>
+                                                            <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "2px" }}>
+                                                                {r.payment_method || "—"} · {fmt(r.created_at)}
+                                                            </div>
+                                                            {r.transaction_id && (
+                                                                <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                                                                    TXN: <code style={{ background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: "3px" }}>{r.transaction_id}</code>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <span style={{ background: isPaid ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: isPaid ? "#10b981" : "#f87171", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>
+                                                        {r.payment_status}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                        <div style={{ textAlign: "right", color: "#34d399", fontWeight: 700, fontSize: "0.85rem", marginTop: "4px" }}>
+                                            Total Paid: {fmtMoney(totalPaid)}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Pending sessions */}
+                                {payment.sessions.length > 0 && (
+                                    <div style={{ marginTop: "12px" }}>
+                                        <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pending Sessions</div>
+                                        {payment.sessions.map((s) => (
+                                            <div key={s.session_id} style={{ background: "rgba(251,191,36,0.07)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "6px", padding: "8px 12px", marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem" }}>
+                                                <span style={{ color: "#fbbf24" }}>{s.status}</span>
+                                                <span style={{ color: "var(--text-muted)" }}>{fmtMoney(s.amount)} · expires {fmt(s.expires_at)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ── Events ── */}
+                            {sectionTitle(`🎭 Participating Events (${events.length} / 25)`)}
+                            {events.length === 0 ? (
+                                <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", padding: "10px 0" }}>No events found in snapshot.</div>
+                            ) : (
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "8px", marginBottom: "8px" }}>
+                                    {events.map((ev) => (
+                                        <div key={ev.event_name} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: "8px", padding: "10px 14px" }}>
+                                            <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.83rem", marginBottom: "6px" }}>
+                                                {fmtEvent(ev.event_name)}
+                                            </div>
+                                            <div style={{ display: "flex", gap: "8px" }}>
+                                                <span style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: 700 }}>
+                                                    👤 {ev.participants} participant{ev.participants != 1 ? "s" : ""}
+                                                </span>
+                                                {Number(ev.accompanists) > 0 && (
+                                                    <span style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: 700 }}>
+                                                        🎵 {ev.accompanists} acc.
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    );
+                })()}
+            </div>
+        </div>
+    );
+}
+
+// ─── Column Definitions ──────────────────────────────────────────────────────
+
 const COLS = [
     { key: "college_code", label: "Code", align: "left" },
     { key: "college_name", label: "College Name", align: "left" },
@@ -30,6 +250,8 @@ const COLS = [
     { key: "actions", label: "Actions", align: "center" },
 ];
 
+// ─── Main Component ──────────────────────────────────────────────────────────
+
 export default function AdminColleges() {
     const [colleges, setColleges] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,6 +261,7 @@ export default function AdminColleges() {
     const [togglingId, setTogglingId] = useState(null);
     const [sortKey, setSortKey] = useState("college_name");
     const [sortDir, setSortDir] = useState("asc");
+    const [detailsCollege, setDetailsCollege] = useState(null); // college object for modal
 
     const token = localStorage.getItem("vtufest_admin_token");
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
@@ -94,6 +317,10 @@ Are you absolutely sure?`
             setColleges((prev) =>
                 prev.map((c) => c.id === id ? { ...c, is_final_approved: data.data.is_final_approved } : c)
             );
+            // Close the details modal if it's open for this college and we just unlocked it
+            if (detailsCollege?.id === id && !data.data.is_final_approved) {
+                setDetailsCollege(null);
+            }
             if (!isLocking) {
                 setSuccessMsg(data.data?.message || "College unlocked. All associated data has been cleared.");
                 setTimeout(() => setSuccessMsg(""), 8000);
@@ -154,7 +381,7 @@ Are you absolutely sure?`
         whiteSpace: "nowrap",
         cursor: "pointer",
         userSelect: "none",
-        background: "rgba(15,23,42,0.97)",   // opaque for sticky
+        background: "rgba(15,23,42,0.97)",
         borderBottom: "1px solid rgba(255,255,255,0.1)",
         position: "sticky",
         top: 0,
@@ -259,7 +486,6 @@ Are you absolutely sure?`
                         border: "1px solid rgba(255,255,255,0.09)",
                         borderRadius: "14px",
                         background: "rgba(255,255,255,0.03)",
-                        // Custom scrollbar
                         scrollbarWidth: "thin",
                         scrollbarColor: "rgba(129,140,248,0.4) transparent",
                     }}>
@@ -371,28 +597,54 @@ Are you absolutely sure?`
 
                                             {/* Actions */}
                                             <td style={tdStyle("center")}>
-                                                {isSuperAdmin ? (
-                                                    <button
-                                                        onClick={() => handleToggleLock(c.id)}
-                                                        disabled={togglingId === c.id}
-                                                        style={{
-                                                            padding: "5px 14px",
-                                                            background: isLocked ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
-                                                            border: `1px solid ${isLocked ? "#10b981" : "#ef4444"}`,
-                                                            color: isLocked ? "#10b981" : "#f87171",
-                                                            borderRadius: "6px",
-                                                            cursor: "pointer",
-                                                            fontSize: "0.78rem",
-                                                            fontWeight: 700,
-                                                            whiteSpace: "nowrap",
-                                                            opacity: togglingId === c.id ? 0.6 : 1,
-                                                        }}
-                                                    >
-                                                        {togglingId === c.id ? "…" : isLocked ? "🔓 Unlock" : "🔒 Lock"}
-                                                    </button>
-                                                ) : (
-                                                    <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>View only</span>
-                                                )}
+                                                <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
+
+                                                    {/* Details button — only for locked colleges */}
+                                                    {isLocked && (
+                                                        <button
+                                                            onClick={() => setDetailsCollege(c)}
+                                                            style={{
+                                                                padding: "5px 12px",
+                                                                background: "rgba(129,140,248,0.12)",
+                                                                border: "1px solid #818cf8",
+                                                                color: "#818cf8",
+                                                                borderRadius: "6px",
+                                                                cursor: "pointer",
+                                                                fontSize: "0.78rem",
+                                                                fontWeight: 700,
+                                                                whiteSpace: "nowrap",
+                                                            }}
+                                                        >
+                                                            📋 Details
+                                                        </button>
+                                                    )}
+
+                                                    {/* Lock / Unlock button — SUPER_ADMIN only */}
+                                                    {isSuperAdmin ? (
+                                                        <button
+                                                            onClick={() => handleToggleLock(c.id)}
+                                                            disabled={togglingId === c.id}
+                                                            style={{
+                                                                padding: "5px 14px",
+                                                                background: isLocked ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+                                                                border: `1px solid ${isLocked ? "#10b981" : "#ef4444"}`,
+                                                                color: isLocked ? "#10b981" : "#f87171",
+                                                                borderRadius: "6px",
+                                                                cursor: "pointer",
+                                                                fontSize: "0.78rem",
+                                                                fontWeight: 700,
+                                                                whiteSpace: "nowrap",
+                                                                opacity: togglingId === c.id ? 0.6 : 1,
+                                                            }}
+                                                        >
+                                                            {togglingId === c.id ? "…" : isLocked ? "🔓 Unlock" : "🔒 Lock"}
+                                                        </button>
+                                                    ) : (
+                                                        !isLocked && (
+                                                            <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>View only</span>
+                                                        )
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     );
@@ -410,6 +662,15 @@ Are you absolutely sure?`
                     </div>
                 )}
             </div>
+
+            {/* ── College Details Modal ── */}
+            {detailsCollege && (
+                <CollegeDetailsModal
+                    college={detailsCollege}
+                    token={token}
+                    onClose={() => setDetailsCollege(null)}
+                />
+            )}
         </AdminLayout>
     );
 }
