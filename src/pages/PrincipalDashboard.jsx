@@ -378,17 +378,6 @@ export default function PrincipalDashboard() {
             <h1>Principal Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Principal Administration Panel</p>
           </div>
-
-          {dashboardData && !dashboardData.has_team_manager && (
-            <button
-              className="neon-btn"
-              onClick={() => setShowAssignModal(true)}
-              disabled={assigningManager}
-              style={{ padding: '8px 20px', fontSize: '0.9rem' }}
-            >
-              {assigningManager ? "Assigning..." : "Assign Manager"}
-            </button>
-          )}
         </div>
 
         {/* --- TICKER --- */}
@@ -401,6 +390,34 @@ export default function PrincipalDashboard() {
                 {priority1Notifications[currentPriority1Index]?.message}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* --- ASSIGN MANAGER CARD (hidden when manager exists) --- */}
+        {dashboardData && !dashboardData.has_team_manager && (
+          <div className="glass-card" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            borderLeft: '4px solid var(--academic-gold)',
+            marginBottom: '10px',
+            flexWrap: 'wrap',
+          }}>
+            <div>
+              <h4 style={{ margin: '0 0 4px', color: 'var(--academic-gold)' }}>👤 No Manager Assigned</h4>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
+                Assign a team manager to handle student approvals and accompan attendant forms.
+              </p>
+            </div>
+            <button
+              className="neon-btn"
+              onClick={() => setShowAssignModal(true)}
+              disabled={assigningManager}
+              style={{ padding: '10px 24px', fontSize: '0.9rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+            >
+              {assigningManager ? 'Assigning...' : '+ Assign Manager'}
+            </button>
           </div>
         )}
 
