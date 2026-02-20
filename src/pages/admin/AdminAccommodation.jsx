@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminLayout from "./AdminLayout";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
@@ -268,8 +268,8 @@ export default function AdminAccommodation() {
                                         const s = cfg(r.status);
                                         const isExpanded = expandedId === r.id;
                                         return (
-                                            <>
-                                                <tr key={r.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
+                                            <React.Fragment key={r.id}>
+                                                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
                                                     onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
                                                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
 
@@ -307,7 +307,7 @@ export default function AdminAccommodation() {
                                                 </tr>
 
                                                 {isExpanded && <RowDetail r={r} />}
-                                            </>
+                                            </React.Fragment>
                                         );
                                     })}
 
