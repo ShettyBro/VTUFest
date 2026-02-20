@@ -661,6 +661,25 @@ export default function AuthPage({ initialView = "login" }) {
                                             <button className="auth-btn" disabled={loading || uploadStatus !== "success"}>
                                                 {loading ? "Finalizing..." : "Complete Registration"}
                                             </button>
+
+                                            <button
+                                                type="button"
+                                                className="text-btn"
+                                                onClick={() => {
+                                                    setRegStep(1);
+                                                    setRegSession(null);
+                                                    setRegTimer(null);
+                                                    setPhotoFile(null);
+                                                    setPhotoPreview("");
+                                                    setUploadStatus("idle");
+                                                    setUploadProgress(0);
+                                                    setGlobalError("");
+                                                }}
+                                                disabled={loading}
+                                                style={{ marginTop: '8px' }}
+                                            >
+                                                ← Back to Details
+                                            </button>
                                         </form>
                                     )}
                                 </div>
