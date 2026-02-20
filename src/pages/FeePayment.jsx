@@ -493,9 +493,7 @@ export default function FeePayment() {
               <p><strong>Amount Paid:</strong> ₹{hasStatus.amount_paid}</p>
               <p><strong>UTR Reference:</strong> {hasStatus.utr_reference_number}</p>
               <p><strong>Uploaded At:</strong> {new Date(hasStatus.uploaded_at).toLocaleString()}</p>
-              {hasStatus.receipt_url && (
-                <p><strong>Receipt:</strong> <a href={hasStatus.receipt_url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-info)' }}>View Receipt</a></p>
-              )}
+
             </div>
 
             {/* If failed, allow re-upload? The logic was showForm if !paymentStatus. If failed, maybe we should clear status to allow retry? The original code didn't explicitly handle retry well, but let's stick to status view if present. */}
