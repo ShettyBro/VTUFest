@@ -376,13 +376,15 @@ export default function Dashboard() {
             <div className="glass-card calendar-card">
               <h3>Upcoming Events</h3>
               <div className="calendar-list">
-                {eventsCalendarData.calendarEvents.slice(0, 5).map((event, idx) => (
-                  <div key={idx} className="calendar-item">
-                    <span className="cal-date">{new Date(event.date).toLocaleDateString("en-IN", { month: 'short', day: 'numeric' })} • {event.time}</span>
-                    <span className="cal-title">{event.title}</span>
-                    <span className="cal-loc">📍 {event.place}</span>
-                  </div>
-                ))}
+                {eventsCalendarData.calendarEvents
+                  .sort((a, b) => new Date(a.date) - new Date(b.date))
+                  .map((event, idx) => (
+                    <div key={idx} className="calendar-item">
+                      <span className="cal-date">{new Date(event.date).toLocaleDateString("en-IN", { month: 'short', day: 'numeric' })} • {event.time}</span>
+                      <span className="cal-title">{event.title}</span>
+                      <span className="cal-loc">📍 {event.place}</span>
+                    </div>
+                  ))}
               </div>
             </div>
 

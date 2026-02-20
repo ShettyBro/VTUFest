@@ -382,6 +382,29 @@ body::after {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--academic-gold) rgba(255, 255, 255, 0.1);
+}
+
+.calendar-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.calendar-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.calendar-list::-webkit-scrollbar-thumb {
+    background: var(--academic-gold);
+    border-radius: 3px;
+}
+
+.calendar-list::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-light);
 }
 
 .calendar-item {
