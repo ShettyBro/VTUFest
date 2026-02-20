@@ -32,6 +32,7 @@ import AdminSettings from "../pages/admin/AdminSettings";
 import AdminColleges from "../pages/admin/AdminColleges";
 import AdminPayments from "../pages/admin/AdminPayments";
 import AdminFindPerson from "../pages/admin/Adminfindperson";
+import AdminAccommodation from "./pages/admin/AdminAccommodation";
 
 /* Admin Route Guard */
 function AdminRoute({ children }) {
@@ -164,6 +165,7 @@ export default function AppRoutes() {
       <Route path="/ad-colleges" element={<AdminRoute><AdminColleges /></AdminRoute>} />
       <Route path="/ad-payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
       <Route path="/ad-find-person" element={<AdminRoute><AdminFindPerson /></AdminRoute>} />
+      <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
 
       {/* Redirect /admin → /ad-login */}
       <Route path="/admin" element={<Navigate to="/ad-login" replace />} />

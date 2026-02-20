@@ -1,42 +1,201 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AdminLayout from "./AdminLayout";
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
+} from "recharts";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
-const StatCard = ({ label, value, color, icon }) => (
-    <div className="glass-card" style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "2rem", marginBottom: "8px" }}>{icon}</div>
-        <div style={{ fontSize: "2.2rem", fontWeight: 700, color: color || "var(--accent-info)" }}>
+// ─── Palette ────────────────────────────────────────────────────────────────
+const COLORS = {
+    blue: "#60a5fa",
+    green: "#10b981",
+    amber: "#f59e0b",
+    red: "#f87171",
+    purple: "#a78bfa",
+    gold: "#d4af37",
+    teal: "#2dd4bf",
+    rose: "#fb7185",
+};
+const PIE_PALETTE = [COLORS.blue, COLORS.green, COLORS.amber, COLORS.red, COLORS.purple, COLORS.teal];
+
+const fmtEvent = (name) =>
+    name.replace(/^event_/, "").split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+
+const fmtINR = (n) =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+
+// ─── Shared tooltip style ────────────────────────────────────────────────────
+const tooltipStyle = {
+    contentStyle: {
+        background: "rgba(15,23,42,0.95)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        borderRadius: "10px",
+        color: "#f1f5f9",
+        fontSize: "0.82rem",
+    },
+    cursor: { fill: "rgba(255,255,255,0.04)" },
+};
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+const StatCard = ({ label, value, color, icon, sub }) => (
+    <div className="glass-card" style={{ textAlign: "center", padding: "20px 16px" }}>
+        <div style={{ fontSize: "1.8rem", marginBottom: "6px" }}>{icon}</div>
+        <div style={{ fontSize: "2rem", fontWeight: 800, color: color || COLORS.blue, lineHeight: 1 }}>
             {value ?? "—"}
         </div>
-        <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "6px" }}>{label}</div>
+        <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginTop: "6px" }}>{label}</div>
+        {sub && <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginTop: "3px" }}>{sub}</div>}
     </div>
 );
 
+const SectionTitle = ({ children, action }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "32px 0 16px" }}>
+        <h3 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1rem", fontWeight: 700 }}>{children}</h3>
+        {action}
+    </div>
+);
+
+const ChartCard = ({ title, children, style }) => (
+    <div className="glass-card" style={{ padding: "20px", ...style }}>
+        {title && <div style={{ color: "var(--text-secondary)", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "16px" }}>{title}</div>}
+        {children}
+    </div>
+);
+
+// Progress bar
+const ProgressBar = ({ value, max, color, label, sublabel }) => {
+    const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+    return (
+        <div style={{ marginBottom: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                <span style={{ color: "var(--text-primary)", fontSize: "0.82rem" }}>{label}</span>
+                <span style={{ color: color || COLORS.blue, fontSize: "0.82rem", fontWeight: 700 }}>{value} / {max} <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>({pct.toFixed(0)}%)</span></span>
+            </div>
+            {sublabel && <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginBottom: "5px" }}>{sublabel}</div>}
+            <div style={{ height: "6px", background: "rgba(255,255,255,0.08)", borderRadius: "3px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: color || COLORS.blue, borderRadius: "3px", transition: "width 0.6s ease" }} />
+            </div>
+        </div>
+    );
+};
+
+// Custom label for pie
+const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+    if (percent < 0.05) return null;
+    const RADIAN = Math.PI / 180;
+    const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + r * Math.cos(-midAngle * RADIAN);
+    const y = cy + r * Math.sin(-midAngle * RADIAN);
+    return (
+        <text x={x} y={y} fill="#f1f5f9" textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="700">
+            {`${(percent * 100).toFixed(0)}%`}
+        </text>
+    );
+};
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [analytics, setAnalytics] = useState(null);
+    const [loadingStats, setLoadingStats] = useState(true);
+    const [loadingAnalytics, setLoadingAnalytics] = useState(true);
     const [error, setError] = useState("");
+    const [lastFetched, setLastFetched] = useState(null);
 
     const token = localStorage.getItem("vtufest_admin_token");
+    const headers = { Authorization: `Bearer ${token}` };
 
-    useEffect(() => {
-        fetch(`${API_BASE}/api/admin/stats`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
+    const fetchStats = useCallback(() => {
+        setLoadingStats(true);
+        fetch(`${API_BASE}/api/admin/stats`, { headers })
             .then(r => r.json())
-            .then(d => {
-                if (d.success) setStats(d.data);
-                else setError(d.message || "Failed to load stats");
-            })
+            .then(d => { if (d.success) { setStats(d.data); setLastFetched(new Date()); } else setError(d.message || "Failed to load stats"); })
             .catch(() => setError("Network error"))
-            .finally(() => setLoading(false));
-    }, []);
+            .finally(() => setLoadingStats(false));
+    }, [token]);
+
+    const fetchAnalytics = useCallback(() => {
+        setLoadingAnalytics(true);
+        fetch(`${API_BASE}/api/admin/analytics`, { headers })
+            .then(r => r.json())
+            .then(d => { if (d.success) setAnalytics(d.data); })
+            .catch(() => { }) // non-critical
+            .finally(() => setLoadingAnalytics(false));
+    }, [token]);
+
+    useEffect(() => { fetchStats(); fetchAnalytics(); }, []);
+
+    const handleRefresh = () => { fetchStats(); fetchAnalytics(); };
+
+    // ── Derived chart data ──
+    const appStatusData = analytics?.applications_by_status?.map(r => ({
+        name: r.status, value: parseInt(r.count),
+    })) || [];
+
+    const eventData = analytics?.event_participation?.map(r => ({
+        name: fmtEvent(r.event_name),
+        Participants: parseInt(r.participants),
+        Accompanists: parseInt(r.accompanists),
+        Total: parseInt(r.total),
+    })) || [];
+
+    const paymentData = analytics?.payments_by_status?.map(r => ({
+        name: r.status,
+        count: parseInt(r.count),
+        amount: parseInt(r.total_amount),
+    })) || [];
+
+    const regByDay = analytics?.registrations_by_day?.map(r => ({
+        date: new Date(r.day).toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+        Registrations: parseInt(r.count),
+    })) || [];
+
+    const genderData = analytics?.gender_split?.map(r => ({
+        name: r.gender?.charAt(0).toUpperCase() + r.gender?.slice(1).toLowerCase() || "Unknown",
+        value: parseInt(r.count),
+    })) || [];
+
+    const volunteerData = analytics?.volunteers_by_type?.map(r => ({
+        name: r.volunteer_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+        Total: parseInt(r.count),
+        Active: parseInt(r.active),
+    })) || [];
+
+    const deptData = analytics?.applications_by_department?.map(r => ({
+        name: r.department?.length > 18 ? r.department.substring(0, 18) + "…" : r.department,
+        Applications: parseInt(r.count),
+    })) || [];
+
+    const cp = analytics?.college_progress;
+    const qr = analytics?.qr_progress;
+    const acc = analytics?.accommodation;
+
+    const appStatusColors = { PENDING: COLORS.amber, APPROVED: COLORS.green, REJECTED: COLORS.red, PENDING_REAPPLY: COLORS.purple };
+    const payStatusColors = { VERIFIED: COLORS.green, PENDING: COLORS.amber, waiting_for_verification: COLORS.blue, REJECTED: COLORS.red };
 
     return (
         <AdminLayout>
             <div style={{ padding: "10px 0" }}>
-                <h3 style={{ color: "var(--text-primary)", marginBottom: "24px" }}>Overview</h3>
+
+                {/* ── Header ── */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                    <div>
+                        <h3 style={{ color: "var(--text-primary)", margin: 0 }}>Overview</h3>
+                        {lastFetched && (
+                            <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "4px" }}>
+                                Last refreshed: {lastFetched.toLocaleTimeString("en-IN")}
+                            </div>
+                        )}
+                    </div>
+                    <button
+                        onClick={handleRefresh}
+                        disabled={loadingStats || loadingAnalytics}
+                        style={{ padding: "8px 18px", background: "rgba(96,165,250,0.15)", border: "1px solid #60a5fa", color: "#60a5fa", borderRadius: "8px", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                        {(loadingStats || loadingAnalytics) ? "⟳ Refreshing..." : "⟳ Refresh"}
+                    </button>
+                </div>
 
                 {error && (
                     <div style={{ background: "rgba(239,68,68,0.15)", border: "1px solid #ef4444", color: "#f87171", padding: "12px 16px", borderRadius: "8px", marginBottom: "20px" }}>
@@ -44,46 +203,257 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {loading ? (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
-                        {[...Array(8)].map((_, i) => (
-                            <div key={i} className="glass-card" style={{ height: "120px", opacity: 0.5 }} />
-                        ))}
+                {/* ── Stat Cards ── */}
+                {loadingStats ? (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "16px" }}>
+                        {[...Array(8)].map((_, i) => <div key={i} className="glass-card" style={{ height: "110px", opacity: 0.4 }} />)}
                     </div>
                 ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px" }}>
-                        <StatCard icon="🏫" label="Total Colleges" value={stats?.total_colleges} color="var(--accent-info)" />
-                        <StatCard icon="👨‍🎓" label="Total Students" value={stats?.total_students} color="var(--accent-success)" />
-                        <StatCard icon="📝" label="Total Applications" value={stats?.total_applications} color="#a78bfa" />
-                        <StatCard icon="💳" label="Pending Payments" value={stats?.pending_payments} color="var(--accent-warning)" />
-                        <StatCard icon="✅" label="Approved Applications" value={stats?.approved_applications} color="var(--accent-success)" />
-                        <StatCard icon="❌" label="Rejected Applications" value={stats?.rejected_applications} color="#f87171" />
-                        <StatCard icon="🔔" label="Active Notifications" value={stats?.active_notifications} color="var(--accent-info)" />
-                        <StatCard icon="📅" label="Calendar Events" value={stats?.active_calendar_events} color="#d4af37" />
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "16px" }}>
+                        <StatCard icon="🏫" label="Total Colleges" value={stats?.total_colleges} color={COLORS.blue}
+                            sub={cp ? `${cp.locked_colleges} locked` : null} />
+                        <StatCard icon="👨‍🎓" label="Total Students" value={stats?.total_students} color={COLORS.green} />
+                        <StatCard icon="📝" label="Total Applications" value={stats?.total_applications} color={COLORS.purple} />
+                        <StatCard icon="💳" label="Pending Payments" value={stats?.pending_payments} color={COLORS.amber} />
+                        <StatCard icon="✅" label="Approved" value={stats?.approved_applications} color={COLORS.green} />
+                        <StatCard icon="❌" label="Rejected" value={stats?.rejected_applications} color={COLORS.red} />
+                        <StatCard icon="🔔" label="Notifications" value={stats?.active_notifications} color={COLORS.blue} />
+                        <StatCard icon="📅" label="Calendar Events" value={stats?.active_calendar_events} color={COLORS.gold} />
+                        {analytics?.total_verified_amount !== undefined && (
+                            <StatCard icon="💰" label="Verified Revenue" value={fmtINR(analytics.total_verified_amount)} color={COLORS.green} />
+                        )}
+                        {qr && (
+                            <StatCard icon="🔖" label="QR Assigned" value={`${qr.assigned}/${qr.total}`} color={COLORS.teal}
+                                sub={`${qr.total > 0 ? ((qr.assigned / qr.total) * 100).toFixed(0) : 0}% assigned`} />
+                        )}
+                        {acc && (
+                            <StatCard icon="🛏️" label="Accommodation" value={parseInt(acc.total_requests)} color={COLORS.rose}
+                                sub={`${acc.pending} pending`} />
+                        )}
+                        {analytics?.accompanist_breakdown && (
+                            <StatCard icon="🎵" label="Accompanists"
+                                value={analytics.accompanist_breakdown.reduce((s, r) => s + parseInt(r.count), 0)}
+                                color={COLORS.purple} />
+                        )}
                     </div>
                 )}
 
-                {/* Quick links */}
-                <h3 style={{ color: "var(--text-primary)", margin: "32px 0 16px" }}>Quick Actions</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+                {/* ── Progress Section ── */}
+                {!loadingAnalytics && (cp || qr || acc) && (
+                    <>
+                        <SectionTitle>Key Progress Indicators</SectionTitle>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
+                            {cp && (
+                                <ChartCard title="College Finalization">
+                                    <ProgressBar label="Colleges Locked" value={parseInt(cp.locked_colleges)} max={parseInt(cp.total_colleges)} color={COLORS.green} />
+                                    <ProgressBar label="Still Pending" value={parseInt(cp.pending_colleges)} max={parseInt(cp.total_colleges)} color={COLORS.amber} />
+                                </ChartCard>
+                            )}
+                            {qr && (
+                                <ChartCard title="QR Code Assignment">
+                                    <ProgressBar label="QR Codes Assigned" value={qr.assigned} max={qr.total} color={COLORS.teal} sublabel="Out of total pool" />
+                                    <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "8px" }}>
+                                        {qr.total - qr.assigned} codes remaining in pool
+                                    </div>
+                                </ChartCard>
+                            )}
+                            {acc && (
+                                <ChartCard title="Accommodation Requests">
+                                    <ProgressBar label="Approved" value={parseInt(acc.approved)} max={parseInt(acc.total_requests)} color={COLORS.green} />
+                                    <ProgressBar label="Pending Review" value={parseInt(acc.pending)} max={parseInt(acc.total_requests)} color={COLORS.amber} />
+                                    <div style={{ display: "flex", gap: "12px", marginTop: "10px" }}>
+                                        <div style={{ flex: 1, background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", borderRadius: "8px", padding: "8px", textAlign: "center" }}>
+                                            <div style={{ color: COLORS.blue, fontWeight: 700 }}>{acc.total_boys}</div>
+                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Boys</div>
+                                        </div>
+                                        <div style={{ flex: 1, background: "rgba(251,113,133,0.1)", border: "1px solid rgba(251,113,133,0.2)", borderRadius: "8px", padding: "8px", textAlign: "center" }}>
+                                            <div style={{ color: COLORS.rose, fontWeight: 700 }}>{acc.total_girls}</div>
+                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Girls</div>
+                                        </div>
+                                        <div style={{ flex: 1, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "8px", padding: "8px", textAlign: "center" }}>
+                                            <div style={{ color: COLORS.green, fontWeight: 700 }}>{acc.total_persons}</div>
+                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Total</div>
+                                        </div>
+                                    </div>
+                                </ChartCard>
+                            )}
+                        </div>
+                    </>
+                )}
+
+                {/* ── Charts Row 1: Applications + Payments ── */}
+                {!loadingAnalytics && (
+                    <>
+                        <SectionTitle>Application & Payment Analytics</SectionTitle>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+
+                            {/* Application status pie */}
+                            <ChartCard title="Applications by Status">
+                                {appStatusData.length > 0 ? (
+                                    <>
+                                        <ResponsiveContainer width="100%" height={180}>
+                                            <PieChart>
+                                                <Pie data={appStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%"
+                                                    outerRadius={75} labelLine={false} label={renderPieLabel}>
+                                                    {appStatusData.map((entry, i) => (
+                                                        <Cell key={i} fill={appStatusColors[entry.name] || PIE_PALETTE[i % PIE_PALETTE.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip {...tooltipStyle} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center", marginTop: "8px" }}>
+                                            {appStatusData.map((d, i) => (
+                                                <div key={i} style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "0.75rem" }}>
+                                                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: appStatusColors[d.name] || PIE_PALETTE[i % PIE_PALETTE.length] }} />
+                                                    <span style={{ color: "var(--text-secondary)" }}>{d.name} ({d.value})</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : <div style={{ color: "var(--text-muted)", textAlign: "center", padding: "40px 0", fontSize: "0.85rem" }}>No data yet</div>}
+                            </ChartCard>
+
+                            {/* Payment status breakdown */}
+                            <ChartCard title="Payment Status">
+                                {paymentData.length > 0 ? (
+                                    <>
+                                        <ResponsiveContainer width="100%" height={180}>
+                                            <PieChart>
+                                                <Pie data={paymentData} dataKey="count" nameKey="name" cx="50%" cy="50%"
+                                                    outerRadius={75} labelLine={false} label={renderPieLabel}>
+                                                    {paymentData.map((entry, i) => (
+                                                        <Cell key={i} fill={payStatusColors[entry.name] || PIE_PALETTE[i % PIE_PALETTE.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip {...tooltipStyle} formatter={(val, name, props) => [`${val} receipts (${fmtINR(props.payload.amount)})`, name]} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center", marginTop: "8px" }}>
+                                            {paymentData.map((d, i) => (
+                                                <div key={i} style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "0.75rem" }}>
+                                                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: payStatusColors[d.name] || PIE_PALETTE[i % PIE_PALETTE.length] }} />
+                                                    <span style={{ color: "var(--text-secondary)" }}>{d.name} ({d.count})</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : <div style={{ color: "var(--text-muted)", textAlign: "center", padding: "40px 0", fontSize: "0.85rem" }}>No payments yet</div>}
+                            </ChartCard>
+
+                            {/* Gender + Volunteers */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                <ChartCard title="Gender Distribution" style={{ flex: 1 }}>
+                                    {genderData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height={90}>
+                                            <BarChart data={genderData} layout="vertical" margin={{ left: 0, right: 10 }}>
+                                                <XAxis type="number" hide />
+                                                <YAxis type="category" dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} width={60} />
+                                                <Tooltip {...tooltipStyle} />
+                                                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                                    {genderData.map((_, i) => <Cell key={i} fill={PIE_PALETTE[i]} />)}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : <div style={{ color: "var(--text-muted)", fontSize: "0.82rem", textAlign: "center", padding: "16px 0" }}>No data</div>}
+                                </ChartCard>
+
+                                <ChartCard title="Volunteers by Type" style={{ flex: 1 }}>
+                                    {volunteerData.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height={90}>
+                                            <BarChart data={volunteerData} layout="vertical" margin={{ left: 0, right: 10 }}>
+                                                <XAxis type="number" hide />
+                                                <YAxis type="category" dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10 }} width={80} />
+                                                <Tooltip {...tooltipStyle} />
+                                                <Bar dataKey="Active" fill={COLORS.green} radius={[0, 4, 4, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : <div style={{ color: "var(--text-muted)", fontSize: "0.82rem", textAlign: "center", padding: "16px 0" }}>No volunteers</div>}
+                                </ChartCard>
+                            </div>
+                        </div>
+
+                        {/* ── Registrations over time ── */}
+                        {regByDay.length > 0 && (
+                            <>
+                                <SectionTitle>Registration Trend (Last 30 Days)</SectionTitle>
+                                <ChartCard>
+                                    <ResponsiveContainer width="100%" height={180}>
+                                        <LineChart data={regByDay} margin={{ left: 0, right: 10, top: 4, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                            <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 10 }} interval="preserveStartEnd" />
+                                            <YAxis tick={{ fill: "#64748b", fontSize: 10 }} allowDecimals={false} />
+                                            <Tooltip {...tooltipStyle} />
+                                            <Line type="monotone" dataKey="Registrations" stroke={COLORS.blue} strokeWidth={2}
+                                                dot={{ fill: COLORS.blue, r: 3 }} activeDot={{ r: 5 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </ChartCard>
+                            </>
+                        )}
+
+                        {/* ── Event Participation ── */}
+                        {eventData.length > 0 && (
+                            <>
+                                <SectionTitle>Event Participation (All 25 Events)</SectionTitle>
+                                <ChartCard>
+                                    <ResponsiveContainer width="100%" height={320}>
+                                        <BarChart data={eventData} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                                            <XAxis type="number" tick={{ fill: "#64748b", fontSize: 10 }} />
+                                            <YAxis type="category" dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10 }} width={145} />
+                                            <Tooltip {...tooltipStyle} />
+                                            <Legend wrapperStyle={{ fontSize: "0.78rem", color: "#94a3b8" }} />
+                                            <Bar dataKey="Participants" fill={COLORS.blue} radius={[0, 3, 3, 0]} stackId="a" />
+                                            <Bar dataKey="Accompanists" fill={COLORS.purple} radius={[0, 3, 3, 0]} stackId="a" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </ChartCard>
+                            </>
+                        )}
+
+                        {/* ── Department Breakdown ── */}
+                        {deptData.length > 0 && (
+                            <>
+                                <SectionTitle>Top Departments by Applications</SectionTitle>
+                                <ChartCard>
+                                    <ResponsiveContainer width="100%" height={220}>
+                                        <BarChart data={deptData} margin={{ left: 0, right: 10, top: 4, bottom: 40 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                                            <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10 }} angle={-30} textAnchor="end" interval={0} />
+                                            <YAxis tick={{ fill: "#64748b", fontSize: 10 }} allowDecimals={false} />
+                                            <Tooltip {...tooltipStyle} />
+                                            <Bar dataKey="Applications" fill={COLORS.teal} radius={[4, 4, 0, 0]}>
+                                                {deptData.map((_, i) => <Cell key={i} fill={`hsl(${170 + i * 12}, 60%, 55%)`} />)}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </ChartCard>
+                            </>
+                        )}
+                    </>
+                )}
+
+                {/* ── Quick Actions ── */}
+                <SectionTitle>Quick Actions</SectionTitle>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "14px" }}>
                     {[
-                        { label: "Manage Notifications", path: "/ad-notifications", icon: "🔔" },
-                        { label: "Manage Calendar", path: "/ad-calendar", icon: "📅" },
-                        { label: "Settings & Toggles", path: "/ad-settings", icon: "⚙️" },
-                        { label: "View Colleges", path: "/ad-colleges", icon: "🏫" },
-                        { label: "Pending Payments", path: "/ad-payments", icon: "💳" },
+                        { label: "Notifications", path: "/ad-notifications", icon: "🔔" },
+                        { label: "Calendar", path: "/ad-calendar", icon: "📅" },
+                        { label: "Settings", path: "/ad-settings", icon: "⚙️" },
+                        { label: "Colleges", path: "/ad-colleges", icon: "🏫" },
+                        { label: "Payments", path: "/ad-payments", icon: "💳" },
+                        { label: "Accommodation", path: "/ad-accommodation", icon: "🛏️" },
+                        { label: "Find Person", path: "/ad-find-person", icon: "🔍" },
                     ].map(item => (
-                        <a
-                            key={item.path}
-                            href={item.path}
-                            className="glass-card"
-                            style={{ textDecoration: "none", color: "var(--text-primary)", textAlign: "center", cursor: "pointer", display: "block" }}
-                        >
-                            <div style={{ fontSize: "1.8rem", marginBottom: "8px" }}>{item.icon}</div>
-                            <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{item.label}</div>
+                        <a key={item.path} href={item.path} className="glass-card"
+                            style={{ textDecoration: "none", color: "var(--text-primary)", textAlign: "center", cursor: "pointer", display: "block", padding: "16px" }}>
+                            <div style={{ fontSize: "1.6rem", marginBottom: "6px" }}>{item.icon}</div>
+                            <div style={{ fontWeight: 600, fontSize: "0.82rem" }}>{item.label}</div>
                         </a>
                     ))}
                 </div>
+
             </div>
         </AdminLayout>
     );
