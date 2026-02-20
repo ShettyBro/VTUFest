@@ -1,4 +1,3 @@
-
 // ChangePassword.jsx (ResetPassword)
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -62,7 +61,10 @@ export default function ResetPassword() {
       const data = await response.json();
 
       if (!response.ok) {
-        showPopup(data.error || data.message || "Reset failed. Retry.", "error");
+        const errorMsg = data.error || data.message || "Reset failed. Retry.";
+        // Use warning style for same-password validation, error for everything else
+        const popupType = errorMsg.includes("same as your current password") ? "warning" : "error";
+        showPopup(errorMsg, popupType);
         setLoading(false);
         return;
       }
