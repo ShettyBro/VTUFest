@@ -162,6 +162,7 @@ export default function AppRoutes() {
       <Route path="/ad-settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
       <Route path="/ad-colleges" element={<AdminRoute><AdminColleges /></AdminRoute>} />
       <Route path="/ad-payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
+      <Route path="/ad-find-person" element={<AdminFindPerson />} />
 
       {/* Redirect /admin → /ad-login */}
       <Route path="/admin" element={<Navigate to="/ad-login" replace />} />

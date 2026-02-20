@@ -9,6 +9,7 @@ const NAV_ITEMS = [
     { path: "/ad-settings", label: "Settings", icon: "⚙️" },
     { path: "/ad-colleges", label: "Colleges", icon: "🏫" },
     { path: "/ad-payments", label: "Payments", icon: "💳" },
+    { path: "/ad-find-person", label: "Find Person", icon: "🔍" },
 ];
 
 export default function AdminLayout({ children }) {
