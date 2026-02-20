@@ -32,7 +32,7 @@ import AdminSettings from "../pages/admin/AdminSettings";
 import AdminColleges from "../pages/admin/AdminColleges";
 import AdminPayments from "../pages/admin/AdminPayments";
 import AdminFindPerson from "../pages/admin/Adminfindperson";
-import AdminAccommodation from "./pages/admin/AdminAccommodation";
+import AdminAccommodation from "../pages/admin/AdminAccommodation";
 
 /* Admin Route Guard */
 function AdminRoute({ children }) {
