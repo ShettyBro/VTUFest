@@ -467,23 +467,21 @@ export default function FeePayment() {
           <div className="glass-card" style={{ maxWidth: "800px", margin: "0 auto", textAlign: 'center' }}>
             <h3>Payment Status</h3>
 
-            <div className="status-badge-lg"
-              style={{
-                background: hasStatus.status === 'payment_approved' ? 'rgba(16, 185, 129, 0.2)' :
-                  hasStatus.status === 'verification_failed' ? 'rgba(239, 68, 68, 0.2)' :
-                    'rgba(33, 150, 243, 0.2)',
-                color: hasStatus.status === 'payment_approved' ? '#10b981' :
-                  hasStatus.status === 'verification_failed' ? '#ef4444' :
-                    '#2196f3',
-                border: `1px solid ${hasStatus.status === 'payment_approved' ? '#10b981' :
-                  hasStatus.status === 'verification_failed' ? '#ef4444' :
-                    '#2196f3'}`,
-                marginBottom: '20px'
-              }}>
-              {hasStatus.status === 'waiting_for_verification' && "⏳ Waiting for Verification"}
-              {hasStatus.status === 'payment_approved' && "✅ Payment Approved"}
-              {hasStatus.status === 'verification_failed' && "❌ Verification Failed"}
-            </div>
+            {(() => {
+              const s = hasStatus.status;
+              const isApproved = s === 'VERIFIED' || s === 'payment_approved';
+              const isRejected = s === 'REJECTED' || s === 'verification_failed';
+              const isPending = s === 'PENDING' || s === 'waiting_for_verification';
+              const bg = isApproved ? 'rgba(16,185,129,0.2)' : isRejected ? 'rgba(239,68,68,0.2)' : 'rgba(33,150,243,0.2)';
+              const color = isApproved ? '#10b981' : isRejected ? '#ef4444' : '#2196f3';
+              const label = isApproved ? '✅ Payment Approved' : isRejected ? '❌ Verification Failed' : '⏳ Waiting for Verification';
+              return (
+                <div className="status-badge-lg"
+                  style={{ background: bg, color, border: `1px solid ${color}`, marginBottom: '20px' }}>
+                  {label}
+                </div>
+              );
+            })()}
 
             {hasStatus.admin_remarks && (
               <div style={{ color: "#ef4444", marginBottom: "20px", padding: "10px", background: "rgba(239,68,68,0.1)", borderRadius: "8px" }}>
