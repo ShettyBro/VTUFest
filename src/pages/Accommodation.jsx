@@ -409,109 +409,107 @@ export default function Accommodation() {
                 </div>
               )}
             </div>
-          </div>
-        ) : (
-        // NEW REQUEST FORM
-        <div>
-          <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
-            Submit New Request
-          </h3>
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '8px' }}>
-              <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
-                ⚠️ Maximum total allowed: Male + Female = 45
-              </small>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-              <div>
-                <label style={labelStyle}>Total Male *</label>
-                <input
-                  type="number"
-                  name="total_boys"
-                  value={formData.total_boys}
-                  onChange={handleInputChange}
-                  style={inputStyle}
-                  min="0"
-                  max="45"
-                  placeholder="0"
-                  required
-                  disabled={isReadOnlyMode}
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>Total Female *</label>
-                <input
-                  type="number"
-                  name="total_girls"
-                  value={formData.total_girls}
-                  onChange={handleInputChange}
-                  style={inputStyle}
-                  min="0"
-                  max="45"
-                  placeholder="0"
-                  required
-                  disabled={isReadOnlyMode}
-                />
-              </div>
-            </div>
-
+          ) : (
+            // NEW REQUEST FORM
             <div>
-              <label style={labelStyle}>Contact Person Name *</label>
-              <input
-                type="text"
-                name="contact_person_name"
-                value={formData.contact_person_name}
-                onChange={handleInputChange}
-                style={inputStyle}
-                placeholder="Name of person responsible"
-                required
-                disabled={isReadOnlyMode}
-              />
-            </div>
+              <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
+                Submit New Request
+              </h3>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '8px' }}>
+                  <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
+                    ⚠️ Maximum total allowed: Male + Female = 45
+                  </small>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div>
+                    <label style={labelStyle}>Total Male *</label>
+                    <input
+                      type="number"
+                      name="total_boys"
+                      value={formData.total_boys}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      min="0"
+                      max="45"
+                      placeholder="0"
+                      required
+                      disabled={isReadOnlyMode}
+                    />
+                  </div>
 
-            <div>
-              <label style={labelStyle}>Contact Phone *</label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                name="contact_person_phone"
-                value={formData.contact_person_phone}
-                onChange={handleInputChange}
-                style={inputStyle}
-                maxLength={10}
-                pattern="[6-9][0-9]{9}"
-                placeholder="e.g. 9876543210 (start with 6-9)"
-                required
-                disabled={isReadOnlyMode}
-              />
-            </div>
+                  <div>
+                    <label style={labelStyle}>Total Female *</label>
+                    <input
+                      type="number"
+                      name="total_girls"
+                      value={formData.total_girls}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      min="0"
+                      max="45"
+                      placeholder="0"
+                      required
+                      disabled={isReadOnlyMode}
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label style={labelStyle}>Special Requirements (Optional)</label>
-              <textarea
-                name="special_requirements"
-                value={formData.special_requirements}
-                onChange={handleInputChange}
-                style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
-                placeholder="Any specific needs..."
-                disabled={isReadOnlyMode}
-              />
-            </div>
+                <div>
+                  <label style={labelStyle}>Contact Person Name *</label>
+                  <input
+                    type="text"
+                    name="contact_person_name"
+                    value={formData.contact_person_name}
+                    onChange={handleInputChange}
+                    style={inputStyle}
+                    placeholder="Name of person responsible"
+                    required
+                    disabled={isReadOnlyMode}
+                  />
+                </div>
 
-            <button
-              type="submit"
-              className="neon-btn"
-              disabled={submitting || isReadOnlyMode}
-            >
-              {submitting ? "Submitting..." : "Submit Request"}
-            </button>
-          </form>
-        </div>
+                <div>
+                  <label style={labelStyle}>Contact Phone *</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    name="contact_person_phone"
+                    value={formData.contact_person_phone}
+                    onChange={handleInputChange}
+                    style={inputStyle}
+                    maxLength={10}
+                    pattern="[6-9][0-9]{9}"
+                    placeholder="e.g. 9876543210 (start with 6-9)"
+                    required
+                    disabled={isReadOnlyMode}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Special Requirements (Optional)</label>
+                  <textarea
+                    name="special_requirements"
+                    value={formData.special_requirements}
+                    onChange={handleInputChange}
+                    style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
+                    placeholder="Any specific needs..."
+                    disabled={isReadOnlyMode}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="neon-btn"
+                  disabled={submitting || isReadOnlyMode}
+                >
+                  {submitting ? "Submitting..." : "Submit Request"}
+                </button>
+              </form>
+            </div>
           )}
+        </div>
       </div>
-
-    </div>
-    </Layout >
+    </Layout>
   );
 }
