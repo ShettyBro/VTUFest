@@ -42,12 +42,15 @@ export default function AuthPage({ initialView = "login" }) {
     const [loginRole, setLoginRole] = useState("student");
     const [loginEmail, setLoginEmail] = useState("");
     const [loginPassword, setLoginPassword] = useState("");
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [showForceResetToast, setShowForceResetToast] = useState(false);
     const [forceResetData, setForceResetData] = useState(null);
 
     /* ================= REGISTER STATE & LOGIC ================= */
     const [regLocked, setRegLocked] = useState(false);
     const [colleges, setColleges] = useState([]);
+    const [showRegPassword, setShowRegPassword] = useState(false);
+    const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
     const [regForm, setRegForm] = useState({
         usn: "", fullName: "", email: "", phone: "", gender: "",
         collegeId: "", password: "", confirmPassword: ""
@@ -439,13 +442,20 @@ export default function AuthPage({ initialView = "login" }) {
 
                             <div className="input-group">
                                 <label>Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="Enter password"
-                                    value={loginPassword}
-                                    onChange={e => setLoginPassword(e.target.value)}
-                                    required
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showLoginPassword ? 'text' : 'password'}
+                                        placeholder="Enter password"
+                                        value={loginPassword}
+                                        onChange={e => setLoginPassword(e.target.value)}
+                                        required
+                                        style={{ paddingRight: '42px' }}
+                                    />
+                                    <button type="button" onClick={() => setShowLoginPassword(v => !v)}
+                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                        tabIndex={-1} aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                                    >{showLoginPassword ? '🙈' : '👁️'}</button>
+                                </div>
                             </div>
 
                             <button className="auth-btn" disabled={loading}>
@@ -640,22 +650,36 @@ export default function AuthPage({ initialView = "login" }) {
 
                                             <div className="input-group">
                                                 <label>Password *</label>
-                                                <input
-                                                    type="password"
-                                                    value={regForm.password}
-                                                    onChange={e => setRegForm({ ...regForm, password: e.target.value })}
-                                                    required
-                                                />
+                                                <div style={{ position: 'relative' }}>
+                                                    <input
+                                                        type={showRegPassword ? 'text' : 'password'}
+                                                        value={regForm.password}
+                                                        onChange={e => setRegForm({ ...regForm, password: e.target.value })}
+                                                        required
+                                                        style={{ paddingRight: '42px' }}
+                                                    />
+                                                    <button type="button" onClick={() => setShowRegPassword(v => !v)}
+                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                                        tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
+                                                    >{showRegPassword ? '🙈' : '👁️'}</button>
+                                                </div>
                                             </div>
 
                                             <div className="input-group">
                                                 <label>Confirm Password *</label>
-                                                <input
-                                                    type="password"
-                                                    value={regForm.confirmPassword}
-                                                    onChange={e => setRegForm({ ...regForm, confirmPassword: e.target.value })}
-                                                    required
-                                                />
+                                                <div style={{ position: 'relative' }}>
+                                                    <input
+                                                        type={showRegConfirmPassword ? 'text' : 'password'}
+                                                        value={regForm.confirmPassword}
+                                                        onChange={e => setRegForm({ ...regForm, confirmPassword: e.target.value })}
+                                                        required
+                                                        style={{ paddingRight: '42px' }}
+                                                    />
+                                                    <button type="button" onClick={() => setShowRegConfirmPassword(v => !v)}
+                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                                        tabIndex={-1} aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
+                                                    >{showRegConfirmPassword ? '🙈' : '👁️'}</button>
+                                                </div>
                                             </div>
 
                                             <button className="auth-btn" disabled={loading || uploadStatus !== "success"}>

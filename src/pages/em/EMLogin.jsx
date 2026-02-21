@@ -8,6 +8,7 @@ export default function EMLogin() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -70,8 +71,14 @@ export default function EMLogin() {
                         </div>
                         <div className="input-group">
                             <label>Password</label>
-                            <input type="password" placeholder="Enter password" value={password}
-                                onChange={e => setPassword(e.target.value)} required />
+                            <div style={{ position: 'relative' }}>
+                                <input type={showPassword ? 'text' : 'password'} placeholder="Enter password" value={password}
+                                    onChange={e => setPassword(e.target.value)} required style={{ paddingRight: '42px' }} />
+                                <button type="button" onClick={() => setShowPassword(v => !v)}
+                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                    tabIndex={-1} aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >{showPassword ? '🙈' : '👁️'}</button>
+                            </div>
                         </div>
                         <button className="auth-btn" disabled={loading}>
                             {loading ? "Logging In..." : "Log In"}

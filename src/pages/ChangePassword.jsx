@@ -12,6 +12,8 @@ export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // ✅ Use popup instead of local error/success state
@@ -101,26 +103,40 @@ export default function ResetPassword() {
 
           <div className="input-group">
             <label>New Password</label>
-            <input
-              type="password"
-              placeholder="Enter new password (min 8 characters)"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                placeholder="Enter new password (min 8 characters)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={loading}
+                required
+                style={{ paddingRight: '42px' }}
+              />
+              <button type="button" onClick={() => setShowNewPassword(v => !v)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                tabIndex={-1} aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+              >{showNewPassword ? '🙈' : '👁️'}</button>
+            </div>
           </div>
 
           <div className="input-group">
             <label>Confirm Password</label>
-            <input
-              type="password"
-              placeholder="Confirm new password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
+                required
+                style={{ paddingRight: '42px' }}
+              />
+              <button type="button" onClick={() => setShowConfirmPassword(v => !v)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                tabIndex={-1} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >{showConfirmPassword ? '🙈' : '👁️'}</button>
+            </div>
           </div>
 
           <button className="auth-btn" type="submit" disabled={loading}>

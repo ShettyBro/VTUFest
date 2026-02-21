@@ -46,6 +46,8 @@ export default function RegisterStudent() {
   const [timerExpired, setTimerExpired] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [sessionData, setSessionData] = useState(null);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
 
   const isLocked = registrationLocked === true;
 
@@ -692,26 +694,40 @@ export default function RegisterStudent() {
             )}
 
             <label>Create Password * (min 8 characters)</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Enter password"
-              disabled={timerExpired || loading}
-              required
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showRegPassword ? 'text' : 'password'}
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="Enter password"
+                disabled={timerExpired || loading}
+                required
+                style={{ paddingRight: '42px' }}
+              />
+              <button type="button" onClick={() => setShowRegPassword(v => !v)}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: '#78350f', padding: 0, lineHeight: 1 }}
+                tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
+              >{showRegPassword ? '🙈' : '👁️'}</button>
+            </div>
 
             <label>Confirm Password *</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm password"
-              disabled={timerExpired || loading}
-              required
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showRegConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm password"
+                disabled={timerExpired || loading}
+                required
+                style={{ paddingRight: '42px' }}
+              />
+              <button type="button" onClick={() => setShowRegConfirmPassword(v => !v)}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: '#78350f', padding: 0, lineHeight: 1 }}
+                tabIndex={-1} aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
+              >{showRegConfirmPassword ? '🙈' : '👁️'}</button>
+            </div>
 
             {!isUploadComplete && !timerExpired && (
               <p style={{
