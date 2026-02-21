@@ -253,6 +253,11 @@ export default function AssignEvents() {
         return;
       }
     } else if (mode === "add_accompanist") {
+      const currentParticipants = currentData?.participants?.length || 0;
+      if (currentParticipants === 0) {
+        showPopup("Please add at least one participant before adding an accompanist", "warning");
+        return;
+      }
       const currentAccompanists = currentData?.accompanists?.length || 0;
       if (currentAccompanists >= eventLimits?.accompanists) {
         showPopup(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
@@ -457,6 +462,8 @@ export default function AssignEvents() {
       const currentCount = currentData.participants?.length || 0;
       return currentCount >= limits.participants;
     } else if (type === "accompanist") {
+      const currentParticipants = currentData.participants?.length || 0;
+      if (currentParticipants === 0) return true;
       const currentCount = currentData.accompanists?.length || 0;
       return currentCount >= limits.accompanists;
     }
