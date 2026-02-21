@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { usePopup } from "../context/PopupContext";
 import Layout from "../components/layout/layout";
 import "../styles/auth.css";
+import PasswordStrength from "../components/PasswordStrength";
 
 const ForceResetPassword = () => {
     const [email, setEmail] = useState("");
@@ -114,6 +115,8 @@ const ForceResetPassword = () => {
                                 >{showNewPassword ? '🙈' : '👁️'}</button>
                             </div>
                         </div>
+
+                        <PasswordStrength password={newPassword} confirmPassword={confirmPassword} />
 
                         <div className="input-group">
                             <label>Confirm Password</label>

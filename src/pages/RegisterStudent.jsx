@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
+import PasswordStrength from "../components/PasswordStrength";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
@@ -722,6 +723,8 @@ export default function RegisterStudent() {
                 tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
               >{showRegPassword ? '🙈' : '👁️'}</button>
             </div>
+
+            <PasswordStrength password={form.password} confirmPassword={form.confirmPassword} />
 
             <label>Confirm Password *</label>
             <div style={{ position: 'relative' }}>

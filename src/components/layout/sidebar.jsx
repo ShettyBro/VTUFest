@@ -248,7 +248,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
                 <path d="M10.5 13.5h3" />
               </svg>
             </Icon>
-            <span className="label">Regestration</span>
+            <span className="label">Fee Payment</span>
           </div>
         </>
       )}

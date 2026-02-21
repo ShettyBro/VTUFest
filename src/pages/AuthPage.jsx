@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import PasswordStrength from "../components/PasswordStrength";
 import "../styles/auth.css";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
@@ -673,6 +674,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                     >{showRegPassword ? '🙈' : '👁️'}</button>
                                                 </div>
                                             </div>
+
+                                            <PasswordStrength password={regForm.password} confirmPassword={regForm.confirmPassword} compact />
 
                                             <div className="input-group">
                                                 <label>Confirm Password *</label>

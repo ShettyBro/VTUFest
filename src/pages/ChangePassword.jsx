@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import "../styles/auth.css";
 // ✅ Import popup hook
 import { usePopup } from "../context/PopupContext";
+import PasswordStrength from "../components/PasswordStrength";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/";
 
@@ -119,6 +120,8 @@ export default function ResetPassword() {
               >{showNewPassword ? '🙈' : '👁️'}</button>
             </div>
           </div>
+
+          <PasswordStrength password={newPassword} confirmPassword={confirmPassword} />
 
           <div className="input-group">
             <label>Confirm Password</label>
