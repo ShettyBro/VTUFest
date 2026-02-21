@@ -119,6 +119,15 @@ export default function Accommodation() {
       showPopup("Contact phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
       return;
     }
+    const totalCount = parseInt(formData.total_boys || 0) + parseInt(formData.total_girls || 0);
+    if (totalCount > 45) {
+      showPopup(`Total accommodation cannot exceed 45. Current total: ${totalCount} (Male + Female)`, "warning");
+      return;
+    }
+    if (totalCount === 0) {
+      showPopup("Please enter at least 1 for Male or Female count", "warning");
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -226,11 +235,11 @@ export default function Accommodation() {
 
               <div style={{ textAlign: "left", background: "rgba(255,255,255,0.03)", padding: "20px", borderRadius: "12px" }}>
                 <div className="detail-row">
-                  <span>Boys Count:</span>
+                  <span>Male Count:</span>
                   <span>{existingRequest.total_boys}</span>
                 </div>
                 <div className="detail-row">
-                  <span>Girls Count:</span>
+                  <span>Female Count:</span>
                   <span>{existingRequest.total_girls}</span>
                 </div>
                 <div className="detail-row">
@@ -262,9 +271,14 @@ export default function Accommodation() {
                 Submit New Request
               </h3>
               <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '8px' }}>
+                  <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
+                    ⚠️ Maximum total allowed: Male + Female = 45
+                  </small>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                   <div>
-                    <label style={labelStyle}>Total Boys *</label>
+                    <label style={labelStyle}>Total Male *</label>
                     <input
                       type="number"
                       name="total_boys"
@@ -272,6 +286,7 @@ export default function Accommodation() {
                       onChange={handleInputChange}
                       style={inputStyle}
                       min="0"
+                      max="45"
                       placeholder="0"
                       required
                       disabled={isReadOnlyMode}
@@ -279,7 +294,7 @@ export default function Accommodation() {
                   </div>
 
                   <div>
-                    <label style={labelStyle}>Total Girls *</label>
+                    <label style={labelStyle}>Total Female *</label>
                     <input
                       type="number"
                       name="total_girls"
@@ -287,6 +302,7 @@ export default function Accommodation() {
                       onChange={handleInputChange}
                       style={inputStyle}
                       min="0"
+                      max="45"
                       placeholder="0"
                       required
                       disabled={isReadOnlyMode}
