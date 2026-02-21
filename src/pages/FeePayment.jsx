@@ -442,6 +442,8 @@ export default function FeePayment() {
   // STATUS VIEW logic
   const isPaymentLocked = paymentInfo.can_upload === false;
   const hasStatus = paymentInfo.payment_status;
+  const can_reapply = paymentInfo.can_reapply === true;
+  const isRejectedStatus = hasStatus && (hasStatus.status === 'REJECTED' || hasStatus.status === 'verification_failed');
 
   return (
     <Layout>
@@ -463,7 +465,7 @@ export default function FeePayment() {
         )}
 
         {/* PAYMENT ALREADY SUBMITTED (STATUS VIEW) */}
-        {hasStatus && (
+        {hasStatus && !(isRejectedStatus && can_reapply) && (
           <div className="glass-card" style={{ maxWidth: "800px", margin: "0 auto", textAlign: 'center' }}>
             <h3>Payment Status</h3>
 
@@ -471,7 +473,6 @@ export default function FeePayment() {
               const s = hasStatus.status;
               const isApproved = s === 'VERIFIED' || s === 'payment_approved';
               const isRejected = s === 'REJECTED' || s === 'verification_failed';
-              const isPending = s === 'PENDING' || s === 'waiting_for_verification';
               const bg = isApproved ? 'rgba(16,185,129,0.2)' : isRejected ? 'rgba(239,68,68,0.2)' : 'rgba(33,150,243,0.2)';
               const color = isApproved ? '#10b981' : isRejected ? '#ef4444' : '#2196f3';
               const label = isApproved ? '✅ Payment Approved' : isRejected ? '❌ Verification Failed' : '⏳ Waiting for Verification';
@@ -493,16 +494,40 @@ export default function FeePayment() {
               <p><strong>Amount Paid:</strong> ₹{hasStatus.amount_paid}</p>
               <p><strong>UTR Reference:</strong> {hasStatus.utr_reference_number}</p>
               <p><strong>Uploaded At:</strong> {new Date(hasStatus.uploaded_at).toLocaleString()}</p>
-
             </div>
 
-            {/* If failed, allow re-upload? The logic was showForm if !paymentStatus. If failed, maybe we should clear status to allow retry? The original code didn't explicitly handle retry well, but let's stick to status view if present. */}
+            {/* Rejection limit reached — no more resubmissions allowed */}
+            {isRejectedStatus && !can_reapply && (
+              <div style={{ padding: '16px', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', borderRadius: '8px', color: '#ef4444', marginBottom: '16px' }}>
+                <strong>⛔ Resubmission Limit Reached</strong>
+                <p style={{ margin: '8px 0 0', fontSize: '0.9rem' }}>
+                  You have used all {hasStatus.reapply_count} allowed resubmission(s). Please contact the admin for further assistance.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
+        {/* RESUBMIT FORM - Show when rejected AND resubmissions remain */}
+        {isRejectedStatus && can_reapply && (
+          <div className="glass-card" style={{ maxWidth: "800px", margin: "0 auto", textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1rem', marginBottom: '6px' }}>❌ Verification Failed</div>
+              {hasStatus.admin_remarks && (
+                <div style={{ color: '#fca5a5', fontSize: '0.9rem', marginBottom: '6px' }}>
+                  <strong>Remarks:</strong> {hasStatus.admin_remarks}
+                </div>
+              )}
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                Resubmissions used: <strong>{hasStatus.reapply_count}</strong> / 2
+                &nbsp;·&nbsp; Remaining: <strong>{hasStatus.reapply_remaining}</strong>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* MAIN FORM - Show if NOT locked and NO status (or if we decide to allow retry, but keeping safe for now) */}
-        {!isPaymentLocked && !hasStatus && (
+        {/* MAIN FORM - Show if NOT locked and (NO status OR is resubmission path) */}
+        {!isPaymentLocked && (!hasStatus || (isRejectedStatus && can_reapply)) && (
           <>
             {/* INFO CARDS */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
