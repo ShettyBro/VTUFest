@@ -492,12 +492,6 @@ export default function Approvals() {
     }
   };
 
-  const moveApprovedToRejected = (student) => {
-    if (isReadOnly || isReadOnlyMode) return;
-    setRejectTarget({ type: "approved", data: student });
-    setShowRejectModal(true);
-  };
-
   // ============================================================================
   // REJECTED SECTION HANDLERS
   // ============================================================================
@@ -566,53 +560,6 @@ export default function Approvals() {
           showPopup("Student rejected successfully", "success");
         } else {
           showPopup(data.error || "Rejection failed", "error");
-        }
-      } else if (rejectTarget.type === "approved") {
-        const response = await fetch(
-          `https://api.vtufest2026.acharyahabba.com/api/manager/approved-students`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              action: "move_to_rejected",
-              student_id: rejectTarget.data.student_id,
-              rejection_reason: rejectionReason,
-            }),
-          }
-        );
-
-        if (response.status === 401) {
-          handleSessionExpired();
-          return;
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          // Remove from approved
-          setApprovedStudents((prev) =>
-            prev.filter((s) => s.student_id !== rejectTarget.data.student_id)
-          );
-
-          // Update quota when moving approved to rejected
-          setQuota((prev) => ({
-            ...prev,
-            used: prev.used - 1,
-            remaining: prev.remaining + 1
-          }));
-
-          // Reset rejected loaded flag
-          setRejectedLoaded(false);
-          if (showRejectedSection) {
-            await fetchRejectedStudents();
-          }
-
-          closeRejectModal();
-          showPopup("Student moved to rejected successfully", "success");
-        } else {
-          showPopup(data.error || "Failed to move student", "error");
         }
       }
     } catch (error) {
@@ -1013,13 +960,6 @@ export default function Approvals() {
                                   </button>
                                 )}
 
-                                <button
-                                  className="neon-btn"
-                                  style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "#ef4444", color: "#ef4444" }}
-                                  onClick={() => moveApprovedToRejected(student)}
-                                >
-                                  Move to Rejected
-                                </button>
                               </>
                             )}
                           </div>
