@@ -12,25 +12,34 @@ const cfg = s => STATUS_CFG[s?.toUpperCase()] || STATUS_CFG.PENDING;
 const fmt = d => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
 
 const ACCOM_TYPES = ["hotel", "pg", "hostel", "dormitory", "other"];
-const EMPTY_SLOT = { accommodation_name: "", accommodation_type: "hotel", address: "", location_url: "", contact_name: "", contact_phone: "", notes: "", allotted_boys: "", allotted_girls: "" };
+const EMPTY_SLOT = {
+    accommodation_name: "", accommodation_type: "hotel",
+    address: "", location_url: "",
+    contact_name: "", contact_phone: "",
+    notes: "", allotted_boys: "", allotted_girls: "",
+};
 
-// ─── STATUS MODAL — approve / reject / pending ────────────────────────────────
-function StatusModal({ request, token, onClose, onDone }) {
-    const [status, setStatus] = useState(request.status?.toUpperCase() || "PENDING");
-    const [remarks, setRemarks] = useState(request.admin_remarks || "");
+// ─── REJECT MODAL ─────────────────────────────────────────────────────────────
+// Rejection requires a mandatory reason. APPROVED option is intentionally removed.
+function RejectModal({ request, token, onClose, onDone }) {
+    const [reason, setReason] = useState("");
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState("");
 
-    const handleSave = async () => {
+    const handleReject = async () => {
+        if (!reason.trim()) {
+            setErr("Rejection reason is required.");
+            return;
+        }
         setSaving(true); setErr("");
         try {
             const res = await fetch(`${API_BASE}/api/em/accommodation/${request.id}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ status, admin_remarks: remarks }),
+                body: JSON.stringify({ status: "REJECTED", admin_remarks: reason.trim() }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to update status");
+            if (!res.ok) throw new Error(data.message || "Failed to reject request");
             onDone();
         } catch (e) { setErr(e.message); }
         finally { setSaving(false); }
@@ -38,50 +47,60 @@ function StatusModal({ request, token, onClose, onDone }) {
 
     return (
         <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(6px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
             <div className="glass-card" style={{ width: "100%", maxWidth: "460px", position: "relative" }}>
                 <button onClick={onClose} style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
 
-                <h4 style={{ margin: "0 0 4px", color: "var(--text-primary)" }}>Update Request Status</h4>
+                <h4 style={{ margin: "0 0 4px", color: "#f87171" }}>❌ Reject Request</h4>
                 <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginBottom: "20px" }}>
                     {request.college_name} <span style={{ opacity: 0.6 }}>({request.college_code})</span>
-                    &nbsp;·&nbsp; 👦 <strong>{request.total_boys}</strong> boys &nbsp;·&nbsp; 👧 <strong>{request.total_girls}</strong> girls
+                    &nbsp;·&nbsp; 👦 <strong>{request.total_boys}</strong> boys
+                    &nbsp;·&nbsp; 👧 <strong>{request.total_girls}</strong> girls
                 </div>
 
-                {/* Status picker */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "18px" }}>
-                    {["PENDING", "APPROVED", "REJECTED"].map(s => {
-                        const c = STATUS_CFG[s];
-                        const active = status === s;
-                        return (
-                            <button key={s} onClick={() => setStatus(s)} style={{
-                                padding: "12px 8px", borderRadius: "10px", cursor: "pointer",
-                                fontWeight: 700, fontSize: "0.82rem", transition: "all 0.2s",
-                                background: active ? c.bg : "rgba(255,255,255,0.04)",
-                                border: `2px solid ${active ? c.color : "rgba(255,255,255,0.1)"}`,
-                                color: active ? c.color : "var(--text-muted)",
-                            }}>
-                                {c.label}
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Remarks */}
+                {/* Mandatory reason */}
                 <div style={{ marginBottom: "18px" }}>
                     <label style={{ color: "var(--text-secondary)", fontSize: "0.82rem", display: "block", marginBottom: "6px" }}>
-                        Remarks <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>(optional)</span>
+                        Rejection Reason <span style={{ color: "#f87171", fontWeight: 700 }}>*</span>
                     </label>
-                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} rows={3}
-                        placeholder="e.g. Rejected due to incomplete details…"
-                        style={{ width: "100%", padding: "10px 12px", boxSizing: "border-box", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.88rem", resize: "vertical" }} />
+                    <textarea
+                        value={reason}
+                        onChange={e => { setReason(e.target.value); if (err) setErr(""); }}
+                        rows={4}
+                        placeholder="Describe why this request is being rejected…"
+                        style={{
+                            width: "100%", padding: "10px 12px", boxSizing: "border-box",
+                            background: "rgba(255,255,255,0.06)",
+                            border: `1px solid ${err ? "rgba(239,68,68,0.6)" : "rgba(255,255,255,0.12)"}`,
+                            borderRadius: "8px", color: "#f1f5f9", fontSize: "0.88rem", resize: "vertical",
+                        }}
+                    />
+                    {!reason.trim() && (
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "4px" }}>
+                            ⚠ Reason is mandatory to reject a request
+                        </div>
+                    )}
                 </div>
 
-                {err && <div style={{ color: "#f87171", fontSize: "0.82rem", marginBottom: "14px", padding: "9px 12px", background: "rgba(239,68,68,0.1)", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)" }}>{err}</div>}
+                {err && (
+                    <div style={{ color: "#f87171", fontSize: "0.82rem", marginBottom: "14px", padding: "9px 12px", background: "rgba(239,68,68,0.1)", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)" }}>
+                        {err}
+                    </div>
+                )}
 
                 <div style={{ display: "flex", gap: "10px" }}>
-                    <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: "12px", background: "rgba(16,185,129,0.2)", border: "1px solid #10b981", color: "#10b981", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.9rem" }}>
-                        {saving ? "Saving…" : "✓ Save Status"}
+                    <button
+                        onClick={handleReject}
+                        disabled={saving || !reason.trim()}
+                        style={{
+                            flex: 1, padding: "12px",
+                            background: reason.trim() ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${reason.trim() ? "#ef4444" : "rgba(255,255,255,0.1)"}`,
+                            color: reason.trim() ? "#f87171" : "var(--text-muted)",
+                            borderRadius: "8px", cursor: reason.trim() && !saving ? "pointer" : "not-allowed",
+                            fontWeight: 700, fontSize: "0.9rem", transition: "all 0.2s",
+                        }}>
+                        {saving ? "Rejecting…" : "❌ Confirm Reject"}
                     </button>
                     <button onClick={onClose} style={{ padding: "12px 20px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
                         Cancel
@@ -93,6 +112,7 @@ function StatusModal({ request, token, onClose, onDone }) {
 }
 
 // ─── ALLOTMENT MODAL ──────────────────────────────────────────────────────────
+// Saving allotments automatically sets status to APPROVED if totals match exactly.
 function AllotmentModal({ request, token, onClose, onSaved }) {
     const [slots, setSlots] = useState([{ ...EMPTY_SLOT }]);
     const [loadingA, setLoadingA] = useState(true);
@@ -109,7 +129,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
     const girlsOk = sumGirls === reqGirls;
     const canSave = boysOk && girlsOk && slots.every(a => a.accommodation_name.trim() !== "");
 
-    // Load any existing allotments
+    // Load any existing allotments on open
     useEffect(() => {
         fetch(`${API_BASE}/api/em/accommodation/${request.id}/allotments`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -154,12 +174,16 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
         finally { setSaving(false); }
     };
 
-    const inp = { width: "100%", padding: "8px 10px", boxSizing: "border-box", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "7px", color: "#f1f5f9", fontSize: "0.85rem", outline: "none" };
+    const inp = {
+        width: "100%", padding: "8px 10px", boxSizing: "border-box",
+        background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)",
+        borderRadius: "7px", color: "#f1f5f9", fontSize: "0.85rem", outline: "none",
+    };
 
     return (
         <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-            <div className="glass-card" style={{ width: "100%", maxWidth: "740px", maxHeight: "90vh", overflowY: "auto", position: "relative" }}>
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(6px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+            <div className="glass-card" style={{ width: "100%", maxWidth: "740px", maxHeight: "92vh", overflowY: "auto", position: "relative" }}>
 
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
@@ -168,13 +192,21 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                         <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>
                             {request.college_name} <span style={{ opacity: 0.6 }}>({request.college_code})</span>
                         </div>
+                        {/* Auto-approve notice */}
+                        <div style={{ marginTop: "8px", padding: "6px 12px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "6px", fontSize: "0.76rem", color: "#10b981" }}>
+                            ✅ Saving with matching totals will automatically approve this request
+                        </div>
                     </div>
                     <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.3rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
                 </div>
 
                 {/* Requested totals */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "18px" }}>
-                    {[{ label: "Requested Boys", value: reqBoys, color: "#60a5fa" }, { label: "Requested Girls", value: reqGirls, color: "#fb7185" }, { label: "Total People", value: reqTotal, color: "#a78bfa" }].map(c => (
+                    {[
+                        { label: "Requested Boys", value: reqBoys, color: "#60a5fa" },
+                        { label: "Requested Girls", value: reqGirls, color: "#fb7185" },
+                        { label: "Total People", value: reqTotal, color: "#a78bfa" },
+                    ].map(c => (
                         <div key={c.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "14px", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
                             <div style={{ fontSize: "1.7rem", fontWeight: 800, color: c.color, lineHeight: 1 }}>{c.value}</div>
                             <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginTop: "4px" }}>{c.label}</div>
@@ -182,8 +214,8 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                     ))}
                 </div>
 
-                {/* Live progress tracker */}
-                <div style={{ marginBottom: "18px", padding: "14px 16px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", border: `1px solid ${canSave ? "rgba(16,185,129,0.45)" : "rgba(245,158,11,0.3)"}` }}>
+                {/* Live allotment progress tracker */}
+                <div style={{ marginBottom: "18px", padding: "14px 16px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", border: `1px solid ${canSave ? "rgba(16,185,129,0.45)" : "rgba(245,158,11,0.3)"}`, transition: "border-color 0.3s" }}>
                     <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
                         Allotment Progress
                     </div>
@@ -200,7 +232,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
                                         <span style={{ color: "var(--text-secondary)", fontSize: "0.78rem" }}>{p.label}</span>
                                         <span style={{ color: p.ok ? "#10b981" : over ? "#f87171" : "#f59e0b", fontSize: "0.78rem", fontWeight: 700 }}>
-                                            {p.sum} / {p.total} {p.ok ? " ✓" : over ? " !" : ""}
+                                            {p.sum} / {p.total} {p.ok ? "✓" : over ? "!" : ""}
                                         </span>
                                     </div>
                                     <div style={{ height: "5px", background: "rgba(255,255,255,0.08)", borderRadius: "3px", overflow: "hidden" }}>
@@ -210,16 +242,20 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                             );
                         })}
                     </div>
-                    {!canSave && (
+                    {canSave ? (
+                        <div style={{ color: "#10b981", fontSize: "0.78rem", marginTop: "10px", fontWeight: 600 }}>
+                            ✅ Totals match — ready to save and approve
+                        </div>
+                    ) : (
                         <div style={{ color: "#f59e0b", fontSize: "0.78rem", marginTop: "10px" }}>
                             {!boysOk && `⚠ Boys: assigned ${sumBoys}, need ${reqBoys}. `}
                             {!girlsOk && `⚠ Girls: assigned ${sumGirls}, need ${reqGirls}. `}
-                            Totals must match exactly before you can save.
+                            Totals must match exactly to save and approve.
                         </div>
                     )}
                 </div>
 
-                {/* Slots */}
+                {/* Allotment slots */}
                 {loadingA ? (
                     <div style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>Loading existing allotments…</div>
                 ) : (
@@ -236,77 +272,116 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                                 </div>
 
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                                    {/* Accommodation Name */}
                                     <div style={{ gridColumn: "1 / -1" }}>
-                                        <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Accommodation Name *</label>
-                                        <input style={inp} placeholder="e.g. Hotel Grand Palace" value={a.accommodation_name}
+                                        <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Accommodation Name <span style={{ color: "#f87171" }}>*</span></label>
+                                        <input style={inp} placeholder="e.g. Hotel Grand Palace"
+                                            value={a.accommodation_name}
                                             onChange={e => upd(idx, "accommodation_name", e.target.value)} />
                                     </div>
+
+                                    {/* Type */}
                                     <div>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Type</label>
                                         <select style={inp} value={a.accommodation_type} onChange={e => upd(idx, "accommodation_type", e.target.value)}>
                                             {ACCOM_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
                                         </select>
                                     </div>
+
+                                    {/* Contact Person */}
                                     <div>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Contact Person</label>
-                                        <input style={inp} placeholder="Name" value={a.contact_name}
+                                        <input style={inp} placeholder="Name"
+                                            value={a.contact_name}
                                             onChange={e => upd(idx, "contact_name", e.target.value)} />
                                     </div>
+
+                                    {/* Contact Phone */}
                                     <div>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Contact Phone</label>
-                                        <input style={inp} placeholder="10-digit number" value={a.contact_phone}
+                                        <input style={inp} placeholder="10-digit number"
+                                            value={a.contact_phone}
                                             onChange={e => upd(idx, "contact_phone", e.target.value)} />
                                     </div>
+
+                                    {/* Address */}
                                     <div style={{ gridColumn: "1 / -1" }}>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Address</label>
-                                        <input style={inp} placeholder="Full address" value={a.address}
+                                        <input style={inp} placeholder="Full address"
+                                            value={a.address}
                                             onChange={e => upd(idx, "address", e.target.value)} />
                                     </div>
+
+                                    {/* Google Maps Link */}
                                     <div style={{ gridColumn: "1 / -1" }}>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Google Maps Link</label>
-                                        <input style={inp} placeholder="https://maps.google.com/..." value={a.location_url}
+                                        <input style={inp} placeholder="https://maps.google.com/…"
+                                            value={a.location_url}
                                             onChange={e => upd(idx, "location_url", e.target.value)} />
                                     </div>
-                                    {/* Boys / Girls — colour-coded */}
+
+                                    {/* Boys */}
                                     <div>
-                                        <label style={{ color: "#60a5fa", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👦 Boys Allotted *</label>
-                                        <input type="number" min="0" value={a.allotted_boys}
+                                        <label style={{ color: "#60a5fa", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👦 Boys Allotted <span style={{ color: "#f87171" }}>*</span></label>
+                                        <input type="number" min="0"
+                                            value={a.allotted_boys}
                                             onChange={e => upd(idx, "allotted_boys", e.target.value)}
                                             placeholder="0"
                                             style={{ ...inp, border: "1px solid rgba(96,165,250,0.5)", color: "#60a5fa", fontWeight: 700, fontSize: "1rem" }} />
                                     </div>
+
+                                    {/* Girls */}
                                     <div>
-                                        <label style={{ color: "#fb7185", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👧 Girls Allotted *</label>
-                                        <input type="number" min="0" value={a.allotted_girls}
+                                        <label style={{ color: "#fb7185", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👧 Girls Allotted <span style={{ color: "#f87171" }}>*</span></label>
+                                        <input type="number" min="0"
+                                            value={a.allotted_girls}
                                             onChange={e => upd(idx, "allotted_girls", e.target.value)}
                                             placeholder="0"
                                             style={{ ...inp, border: "1px solid rgba(251,113,133,0.5)", color: "#fb7185", fontWeight: 700, fontSize: "1rem" }} />
                                     </div>
+
+                                    {/* Notes */}
                                     <div style={{ gridColumn: "1 / -1" }}>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Notes / Additional Info</label>
                                         <textarea rows={2} style={{ ...inp, resize: "vertical" }}
                                             placeholder="Check-in time, room number, special instructions…"
-                                            value={a.notes} onChange={e => upd(idx, "notes", e.target.value)} />
+                                            value={a.notes}
+                                            onChange={e => upd(idx, "notes", e.target.value)} />
                                     </div>
                                 </div>
                             </div>
                         ))}
 
+                        {/* Add another location */}
                         <button onClick={add} style={{ width: "100%", padding: "11px", marginBottom: "16px", background: "rgba(16,185,129,0.08)", border: "1px dashed rgba(16,185,129,0.5)", color: "#10b981", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem", transition: "all 0.2s" }}>
                             + Add Another Location
                         </button>
                     </>
                 )}
 
-                {err && <div style={{ color: "#f87171", fontSize: "0.82rem", marginBottom: "12px", padding: "10px 14px", background: "rgba(239,68,68,0.1)", borderRadius: "8px", border: "1px solid rgba(239,68,68,0.3)" }}>{err}</div>}
+                {err && (
+                    <div style={{ color: "#f87171", fontSize: "0.82rem", marginBottom: "12px", padding: "10px 14px", background: "rgba(239,68,68,0.1)", borderRadius: "8px", border: "1px solid rgba(239,68,68,0.3)" }}>
+                        {err}
+                    </div>
+                )}
 
+                {/* Save = Approve button */}
                 <div style={{ display: "flex", gap: "10px" }}>
-                    <button onClick={handleSave} disabled={!canSave || saving}
-                        title={!canSave ? "Boys and girls totals must match requested amounts exactly" : ""}
-                        style={{ flex: 1, padding: "12px", fontWeight: 700, fontSize: "0.9rem", borderRadius: "8px", cursor: canSave && !saving ? "pointer" : "not-allowed", transition: "all 0.2s", background: canSave ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.04)", border: `1px solid ${canSave ? "#10b981" : "rgba(255,255,255,0.12)"}`, color: canSave ? "#10b981" : "var(--text-muted)" }}>
-                        {saving ? "Saving…" : canSave ? "✓ Save Allotments" : "Fix totals to enable save"}
+                    <button
+                        onClick={handleSave}
+                        disabled={!canSave || saving}
+                        title={!canSave ? "Boys and girls totals must match requested amounts exactly" : "Save allotments and approve this request"}
+                        style={{
+                            flex: 1, padding: "13px", fontWeight: 700, fontSize: "0.92rem",
+                            borderRadius: "8px", transition: "all 0.2s",
+                            cursor: canSave && !saving ? "pointer" : "not-allowed",
+                            background: canSave ? "rgba(16,185,129,0.22)" : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${canSave ? "#10b981" : "rgba(255,255,255,0.12)"}`,
+                            color: canSave ? "#10b981" : "var(--text-muted)",
+                        }}>
+                        {saving ? "Saving & Approving…" : canSave ? "✅ Save & Approve Request" : "Fix totals to enable save"}
                     </button>
-                    <button onClick={onClose} style={{ padding: "12px 22px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
+                    <button onClick={onClose} style={{ padding: "13px 22px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
                         Cancel
                     </button>
                 </div>
@@ -315,7 +390,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
     );
 }
 
-// ─── Expanded row (contact + remarks) ────────────────────────────────────────
+// ─── Expanded row detail ──────────────────────────────────────────────────────
 function RowDetail({ r }) {
     return (
         <tr>
@@ -334,14 +409,20 @@ function RowDetail({ r }) {
                     )}
                     {r.admin_remarks && (
                         <div>
-                            <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Remarks</div>
-                            <div style={{ color: "#f59e0b", fontSize: "0.85rem" }}>{r.admin_remarks}</div>
+                            <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Rejection Reason</div>
+                            <div style={{ color: "#f87171", fontSize: "0.85rem", background: "rgba(239,68,68,0.08)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(239,68,68,0.2)" }}>{r.admin_remarks}</div>
                         </div>
                     )}
                     <div>
                         <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Applied At</div>
                         <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>{fmt(r.applied_at)}</div>
                     </div>
+                    {r.processed_at && (
+                        <div>
+                            <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Processed At</div>
+                            <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>{fmt(r.processed_at)}</div>
+                        </div>
+                    )}
                 </div>
             </td>
         </tr>
@@ -353,11 +434,11 @@ export default function EMAccommodation() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [filter, setFilter] = useState("ALL");  // ← DEFAULT = ALL
+    const [filter, setFilter] = useState("ALL");
     const [search, setSearch] = useState("");
     const [expandedId, setExpandedId] = useState(null);
-    const [statusTarget, setStatusTarget] = useState(null);   // approve/reject modal
-    const [allotTarget, setAllotTarget] = useState(null);   // allotment modal
+    const [rejectTarget, setRejectTarget] = useState(null);  // reject modal
+    const [allotTarget, setAllotTarget] = useState(null);  // allotment modal
 
     const token = localStorage.getItem("vtufest_em_token");
     const headers = { Authorization: `Bearer ${token}` };
@@ -441,7 +522,7 @@ export default function EMAccommodation() {
                             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1000px" }}>
                                 <thead>
                                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                                        {["College", "Code", "Status", "Boys", "Girls", "Total", "Allotted", "Applied At", "✏️ Approve/Reject", "🏨 Assign", ""].map(h => (
+                                        {["College", "Code", "Status", "Boys", "Girls", "Total", "Allotted", "Applied At", "❌ Reject", "🏨 Assign & Approve", ""].map(h => (
                                             <th key={h} style={{ padding: "13px 14px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.73rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.4px", whiteSpace: "nowrap" }}>{h}</th>
                                         ))}
                                     </tr>
@@ -452,6 +533,7 @@ export default function EMAccommodation() {
                                         const isExpanded = expandedId === r.id;
                                         const fullyAllotted = r.is_fully_allotted;
                                         const isApproved = r.status?.toUpperCase() === "APPROVED";
+                                        const isRejected = r.status?.toUpperCase() === "REJECTED";
 
                                         return (
                                             <React.Fragment key={r.id}>
@@ -492,34 +574,38 @@ export default function EMAccommodation() {
                                                                         ? `⚠ Partial (${r.allotment_count})`
                                                                         : "— Not assigned"}
                                                             </span>
-                                                        ) : <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>N/A</span>}
+                                                        ) : <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>—</span>}
                                                     </td>
 
                                                     <td style={{ padding: "13px 14px", color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>{fmt(r.applied_at)}</td>
 
-                                                    {/* ── ACTION 1: Approve / Reject — ALWAYS visible ── */}
+                                                    {/* ── Reject button — hidden for already-rejected ── */}
                                                     <td style={{ padding: "13px 14px" }}>
-                                                        <button onClick={() => setStatusTarget(r)}
-                                                            style={{ padding: "6px 14px", background: "rgba(212,175,55,0.15)", border: "1px solid #d4af37", color: "#d4af37", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", transition: "all 0.2s" }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = "rgba(212,175,55,0.28)"}
-                                                            onMouseLeave={e => e.currentTarget.style.background = "rgba(212,175,55,0.15)"}>
-                                                            ✏️ Status
-                                                        </button>
-                                                    </td>
-
-                                                    {/* ── ACTION 2: Assign Accommodation — only for APPROVED ── */}
-                                                    <td style={{ padding: "13px 14px" }}>
-                                                        {isApproved ? (
-                                                            <button onClick={() => setAllotTarget(r)}
-                                                                style={{ padding: "6px 14px", background: "rgba(16,185,129,0.15)", border: "1px solid #10b981", color: "#10b981", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", transition: "all 0.2s" }}
-                                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(16,185,129,0.28)"}
-                                                                onMouseLeave={e => e.currentTarget.style.background = "rgba(16,185,129,0.15)"}>
-                                                                🏨 {parseInt(r.allotment_count) > 0 ? "Edit" : "Assign"}
+                                                        {!isRejected ? (
+                                                            <button
+                                                                onClick={() => setRejectTarget(r)}
+                                                                style={{ padding: "6px 14px", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.45)", color: "#f87171", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", transition: "all 0.2s" }}
+                                                                onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.25)"}
+                                                                onMouseLeave={e => e.currentTarget.style.background = "rgba(239,68,68,0.12)"}>
+                                                                ❌ Reject
                                                             </button>
                                                         ) : (
-                                                            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic" }}>
-                                                                Approve first
-                                                            </span>
+                                                            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic" }}>Rejected</span>
+                                                        )}
+                                                    </td>
+
+                                                    {/* ── Assign & Approve — available for PENDING and re-edit for APPROVED ── */}
+                                                    <td style={{ padding: "13px 14px" }}>
+                                                        {!isRejected ? (
+                                                            <button
+                                                                onClick={() => setAllotTarget(r)}
+                                                                style={{ padding: "6px 14px", background: isApproved ? "rgba(16,185,129,0.12)" : "rgba(212,175,55,0.15)", border: `1px solid ${isApproved ? "#10b981" : "#d4af37"}`, color: isApproved ? "#10b981" : "#d4af37", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", transition: "all 0.2s" }}
+                                                                onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+                                                                onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
+                                                                {isApproved ? `🏨 Edit (${r.allotment_count} loc)` : "🏨 Assign & Approve"}
+                                                            </button>
+                                                        ) : (
+                                                            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic" }}>N/A</span>
                                                         )}
                                                     </td>
 
@@ -567,12 +653,12 @@ export default function EMAccommodation() {
                 )}
 
                 {/* ── Modals ── */}
-                {statusTarget && (
-                    <StatusModal
-                        request={statusTarget}
+                {rejectTarget && (
+                    <RejectModal
+                        request={rejectTarget}
                         token={token}
-                        onClose={() => setStatusTarget(null)}
-                        onDone={() => { setStatusTarget(null); fetchAll(); }}
+                        onClose={() => setRejectTarget(null)}
+                        onDone={() => { setRejectTarget(null); fetchAll(); }}
                     />
                 )}
                 {allotTarget && (
