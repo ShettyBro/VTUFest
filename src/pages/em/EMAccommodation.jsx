@@ -16,7 +16,19 @@ const EMPTY_SLOT = {
     accommodation_name: "", accommodation_type: "hotel",
     address: "", location_url: "",
     contact_name: "", contact_phone: "",
-    notes: "", allotted_boys: "", allotted_girls: "",
+    notes: "", allotted_boys: "0", allotted_girls: "0",
+};
+
+// location_url is MANDATORY and must be a Google Maps link
+const isValidGoogleMapsUrl = (url) => {
+    if (!url || !url.trim()) return false; // mandatory — blank is not allowed
+    const t = url.trim();
+    return (
+        t.includes("maps.app.goo.gl") ||
+        t.includes("goo.gl/maps") ||
+        t.includes("google.com/maps") ||
+        t.includes("maps.google.com")
+    );
 };
 
 // ─── REJECT MODAL ─────────────────────────────────────────────────────────────
@@ -118,6 +130,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
     const [loadingA, setLoadingA] = useState(true);
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState("");
+    const [urlErrors, setUrlErrors] = useState([true]); // per-slot URL validity — starts invalid (mandatory field)
 
     const reqBoys = parseInt(request.total_boys) || 0;
     const reqGirls = parseInt(request.total_girls) || 0;
@@ -127,7 +140,9 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
     const sumGirls = slots.reduce((s, a) => s + (parseInt(a.allotted_girls) || 0), 0);
     const boysOk = sumBoys === reqBoys;
     const girlsOk = sumGirls === reqGirls;
-    const canSave = boysOk && girlsOk && slots.every(a => a.accommodation_name.trim() !== "");
+    const canSave = boysOk && girlsOk
+        && slots.every(a => a.accommodation_name.trim() !== "")
+        && !urlErrors.some(Boolean);
 
     // Load any existing allotments on open
     useEffect(() => {
@@ -154,9 +169,14 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
             .finally(() => setLoadingA(false));
     }, []);
 
-    const upd = (idx, f, v) => setSlots(p => p.map((a, i) => i === idx ? { ...a, [f]: v } : a));
-    const add = () => setSlots(p => [...p, { ...EMPTY_SLOT }]);
-    const rem = idx => { if (slots.length > 1) setSlots(p => p.filter((_, i) => i !== idx)); };
+    const upd = (idx, f, v) => {
+        setSlots(p => p.map((a, i) => i === idx ? { ...a, [f]: v } : a));
+        if (f === "location_url") {
+            setUrlErrors(p => p.map((e, i) => i === idx ? !isValidGoogleMapsUrl(v) : e));
+        }
+    };
+    const add = () => { setSlots(p => [...p, { ...EMPTY_SLOT }]); setUrlErrors(p => [...p, true]); };
+    const rem = idx => { if (slots.length > 1) { setSlots(p => p.filter((_, i) => i !== idx)); setUrlErrors(p => p.filter((_, i) => i !== idx)); } };
 
     const handleSave = async () => {
         if (!canSave) return;
@@ -314,10 +334,28 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
 
                                     {/* Google Maps Link */}
                                     <div style={{ gridColumn: "1 / -1" }}>
-                                        <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Google Maps Link</label>
-                                        <input style={inp} placeholder="https://maps.google.com/…"
+                                        <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>
+                                            Google Maps Link <span style={{ color: "#f87171" }}>*</span>
+                                        </label>
+                                        <input
+                                            style={{
+                                                ...inp,
+                                                border: urlErrors[idx]
+                                                    ? "1px solid rgba(239,68,68,0.7)"
+                                                    : "1px solid rgba(16,185,129,0.6)",
+                                            }}
+                                            placeholder="https://maps.app.goo.gl/… or google.com/maps/…"
                                             value={a.location_url}
-                                            onChange={e => upd(idx, "location_url", e.target.value)} />
+                                            onChange={e => upd(idx, "location_url", e.target.value)}
+                                        />
+                                        {urlErrors[idx] && (
+                                            <div style={{ color: "#f87171", fontSize: "0.72rem", marginTop: "4px" }}>
+                                                ⛔ Required — must be a Google Maps link, e.g. <em>https://maps.app.goo.gl/iz2Sr1d1Kbb…</em>
+                                            </div>
+                                        )}
+                                        {!urlErrors[idx] && a.location_url.trim() && (
+                                            <div style={{ color: "#10b981", fontSize: "0.72rem", marginTop: "4px" }}>✓ Valid Google Maps link</div>
+                                        )}
                                     </div>
 
                                     {/* Boys */}

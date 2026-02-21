@@ -293,6 +293,10 @@ export default function RegisterStudent() {
       setErrorMessage("Full name is required");
       return;
     }
+    if (!/^[a-zA-Z\s.'-]+$/.test(form.fullName.trim())) {
+      setErrorMessage("Full name must contain only letters, spaces, dots, hyphens, or apostrophes — no special characters.");
+      return;
+    }
 
     if (!form.collegeId) {
       setErrorMessage("Please select your college");
@@ -324,7 +328,7 @@ export default function RegisterStudent() {
           usn: form.usn,
           fullName: form.fullName,
           collegeId: form.collegeId,
-          email: form.email,
+          email: form.email.trim().toLowerCase(),
           phone: form.phone,
           gender: form.gender,
         }),
@@ -341,7 +345,7 @@ export default function RegisterStudent() {
             usn: form.usn,
             fullName: form.fullName,
             collegeId: form.collegeId,
-            email: form.email,
+            email: form.email.trim().toLowerCase(),
             phone: form.phone,
             gender: form.gender,
           }
@@ -548,9 +552,17 @@ export default function RegisterStudent() {
               onChange={handleChange}
               placeholder="Enter your full name"
               disabled={formDisabled || loading}
-              style={{ opacity: formDisabled ? 0.5 : 1 }}
+              style={{
+                opacity: formDisabled ? 0.5 : 1,
+                borderColor: form.fullName && !/^[a-zA-Z\s.'-]+$/.test(form.fullName) ? '#ef4444' : '',
+              }}
               required
             />
+            {form.fullName && !/^[a-zA-Z\s.'-]+$/.test(form.fullName) && (
+              <small style={{ color: '#ef4444', fontSize: '0.75rem' }}>
+                ⛔ Only letters, spaces, dots (.), hyphens (-), or apostrophes (') allowed
+              </small>
+            )}
 
             <label>College *</label>
             <select

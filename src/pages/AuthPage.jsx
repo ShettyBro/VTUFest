@@ -161,7 +161,7 @@ export default function AuthPage({ initialView = "login" }) {
             const res = await fetch(API_ENDPOINTS.login, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: loginEmail, password: loginPassword, role: loginRole })
+                body: JSON.stringify({ email: loginEmail.trim().toLowerCase(), password: loginPassword, role: loginRole })
             });
             const data = await res.json();
 
@@ -258,7 +258,7 @@ export default function AuthPage({ initialView = "login" }) {
                     usn: regForm.usn,
                     full_name: regForm.fullName,
                     college_id: regForm.collegeId,
-                    email: regForm.email,
+                    email: regForm.email.trim().toLowerCase(),
                     phone: regForm.phone,
                     gender: regForm.gender
                 })
@@ -509,9 +509,18 @@ export default function AuthPage({ initialView = "login" }) {
                                                     value={regForm.fullName}
                                                     onChange={e => setRegForm(prev => ({ ...prev, fullName: e.target.value }))}
                                                     disabled={usnStatus !== "valid"}
-                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
+                                                    placeholder="Letters, spaces, dots, hyphens only"
+                                                    style={{
+                                                        opacity: usnStatus !== "valid" ? 0.5 : 1,
+                                                        borderColor: regForm.fullName && !/^[a-zA-Z\s.'-]+$/.test(regForm.fullName) ? '#ef4444' : '',
+                                                    }}
                                                     required
                                                 />
+                                                {regForm.fullName && !/^[a-zA-Z\s.'-]+$/.test(regForm.fullName) && (
+                                                    <small style={{ color: '#ef4444', fontSize: '0.75rem' }}>
+                                                        ⛔ Only letters, spaces, . - or ' allowed
+                                                    </small>
+                                                )}
                                             </div>
 
                                             <div className="input-group">
