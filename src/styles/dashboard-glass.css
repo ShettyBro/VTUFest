@@ -59,12 +59,10 @@ body,
 html {
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
     font-family: 'Outfit', sans-serif;
     color: var(--text-primary);
-    overflow: hidden;
-    /* Prevent body scroll, handle in wrapper */
+    /* NOTE: No overflow:hidden here — that must only live on .layout/.content,
+       not on html/body, or it breaks scrolling on all auth/non-layout pages */
 }
 
 /* Override Layout Background - Academic Dark */

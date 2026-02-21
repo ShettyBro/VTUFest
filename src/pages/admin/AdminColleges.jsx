@@ -218,8 +218,8 @@ function CollegeDetailsModal({ college, token, onClose }) {
                             </div>
 
                             {/* ── Events ── */}
-                            {sectionTitle(`🎭 Participating Events (${events.length} / 25)`)}
-                            {events.length === 0 ? (
+                            {payment.receipts.length > 0 && sectionTitle(`🎭 Participating Events (${events.length} / 25)`)}
+                            {payment.receipts.length > 0 && (events.length === 0 ? (
                                 <div style={{ color: "var(--text-muted)", fontSize: "0.85rem", padding: "10px 0" }}>No events found in snapshot.</div>
                             ) : (
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "8px", marginBottom: "8px" }}>
@@ -241,7 +241,7 @@ function CollegeDetailsModal({ college, token, onClose }) {
                                         </div>
                                     ))}
                                 </div>
-                            )}
+                            ))}
                         </>
                     );
                 })()}
