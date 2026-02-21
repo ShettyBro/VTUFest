@@ -81,7 +81,6 @@
 
     /* 5. LAYOUT OPTIMIZATION */
     .auth-page,
-    .layout,
     .login-page {
         min-height: 100dvh !important;
         height: auto !important;

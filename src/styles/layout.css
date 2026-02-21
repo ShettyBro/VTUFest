@@ -8,15 +8,11 @@
 }
 
 html {
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
-  width: 100%;
-  min-height: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -30,7 +26,8 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: 100dvh;
+  /* dashboard self-contains scroll — does NOT affect html/body */
   background: #a6c8e9;
   overflow: hidden;
 }
