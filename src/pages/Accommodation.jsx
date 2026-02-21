@@ -5,6 +5,57 @@ import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Converts any Google Maps URL variant into a safe, embeddable URL.
+// Handles: full URLs, short links (maps.app.goo.gl / goo.gl/maps),
+//          coordinate-based URLs, and place-name URLs.
+// ─────────────────────────────────────────────────────────────────────────────
+const buildEmbedUrl = (url) => {
+  if (!url || typeof url !== "string") return "";
+
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  try {
+    // 1. Already an embed link — return as-is
+    if (trimmed.includes("/maps/embed")) return trimmed;
+
+    // 2. Short links — cannot be resolved client-side, use as search query
+    if (
+      trimmed.includes("maps.app.goo.gl") ||
+      trimmed.includes("goo.gl/maps")
+    ) {
+      return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
+    }
+
+    // 3. Extract coordinates from @lat,lng in URL
+    const coordMatch = trimmed.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (coordMatch) {
+      return `https://www.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&z=16&output=embed`;
+    }
+
+    // 4. Extract place name from /place/Name segment
+    const placeMatch = trimmed.match(/\/place\/([^/?]+)/);
+    if (placeMatch) {
+      return `https://www.google.com/maps?q=${encodeURIComponent(
+        decodeURIComponent(placeMatch[1].replace(/\+/g, " "))
+      )}&output=embed`;
+    }
+
+    // 5. If it looks like a Google Maps URL but none matched — use as query
+    if (trimmed.includes("google.com/maps")) {
+      return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
+    }
+
+    // 6. Fallback — treat the whole value as a search query
+    return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
+
+  } catch (e) {
+    console.warn("Map embed URL build error:", e);
+    return "";
+  }
+};
+
 export default function Accommodation() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
@@ -367,40 +418,39 @@ export default function Accommodation() {
                             </a>
                           </div>
                           <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', height: '200px', position: 'relative', background: '#1a1a2e' }}>
-                            <iframe
-                              src={(() => {
-                                try {
-                                  const url = slot.location_url;
-                                  // Handle short share links: maps.app.goo.gl or goo.gl/maps
-                                  if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
-                                    return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed&z=15`;
-                                  }
-                                  // Handle full google maps URL — extract coordinates or query
-                                  const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-                                  if (coordMatch) {
-                                    return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&output=embed&z=16`;
-                                  }
-                                  // Handle /place/ or /search/ URLs
-                                  const placeMatch = url.match(/\/place\/([^\/]+)/);
-                                  if (placeMatch) {
-                                    return `https://maps.google.com/maps?q=${encodeURIComponent(decodeURIComponent(placeMatch[1]))}&output=embed&z=15`;
-                                  }
-                                  // Fallback — embed the URL directly if it's already an embed URL
-                                  if (url.includes('google.com/maps/embed')) return url;
-                                  // Last resort — wrap in search embed
-                                  return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed&z=14`;
-                                } catch {
-                                  return '';
-                                }
-                              })()}
-                              width="100%"
-                              height="200"
-                              style={{ border: 0, display: 'block' }}
-                              allowFullScreen=""
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                              title={`Map for ${slot.accommodation_name}`}
-                            />
+                            {buildEmbedUrl(slot.location_url) ? (
+                              <iframe
+                                src={buildEmbedUrl(slot.location_url)}
+                                width="100%"
+                                height="200"
+                                style={{ border: 0, display: 'block' }}
+                                allowFullScreen
+                                loading="lazy"
+                                title={`Map for ${slot.accommodation_name}`}
+                              />
+                            ) : (
+                              <div style={{
+                                height: '200px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'var(--text-muted)',
+                                fontSize: '0.85rem',
+                                gap: '8px'
+                              }}>
+                                <span style={{ fontSize: '1.5rem' }}>🗺️</span>
+                                <span>Map preview unavailable</span>
+                                <a
+                                  href={slot.location_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: 'var(--academic-gold)', fontSize: '0.8rem' }}
+                                >
+                                  Open in Google Maps ↗
+                                </a>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
