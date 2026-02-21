@@ -16,6 +16,7 @@ export default function Accommodation() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [existingRequest, setExistingRequest] = useState(null);
+  const [allotments, setAllotments] = useState([]);
 
   const [formData, setFormData] = useState({
     total_girls: "",
@@ -89,6 +90,7 @@ export default function Accommodation() {
       const data = await response.json();
       if (data.success && data.data && data.data.accommodation) {
         setExistingRequest(data.data.accommodation);
+        setAllotments(data.data.allotments || []);
       }
     } catch (error) {
       console.error("Fetch error:", error);
@@ -263,109 +265,253 @@ export default function Accommodation() {
                   </div>
                 )}
               </div>
+
+              {/* ALLOTMENTS SECTION */}
+              {allotments.length > 0 && (
+                <div style={{ marginTop: '30px', textAlign: 'left' }}>
+                  <h3 style={{ color: 'var(--academic-gold)', marginBottom: '16px', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    🏨 Allotted Accommodation ({allotments.length} {allotments.length === 1 ? 'place' : 'places'})
+                  </h3>
+
+                  {allotments.map((slot, idx) => (
+                    <div key={slot.id} style={{
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px',
+                      padding: '20px',
+                      marginBottom: '16px'
+                    }}>
+                      {/* Header row */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                        <div>
+                          <strong style={{ color: 'var(--text-primary)', fontSize: '1rem' }}>
+                            {allotments.length > 1 ? `${idx + 1}. ` : ''}{slot.accommodation_name}
+                          </strong>
+                          {slot.accommodation_type && (
+                            <span style={{
+                              marginLeft: '10px',
+                              fontSize: '0.72rem',
+                              padding: '2px 8px',
+                              background: 'rgba(99,102,241,0.2)',
+                              color: '#a5b4fc',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(99,102,241,0.3)'
+                            }}>
+                              {slot.accommodation_type}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <span style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', padding: '3px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700 }}>
+                            👨 {slot.allotted_boys} Male
+                          </span>
+                          <span style={{ background: 'rgba(244,114,182,0.15)', color: '#f472b6', padding: '3px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700 }}>
+                            👩 {slot.allotted_girls} Female
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Details grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: slot.location_url ? '14px' : '0' }}>
+                        {slot.address && (
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Address</span>
+                            <div style={{ color: 'var(--text-primary)', marginTop: '2px' }}>{slot.address}</div>
+                          </div>
+                        )}
+                        {slot.contact_name && (
+                          <div>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Contact</span>
+                            <div style={{ color: 'var(--text-primary)', marginTop: '2px' }}>{slot.contact_name}</div>
+                          </div>
+                        )}
+                        {slot.contact_phone && (
+                          <div>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone</span>
+                            <div style={{ color: 'var(--text-primary)', marginTop: '2px' }}>{slot.contact_phone}</div>
+                          </div>
+                        )}
+                        {slot.notes && (
+                          <div style={{ gridColumn: '1 / -1' }}>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Notes</span>
+                            <div style={{ color: 'var(--text-secondary)', marginTop: '2px', fontStyle: 'italic' }}>{slot.notes}</div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Map embed + open link */}
+                      {slot.location_url && (
+                        <div style={{ marginTop: '14px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📍 Location</span>
+                            <a
+                              href={slot.location_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                color: 'var(--academic-gold)',
+                                fontSize: '0.8rem',
+                                textDecoration: 'none',
+                                border: '1px solid var(--academic-gold)',
+                                padding: '3px 10px',
+                                borderRadius: '4px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                transition: 'background 0.2s'
+                              }}
+                              onMouseOver={e => e.currentTarget.style.background = 'rgba(245,158,11,0.15)'}
+                              onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                              🗺️ View on Maps ↗
+                            </a>
+                          </div>
+                          <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', height: '200px', position: 'relative', background: '#1a1a2e' }}>
+                            <iframe
+                              src={(() => {
+                                try {
+                                  const url = slot.location_url;
+                                  // Handle short share links: maps.app.goo.gl or goo.gl/maps
+                                  if (url.includes('goo.gl') || url.includes('maps.app.goo.gl')) {
+                                    return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed&z=15`;
+                                  }
+                                  // Handle full google maps URL — extract coordinates or query
+                                  const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                                  if (coordMatch) {
+                                    return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&output=embed&z=16`;
+                                  }
+                                  // Handle /place/ or /search/ URLs
+                                  const placeMatch = url.match(/\/place\/([^\/]+)/);
+                                  if (placeMatch) {
+                                    return `https://maps.google.com/maps?q=${encodeURIComponent(decodeURIComponent(placeMatch[1]))}&output=embed&z=15`;
+                                  }
+                                  // Fallback — embed the URL directly if it's already an embed URL
+                                  if (url.includes('google.com/maps/embed')) return url;
+                                  // Last resort — wrap in search embed
+                                  return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed&z=14`;
+                                } catch {
+                                  return '';
+                                }
+                              })()}
+                              width="100%"
+                              height="200"
+                              style={{ border: 0, display: 'block' }}
+                              allowFullScreen=""
+                              loading="lazy"
+                              referrerPolicy="no-referrer-when-downgrade"
+                              title={`Map for ${slot.accommodation_name}`}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            // NEW REQUEST FORM
+          </div>
+        ) : (
+        // NEW REQUEST FORM
+        <div>
+          <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
+            Submit New Request
+          </h3>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '8px' }}>
+              <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
+                ⚠️ Maximum total allowed: Male + Female = 45
+              </small>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div>
+                <label style={labelStyle}>Total Male *</label>
+                <input
+                  type="number"
+                  name="total_boys"
+                  value={formData.total_boys}
+                  onChange={handleInputChange}
+                  style={inputStyle}
+                  min="0"
+                  max="45"
+                  placeholder="0"
+                  required
+                  disabled={isReadOnlyMode}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Total Female *</label>
+                <input
+                  type="number"
+                  name="total_girls"
+                  value={formData.total_girls}
+                  onChange={handleInputChange}
+                  style={inputStyle}
+                  min="0"
+                  max="45"
+                  placeholder="0"
+                  required
+                  disabled={isReadOnlyMode}
+                />
+              </div>
+            </div>
+
             <div>
-              <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
-                Submit New Request
-              </h3>
-              <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '8px' }}>
-                  <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
-                    ⚠️ Maximum total allowed: Male + Female = 45
-                  </small>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <div>
-                    <label style={labelStyle}>Total Male *</label>
-                    <input
-                      type="number"
-                      name="total_boys"
-                      value={formData.total_boys}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                      min="0"
-                      max="45"
-                      placeholder="0"
-                      required
-                      disabled={isReadOnlyMode}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={labelStyle}>Total Female *</label>
-                    <input
-                      type="number"
-                      name="total_girls"
-                      value={formData.total_girls}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                      min="0"
-                      max="45"
-                      placeholder="0"
-                      required
-                      disabled={isReadOnlyMode}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Contact Person Name *</label>
-                  <input
-                    type="text"
-                    name="contact_person_name"
-                    value={formData.contact_person_name}
-                    onChange={handleInputChange}
-                    style={inputStyle}
-                    placeholder="Name of person responsible"
-                    required
-                    disabled={isReadOnlyMode}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Contact Phone *</label>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    name="contact_person_phone"
-                    value={formData.contact_person_phone}
-                    onChange={handleInputChange}
-                    style={inputStyle}
-                    maxLength={10}
-                    pattern="[6-9][0-9]{9}"
-                    placeholder="e.g. 9876543210 (start with 6-9)"
-                    required
-                    disabled={isReadOnlyMode}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Special Requirements (Optional)</label>
-                  <textarea
-                    name="special_requirements"
-                    value={formData.special_requirements}
-                    onChange={handleInputChange}
-                    style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
-                    placeholder="Any specific needs..."
-                    disabled={isReadOnlyMode}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="neon-btn"
-                  disabled={submitting || isReadOnlyMode}
-                >
-                  {submitting ? "Submitting..." : "Submit Request"}
-                </button>
-              </form>
+              <label style={labelStyle}>Contact Person Name *</label>
+              <input
+                type="text"
+                name="contact_person_name"
+                value={formData.contact_person_name}
+                onChange={handleInputChange}
+                style={inputStyle}
+                placeholder="Name of person responsible"
+                required
+                disabled={isReadOnlyMode}
+              />
             </div>
-          )}
-        </div>
 
+            <div>
+              <label style={labelStyle}>Contact Phone *</label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                name="contact_person_phone"
+                value={formData.contact_person_phone}
+                onChange={handleInputChange}
+                style={inputStyle}
+                maxLength={10}
+                pattern="[6-9][0-9]{9}"
+                placeholder="e.g. 9876543210 (start with 6-9)"
+                required
+                disabled={isReadOnlyMode}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Special Requirements (Optional)</label>
+              <textarea
+                name="special_requirements"
+                value={formData.special_requirements}
+                onChange={handleInputChange}
+                style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }}
+                placeholder="Any specific needs..."
+                disabled={isReadOnlyMode}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="neon-btn"
+              disabled={submitting || isReadOnlyMode}
+            >
+              {submitting ? "Submitting..." : "Submit Request"}
+            </button>
+          </form>
+        </div>
+          )}
       </div>
-    </Layout>
+
+    </div>
+    </Layout >
   );
 }
