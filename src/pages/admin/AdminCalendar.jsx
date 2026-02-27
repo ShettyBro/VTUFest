@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "./AdminLayout";
+import { adminFetch } from "../../utils/adminFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 const EMPTY_FORM = { date: "", title: "", type: "blue", place: "", time: "" };
@@ -19,7 +20,7 @@ export default function AdminCalendar() {
 
     const fetchEvents = () => {
         setLoading(true);
-        fetch(`${API_BASE}/api/admin/calendar-events`, { headers })
+        adminFetch(`${API_BASE}/api/admin/calendar-events`, { headers })
             .then(r => r.json())
             .then(d => { if (d.success) setEvents(d.data); else setError(d.message); })
             .catch(() => setError("Network error"))
@@ -36,7 +37,7 @@ export default function AdminCalendar() {
                 ? `${API_BASE}/api/admin/calendar-events/${editingId}`
                 : `${API_BASE}/api/admin/calendar-events`;
             const method = editingId ? "PUT" : "POST";
-            const res = await fetch(url, { method, headers, body: JSON.stringify(form) });
+            const res = await adminFetch(url, { method, headers, body: JSON.stringify(form) });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
             setShowForm(false); setForm(EMPTY_FORM); setEditingId(null);
@@ -46,7 +47,7 @@ export default function AdminCalendar() {
 
     const handleToggle = async (id) => {
         try {
-            const res = await fetch(`${API_BASE}/api/admin/calendar-events/${id}/toggle`, { method: "PATCH", headers });
+            const res = await adminFetch(`${API_BASE}/api/admin/calendar-events/${id}/toggle`, { method: "PATCH", headers });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
             fetchEvents();
@@ -56,7 +57,7 @@ export default function AdminCalendar() {
     const handleDelete = async (id) => {
         if (!window.confirm("Delete this event permanently?")) return;
         try {
-            const res = await fetch(`${API_BASE}/api/admin/calendar-events/${id}`, { method: "DELETE", headers });
+            const res = await adminFetch(`${API_BASE}/api/admin/calendar-events/${id}`, { method: "DELETE", headers });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
             fetchEvents();

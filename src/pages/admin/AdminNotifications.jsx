@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "./AdminLayout";
+import { adminFetch } from "../../utils/adminFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -21,7 +22,7 @@ export default function AdminNotifications() {
 
     const fetchNotifications = () => {
         setLoading(true);
-        fetch(`${API_BASE}/api/admin/notifications`, { headers })
+        adminFetch(`${API_BASE}/api/admin/notifications`, { headers })
             .then(r => r.json())
             .then(d => { if (d.success) setNotifications(d.data); else setError(d.message); })
             .catch(() => setError("Network error"))
@@ -39,7 +40,7 @@ export default function AdminNotifications() {
                 : `${API_BASE}/api/admin/notifications`;
             const method = editingId ? "PUT" : "POST";
             const body = { ...form, priority: Number(form.priority), expires_at: form.expires_at || null };
-            const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
+            const res = await adminFetch(url, { method, headers, body: JSON.stringify(body) });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
             setShowForm(false);
@@ -55,7 +56,7 @@ export default function AdminNotifications() {
 
     const handleToggle = async (id) => {
         try {
-            const res = await fetch(`${API_BASE}/api/admin/notifications/${id}/toggle`, { method: "PATCH", headers });
+            const res = await adminFetch(`${API_BASE}/api/admin/notifications/${id}/toggle`, { method: "PATCH", headers });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
             fetchNotifications();
@@ -65,7 +66,7 @@ export default function AdminNotifications() {
     const handleDelete = async (id) => {
         if (!window.confirm("Delete this notification permanently?")) return;
         try {
-            const res = await fetch(`${API_BASE}/api/admin/notifications/${id}`, { method: "DELETE", headers });
+            const res = await adminFetch(`${API_BASE}/api/admin/notifications/${id}`, { method: "DELETE", headers });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
             fetchNotifications();

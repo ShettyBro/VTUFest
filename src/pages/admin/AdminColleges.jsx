@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import AdminLayout from "./AdminLayout";
+import { adminFetch } from "../../utils/adminFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -34,7 +35,7 @@ function CollegeDetailsModal({ college, token, onClose }) {
     const [err, setErr] = useState("");
 
     useEffect(() => {
-        fetch(`${API_BASE}/api/admin/colleges/${college.id}/details`, {
+        adminFetch(`${API_BASE}/api/admin/colleges/${college.id}/details`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then(r => r.json())
@@ -284,7 +285,7 @@ export default function AdminColleges() {
     const fetchColleges = () => {
         setLoading(true);
         setError("");
-        fetch(`${API_BASE}/api/admin/colleges`, { headers })
+        adminFetch(`${API_BASE}/api/admin/colleges`, { headers })
             .then((r) => r.json())
             .then((d) => { if (d.success) setColleges(d.data); else setError(d.message); })
             .catch(() => setError("Network error — could not fetch colleges"))
@@ -325,7 +326,7 @@ Are you absolutely sure?`
 
         setTogglingId(id);
         try {
-            const res = await fetch(`${API_BASE}/api/admin/colleges/${id}/toggle-lock`, { method: "PATCH", headers });
+            const res = await adminFetch(`${API_BASE}/api/admin/colleges/${id}/toggle-lock`, { method: "PATCH", headers });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
             setColleges((prev) =>

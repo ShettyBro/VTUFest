@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { adminFetch } from "../../utils/adminFetch";
 import AdminLayout from "./AdminLayout";
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -109,7 +110,7 @@ export default function AdminDashboard() {
 
     const fetchStats = useCallback(() => {
         setLoadingStats(true);
-        fetch(`${API_BASE}/api/admin/stats`, { headers })
+        adminFetch(`${API_BASE}/api/admin/stats`, { headers })
             .then(r => r.json())
             .then(d => { if (d.success) { setStats(d.data); setLastFetched(new Date()); } else setError(d.message || "Failed to load stats"); })
             .catch(() => setError("Network error"))
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
 
     const fetchAnalytics = useCallback(() => {
         setLoadingAnalytics(true);
-        fetch(`${API_BASE}/api/admin/analytics`, { headers })
+        adminFetch(`${API_BASE}/api/admin/analytics`, { headers })
             .then(r => r.json())
             .then(d => { if (d.success) setAnalytics(d.data); })
             .catch(() => { }) // non-critical

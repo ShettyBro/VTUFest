@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import AdminLayout from "./AdminLayout";
+import { adminFetch } from "../../utils/adminFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 const API = `${API_BASE}/api/admin/find`;
@@ -78,7 +79,7 @@ function DocCard({ doc }) {
         setLoading(true); setErr(null); setImgErr(false);
         const token = localStorage.getItem("vtufest_admin_token");
         try {
-            const r = await fetch(`${API}/sas`, {
+            const r = await adminFetch(`${API}/sas`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -183,7 +184,7 @@ export default function AdminFindPerson() {
         if (!qr) return;
         setLoading(true); setErr(null); setResult(null);
         try {
-            const r = await fetch(`${API}/person?qr=${encodeURIComponent(qr)}`, {
+            const r = await adminFetch(`${API}/person?qr=${encodeURIComponent(qr)}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await r.json();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "./AdminLayout";
+import { adminFetch } from "../../utils/adminFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -15,7 +16,7 @@ export default function AdminSettings() {
 
     const fetchSettings = () => {
         setLoading(true);
-        fetch(`${API_BASE}/api/admin/settings`, { headers })
+        adminFetch(`${API_BASE}/api/admin/settings`, { headers })
             .then(r => r.json())
             .then(d => { if (d.success) setSettings(d.data); else setError(d.message); })
             .catch(() => setError("Network error"))
@@ -29,7 +30,7 @@ export default function AdminSettings() {
         setSaving(key);
         try {
             const newValue = currentValue === "true" ? false : true;
-            const res = await fetch(`${API_BASE}/api/admin/settings/${key}`, {
+            const res = await adminFetch(`${API_BASE}/api/admin/settings/${key}`, {
                 method: "PATCH",
                 headers,
                 body: JSON.stringify({ value: newValue, reason: "Toggled from admin panel" }),

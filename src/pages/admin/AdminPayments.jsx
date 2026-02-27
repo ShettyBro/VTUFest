@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import AdminLayout from "./AdminLayout";
+import { adminFetch } from "../../utils/adminFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -32,7 +33,7 @@ export default function AdminPayments() {
     const fetchPayments = useCallback(() => {
         setLoading(true);
         setError("");
-        fetch(`${API_BASE}/api/admin/pending-payments`, { method: "POST", headers })
+        adminFetch(`${API_BASE}/api/admin/pending-payments`, { method: "POST", headers })
             .then((r) => r.json())
             .then((d) => {
                 if (d.success) {
@@ -57,7 +58,7 @@ export default function AdminPayments() {
     const refreshReceiptUrl = async (id) => {
         setReceiptLoading(id);
         try {
-            const res = await fetch(`${API_BASE}/api/admin/pending-payments/receipt-url/${id}`, {
+            const res = await adminFetch(`${API_BASE}/api/admin/pending-payments/receipt-url/${id}`, {
                 method: "POST",
                 headers,
             });
@@ -82,7 +83,7 @@ export default function AdminPayments() {
         }
         setActionLoading(id);
         try {
-            const res = await fetch(`${API_BASE}/api/admin/verify-payment`, {
+            const res = await adminFetch(`${API_BASE}/api/admin/verify-payment`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({

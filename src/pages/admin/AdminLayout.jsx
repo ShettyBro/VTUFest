@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../../styles/dashboard-glass.css";
+import { isAdminTokenExpired } from "../../utils/adminFetch";
 
 const NAV_ITEMS = [
     { path: "/ad-dashboard", label: "Dashboard", icon: "📊" },
@@ -22,9 +23,14 @@ export default function AdminLayout({ children }) {
     const name = localStorage.getItem("vtufest_admin_name") || "Admin";
     const isSuperAdmin = role === "SUPER_ADMIN";
 
-    // Route protection
+    // Route protection – redirect if token is missing OR expired
     useEffect(() => {
-        if (!token || !role) navigate("/ad-login");
+        if (!token || !role || isAdminTokenExpired()) {
+            localStorage.removeItem("vtufest_admin_token");
+            localStorage.removeItem("vtufest_admin_role");
+            localStorage.removeItem("vtufest_admin_name");
+            navigate("/ad-login");
+        }
     }, []);
 
     const handleLogout = () => {

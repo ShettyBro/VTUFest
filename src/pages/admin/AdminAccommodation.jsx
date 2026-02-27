@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import AdminLayout from "./AdminLayout";
+import { adminFetch } from "../../utils/adminFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -40,7 +41,7 @@ function DetailsModal({ request, token, onClose }) {
     const s = cfg(request.status);
 
     useEffect(() => {
-        fetch(`${API_BASE}/api/admin/accommodation/${request.id}/allotments`, {
+        adminFetch(`${API_BASE}/api/admin/accommodation/${request.id}/allotments`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then(r => r.json())
@@ -276,8 +277,8 @@ export default function AdminAccommodation() {
     const fetchAll = useCallback(() => {
         setLoading(true);
         Promise.all([
-            fetch(`${API_BASE}/api/admin/accommodation`, { headers }).then(r => r.json()),
-            fetch(`${API_BASE}/api/admin/accommodation/summary`, { headers }).then(r => r.json()),
+            adminFetch(`${API_BASE}/api/admin/accommodation`, { headers }).then(r => r.json()),
+            adminFetch(`${API_BASE}/api/admin/accommodation/summary`, { headers }).then(r => r.json()),
         ]).then(([listData, sumData]) => {
             if (listData.success) setRequests(listData.data);
             else setError(listData.message || "Failed to load requests");
