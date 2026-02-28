@@ -98,156 +98,154 @@ export default function ManagerProfileModal({ onComplete }) {
     loadSessionFromStorage();
   }, []);
 
-  useEffect(() => {
+  const saveSessionToStorage = (data) => {
+    localStorage.setItem("manager_profile_session", JSON.stringify({ ...data, savedAt: Date.now() }));
+  };
 
-    const saveSessionToStorage = (data) => {
-      localStorage.setItem("manager_profile_session", JSON.stringify({ ...data, savedAt: Date.now() }));
-    };
-
-    const loadSessionFromStorage = () => {
-      try {
-        const saved = localStorage.getItem("manager_profile_session");
-        if (!saved) return;
-        const data = JSON.parse(saved);
-        const expiresAt = new Date(data.expires_at).getTime();
-        const now = Date.now();
-        if (now < expiresAt) {
-          setSession(data);
-          if (data.remaining_seconds !== undefined) {
-            const elapsed = Math.floor((now - data.savedAt) / 1000);
-            setTimer(Math.max(0, data.remaining_seconds - elapsed));
-          } else {
-            setTimer(Math.floor((expiresAt - now) / 1000));
-          }
+  const loadSessionFromStorage = () => {
+    try {
+      const saved = localStorage.getItem("manager_profile_session");
+      if (!saved) return;
+      const data = JSON.parse(saved);
+      const expiresAt = new Date(data.expires_at).getTime();
+      const now = Date.now();
+      if (now < expiresAt) {
+        setSession(data);
+        if (data.remaining_seconds !== undefined) {
+          const elapsed = Math.floor((now - data.savedAt) / 1000);
+          setTimer(Math.max(0, data.remaining_seconds - elapsed));
         } else {
-          localStorage.removeItem("manager_profile_session");
+          setTimer(Math.floor((expiresAt - now) / 1000));
         }
-      } catch (error) {
-        console.error("Error loading session:", error);
+      } else {
         localStorage.removeItem("manager_profile_session");
       }
-    };
+    } catch (error) {
+      console.error("Error loading session:", error);
+      localStorage.removeItem("manager_profile_session");
+    }
+  };
 
 
-    const handleInit = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ action: "init_manager_profile" }),
-        });
-        if (response.status === 401) {
-          showPopup("Session expired. Please login again.", "error");
-          localStorage.clear();
-          setTimeout(() => navigate("/"), 2000);
-          return;
-        }
-        const data = await response.json();
-        if (data.success) {
-          setSession(data);
-          saveSessionToStorage(data);
-          setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
-          setTimerExpired(false);
-        } else {
-          showPopup(data.error || "Failed to initialize profile", "error");
-        }
-      } catch (error) {
-        console.error("Init error:", error);
-        showPopup("Failed to initialize profile", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const handleFileChange = (e, key) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
-        showPopup("Only PNG, JPG, or PDF files allowed", "warning");
+  const handleInit = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "init_manager_profile" }),
+      });
+      if (response.status === 401) {
+        showPopup("Session expired. Please login again.", "error");
+        localStorage.clear();
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        showPopup("File must be less than 5MB", "warning");
-        return;
-      }
-      setFiles((prev) => ({ ...prev, [key]: file }));
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => setFilePreviews((prev) => ({ ...prev, [key]: reader.result }));
-        reader.readAsDataURL(file);
+      const data = await response.json();
+      if (data.success) {
+        setSession(data);
+        saveSessionToStorage(data);
+        setTimer(data.remaining_seconds > 0 ? data.remaining_seconds : 0);
+        setTimerExpired(false);
       } else {
-        setFilePreviews((prev) => ({ ...prev, [key]: "PDF" }));
+        showPopup(data.error || "Failed to initialize profile", "error");
       }
-    };
+    } catch (error) {
+      console.error("Init error:", error);
+      showPopup("Failed to initialize profile", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const uploadFile = async (key) => {
-      if (!files[key] || !session?.upload_urls?.[key]) {
-        showPopup("Session expired. Please restart.", "error");
+  const handleFileChange = (e, key) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+      showPopup("Only PNG, JPG, or PDF files allowed", "warning");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showPopup("File must be less than 5MB", "warning");
+      return;
+    }
+    setFiles((prev) => ({ ...prev, [key]: file }));
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => setFilePreviews((prev) => ({ ...prev, [key]: reader.result }));
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreviews((prev) => ({ ...prev, [key]: "PDF" }));
+    }
+  };
+
+  const uploadFile = async (key) => {
+    if (!files[key] || !session?.upload_urls?.[key]) {
+      showPopup("Session expired. Please restart.", "error");
+      return;
+    }
+    try {
+      setUploadStatus((prev) => ({ ...prev, [key]: "uploading" }));
+      const response = await fetch(session.upload_urls[key], {
+        method: "PUT",
+        headers: { "x-ms-blob-type": "BlockBlob" },
+        body: files[key],
+      });
+      if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
+      setUploadStatus((prev) => ({ ...prev, [key]: "done" }));
+    } catch (error) {
+      console.error(`Upload error (${key}):`, error);
+      setUploadStatus((prev) => ({ ...prev, [key]: "failed" }));
+      showPopup(`Failed to upload ${key.replace(/_/g, " ")}`, "error");
+    }
+  };
+
+  const handleFinalize = async () => {
+    if (uploadStatus.passport_photo !== "done" || uploadStatus.college_id_card !== "done" || uploadStatus.aadhaar_card !== "done") {
+      showPopup("Please upload all 3 documents before submitting", "warning");
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "finalize_manager_profile", session_id: session.session_id }),
+      });
+      if (response.status === 401) {
+        showPopup("Session expired. Please login again.", "error");
+        localStorage.clear();
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
-      try {
-        setUploadStatus((prev) => ({ ...prev, [key]: "uploading" }));
-        const response = await fetch(session.upload_urls[key], {
-          method: "PUT",
-          headers: { "x-ms-blob-type": "BlockBlob" },
-          body: files[key],
-        });
-        if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
-        setUploadStatus((prev) => ({ ...prev, [key]: "done" }));
-      } catch (error) {
-        console.error(`Upload error (${key}):`, error);
-        setUploadStatus((prev) => ({ ...prev, [key]: "failed" }));
-        showPopup(`Failed to upload ${key.replace(/_/g, " ")}`, "error");
+      const data = await response.json();
+      if (data.success) {
+        localStorage.removeItem("manager_profile_session");
+        showPopup("Profile completed! You are now counted in the 45-person quota.", "success");
+        if (onComplete) onComplete();
+        window.location.reload();
+      } else {
+        showPopup(data.error || "Finalization failed", "error");
       }
-    };
+    } catch (error) {
+      console.error("Finalize error:", error);
+      showPopup("Failed to finalize profile", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleFinalize = async () => {
-      if (uploadStatus.passport_photo !== "done" || uploadStatus.college_id_card !== "done" || uploadStatus.aadhaar_card !== "done") {
-        showPopup("Please upload all 3 documents before submitting", "warning");
-        return;
-      }
-      try {
-        setLoading(true);
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ action: "finalize_manager_profile", session_id: session.session_id }),
-        });
-        if (response.status === 401) {
-          showPopup("Session expired. Please login again.", "error");
-          localStorage.clear();
-          setTimeout(() => navigate("/"), 2000);
-          return;
-        }
-        const data = await response.json();
-        if (data.success) {
-          localStorage.removeItem("manager_profile_session");
-          showPopup("Profile completed! You are now counted in the 45-person quota.", "success");
-          if (onComplete) onComplete();
-          window.location.reload();
-        } else {
-          showPopup(data.error || "Finalization failed", "error");
-        }
-      } catch (error) {
-        console.error("Finalize error:", error);
-        showPopup("Failed to finalize profile", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const allUploaded =
+    uploadStatus.passport_photo === "done" &&
+    uploadStatus.college_id_card === "done" &&
+    uploadStatus.aadhaar_card === "done";
 
-    const allUploaded =
-      uploadStatus.passport_photo === "done" &&
-      uploadStatus.college_id_card === "done" &&
-      uploadStatus.aadhaar_card === "done";
+  return (
+    <div className="auth-page" style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+      <div className="shape shape-1"></div>
+      <div className="shape shape-2"></div>
 
-    return (
-      <div className="auth-page" style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-        <div className="shape shape-1"></div>
-        <div className="shape shape-2"></div>
-
-        <style>{`
+      <style>{`
         .upload-grid-manager {
           display: flex;
           flex-wrap: wrap;
@@ -267,75 +265,75 @@ export default function ManagerProfileModal({ onComplete }) {
         }
       `}</style>
 
-        <div className="auth-container manager-profile-container">
-          <h2 className="form-title" style={{ textAlign: 'center' }}>Complete Your Profile</h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: '10px', fontSize: '0.9rem' }}>
-            Upload the following documents to continue. You will be counted in the 45-person quota after completion.
-          </p>
+      <div className="auth-container manager-profile-container">
+        <h2 className="form-title" style={{ textAlign: 'center' }}>Complete Your Profile</h2>
+        <p style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: '10px', fontSize: '0.9rem' }}>
+          Upload the following documents to continue. You will be counted in the 45-person quota after completion.
+        </p>
 
-          {!session ? (
-            <button className="auth-btn" onClick={handleInit} disabled={loading} style={{ marginTop: '15px' }}>
-              {loading ? "Initializing..." : "Start Upload"}
+        {!session ? (
+          <button className="auth-btn" onClick={handleInit} disabled={loading} style={{ marginTop: '15px' }}>
+            {loading ? "Initializing..." : "Start Upload"}
+          </button>
+        ) : (
+          <>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
+              borderLeft: '4px solid #f59e0b', borderRadius: '8px',
+              padding: '10px 14px', marginBottom: '10px',
+              color: '#fbbf24', fontWeight: 600, fontSize: '0.88rem',
+            }}>
+              ⚠️ File upload link is valid for 5 minutes. Please upload your documents promptly.
+            </div>
+
+            <div className="upload-grid-manager">
+              <FileUploadField
+                label="Passport Photo"
+                docKey="passport_photo"
+                files={files}
+                filePreviews={filePreviews}
+                uploadStatus={uploadStatus}
+                handleFileChange={handleFileChange}
+                uploadFile={uploadFile}
+                timerExpired={false}
+                loading={loading}
+              />
+              <FileUploadField
+                label="College ID Card"
+                docKey="college_id_card"
+                files={files}
+                filePreviews={filePreviews}
+                uploadStatus={uploadStatus}
+                handleFileChange={handleFileChange}
+                uploadFile={uploadFile}
+                timerExpired={false}
+                loading={loading}
+              />
+              <FileUploadField
+                label="Aadhaar Card"
+                docKey="aadhaar_card"
+                files={files}
+                filePreviews={filePreviews}
+                uploadStatus={uploadStatus}
+                handleFileChange={handleFileChange}
+                uploadFile={uploadFile}
+                timerExpired={false}
+                loading={loading}
+              />
+            </div>
+
+            <button
+              className="auth-btn"
+              onClick={handleFinalize}
+              disabled={!allUploaded || loading}
+              style={{ marginTop: '20px' }}
+            >
+              {loading ? "Submitting..." : "Complete Profile"}
             </button>
-          ) : (
-            <>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
-                borderLeft: '4px solid #f59e0b', borderRadius: '8px',
-                padding: '10px 14px', marginBottom: '10px',
-                color: '#fbbf24', fontWeight: 600, fontSize: '0.88rem',
-              }}>
-                ⚠️ File upload link is valid for 5 minutes. Please upload your documents promptly.
-              </div>
-
-              <div className="upload-grid-manager">
-                <FileUploadField
-                  label="Passport Photo"
-                  docKey="passport_photo"
-                  files={files}
-                  filePreviews={filePreviews}
-                  uploadStatus={uploadStatus}
-                  handleFileChange={handleFileChange}
-                  uploadFile={uploadFile}
-                  timerExpired={false}
-                  loading={loading}
-                />
-                <FileUploadField
-                  label="College ID Card"
-                  docKey="college_id_card"
-                  files={files}
-                  filePreviews={filePreviews}
-                  uploadStatus={uploadStatus}
-                  handleFileChange={handleFileChange}
-                  uploadFile={uploadFile}
-                  timerExpired={false}
-                  loading={loading}
-                />
-                <FileUploadField
-                  label="Aadhaar Card"
-                  docKey="aadhaar_card"
-                  files={files}
-                  filePreviews={filePreviews}
-                  uploadStatus={uploadStatus}
-                  handleFileChange={handleFileChange}
-                  uploadFile={uploadFile}
-                  timerExpired={false}
-                  loading={loading}
-                />
-              </div>
-
-              <button
-                className="auth-btn"
-                onClick={handleFinalize}
-                disabled={!allUploaded || loading}
-                style={{ marginTop: '20px' }}
-              >
-                {loading ? "Submitting..." : "Complete Profile"}
-              </button>
-            </>
-          )}
-        </div>
+          </>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
