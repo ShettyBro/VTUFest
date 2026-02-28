@@ -253,6 +253,31 @@ export default function Accommodation() {
           </div>
         </div>
 
+        {/* ── IMPORTANT NOTE ── */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '12px',
+          background: 'rgba(245, 158, 11, 0.1)',
+          border: '1px solid rgba(245, 158, 11, 0.5)',
+          borderLeft: '4px solid #f59e0b',
+          borderRadius: '10px',
+          padding: '14px 18px',
+          marginBottom: '20px',
+          color: 'var(--text-primary)',
+        }}>
+          <span style={{ fontSize: '1.3rem', lineHeight: 1, marginTop: '1px' }}>⚠️</span>
+          <div>
+            <strong style={{ color: '#f59e0b', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Important Note
+            </strong>
+            <p style={{ margin: '4px 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+              Accommodations will be <strong style={{ color: '#fbbf24' }}>approved only for colleges outside Bangalore</strong>.
+              Colleges that are located within Bangalore are <strong style={{ color: '#fbbf24' }}>not eligible</strong> for accommodation as we do not provide stay arrangements for Bangalore-based institutions.
+            </p>
+          </div>
+        </div>
+
         {isLocked && (
           <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
             🔒 Final approval submitted. Read-only.
