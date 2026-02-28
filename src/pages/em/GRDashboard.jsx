@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../../styles/dashboard-glass.css";
+import { emFetch, isEMTokenExpired } from "../../utils/emFetch";
+import { usePopup } from "../../context/PopupContext";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 const fmt = (d) => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
@@ -17,12 +19,24 @@ const scfg = (s) => STATUS_CFG[s?.toUpperCase()] || STATUS_CFG.PENDING;
 function GRLayout({ children }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { showPopup } = usePopup();
     const name = localStorage.getItem("vtufest_em_name") || "GR Incharge";
+
+    const doSessionExpiry = () => {
+        localStorage.removeItem("vtufest_em_token");
+        localStorage.removeItem("vtufest_em_name");
+        localStorage.removeItem("vtufest_em_role");
+        showPopup("Session expired. Please login again.", "error");
+        setTimeout(() => navigate("/em-login", { replace: true }), 2000);
+    };
 
     useEffect(() => {
         const token = localStorage.getItem("vtufest_em_token");
         const role = localStorage.getItem("vtufest_em_role");
-        if (!token || role !== "GR_INCHARGE") navigate("/em-login");
+        if (!token || role !== "GR_INCHARGE" || isEMTokenExpired()) { doSessionExpiry(); return; }
+        const handler = () => doSessionExpiry();
+        window.addEventListener("em:session-expired", handler);
+        return () => window.removeEventListener("em:session-expired", handler);
     }, []);
 
     const handleLogout = () => {
@@ -136,7 +150,7 @@ function AllocateModal({ request, token, onClose, onDone }) {
         }
         setSaving(true); setErr("");
         try {
-            const res = await fetch(`${API_BASE}/api/em/green-room/${request.id}/allocate`, {
+            const res = await emFetch(`${API_BASE}/api/em/green-room/${request.id}/allocate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
@@ -235,7 +249,7 @@ function ActionModal({ request, action, token, onClose, onDone }) {
         if (needsReason && !reason.trim()) { setErr("Reason is required."); return; }
         setSaving(true); setErr("");
         try {
-            const res = await fetch(`${API_BASE}/api/em/green-room/${request.id}/${action}`, {
+            const res = await emFetch(`${API_BASE}/api/em/green-room/${request.id}/${action}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: needsReason ? JSON.stringify({ reason: reason.trim() }) : undefined,

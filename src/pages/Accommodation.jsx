@@ -133,8 +133,9 @@ export default function Accommodation() {
       );
 
       if (response.status === 401) {
-        showPopup("Session expired", "error");
-        navigate("/");
+        showPopup("Session expired. Please login again.", "error");
+        localStorage.clear();
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 

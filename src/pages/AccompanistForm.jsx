@@ -148,459 +148,446 @@ export default function AccompanistForm() {
   }, []);
 
   useEffect(() => {
-    if (timer && timer > 0 && !timerExpired) {
-      const interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            setTimerExpired(true);
-            return 0;
-          }
-          return prev - 1;
+
+    const fetchQuota = async () => {
+      try {
+        setLoading(true);
+        const dashResponse = await fetch(`${API_BASE_URL}/manager/dashboard`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer, timerExpired]);
 
-  const fetchQuota = async () => {
-    try {
-      setLoading(true);
-      const dashResponse = await fetch(`${API_BASE_URL}/manager/dashboard`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (dashResponse.status === 401) {
-        handleSessionExpired();
-        return;
-      }
-
-      const dashData = await dashResponse.json();
-      if (dashData.success) {
-        setQuotaUsed(dashData.data.stats.quota_used);
-      }
-    } catch (error) {
-      console.error("Fetch quota error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAccompanists = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action: "get_accompanists" }),
-      });
-
-      if (response.status === 401) {
-        handleSessionExpired();
-        return;
-      }
-
-      const data = await response.json();
-      if (data.success && data.data && data.data.accompanists) {
-        setAccompanists(data.data.accompanists);
-        setAccompanistsLoaded(true);
-        if (data.success && data.data) {
-          setIsLocked(data.data.is_locked);
-          setRegistrationLock(data.data.registration_lock);
+        if (dashResponse.status === 401) {
+          handleSessionExpired();
+          return;
         }
+
+        const dashData = await dashResponse.json();
+        if (dashData.success) {
+          setQuotaUsed(dashData.data.stats.quota_used);
+        }
+      } catch (error) {
+        console.error("Fetch quota error:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Fetch accompanists error:", error);
-    }
-  };
+    };
 
-  const isReadOnlyMode = isLocked || registrationLock;
+    const fetchAccompanists = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: "get_accompanists" }),
+        });
 
-  const handleSessionExpired = () => {
-    showPopup("Session expired. Please login again.", "error");
-    localStorage.clear();
-    navigate("/");
-  };
+        if (response.status === 401) {
+          handleSessionExpired();
+          return;
+        }
 
-  const remainingSlots = 45 - quotaUsed;
+        const data = await response.json();
+        if (data.success && data.data && data.data.accompanists) {
+          setAccompanists(data.data.accompanists);
+          setAccompanistsLoaded(true);
+          if (data.success && data.data) {
+            setIsLocked(data.data.is_locked);
+            setRegistrationLock(data.data.registration_lock);
+          }
+        }
+      } catch (error) {
+        console.error("Fetch accompanists error:", error);
+      }
+    };
 
-  const formatTimer = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
+    const isReadOnlyMode = isLocked || registrationLock;
 
-  const openModal = () => {
-    if (isReadOnlyMode) return;
-    if (remainingSlots <= 0) {
-      showPopup("Maximum capacity 45 reached.", "warning");
-      return;
-    }
+    const handleSessionExpired = () => {
+      showPopup("Session expired. Please login again.", "error");
+      localStorage.clear();
+      setTimeout(() => navigate("/"), 2000);
+    };
 
-    setShowModal(true);
-    setModalStep(1);
-    setModalForm({
-      full_name: "",
-      phone: "",
-      email: "",
-      accompanist_type: "faculty",
-    });
-    setSessionData(null);
-    setUploadFiles({ government_id_proof: null, passport_photo: null });
-    setDocumentPreviews({ government_id_proof: null, passport_photo: null });
-    setUploadStatus({ government_id_proof: "", passport_photo: "" });
-    setUploadProgress({ government_id_proof: "", passport_photo: "" });
-    setTimer(null);
-    setTimerExpired(false);
-  };
+    const remainingSlots = 45 - quotaUsed;
 
-  const closeModal = () => {
-    setShowModal(false);
-    setModalStep(1);
-    setSessionData(null);
-    setTimer(null);
-    setTimerExpired(false);
-  };
-
-  const handleModalFormChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "phone") {
-      setModalForm({ ...modalForm, [name]: sanitizePhone(value) });
-    } else {
-      setModalForm({ ...modalForm, [name]: value });
-    }
-  };
-
-  const handleFileChange = (e, key) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
-      showPopup("Only PNG, JPG, or PDF files allowed", "warning");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      showPopup("File must be less than 5MB", "warning");
-      return;
-    }
-
-    setUploadFiles((prev) => ({ ...prev, [key]: file }));
-
-    // Generate Preview
-    if (file.type === "application/pdf") {
-      setDocumentPreviews(prev => ({ ...prev, [key]: "PDF" }));
-    } else {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setDocumentPreviews(prev => ({ ...prev, [key]: e.target.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleNext = async () => {
-    if (!modalForm.full_name || !modalForm.phone) {
-      showPopup("Name and Phone are required", "warning");
-      return;
-    }
-    if (!isValidIndianPhone(modalForm.phone)) {
-      showPopup("Phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
-      return;
-    }
-    if (!["faculty", "professional"].includes(modalForm.accompanist_type)) {
-      showPopup("Accompanist type must be either 'faculty' or 'professional'", "warning");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      const initResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "init_accompanist",
-          full_name: modalForm.full_name,
-          phone: modalForm.phone,
-          email: modalForm.email || null,
-          accompanist_type: modalForm.accompanist_type,
-          student_id: null,
-        }),
-      });
-
-      if (initResponse.status === 401) {
-        handleSessionExpired();
+    const openModal = () => {
+      if (isReadOnlyMode) return;
+      if (remainingSlots <= 0) {
+        showPopup("Maximum capacity 45 reached.", "warning");
         return;
       }
 
-      const initData = await initResponse.json();
-      if (!initData.success) {
-        showPopup(initData.message || "Failed to initialize session", "error");
-        return;
-      }
-
-      const { session_id, upload_urls, remaining_seconds } = initData.data;
-      setSessionData({ session_id, upload_urls });
-      setTimer(remaining_seconds > 0 ? remaining_seconds : 0);
-      setModalStep(2);
-    } catch (error) {
-      console.error("Init error:", error);
-      showPopup("Network error. Please try again.", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const uploadFile = async (key) => {
-    const file = uploadFiles[key];
-    if (!file || !sessionData?.upload_urls?.[key]) return;
-
-    try {
-      setUploadProgress((prev) => ({ ...prev, [key]: "uploading" }));
-      setUploadStatus((prev) => ({ ...prev, [key]: "uploading" })); // Update main status too
-
-      const uploadResponse = await fetch(sessionData.upload_urls[key], {
-        method: "PUT",
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-          "Content-Type": file.type,
-        },
-        body: file,
+      setShowModal(true);
+      setModalStep(1);
+      setModalForm({
+        full_name: "",
+        phone: "",
+        email: "",
+        accompanist_type: "faculty",
       });
+      setSessionData(null);
+      setUploadFiles({ government_id_proof: null, passport_photo: null });
+      setDocumentPreviews({ government_id_proof: null, passport_photo: null });
+      setUploadStatus({ government_id_proof: "", passport_photo: "" });
+      setUploadProgress({ government_id_proof: "", passport_photo: "" });
+      setTimer(null);
+      setTimerExpired(false);
+    };
 
-      if (uploadResponse.ok) {
-        setUploadStatus((prev) => ({ ...prev, [key]: "done" }));
-        setUploadProgress((prev) => ({ ...prev, [key]: "done" }));
+    const closeModal = () => {
+      setShowModal(false);
+      setModalStep(1);
+      setSessionData(null);
+      setTimer(null);
+      setTimerExpired(false);
+    };
+
+    const handleModalFormChange = (e) => {
+      const { name, value } = e.target;
+      if (name === "phone") {
+        setModalForm({ ...modalForm, [name]: sanitizePhone(value) });
       } else {
+        setModalForm({ ...modalForm, [name]: value });
+      }
+    };
+
+    const handleFileChange = (e, key) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+        showPopup("Only PNG, JPG, or PDF files allowed", "warning");
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showPopup("File must be less than 5MB", "warning");
+        return;
+      }
+
+      setUploadFiles((prev) => ({ ...prev, [key]: file }));
+
+      // Generate Preview
+      if (file.type === "application/pdf") {
+        setDocumentPreviews(prev => ({ ...prev, [key]: "PDF" }));
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setDocumentPreviews(prev => ({ ...prev, [key]: e.target.result }));
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const handleNext = async () => {
+      if (!modalForm.full_name || !modalForm.phone) {
+        showPopup("Name and Phone are required", "warning");
+        return;
+      }
+      if (!isValidIndianPhone(modalForm.phone)) {
+        showPopup("Phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
+        return;
+      }
+      if (!["faculty", "professional"].includes(modalForm.accompanist_type)) {
+        showPopup("Accompanist type must be either 'faculty' or 'professional'", "warning");
+        return;
+      }
+
+      try {
+        setSubmitting(true);
+        const initResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "init_accompanist",
+            full_name: modalForm.full_name,
+            phone: modalForm.phone,
+            email: modalForm.email || null,
+            accompanist_type: modalForm.accompanist_type,
+            student_id: null,
+          }),
+        });
+
+        if (initResponse.status === 401) {
+          handleSessionExpired();
+          return;
+        }
+
+        const initData = await initResponse.json();
+        if (!initData.success) {
+          showPopup(initData.message || "Failed to initialize session", "error");
+          return;
+        }
+
+        const { session_id, upload_urls, remaining_seconds } = initData.data;
+        setSessionData({ session_id, upload_urls });
+        setTimer(remaining_seconds > 0 ? remaining_seconds : 0);
+        setModalStep(2);
+      } catch (error) {
+        console.error("Init error:", error);
+        showPopup("Network error. Please try again.", "error");
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    const uploadFile = async (key) => {
+      const file = uploadFiles[key];
+      if (!file || !sessionData?.upload_urls?.[key]) return;
+
+      try {
+        setUploadProgress((prev) => ({ ...prev, [key]: "uploading" }));
+        setUploadStatus((prev) => ({ ...prev, [key]: "uploading" })); // Update main status too
+
+        const uploadResponse = await fetch(sessionData.upload_urls[key], {
+          method: "PUT",
+          headers: {
+            "x-ms-blob-type": "BlockBlob",
+            "Content-Type": file.type,
+          },
+          body: file,
+        });
+
+        if (uploadResponse.ok) {
+          setUploadStatus((prev) => ({ ...prev, [key]: "done" }));
+          setUploadProgress((prev) => ({ ...prev, [key]: "done" }));
+        } else {
+          setUploadProgress((prev) => ({ ...prev, [key]: "failed" }));
+          setUploadStatus((prev) => ({ ...prev, [key]: "failed" }));
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
         setUploadProgress((prev) => ({ ...prev, [key]: "failed" }));
         setUploadStatus((prev) => ({ ...prev, [key]: "failed" }));
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-      setUploadProgress((prev) => ({ ...prev, [key]: "failed" }));
-      setUploadStatus((prev) => ({ ...prev, [key]: "failed" }));
-    }
-  };
+    };
 
-  const handleSubmit = async () => {
-    if (!sessionData?.session_id) return;
+    const handleSubmit = async () => {
+      if (!sessionData?.session_id) return;
 
-    try {
-      setSubmitting(true);
-      const finalizeResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "finalize_accompanist",
-          session_id: sessionData.session_id,
-        }),
-      });
+      try {
+        setSubmitting(true);
+        const finalizeResponse = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "finalize_accompanist",
+            session_id: sessionData.session_id,
+          }),
+        });
 
-      if (finalizeResponse.status === 401) {
-        handleSessionExpired();
-        return;
+        if (finalizeResponse.status === 401) {
+          handleSessionExpired();
+          return;
+        }
+
+        const finalizeData = await finalizeResponse.json();
+        if (!finalizeData.success) {
+          showPopup(finalizeData.message || "Failed to add accompanist", "error");
+          return;
+        }
+
+        showPopup("Accompanist added successfully", "success");
+        closeModal();
+        await fetchQuota();
+        await fetchAccompanists();
+      } catch (error) {
+        console.error("Submit error:", error);
+        showPopup("Network error.", "error");
+      } finally {
+        setSubmitting(false);
       }
+    };
 
-      const finalizeData = await finalizeResponse.json();
-      if (!finalizeData.success) {
-        showPopup(finalizeData.message || "Failed to add accompanist", "error");
-        return;
-      }
+    const removeAccompanist = async (accompanist_id) => {
+      if (isReadOnlyMode) return;
+      if (!confirm("Are you sure you want to remove this accompanist?")) return;
 
-      showPopup("Accompanist added successfully", "success");
-      closeModal();
-      await fetchQuota();
-      await fetchAccompanists();
-    } catch (error) {
-      console.error("Submit error:", error);
-      showPopup("Network error.", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      try {
+        setRemovingId(accompanist_id);
+        const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            action: "delete_accompanist",
+            accompanist_id,
+          }),
+        });
 
-  const removeAccompanist = async (accompanist_id) => {
-    if (isReadOnlyMode) return;
-    if (!confirm("Are you sure you want to remove this accompanist?")) return;
+        if (response.status === 401) {
+          handleSessionExpired();
+          return;
+        }
 
-    try {
-      setRemovingId(accompanist_id);
-      const response = await fetch(`${API_BASE_URL}/manager/manage-accompanists`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "delete_accompanist",
-          accompanist_id,
-        }),
-      });
+        const data = await response.json();
+        if (!data.success) {
+          showPopup(data.message || "Failed to remove accompanist", "error");
+          setRemovingId(null);
+          return;
+        }
 
-      if (response.status === 401) {
-        handleSessionExpired();
-        return;
-      }
-
-      const data = await response.json();
-      if (!data.success) {
-        showPopup(data.message || "Failed to remove accompanist", "error");
+        setAccompanists(accompanists.filter((acc) => acc.accompanist_id !== accompanist_id));
+        setQuotaUsed(quotaUsed - 1);
+        showPopup("Accompanist removed successfully", "success");
+      } catch (error) {
+        showPopup("Failed to remove accompanist", "error");
+      } finally {
         setRemovingId(null);
-        return;
       }
+    };
 
-      setAccompanists(accompanists.filter((acc) => acc.accompanist_id !== accompanist_id));
-      setQuotaUsed(quotaUsed - 1);
-      showPopup("Accompanist removed successfully", "success");
-    } catch (error) {
-      showPopup("Failed to remove accompanist", "error");
-    } finally {
-      setRemovingId(null);
+    const inputStyle = {
+      width: "100%",
+      padding: "12px",
+      borderRadius: "8px",
+      background: "rgba(255,255,255,0.05)",
+      border: "1px solid var(--glass-border)",
+      color: "white",
+      fontSize: "0.95rem",
+      marginTop: "5px"
+    };
+
+    const labelStyle = {
+      display: "block",
+      color: "var(--text-secondary)",
+      fontSize: "0.9rem",
+      marginBottom: "5px",
+      marginTop: "15px"
+    };
+
+    if (loading) {
+      return (
+        <Layout>
+          <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
+            <h3>Loading Accompanists...</h3>
+          </div>
+        </Layout>
+      );
     }
-  };
 
-  const inputStyle = {
-    width: "100%",
-    padding: "12px",
-    borderRadius: "8px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid var(--glass-border)",
-    color: "white",
-    fontSize: "0.95rem",
-    marginTop: "5px"
-  };
+    const allUploaded = uploadStatus.government_id_proof === "done" && uploadStatus.passport_photo === "done";
 
-  const labelStyle = {
-    display: "block",
-    color: "var(--text-secondary)",
-    fontSize: "0.9rem",
-    marginBottom: "5px",
-    marginTop: "15px"
-  };
-
-  if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: "center", padding: "50px", color: "white" }}>
-          <h3>Loading Accompanists...</h3>
-        </div>
-      </Layout>
-    );
-  }
-
-  const allUploaded = uploadStatus.government_id_proof === "done" && uploadStatus.passport_photo === "done";
-
-  return (
-    <Layout>
-      <div className="dashboard-glass-wrapper">
-        <div className="dashboard-header">
-          <div className="welcome-text">
-            <h1>Manage Accompanists</h1>
-            <p>Register Professionals & Faculty</p>
+        <div className="dashboard-glass-wrapper">
+          <div className="dashboard-header">
+            <div className="welcome-text">
+              <h1>Manage Accompanists</h1>
+              <p>Register Professionals & Faculty</p>
+            </div>
           </div>
-        </div>
 
-        {isLocked && <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>🔒 Final approval submitted.</div>}
-        {registrationLock && <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>🔒 Registration locked.</div>}
+          {isLocked && <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>🔒 Final approval submitted.</div>}
+          {registrationLock && <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>🔒 Registration locked.</div>}
 
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '20px' }}>
-          <div className="glass-card" style={{ padding: '15px 25px', display: 'inline-block' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Quota Used:</span>
-            <strong style={{ color: 'white', fontSize: '1.2rem', marginLeft: '10px' }}>{quotaUsed}</strong>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="glass-card" style={{ padding: '15px 25px', display: 'inline-block' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Quota Used:</span>
+              <strong style={{ color: 'white', fontSize: '1.2rem', marginLeft: '10px' }}>{quotaUsed}</strong>
+            </div>
+            <div className="glass-card" style={{ padding: '15px 25px', display: 'inline-block' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Remaining Slots:</span>
+              <strong style={{ color: 'var(--academic-gold)', fontSize: '1.2rem', marginLeft: '10px' }}>{remainingSlots}</strong>
+            </div>
           </div>
-          <div className="glass-card" style={{ padding: '15px 25px', display: 'inline-block' }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Remaining Slots:</span>
-            <strong style={{ color: 'var(--academic-gold)', fontSize: '1.2rem', marginLeft: '10px' }}>{remainingSlots}</strong>
+
+          <div style={{ marginBottom: '30px' }}>
+            <button className="neon-btn" onClick={openModal} disabled={remainingSlots <= 0 || isReadOnlyMode} style={{ maxWidth: '300px' }}>+ Add Accompanist</button>
           </div>
-        </div>
 
-        <div style={{ marginBottom: '30px' }}>
-          <button className="neon-btn" onClick={openModal} disabled={remainingSlots <= 0 || isReadOnlyMode} style={{ maxWidth: '300px' }}>+ Add Accompanist</button>
-        </div>
-
-        <div className="glass-card">
-          <h3 style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px' }}>Added Accompanists ({accompanists.length})</h3>
-          <div style={{ display: 'grid', gap: '15px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-            {accompanists.map((acc) => (
-              <div key={acc.accompanist_id} className="block-item" style={{ position: 'relative' }}>
-                <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{acc.full_name}</div>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
-                  <div>{acc.phone}</div>
-                  <div style={{ color: 'var(--academic-gold)' }}>{acc.accompanist_type}</div>
+          <div className="glass-card">
+            <h3 style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px' }}>Added Accompanists ({accompanists.length})</h3>
+            <div style={{ display: 'grid', gap: '15px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+              {accompanists.map((acc) => (
+                <div key={acc.accompanist_id} className="block-item" style={{ position: 'relative' }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{acc.full_name}</div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
+                    <div>{acc.phone}</div>
+                    <div style={{ color: 'var(--academic-gold)' }}>{acc.accompanist_type}</div>
+                  </div>
+                  {!isReadOnlyMode && (
+                    <button onClick={() => removeAccompanist(acc.accompanist_id)} disabled={removingId === acc.accompanist_id} style={{ position: 'absolute', top: '15px', right: '15px', padding: '5px 10px', background: 'rgba(239,68,68,0.2)', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '4px', cursor: 'pointer' }}>
+                      {removingId === acc.accompanist_id ? "..." : "X"}
+                    </button>
+                  )}
                 </div>
-                {!isReadOnlyMode && (
-                  <button onClick={() => removeAccompanist(acc.accompanist_id)} disabled={removingId === acc.accompanist_id} style={{ position: 'absolute', top: '15px', right: '15px', padding: '5px 10px', background: 'rgba(239,68,68,0.2)', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '4px', cursor: 'pointer' }}>
-                    {removingId === acc.accompanist_id ? "..." : "X"}
-                  </button>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass-card" style={{ width: '95%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', background: 'var(--navy-dark)', border: '1px solid var(--academic-gold)' }}>
-            <h3 style={{ color: 'var(--academic-gold)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', marginTop: 0 }}>
-              {modalStep === 1 ? "Add Accompanist Details" : "Upload Documents"}
-            </h3>
+        {showModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <div className="glass-card" style={{ width: '95%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', background: 'var(--navy-dark)', border: '1px solid var(--academic-gold)' }}>
+              <h3 style={{ color: 'var(--academic-gold)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', marginTop: 0 }}>
+                {modalStep === 1 ? "Add Accompanist Details" : "Upload Documents"}
+              </h3>
 
-            {modalStep === 1 ? (
-              <>
-                <div style={{ display: 'grid', gap: '15px' }}>
-                  <div>
-                    <label style={labelStyle}>Full Name *</label>
-                    <input name="full_name" value={modalForm.full_name} onChange={handleModalFormChange} style={inputStyle} placeholder="Enter Full Name" />
+              {modalStep === 1 ? (
+                <>
+                  <div style={{ display: 'grid', gap: '15px' }}>
+                    <div>
+                      <label style={labelStyle}>Full Name *</label>
+                      <input name="full_name" value={modalForm.full_name} onChange={handleModalFormChange} style={inputStyle} placeholder="Enter Full Name" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Phone *</label>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        name="phone"
+                        value={modalForm.phone}
+                        onChange={handleModalFormChange}
+                        style={inputStyle}
+                        maxLength={10}
+                        pattern="[6-9][0-9]{9}"
+                        placeholder="e.g. 9876543210 (start with 6-9)"
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Email</label>
+                      <input name="email" value={modalForm.email} onChange={handleModalFormChange} style={inputStyle} placeholder="Optional" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Type *</label>
+                      <select name="accompanist_type" value={modalForm.accompanist_type} onChange={handleModalFormChange} style={inputStyle}>
+                        <option value="faculty" style={{ background: 'var(--navy-dark)', color: 'white' }}>Faculty</option>
+                        <option value="professional" style={{ background: 'var(--navy-dark)', color: 'white' }}>Professional</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label style={labelStyle}>Phone *</label>
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      name="phone"
-                      value={modalForm.phone}
-                      onChange={handleModalFormChange}
-                      style={inputStyle}
-                      maxLength={10}
-                      pattern="[6-9][0-9]{9}"
-                      placeholder="e.g. 9876543210 (start with 6-9)"
-                    />
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                    <button className="neon-btn" onClick={handleNext} disabled={submitting}>{submitting ? "..." : "Next →"}</button>
+                    <button className="neon-btn" onClick={closeModal} style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}>Cancel</button>
                   </div>
-                  <div>
-                    <label style={labelStyle}>Email</label>
-                    <input name="email" value={modalForm.email} onChange={handleModalFormChange} style={inputStyle} placeholder="Optional" />
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
+                    borderLeft: '4px solid #f59e0b', borderRadius: '8px',
+                    padding: '10px 14px', marginBottom: '16px',
+                    color: '#fbbf24', fontWeight: 600, fontSize: '0.88rem',
+                  }}>
+                    ⚠️ File upload link is valid for 5 minutes. Please upload your documents promptly.
                   </div>
-                  <div>
-                    <label style={labelStyle}>Type *</label>
-                    <select name="accompanist_type" value={modalForm.accompanist_type} onChange={handleModalFormChange} style={inputStyle}>
-                      <option value="faculty" style={{ background: 'var(--navy-dark)', color: 'white' }}>Faculty</option>
-                      <option value="professional" style={{ background: 'var(--navy-dark)', color: 'white' }}>Professional</option>
-                    </select>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                  <button className="neon-btn" onClick={handleNext} disabled={submitting}>{submitting ? "..." : "Next →"}</button>
-                  <button className="neon-btn" onClick={closeModal} style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}>Cancel</button>
-                </div>
-              </>
-            ) : (
-              <>
-                {timer !== null && !timerExpired && (<div style={{ textAlign: 'center', marginBottom: '20px', color: timer < 30 ? '#ef4444' : '#10b981', fontWeight: 'bold' }}>Session expires in: {formatTimer(timer)}</div>)}
-                {timerExpired && <div style={{ textAlign: 'center', color: '#ef4444', marginBottom: '20px' }}>Session expired.</div>}
 
-                {!timerExpired && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
                     <FileUploadField
                       label="Govt ID Proof *"
@@ -627,17 +614,16 @@ export default function AccompanistForm() {
                       loading={submitting}
                     />
                   </div>
-                )}
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
-                  <button className="neon-btn" onClick={handleSubmit} disabled={!allUploaded || submitting || timerExpired} style={{ opacity: (!allUploaded || submitting || timerExpired) ? 0.5 : 1 }}>{submitting ? "Submitting..." : "Submit Registration"}</button>
-                  <button className="neon-btn" onClick={closeModal} style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}>Cancel</button>
-                </div>
-              </>
-            )}
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
+                    <button className="neon-btn" onClick={handleSubmit} disabled={!allUploaded || submitting} style={{ opacity: (!allUploaded || submitting) ? 0.5 : 1 }}>{submitting ? "Submitting..." : "Submit Registration"}</button>
+                    <button className="neon-btn" onClick={closeModal} style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}>Cancel</button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </Layout>
-  );
-}
+        )}
+      </Layout>
+    );
+  }

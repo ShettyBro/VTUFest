@@ -64,20 +64,6 @@ export default function RegisterStudent() {
     }
   }, [lockCheckComplete, isLocked]);
 
-  useEffect(() => {
-    if (timer && timer > 0 && !timerExpired) {
-      const interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            setTimerExpired(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer, timerExpired]);
 
   // Check registration lock status
   const checkLockStatus = async () => {
@@ -269,11 +255,6 @@ export default function RegisterStudent() {
     reader.readAsDataURL(file);
   };
 
-  const formatTimer = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
-  };
 
   const handleNext = async (e) => {
     e.preventDefault();
@@ -634,29 +615,15 @@ export default function RegisterStudent() {
           </form>
         ) : (
           <form className="register-card" onSubmit={handleRegister}>
-            {timer !== null && !timerExpired && (
-              <div style={{
-                textAlign: "center",
-                color: timer < 30 ? "#d32f2f" : "#2e7d32",
-                fontWeight: "bold",
-                marginBottom: "15px",
-                fontSize: "16px"
-              }}>
-                ⏱️ Session expires in: {formatTimer(timer)}
-              </div>
-            )}
-
-            {timerExpired && (
-              <div style={{
-                textAlign: "center",
-                color: "#d32f2f",
-                fontWeight: "bold",
-                marginBottom: "15px",
-                fontSize: "16px"
-              }}>
-                ⚠️ Registration session expired. Please restart.
-              </div>
-            )}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
+              borderLeft: '4px solid #f59e0b', borderRadius: '8px',
+              padding: '10px 14px', marginBottom: '14px',
+              color: '#fbbf24', fontWeight: 600, fontSize: '0.88rem',
+            }}>
+              ⚠️ File upload link is valid for 5 minutes. Please upload your documents promptly.
+            </div>
 
             <label>Passport Size Photo * (PNG/JPG, max 5MB)</label>
             <input

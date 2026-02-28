@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import EMLayout from "./EMLayout";
+import { emFetch, isEMTokenExpired } from "../../utils/emFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -23,8 +24,8 @@ export default function EMDashboard() {
     const headers = { Authorization: `Bearer ${token}` };
 
     useEffect(() => {
-        if (!token) { navigate("/em-login"); return; }
-        fetch(`${API_BASE}/api/em/stats`, { headers })
+        if (!token || isEMTokenExpired()) { navigate("/em-login"); return; }
+        emFetch(`${API_BASE}/api/em/stats`, { headers })
             .then(r => r.json())
             .then(d => { if (d.success) setStats(d.data); else setError(d.message); })
             .catch(() => setError("Network error"))

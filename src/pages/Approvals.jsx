@@ -233,7 +233,7 @@ export default function Approvals() {
   const handleSessionExpired = () => {
     showPopup("Session expired. Please login again.", "error");
     localStorage.clear();
-    navigate("/");
+    setTimeout(() => navigate("/"), 2000);
   };
 
   // ============================================================================

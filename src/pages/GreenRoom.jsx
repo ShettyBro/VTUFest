@@ -42,8 +42,9 @@ export default function GreenRoom() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.status === 401) {
-                showPopup("Session expired", "error");
-                navigate("/");
+                showPopup("Session expired. Please login again.", "error");
+                localStorage.clear();
+                setTimeout(() => navigate("/"), 2000);
                 return;
             }
             const json = await res.json();

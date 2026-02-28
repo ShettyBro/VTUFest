@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../../styles/dashboard-glass.css";
 import { isAdminTokenExpired } from "../../utils/adminFetch";
+import { usePopup } from "../../context/PopupContext";
+import SessionTimerBadge from "../../components/SessionTimerBadge";
 
 const NAV_ITEMS = [
     { path: "/ad-dashboard", label: "Dashboard", icon: "📊" },
@@ -17,20 +19,31 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { showPopup } = usePopup();
 
     const token = localStorage.getItem("vtufest_admin_token");
     const role = localStorage.getItem("vtufest_admin_role");
     const name = localStorage.getItem("vtufest_admin_name") || "Admin";
     const isSuperAdmin = role === "SUPER_ADMIN";
 
-    // Route protection – redirect if token is missing OR expired
+    const doSessionExpiry = () => {
+        localStorage.removeItem("vtufest_admin_token");
+        localStorage.removeItem("vtufest_admin_role");
+        localStorage.removeItem("vtufest_admin_name");
+        showPopup("Session expired. Please login again.", "error");
+        setTimeout(() => navigate("/ad-login", { replace: true }), 2000);
+    };
+
+    // Route protection — redirect if token missing or expired
     useEffect(() => {
         if (!token || !role || isAdminTokenExpired()) {
-            localStorage.removeItem("vtufest_admin_token");
-            localStorage.removeItem("vtufest_admin_role");
-            localStorage.removeItem("vtufest_admin_name");
-            navigate("/ad-login");
+            doSessionExpiry();
+            return;
         }
+        // Listen for 401 events fired by adminFetch
+        const handler = () => doSessionExpiry();
+        window.addEventListener("admin:session-expired", handler);
+        return () => window.removeEventListener("admin:session-expired", handler);
     }, []);
 
     const handleLogout = () => {
@@ -158,19 +171,26 @@ export default function AdminLayout({ children }) {
                         {NAV_ITEMS.find(n => n.path === location.pathname)?.icon}{" "}
                         {NAV_ITEMS.find(n => n.path === location.pathname)?.label || "Admin Panel"}
                     </h2>
-                    {!isSuperAdmin && (
-                        <span style={{
-                            padding: "4px 12px",
-                            background: "rgba(96,165,250,0.15)",
-                            border: "1px solid #60a5fa",
-                            color: "#60a5fa",
-                            borderRadius: "20px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                        }}>
-                            👁 View Only Mode
-                        </span>
-                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <SessionTimerBadge
+                            tokenKey="vtufest_admin_token"
+                            accentColor="#d4af37"
+                            onExpired={doSessionExpiry}
+                        />
+                        {!isSuperAdmin && (
+                            <span style={{
+                                padding: "4px 12px",
+                                background: "rgba(96,165,250,0.15)",
+                                border: "1px solid #60a5fa",
+                                color: "#60a5fa",
+                                borderRadius: "20px",
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                            }}>
+                                👁 View Only Mode
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Page Content */}

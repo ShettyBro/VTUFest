@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../../styles/dashboard-glass.css";
+import { accountsFetch, isAccountsTokenExpired } from "../../utils/accountsFetch";
+import { usePopup } from "../../context/PopupContext";
+import SessionTimerBadge from "../../components/SessionTimerBadge";
 
 // ─── Accounts API endpoints (routes/em/accounts-payments.js, mounted at /api/em/accounts) ─
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
@@ -28,12 +31,24 @@ const isPending = (s) => s === "waiting_for_verification" || s === "PENDING";
 function AccountsLayout({ children }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { showPopup } = usePopup();
     const name = localStorage.getItem(NAME_KEY) || "Accounts";
+
+    const doSessionExpiry = () => {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(NAME_KEY);
+        localStorage.removeItem(ROLE_KEY);
+        showPopup("Session expired. Please login again.", "error");
+        setTimeout(() => navigate("/em-login", { replace: true }), 2000);
+    };
 
     useEffect(() => {
         const token = localStorage.getItem(TOKEN_KEY);
         const role = localStorage.getItem(ROLE_KEY);
-        if (!token || role !== "ACCOUNTS") navigate("/em-login");
+        if (!token || role !== "ACCOUNTS" || isAccountsTokenExpired()) { doSessionExpiry(); return; }
+        const handler = () => doSessionExpiry();
+        window.addEventListener("accounts:session-expired", handler);
+        return () => window.removeEventListener("accounts:session-expired", handler);
     }, []);
 
     const handleLogout = () => {
@@ -120,7 +135,14 @@ function AccountsLayout({ children }) {
                     <h2 style={{ margin: 0, color: "#f1f5f9", fontSize: "1.1rem", fontWeight: 600 }}>
                         💳 Payment Verification
                     </h2>
-                    <div style={{ color: "#10b981", fontSize: "0.82rem", fontWeight: 600 }}>Accounts Department</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <SessionTimerBadge
+                            tokenKey="vtufest_accounts_token"
+                            accentColor="#10b981"
+                            onExpired={doSessionExpiry}
+                        />
+                        <div style={{ color: "#10b981", fontSize: "0.82rem", fontWeight: 600 }}>Accounts Department</div>
+                    </div>
                 </div>
                 <div className="dashboard-glass-wrapper" style={{ flex: 1 }}>{children}</div>
             </main>
@@ -147,7 +169,7 @@ export default function AccountsDashboard() {
     const fetchPayments = useCallback(() => {
         setLoading(true);
         setError("");
-        fetch(ACCOUNTS_API.fetchPayments, { method: "POST", headers })
+        accountsFetch(ACCOUNTS_API.fetchPayments, { method: "POST", headers })
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
@@ -168,7 +190,7 @@ export default function AccountsDashboard() {
     const refreshReceiptUrl = async (id) => {
         setReceiptLoading(id);
         try {
-            const res = await fetch(ACCOUNTS_API.refreshReceiptUrl(id), { method: "POST", headers });
+            const res = await accountsFetch(ACCOUNTS_API.refreshReceiptUrl(id), { method: "POST", headers });
             const data = await res.json();
             if (data.success) setReceiptUrls(prev => ({ ...prev, [id]: data.data.sas_url }));
             else setError(data.message || "Could not refresh receipt URL");
@@ -183,7 +205,7 @@ export default function AccountsDashboard() {
         }
         setActionLoading(id);
         try {
-            const res = await fetch(ACCOUNTS_API.verifyPayment, {
+            const res = await accountsFetch(ACCOUNTS_API.verifyPayment, {
                 method: "POST", headers,
                 body: JSON.stringify({ receipt_id: id, action, remarks: remarks[id] || "" }),
             });

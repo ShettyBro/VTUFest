@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../../styles/dashboard-glass.css";
+import { isEMTokenExpired } from "../../utils/emFetch";
+import { usePopup } from "../../context/PopupContext";
+import SessionTimerBadge from "../../components/SessionTimerBadge";
 
 const NAV_ITEMS = [
     { path: "/em-dashboard", label: "Dashboard", icon: "📊" },
@@ -10,12 +13,24 @@ const NAV_ITEMS = [
 export default function EMLayout({ children }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const { showPopup } = usePopup();
 
     const token = localStorage.getItem("vtufest_em_token");
     const name = localStorage.getItem("vtufest_em_name") || "Event Manager";
 
+    const doSessionExpiry = () => {
+        localStorage.removeItem("vtufest_em_token");
+        localStorage.removeItem("vtufest_em_name");
+        localStorage.removeItem("vtufest_em_role");
+        showPopup("Session expired. Please login again.", "error");
+        setTimeout(() => navigate("/em-login", { replace: true }), 2000);
+    };
+
     useEffect(() => {
-        if (!token) navigate("/em-login");
+        if (!token || isEMTokenExpired()) { doSessionExpiry(); return; }
+        const handler = () => doSessionExpiry();
+        window.addEventListener("em:session-expired", handler);
+        return () => window.removeEventListener("em:session-expired", handler);
     }, []);
 
     const handleLogout = () => {
@@ -104,6 +119,11 @@ export default function EMLayout({ children }) {
                         {NAV_ITEMS.find(n => n.path === location.pathname)?.icon}{" "}
                         {NAV_ITEMS.find(n => n.path === location.pathname)?.label || "Event Manager"}
                     </h2>
+                    <SessionTimerBadge
+                        tokenKey="vtufest_em_token"
+                        accentColor="#10b981"
+                        onExpired={doSessionExpiry}
+                    />
                 </div>
                 <div className="dashboard-glass-wrapper" style={{ flex: 1 }}>
                     {children}

@@ -479,7 +479,7 @@ export default function AuthPage({ initialView = "login" }) {
                             {regLocked ? (
                                 <div style={{ textAlign: 'center', color: 'white' }}>
                                     <h2>🛑 Registrations Closed</h2>
-                                    <p>Please contact admin for support.</p>
+                                    {/* <p>Please contact admin for support.</p> */}
                                 </div>
                             ) : (
                                 <div className="auth-form">

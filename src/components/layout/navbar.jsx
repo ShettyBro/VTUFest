@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/layout-glass.css";
+import SessionTimerBadge from "../SessionTimerBadge";
 
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
@@ -102,6 +103,16 @@ export default function Navbar() {
 
       {/* RIGHT ACTIONS */}
       <div className="navbar-right">
+        {/* SESSION TIMER */}
+        <SessionTimerBadge
+          tokenKey="vtufest_token"
+          accentColor="#d4af37"
+          onExpired={() => {
+            localStorage.clear();
+            navigate("/");
+          }}
+        />
+
         {/* NOTIFICATIONS */}
         <div className="notif-wrapper" ref={notifRef}>
           <div

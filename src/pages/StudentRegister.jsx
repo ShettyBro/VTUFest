@@ -8,7 +8,7 @@ const API_BASE = {
 };
 
 // Helper component for file upload to match AuthPage design
-const FileUploadField = ({ label, docType, blobType, accept, title, documents, documentPreviews, uploadStatus, handleDocumentChange, uploadDocument, timerExpired, loading }) => (
+const FileUploadField = ({ label, docType, blobType, accept, title, documents, documentPreviews, uploadStatus, handleDocumentChange, uploadDocument, loading }) => (
   <div className="file-upload-wrapper" style={{ flex: 1, padding: '15px', background: 'rgba(0, 0, 0, 0.3)', border: '2px dashed rgba(255, 255, 255, 0.5)', minWidth: '200px' }}>
     <h4 style={{ color: 'white', marginBottom: '10px', fontSize: '14px', textAlign: 'center' }}>{title || label}</h4>
     <div className="preview-container" style={{ margin: '10px 0', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -32,7 +32,7 @@ const FileUploadField = ({ label, docType, blobType, accept, title, documents, d
         type="file"
         accept={accept}
         onChange={handleDocumentChange(docType)}
-        disabled={timerExpired || uploadStatus[docType] === "success"}
+        disabled={uploadStatus[docType] === "success"}
         style={{ display: 'none' }}
       />
       {documents[docType] && (
@@ -47,7 +47,7 @@ const FileUploadField = ({ label, docType, blobType, accept, title, documents, d
         type="button"
         className="secondary-btn"
         onClick={() => uploadDocument(docType, blobType)}
-        disabled={timerExpired || loading || uploadStatus[docType] === "uploading"}
+        disabled={loading || uploadStatus[docType] === "uploading"}
         style={{
           marginTop: '10px',
           borderRadius: '50px',
@@ -88,7 +88,6 @@ export default function SubmitApplication() {
   const [showUploadSection, setShowUploadSection] = useState(false);
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(null);
-  const [timerExpired, setTimerExpired] = useState(false);
 
   const [documents, setDocuments] = useState({
     aadhaar: null,
@@ -160,20 +159,6 @@ export default function SubmitApplication() {
     loadSessionFromStorage();
   }, [navigate, showPopup]);
 
-  useEffect(() => {
-    if (timer && timer > 0 && !timerExpired) {
-      const interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            setTimerExpired(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer, timerExpired]);
 
   const saveSessionToStorage = (data) => {
     localStorage.setItem("application_session", JSON.stringify({
@@ -243,11 +228,6 @@ export default function SubmitApplication() {
     }
   };
 
-  const formatTimer = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")} remaining`;
-  };
 
   const handleNext = async (e) => {
     e.preventDefault();
@@ -605,17 +585,15 @@ export default function SubmitApplication() {
           </form>
         ) : (
           <form className="auth-form" onSubmit={handleSubmit} style={{ maxWidth: '100%' }}>
-            {timer !== null && !timerExpired && (
-              <div className="timer-display" style={{ padding: '5px', fontSize: '0.9rem', marginBottom: '10px' }}>
-                Session expires in: {formatTimer(timer)}
-              </div>
-            )}
-
-            {timerExpired && (
-              <div className="error-msg">
-                Session expired. Please restart.
-              </div>
-            )}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
+              borderLeft: '4px solid #f59e0b', borderRadius: '8px',
+              padding: '10px 14px', marginBottom: '14px',
+              color: '#fbbf24', fontWeight: 600, fontSize: '0.88rem',
+            }}>
+              ⚠️ File upload link is valid for 5 minutes. Please upload your documents promptly.
+            </div>
 
             <div className="upload-grid">
               <FileUploadField
@@ -629,7 +607,6 @@ export default function SubmitApplication() {
                 uploadStatus={uploadStatus}
                 handleDocumentChange={handleDocumentChange}
                 uploadDocument={uploadDocument}
-                timerExpired={timerExpired}
                 loading={loading}
               />
 
@@ -644,7 +621,6 @@ export default function SubmitApplication() {
                 uploadStatus={uploadStatus}
                 handleDocumentChange={handleDocumentChange}
                 uploadDocument={uploadDocument}
-                timerExpired={timerExpired}
                 loading={loading}
               />
 
@@ -659,7 +635,6 @@ export default function SubmitApplication() {
                 uploadStatus={uploadStatus}
                 handleDocumentChange={handleDocumentChange}
                 uploadDocument={uploadDocument}
-                timerExpired={timerExpired}
                 loading={loading}
               />
             </div>
@@ -668,7 +643,6 @@ export default function SubmitApplication() {
               type="submit"
               className="auth-btn"
               disabled={
-                timerExpired ||
                 loading ||
                 uploadStatus.aadhaar !== "success" ||
                 uploadStatus.collegeId !== "success" ||

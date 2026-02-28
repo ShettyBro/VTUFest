@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import EMLayout from "./EMLayout";
+import { emFetch } from "../../utils/emFetch";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -45,7 +46,7 @@ function RejectModal({ request, token, onClose, onDone }) {
         }
         setSaving(true); setErr("");
         try {
-            const res = await fetch(`${API_BASE}/api/em/accommodation/${request.id}/status`, {
+            const res = await emFetch(`${API_BASE}/api/em/accommodation/${request.id}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ status: "REJECTED", admin_remarks: reason.trim() }),
@@ -182,7 +183,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
         if (!canSave) return;
         setSaving(true); setErr("");
         try {
-            const res = await fetch(`${API_BASE}/api/em/accommodation/${request.id}/allotments`, {
+            const res = await emFetch(`${API_BASE}/api/em/accommodation/${request.id}/allotments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ allotments: slots }),

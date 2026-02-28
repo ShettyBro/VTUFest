@@ -156,20 +156,6 @@ export default function FeePayment() {
     fetchPaymentInfo();
   }, []);
 
-  useEffect(() => {
-    if (timer && timer > 0 && !timerExpired) {
-      const interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            setTimerExpired(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer, timerExpired]);
 
   const fetchPaymentInfo = async () => {
     try {
@@ -187,7 +173,7 @@ export default function FeePayment() {
       if (response.status === 401) {
         showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
-        navigate("/");
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 
@@ -209,11 +195,6 @@ export default function FeePayment() {
     }
   };
 
-  const formatTimer = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
 
   const openUploadModal = async () => {
     if (!utrNumber.trim()) {
@@ -245,7 +226,7 @@ export default function FeePayment() {
       if (response.status === 401) {
         showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
-        navigate("/");
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 
@@ -373,7 +354,7 @@ export default function FeePayment() {
       if (response.status === 401) {
         showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
-        navigate("/");
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 
@@ -626,39 +607,42 @@ export default function FeePayment() {
               Upload Payment Proof
             </h3>
 
-            {timer !== null && !timerExpired && (<div style={{ textAlign: 'center', marginBottom: '20px', color: timer < 30 ? '#ef4444' : '#10b981', fontWeight: 'bold' }}>Session expires in: {formatTimer(timer)}</div>)}
-            {timerExpired && <div style={{ textAlign: 'center', color: '#ef4444', marginBottom: '20px' }}>Session expired. Please restart.</div>}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
+              borderLeft: '4px solid #f59e0b', borderRadius: '8px',
+              padding: '10px 14px', marginBottom: '16px',
+              color: '#fbbf24', fontWeight: 600, fontSize: '0.88rem',
+            }}>
+              ⚠️ File upload link is valid for 5 minutes. Please upload your proof promptly.
+            </div>
 
-            {!timerExpired && (
-              <FileUploadField
-                label="Payment Screenshot / Receipt *"
-                accept="image/*,.pdf"
-                document={uploadFile}
-                documentPreview={uploadPreview}
-                uploadStatus={uploadStatus}
-                handleFileChange={handleFileSelect}
-                uploadFile={uploadToBlob}
-                loading={false}
-              />
-            )}
+            <FileUploadField
+              label="Payment Screenshot / Receipt *"
+              accept="image/*,.pdf"
+              document={uploadFile}
+              documentPreview={uploadPreview}
+              uploadStatus={uploadStatus}
+              handleFileChange={handleFileSelect}
+              uploadFile={uploadToBlob}
+              loading={false}
+            />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '25px' }}>
-              {!timerExpired && (
-                <button
-                  className="neon-btn"
-                  onClick={handleSubmit}
-                  disabled={uploadStatus !== 'done' || submitting}
-                  style={{ opacity: (uploadStatus !== 'done' || submitting) ? 0.5 : 1 }}
-                >
-                  {submitting ? "Submitting..." : "Submit Final Payment"}
-                </button>
-              )}
+              <button
+                className="neon-btn"
+                onClick={handleSubmit}
+                disabled={uploadStatus !== 'done' || submitting}
+                style={{ opacity: (uploadStatus !== 'done' || submitting) ? 0.5 : 1 }}
+              >
+                {submitting ? "Submitting..." : "Submit Final Payment"}
+              </button>
               <button
                 className="neon-btn"
                 onClick={closeUploadModal}
                 style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}
               >
-                {timerExpired ? "Close" : "Cancel"}
+                Cancel
               </button>
             </div>
           </div>

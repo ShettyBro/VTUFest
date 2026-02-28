@@ -47,7 +47,7 @@ export default function ApprovedStudents() {
       if (lockResponse.status === 401) {
         showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
-        navigate("/");
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 
@@ -69,7 +69,7 @@ export default function ApprovedStudents() {
       if (response.status === 401) {
         showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
-        navigate("/");
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 
@@ -152,7 +152,7 @@ export default function ApprovedStudents() {
       if (response.status === 401) {
         showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
-        navigate("/");
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 
@@ -194,7 +194,7 @@ export default function ApprovedStudents() {
       if (response.status === 401) {
         showPopup("Session expired. Please login again.", "error");
         localStorage.clear();
-        navigate("/");
+        setTimeout(() => navigate("/"), 2000);
         return;
       }
 
