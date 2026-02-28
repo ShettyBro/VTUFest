@@ -17,7 +17,7 @@ export default function EMLogin() {
         const token = localStorage.getItem("vtufest_em_token");
         const role = localStorage.getItem("vtufest_em_role");
         if (token) {
-            if (role === "gr_incharge") navigate("/gr-dashboard");
+            if (role === "GR_INCHARGE") navigate("/gr-dashboard");
             else navigate("/em-dashboard");
         }
     }, []);
@@ -29,7 +29,7 @@ export default function EMLogin() {
         try {
             // GR_INCHARGE uses the main auth login (same as MANAGER/PRINCIPAL)
             // EM uses its own dedicated login endpoint
-            const endpoint = selectedRole === "gr_incharge"
+            const endpoint = selectedRole === "GR_INCHARGE"
                 ? `${API_BASE}/api/auth/login`
                 : `${API_BASE}/api/em/auth/login`;
 
@@ -39,7 +39,7 @@ export default function EMLogin() {
                 body: JSON.stringify({
                     email: email.trim().toLowerCase(),
                     password,
-                    role: selectedRole,  // "gr_incharge" → main login handles GR_INCHARGE role
+                    role: selectedRole,  // "GR_INCHARGE" → main login handles GR_INCHARGE role
                 }),
             });
             const data = await res.json();
@@ -47,14 +47,14 @@ export default function EMLogin() {
 
             // EM login returns: data.data.token / data.data.name
             // Main login returns: data.token / data.name  (flat, no data wrapper)
-            const token = selectedRole === "gr_incharge" ? data.token : data.data.token;
-            const name = selectedRole === "gr_incharge" ? data.name : data.data.name;
+            const token = selectedRole === "GR_INCHARGE" ? data.token : data.data.token;
+            const name = selectedRole === "GR_INCHARGE" ? data.name : data.data.name;
 
             localStorage.setItem("vtufest_em_token", token);
             localStorage.setItem("vtufest_em_name", name);
             localStorage.setItem("vtufest_em_role", selectedRole);
 
-            if (selectedRole === "gr_incharge") {
+            if (selectedRole === "GR_INCHARGE") {
                 navigate("/gr-dashboard");
             } else {
                 navigate("/em-dashboard");
@@ -81,7 +81,7 @@ export default function EMLogin() {
                         </div>
                     </div>
                     <div style={{ marginTop: "30px", color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", textAlign: "center" }}>
-                        <p>{selectedRole === "gr_incharge" ? "Green Room Incharge Portal" : "Event Manager Portal"}</p>
+                        <p>{selectedRole === "GR_INCHARGE" ? "Green Room Incharge Portal" : "Event Manager Portal"}</p>
                         <p>Restricted access.</p>
                     </div>
                 </div>
@@ -103,8 +103,8 @@ export default function EMLogin() {
                             </button>
                             <button
                                 type="button"
-                                className={`role-tab ${selectedRole === "gr_incharge" ? "active" : ""}`}
-                                onClick={() => setSelectedRole("gr_incharge")}
+                                className={`role-tab ${selectedRole === "GR_INCHARGE" ? "active" : ""}`}
+                                onClick={() => setSelectedRole("GR_INCHARGE")}
                             >
                                 GR Incharge
                             </button>
