@@ -392,8 +392,8 @@ export default function AdminPayments() {
                                                         </button>
                                                         <button
                                                             onClick={() => handleAction(p.id, "REJECT")}
-                                                            disabled={actionLoading === p.id}
-                                                            style={actionBtn("#f87171")}
+                                                            disabled={actionLoading === p.id || !remarks[p.id]?.trim()}
+                                                            style={{ ...actionBtn("#f87171"), opacity: (!remarks[p.id]?.trim()) ? 0.4 : 1, cursor: (!remarks[p.id]?.trim()) ? "not-allowed" : "pointer" }}
                                                         >
                                                             {actionLoading === p.id ? "Processing…" : "❌ Reject Payment"}
                                                         </button>

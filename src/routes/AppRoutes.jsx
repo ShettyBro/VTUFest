@@ -42,6 +42,7 @@ import EMLogin from "../pages/em/EMLogin";
 import EMDashboard from "../pages/em/EMDashboard";
 import EMAccommodation from "../pages/em/EMAccommodation";
 import GRDashboard from "../pages/em/GRDashboard";
+import AccountsDashboard from "../pages/em/AccountsDashboard";
 
 /* ── Route Guards ──────────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
@@ -62,6 +63,13 @@ function GRRoute({ children }) {
   const token = localStorage.getItem("vtufest_em_token");
   const role = localStorage.getItem("vtufest_em_role");
   if (!token || role !== "GR_INCHARGE") return <Navigate to="/em-login" replace />;
+  return children;
+}
+
+function AccountsRoute({ children }) {
+  const token = localStorage.getItem("vtufest_accounts_token");
+  const role = localStorage.getItem("vtufest_accounts_role");
+  if (!token || role !== "ACCOUNTS") return <Navigate to="/em-login" replace />;
   return children;
 }
 
@@ -139,6 +147,7 @@ export default function AppRoutes() {
       <Route path="/em-dashboard" element={<EMRoute><EMDashboard /></EMRoute>} />
       <Route path="/em-accommodation" element={<EMRoute><EMAccommodation /></EMRoute>} />
       <Route path="/gr-dashboard" element={<GRRoute><GRDashboard /></GRRoute>} />
+      <Route path="/accounts-dashboard" element={<AccountsRoute><AccountsDashboard /></AccountsRoute>} />
     </Routes>
   );
 }

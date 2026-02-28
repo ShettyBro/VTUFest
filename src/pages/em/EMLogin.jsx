@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/auth.css";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
+const EM_LOGIN_URL = `${API_BASE}/api/em/auth/login`;
 
 export default function EMLogin() {
     const navigate = useNavigate();
@@ -14,11 +15,17 @@ export default function EMLogin() {
     const [selectedRole, setSelectedRole] = useState("em");
 
     useEffect(() => {
-        const token = localStorage.getItem("vtufest_em_token");
-        const role = localStorage.getItem("vtufest_em_role");
-        if (token) {
-            if (role === "GR_INCHARGE") navigate("/gr-dashboard");
+        // EM / GR already logged in
+        const emToken = localStorage.getItem("vtufest_em_token");
+        const emRole = localStorage.getItem("vtufest_em_role");
+        if (emToken) {
+            if (emRole === "GR_INCHARGE") navigate("/gr-dashboard");
             else navigate("/em-dashboard");
+            return;
+        }
+        // Accounts already logged in
+        if (localStorage.getItem("vtufest_accounts_token")) {
+            navigate("/accounts-dashboard");
         }
     }, []);
 
@@ -27,35 +34,56 @@ export default function EMLogin() {
         setError("");
         setLoading(true);
         try {
-            // Both EM and GR_INCHARGE use the same em/auth/login endpoint.
-            // em-login.js checks role in admins table — works for both EVENT_MANAGER and GR_INCHARGE.
-            const res = await fetch(`${API_BASE}/api/em/auth/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: email.trim().toLowerCase(),
-                    password,
-                    role: selectedRole,
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Login failed");
+            if (selectedRole === "ACCOUNTS") {
+                // ── Accounts login — same /api/em/auth/login endpoint, role: "ACCOUNTS" ──
+                const res = await fetch(EM_LOGIN_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: email.trim().toLowerCase(),
+                        password,
+                        role: "ACCOUNTS",
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Login failed");
 
-            // em-login.js returns: { data: { token, name, email, role } }
-            localStorage.setItem("vtufest_em_token", data.data.token);
-            localStorage.setItem("vtufest_em_name", data.data.name);
-            localStorage.setItem("vtufest_em_role", selectedRole);
-
-            if (selectedRole === "GR_INCHARGE") {
-                navigate("/gr-dashboard");
+                localStorage.setItem("vtufest_accounts_token", data.data.token);
+                localStorage.setItem("vtufest_accounts_name", data.data.name);
+                localStorage.setItem("vtufest_accounts_role", "ACCOUNTS");
+                navigate("/accounts-dashboard");
             } else {
-                navigate("/em-dashboard");
+                // ── EM / GR_INCHARGE login — existing endpoint ──────────────
+                const res = await fetch(`${API_BASE}/api/em/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: email.trim().toLowerCase(),
+                        password,
+                        role: selectedRole,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Login failed");
+
+                localStorage.setItem("vtufest_em_token", data.data.token);
+                localStorage.setItem("vtufest_em_name", data.data.name);
+                localStorage.setItem("vtufest_em_role", selectedRole);
+
+                if (selectedRole === "GR_INCHARGE") navigate("/gr-dashboard");
+                else navigate("/em-dashboard");
             }
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
+    };
+
+    const roleLabels = {
+        em: "Event Manager Portal",
+        GR_INCHARGE: "Green Room Incharge Portal",
+        ACCOUNTS: "Accounts Department Portal",
     };
 
     return (
@@ -69,11 +97,11 @@ export default function EMLogin() {
                         <img src="/main.webp" alt="VTU Fest Logo" />
                         <div className="brand-text">
                             <h3>VTU HABBA 2026</h3>
-                            <span>Event Manager Portal</span>
+                            <span>Staff Portal</span>
                         </div>
                     </div>
                     <div style={{ marginTop: "30px", color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", textAlign: "center" }}>
-                        <p>{selectedRole === "GR_INCHARGE" ? "Green Room Incharge Portal" : "Event Manager Portal"}</p>
+                        <p>{roleLabels[selectedRole]}</p>
                         <p>Restricted access.</p>
                     </div>
                 </div>
@@ -82,23 +110,30 @@ export default function EMLogin() {
                 <div className="auth-form-panel">
                     {error && <div className="error-msg">{error}</div>}
                     <form className="auth-form" onSubmit={handleLogin}>
-                        <h2 className="form-title">Event Manager Login</h2>
+                        <h2 className="form-title">Staff Login</h2>
 
                         {/* ROLE TABS */}
                         <div className="role-tabs">
                             <button
                                 type="button"
                                 className={`role-tab ${selectedRole === "em" ? "active" : ""}`}
-                                onClick={() => setSelectedRole("em")}
+                                onClick={() => { setSelectedRole("em"); setError(""); }}
                             >
                                 Event Manager
                             </button>
                             <button
                                 type="button"
                                 className={`role-tab ${selectedRole === "GR_INCHARGE" ? "active" : ""}`}
-                                onClick={() => setSelectedRole("GR_INCHARGE")}
+                                onClick={() => { setSelectedRole("GR_INCHARGE"); setError(""); }}
                             >
                                 GR Incharge
+                            </button>
+                            <button
+                                type="button"
+                                className={`role-tab ${selectedRole === "ACCOUNTS" ? "active" : ""}`}
+                                onClick={() => { setSelectedRole("ACCOUNTS"); setError(""); }}
+                            >
+                                Accounts
                             </button>
                         </div>
 
@@ -109,13 +144,19 @@ export default function EMLogin() {
                         </div>
                         <div className="input-group">
                             <label>Password</label>
-                            <div style={{ position: 'relative' }}>
-                                <input type={showPassword ? 'text' : 'password'} placeholder="Enter password" value={password}
-                                    onChange={e => setPassword(e.target.value)} required style={{ paddingRight: '42px' }} />
+                            <div style={{ position: "relative" }}>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter password"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    required
+                                    style={{ paddingRight: "42px" }}
+                                />
                                 <button type="button" onClick={() => setShowPassword(v => !v)}
-                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
-                                    tabIndex={-1} aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                >{showPassword ? '🙈' : '👁️'}</button>
+                                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "1.1rem", color: "rgba(255,255,255,0.7)", padding: 0, lineHeight: 1 }}
+                                    tabIndex={-1} aria-label={showPassword ? "Hide password" : "Show password"}
+                                >{showPassword ? "🙈" : "👁️"}</button>
                             </div>
                         </div>
                         <button className="auth-btn" disabled={loading}>

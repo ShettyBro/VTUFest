@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "./AdminLayout";
 import { adminFetch } from "../../utils/adminFetch";
+import { usePopup } from "../../context/PopupContext";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -19,6 +20,7 @@ export default function AdminNotifications() {
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
 
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+    const { showConfirm } = usePopup();
 
     const fetchNotifications = () => {
         setLoading(true);
@@ -64,7 +66,13 @@ export default function AdminNotifications() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Delete this notification permanently?")) return;
+        const ok = await showConfirm({
+            title: "Delete Notification",
+            message: "Delete this notification permanently? This cannot be undone.",
+            confirmLabel: "Yes, Delete",
+            type: "danger",
+        });
+        if (!ok) return;
         try {
             const res = await adminFetch(`${API_BASE}/api/admin/notifications/${id}`, { method: "DELETE", headers });
             const data = await res.json();

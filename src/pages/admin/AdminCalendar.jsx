@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "./AdminLayout";
 import { adminFetch } from "../../utils/adminFetch";
+import { usePopup } from "../../context/PopupContext";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 const EMPTY_FORM = { date: "", title: "", type: "blue", place: "", time: "" };
@@ -17,6 +18,7 @@ export default function AdminCalendar() {
     const token = localStorage.getItem("vtufest_admin_token");
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+    const { showConfirm } = usePopup();
 
     const fetchEvents = () => {
         setLoading(true);
@@ -55,7 +57,13 @@ export default function AdminCalendar() {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Delete this event permanently?")) return;
+        const ok = await showConfirm({
+            title: "Delete Event",
+            message: "Delete this calendar event permanently? This cannot be undone.",
+            confirmLabel: "Yes, Delete",
+            type: "danger",
+        });
+        if (!ok) return;
         try {
             const res = await adminFetch(`${API_BASE}/api/admin/calendar-events/${id}`, { method: "DELETE", headers });
             const data = await res.json();

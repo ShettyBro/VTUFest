@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import AdminLayout from "./AdminLayout";
 import { adminFetch } from "../../utils/adminFetch";
+import { usePopup } from "../../context/PopupContext";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
@@ -281,6 +282,7 @@ export default function AdminColleges() {
     const token = localStorage.getItem("vtufest_admin_token");
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+    const { showConfirm } = usePopup();
 
     const fetchColleges = () => {
         setLoading(true);
@@ -301,27 +303,22 @@ export default function AdminColleges() {
         const isLocking = !college?.is_final_approved;
 
         if (isLocking) {
-            if (!window.confirm(`Lock "${college?.college_name}"?
-
-This will mark the college as final-approved.`)) return;
+            const ok = await showConfirm({
+                title: "Lock College",
+                message: `Mark "${college?.college_name}" as final-approved?\n\nThis will lock their registration and generate master participant records.`,
+                confirmLabel: "Yes, Lock",
+                type: "warning",
+            });
+            if (!ok) return;
         } else {
-            const confirmed = window.confirm(
-                `WARNING — DESTRUCTIVE ACTION
-
-You are about to UNLOCK "${college?.college_name}".
-
-This will permanently delete:
-  * All master participant records
-  * All event participation snapshots
-  * All QR code assignments for this college
-  * Payment receipt record
-  * Pending payment sessions
-
-The college can re-submit final approval from scratch.
-
-Are you absolutely sure?`
-            );
-            if (!confirmed) return;
+            const ok = await showConfirm({
+                title: "⚠️ Destructive Action",
+                message: `You are about to UNLOCK "${college?.college_name}".\n\nThis will permanently delete:\n• All master participant records\n• All event participation snapshots\n• All QR code assignments\n• Payment receipt record\n• Pending payment sessions\n\nThe college can re-submit final approval from scratch.\n\nAre you absolutely sure?`,
+                confirmLabel: "Yes, Unlock & Delete",
+                cancelLabel: "Cancel",
+                type: "danger",
+            });
+            if (!ok) return;
         }
 
         setTogglingId(id);
