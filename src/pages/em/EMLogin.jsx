@@ -11,10 +11,15 @@ export default function EMLogin() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [selectedRole, setSelectedRole] = useState("em");
 
     useEffect(() => {
         const token = localStorage.getItem("vtufest_em_token");
-        if (token) navigate("/em-dashboard");
+        const role = localStorage.getItem("vtufest_em_role");
+        if (token) {
+            if (role === "gr_incharge") navigate("/gr-dashboard");
+            else navigate("/em-dashboard");
+        }
     }, []);
 
     const handleLogin = async (e) => {
@@ -25,13 +30,22 @@ export default function EMLogin() {
             const res = await fetch(`${API_BASE}/api/em/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+                body: JSON.stringify({
+                    email: email.trim().toLowerCase(),
+                    password,
+                    role: selectedRole,
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Login failed");
             localStorage.setItem("vtufest_em_token", data.data.token);
             localStorage.setItem("vtufest_em_name", data.data.name);
-            navigate("/em-dashboard");
+            localStorage.setItem("vtufest_em_role", selectedRole);
+            if (selectedRole === "gr_incharge") {
+                navigate("/gr-dashboard");
+            } else {
+                navigate("/em-dashboard");
+            }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -54,7 +68,7 @@ export default function EMLogin() {
                         </div>
                     </div>
                     <div style={{ marginTop: "30px", color: "rgba(255,255,255,0.8)", fontSize: "0.9rem", textAlign: "center" }}>
-                        <p>Accommodation Management</p>
+                        <p>{selectedRole === "gr_incharge" ? "Green Room Incharge Portal" : "Event Manager Portal"}</p>
                         <p>Restricted access.</p>
                     </div>
                 </div>
@@ -64,6 +78,25 @@ export default function EMLogin() {
                     {error && <div className="error-msg">{error}</div>}
                     <form className="auth-form" onSubmit={handleLogin}>
                         <h2 className="form-title">Event Manager Login</h2>
+
+                        {/* ROLE TABS */}
+                        <div className="role-tabs">
+                            <button
+                                type="button"
+                                className={`role-tab ${selectedRole === "em" ? "active" : ""}`}
+                                onClick={() => setSelectedRole("em")}
+                            >
+                                Event Manager
+                            </button>
+                            <button
+                                type="button"
+                                className={`role-tab ${selectedRole === "gr_incharge" ? "active" : ""}`}
+                                onClick={() => setSelectedRole("gr_incharge")}
+                            >
+                                GR Incharge
+                            </button>
+                        </div>
+
                         <div className="input-group">
                             <label>Email Address</label>
                             <input type="email" placeholder="Enter your email" value={email}

@@ -227,6 +227,21 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
           </div>
 
           <div
+            className={`sidebar-item ${isActive("/green-room") ? "active" : ""
+              }`}
+            onClick={() => navigate("/green-room")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="10" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                <path d="M12 15v2" />
+              </svg>
+            </Icon>
+            <span className="label">Green Room</span>
+          </div>
+
+          <div
             className={`sidebar-item ${isActive("/fee-payment") ? "active" : ""
               }`}
             onClick={() => navigate("/fee-payment")}

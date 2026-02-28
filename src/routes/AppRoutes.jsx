@@ -34,10 +34,14 @@ import AdminPayments from "../pages/admin/AdminPayments";
 import AdminFindPerson from "../pages/admin/Adminfindperson";
 import AdminAccommodation from "../pages/admin/AdminAccommodation";
 
+/* GREEN ROOM (MANAGER SIDE) */
+import GreenRoom from "../pages/GreenRoom";
+
 /* EVENT MANAGER */
 import EMLogin from "../pages/em/EMLogin";
 import EMDashboard from "../pages/em/EMDashboard";
 import EMAccommodation from "../pages/em/EMAccommodation";
+import GRDashboard from "../pages/em/GRDashboard";
 
 /* ── Route Guards ──────────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
@@ -51,6 +55,13 @@ function AdminRoute({ children }) {
 function EMRoute({ children }) {
   const token = localStorage.getItem("vtufest_em_token");
   if (!token) return <Navigate to="/em-login" replace />;
+  return children;
+}
+
+function GRRoute({ children }) {
+  const token = localStorage.getItem("vtufest_em_token");
+  const role = localStorage.getItem("vtufest_em_role");
+  if (!token || role !== "gr_incharge") return <Navigate to="/em-login" replace />;
   return children;
 }
 
@@ -118,10 +129,16 @@ export default function AppRoutes() {
       <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
       <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 
+      {/* ── GREEN ROOM (MANAGER SIDE) ────────────────────────────────── */}
+      <Route path="/green-room" element={
+        <ProtectedRoute allowedRoles={["manager"]}><GreenRoom /></ProtectedRoute>
+      } />
+
       {/* ── EVENT MANAGER ───────────────────────────────────────────── */}
       <Route path="/em-login" element={<EMLogin />} />
       <Route path="/em-dashboard" element={<EMRoute><EMDashboard /></EMRoute>} />
       <Route path="/em-accommodation" element={<EMRoute><EMAccommodation /></EMRoute>} />
+      <Route path="/gr-dashboard" element={<GRRoute><GRDashboard /></GRRoute>} />
     </Routes>
   );
 }
