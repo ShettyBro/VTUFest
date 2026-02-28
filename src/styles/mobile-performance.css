@@ -1,10 +1,12 @@
 /* =========================================
    MOBILE PERFORMANCE LAYER (Max-width: 1024px)
+   Static colors only — NO animations, NO backdrop-filter, NO heavy shadows.
+   Colors are free; blur + keyframes are what caused lag.
    ========================================= */
 
 @media (max-width: 1024px) {
 
-    /* 1. DISABLE BACKGROUND ANIMATIONS & GRADIENTS */
+    /* ── 1. KILL BACKGROUND ANIMATIONS ─────────────────────────────────── */
     body,
     html,
     #root,
@@ -18,17 +20,19 @@
         transition: none !important;
     }
 
-    /* Force static gradient for heavy animated backgrounds */
-    .auth-page,
-    body::before {
-        background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+    /* Static deep-navy-to-royal-blue gradient — replaces the animated one */
+    body::before,
+    .auth-page {
+        background: linear-gradient(160deg, #0f172a 0%, #0f2044 55%, #1e3a8a 100%) !important;
+        animation: none !important;
     }
 
     .login-page {
         background: linear-gradient(135deg, #92400e, #78350f) !important;
     }
 
-    /* 2. REMOVE GLASSMORPHISM & BLURS */
+    /* ── 2. REMOVE GLASSMORPHISM / BLURS ────────────────────────────────── */
+    /* Blur is the #1 cause of lag. Replace with solid + coloured borders. */
     .glass-card,
     .navbar,
     .sidebar,
@@ -42,19 +46,116 @@
     .profile-menu {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        background: rgba(15, 23, 42, 0.95) !important;
-        /* Solid dark fallback */
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         box-shadow: none !important;
     }
 
-    /* specific overrides for light theme containers if any, or specific colored cards */
-    .auth-container {
-        background: #1e293b !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    /* Cards: deep navy with a subtle blue tint — NOT flat grey */
+    .glass-card {
+        background: #111f3b !important;
+        border-left: 3px solid #1e40af !important;
     }
 
-    /* 3. HIDE DECORATIVE SHAPES & FLOATING ELEMENTS */
+    /* Auth container: clean dark slate */
+    .auth-container {
+        background: #0f1e36 !important;
+    }
+
+    /* Sidebar / navbar: deepest navy */
+    .navbar,
+    .sidebar {
+        background: #0a1628 !important;
+        border-right-color: rgba(30, 64, 175, 0.35) !important;
+    }
+
+    /* Notification banner: gold-tinted */
+    .glass-banner {
+        background: #1a1400 !important;
+        border-color: rgba(212, 175, 55, 0.35) !important;
+        border-left: 3px solid #d4af37 !important;
+    }
+
+    /* ── 3. COLOURED PAGE-SECTION BACKGROUNDS ───────────────────────────── */
+    /* Dashboard header gets a gold-accent top border and a richer tint */
+    .dashboard-header {
+        background: linear-gradient(90deg, #0f2044 0%, #0f172a 100%) !important;
+        border-bottom: 2px solid rgba(212, 175, 55, 0.4) !important;
+        padding: 16px 20px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Auth info panel: deep blue gradient panel */
+    .auth-info-panel {
+        background: linear-gradient(160deg, #0f2044, #1e3a8a) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* ── 4. COLOURED HEADINGS & ACCENTS ─────────────────────────────────── */
+    /* Page title gets the gold gradient as text colour */
+    .welcome-text h1 {
+        background: linear-gradient(90deg, #f5d76e, #d4af37) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+    }
+
+    /* Sub-page headings — keep existing colour but ensure visibility */
+    .glass-card h3,
+    .glass-card h4 {
+        color: #93c5fd !important; /* blue-300 — pops against dark card */
+        border-bottom-color: rgba(30, 64, 175, 0.3) !important;
+    }
+
+    /* ── 5. COLOURED NEON BUTTON (no animation, just static fill) ───────── */
+    .neon-btn {
+        background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
+        border: 2px solid #d4af37 !important;
+        color: #fbbf24 !important;
+        box-shadow: none !important;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    .neon-btn:hover:not(:disabled),
+    .neon-btn:active:not(:disabled) {
+        background: linear-gradient(135deg, #1e40af, #2563eb) !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .neon-btn:disabled {
+        background: #1a1a2e !important;
+        border-color: #444 !important;
+        color: #555 !important;
+    }
+
+    /* ── 6. CARD LEFT-BORDER COLOUR VARIANTS ────────────────────────────── */
+    /* Status cards get semantic border colours */
+    .glass-card[style*="rgba(16,185,129"],
+    .glass-card[style*="rgba(16, 185, 129"] {
+        border-left-color: #10b981 !important;
+        background: #0a1f18 !important;
+    }
+
+    .glass-card[style*="rgba(245,158,11"],
+    .glass-card[style*="rgba(245, 158, 11"] {
+        border-left-color: #f59e0b !important;
+        background: #1a1200 !important;
+    }
+
+    .glass-card[style*="rgba(239,68,68"],
+    .glass-card[style*="rgba(239, 68, 68"] {
+        border-left-color: #ef4444 !important;
+        background: #1f0a0a !important;
+    }
+
+    /* Calendar items keep their left-border colour */
+    .calendar-item {
+        background: #111f3b !important;
+        border-left-width: 3px !important;
+    }
+
+    /* ── 7. HIDE DECORATIVE BLOBS & SHAPES ──────────────────────────────── */
     .shape,
     .shape-1,
     .shape-2,
@@ -66,35 +167,34 @@
         animation: none !important;
     }
 
-    /* 4. SIMPLIFY BOX SHADOWS */
+    /* ── 8. BOX / TEXT SHADOWS — GLOBAL KILL ────────────────────────────── */
     * {
         box-shadow: none !important;
         text-shadow: none !important;
     }
 
-    /* Keep minimal shadows for depth where strictly necessary */
+    /* Restore the single minimal shadow for depth */
     .auth-container,
-    .glass-card,
-    .navbar {
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    .glass-card {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
     }
 
-    /* 5. LAYOUT OPTIMIZATION */
+    /* ── 9. HOVER / TRANSITION KILL ─────────────────────────────────────── */
+    .glass-card:hover,
+    .neon-btn:hover,
+    .calendar-item:hover,
+    .block-item:hover {
+        transform: none !important;
+    }
+
+    /* ── 10. LAYOUT ─────────────────────────────────────────────────────── */
     .auth-page,
     .login-page {
         min-height: 100dvh !important;
         height: auto !important;
     }
 
-    /* Ensure content is readable */
     .auth-form-panel {
         background: transparent !important;
-    }
-
-    /* Remove hover effects that might cause repaints on scroll */
-    .glass-card:hover,
-    .neon-btn:hover {
-        transform: none !important;
-        box-shadow: none !important;
     }
 }

@@ -27,31 +27,23 @@ export default function EMLogin() {
         setError("");
         setLoading(true);
         try {
-            // GR_INCHARGE uses the main auth login (same as MANAGER/PRINCIPAL)
-            // EM uses its own dedicated login endpoint
-            const endpoint = selectedRole === "GR_INCHARGE"
-                ? `${API_BASE}/api/auth/login`
-                : `${API_BASE}/api/em/auth/login`;
-
-            const res = await fetch(endpoint, {
+            // Both EM and GR_INCHARGE use the same em/auth/login endpoint.
+            // em-login.js checks role in admins table — works for both EVENT_MANAGER and GR_INCHARGE.
+            const res = await fetch(`${API_BASE}/api/em/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     email: email.trim().toLowerCase(),
                     password,
-                    role: selectedRole,  // "GR_INCHARGE" → main login handles GR_INCHARGE role
+                    role: selectedRole,
                 }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Login failed");
 
-            // EM login returns: data.data.token / data.data.name
-            // Main login returns: data.token / data.name  (flat, no data wrapper)
-            const token = selectedRole === "GR_INCHARGE" ? data.token : data.data.token;
-            const name = selectedRole === "GR_INCHARGE" ? data.name : data.data.name;
-
-            localStorage.setItem("vtufest_em_token", token);
-            localStorage.setItem("vtufest_em_name", name);
+            // em-login.js returns: { data: { token, name, email, role } }
+            localStorage.setItem("vtufest_em_token", data.data.token);
+            localStorage.setItem("vtufest_em_name", data.data.name);
             localStorage.setItem("vtufest_em_role", selectedRole);
 
             if (selectedRole === "GR_INCHARGE") {
