@@ -27,20 +27,33 @@ export default function EMLogin() {
         setError("");
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/api/em/auth/login`, {
+            // GR_INCHARGE uses the main auth login (same as MANAGER/PRINCIPAL)
+            // EM uses its own dedicated login endpoint
+            const endpoint = selectedRole === "gr_incharge"
+                ? `${API_BASE}/api/auth/login`
+                : `${API_BASE}/api/em/auth/login`;
+
+            const res = await fetch(endpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     email: email.trim().toLowerCase(),
                     password,
-                    role: selectedRole,
+                    role: selectedRole,  // "gr_incharge" → main login handles GR_INCHARGE role
                 }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Login failed");
-            localStorage.setItem("vtufest_em_token", data.data.token);
-            localStorage.setItem("vtufest_em_name", data.data.name);
+
+            // EM login returns: data.data.token / data.data.name
+            // Main login returns: data.token / data.name  (flat, no data wrapper)
+            const token = selectedRole === "gr_incharge" ? data.token : data.data.token;
+            const name = selectedRole === "gr_incharge" ? data.name : data.data.name;
+
+            localStorage.setItem("vtufest_em_token", token);
+            localStorage.setItem("vtufest_em_name", name);
             localStorage.setItem("vtufest_em_role", selectedRole);
+
             if (selectedRole === "gr_incharge") {
                 navigate("/gr-dashboard");
             } else {
