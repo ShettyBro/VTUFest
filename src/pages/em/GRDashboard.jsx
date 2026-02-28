@@ -22,7 +22,7 @@ function GRLayout({ children }) {
     useEffect(() => {
         const token = localStorage.getItem("vtufest_em_token");
         const role = localStorage.getItem("vtufest_em_role");
-        if (!token || role !== "gr_incharge") navigate("/em-login");
+        if (!token || role !== "GR_INCHARGE") navigate("/em-login");
     }, []);
 
     const handleLogout = () => {

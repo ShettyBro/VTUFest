@@ -61,7 +61,7 @@ function EMRoute({ children }) {
 function GRRoute({ children }) {
   const token = localStorage.getItem("vtufest_em_token");
   const role = localStorage.getItem("vtufest_em_role");
-  if (!token || role !== "gr_incharge") return <Navigate to="/em-login" replace />;
+  if (!token || role !== "GR_INCHARGE") return <Navigate to="/em-login" replace />;
   return children;
 }
 
