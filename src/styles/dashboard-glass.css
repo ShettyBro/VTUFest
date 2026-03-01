@@ -304,24 +304,24 @@ body::after {
     will-change: transform;
 }
 
-/* News-channel right→left scroll */
+/* News-channel right→left scroll — always starts at right viewport edge */
 @keyframes news-ticker-scroll {
     0% {
-        transform: translateX(105%);
+        transform: translateX(100vw);
         opacity: 1;
     }
 
-    88% {
-        transform: translateX(-105%);
+    90% {
+        transform: translateX(-110%);
         opacity: 1;
     }
 
-    89% {
+    93% {
         opacity: 0;
     }
 
     100% {
-        transform: translateX(-105%);
+        transform: translateX(-110%);
         opacity: 0;
     }
 }
