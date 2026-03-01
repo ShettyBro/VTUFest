@@ -3,30 +3,56 @@
    Applied on screens ≤ 768px via layout.jsx logic
    ================================================ */
 
+/* ── RESPONSIVE SCALE TOKENS ───────────────────────
+   clamp(min, preferred-vw, max)
+   Scales smoothly from 320px (small phone) to 430px
+   (large phone) and caps out before tablet sizes.
+   ─────────────────────────────────────────────── */
+:root {
+    --mtb-h: clamp(52px, 14.5vw, 64px);
+    /* top bar height     */
+    --mcs-h: clamp(26px, 8vw, 36px);
+    /* college strip      */
+    --mbn-h: clamp(56px, 15vw, 70px);
+    /* bottom nav height  */
+    --mtb-logo: clamp(36px, 11vw, 50px);
+    /* logo height        */
+    --mtb-icon: clamp(32px, 9.5vw, 44px);
+    /* icon button size   */
+    --mtb-avatar: clamp(26px, 7.5vw, 34px);
+    /* avatar size        */
+    --mbn-icon: clamp(18px, 5.5vw, 24px);
+    /* bottom nav icon    */
+    --mbn-label: clamp(9px, 2.5vw, 11px);
+    /* bottom nav label   */
+    --mbn-item-w: clamp(54px, 16vw, 80px);
+    /* bottom nav item    */
+}
+
 /* ── MOBILE TOP BAR ─────────────────────────────── */
 .mobile-top-bar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: 56px;
+    height: var(--mtb-h);
     background: #4c679096;
     border-bottom: 1px solid rgba(212, 175, 55, 0.3);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 clamp(8px, 3.2vw, 16px);
     z-index: 1000;
-    gap: 10px;
+    gap: clamp(6px, 2vw, 12px);
 }
 
 /* College name sub-strip — shown below top bar on dashboard pages (mobile only) */
 .mtb-college-strip {
     position: fixed;
-    top: 56px;
+    top: var(--mtb-h);
     left: 0;
     right: 0;
-    height: 32px;
+    height: var(--mcs-h);
     background: rgba(212, 175, 55, 0.1);
     border-bottom: 1px solid rgba(212, 175, 55, 0.25);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
@@ -37,7 +63,7 @@
     padding: 0 12px;
     z-index: 999;
     color: #d4af37;
-    font-size: 0.72rem;
+    font-size: clamp(0.68rem, 2.2vw, 0.75rem);
     font-weight: 600;
     letter-spacing: 0.3px;
     white-space: nowrap;
@@ -65,7 +91,7 @@
 }
 
 .mtb-logo {
-    height: 44px;
+    height: var(--mtb-logo);
     width: auto;
     object-fit: contain;
 }
@@ -102,8 +128,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: var(--mtb-icon);
+    height: var(--mtb-icon);
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.06);
     cursor: pointer;
@@ -135,8 +161,8 @@
 }
 
 .mtb-avatar {
-    width: 30px;
-    height: 30px;
+    width: var(--mtb-avatar);
+    height: var(--mtb-avatar);
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #d4af37;
@@ -301,7 +327,7 @@
     left: 0;
     right: 0;
     height: auto;
-    min-height: 60px;
+    min-height: var(--mbn-h);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     background: #0a1628;
     border-top: 1px solid rgba(212, 175, 55, 0.3);
@@ -320,14 +346,14 @@
 
 .mbn-item {
     flex: 1;
-    min-width: 60px;
-    max-width: 90px;
+    min-width: var(--mbn-item-w);
+    max-width: clamp(72px, 22vw, 100px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 8px 4px;
+    gap: clamp(2px, 0.8vw, 4px);
+    padding: clamp(6px, 2vw, 10px) clamp(2px, 1vw, 6px);
     background: transparent;
     border: none;
     border-top: 2px solid transparent;
@@ -349,8 +375,8 @@
 }
 
 .mbn-icon {
-    width: 22px;
-    height: 22px;
+    width: var(--mbn-icon);
+    height: var(--mbn-icon);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -358,8 +384,8 @@
 }
 
 .mbn-icon svg {
-    width: 22px;
-    height: 22px;
+    width: var(--mbn-icon);
+    height: var(--mbn-icon);
     stroke: currentColor;
     fill: none;
     stroke-width: 2;
@@ -374,13 +400,13 @@
 }
 
 .mbn-label {
-    font-size: 10px;
+    font-size: var(--mbn-label);
     font-weight: 500;
     line-height: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 80px;
+    max-width: clamp(54px, 16vw, 80px);
     text-align: center;
 }
 
@@ -391,8 +417,8 @@
 /* ── PWA INSTALL BANNER ─────────────────────────── */
 .pwa-install-banner {
     position: fixed;
-    /* Sits just above the bottom nav (60px + safe area) */
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    /* Sits just above the bottom nav */
+    bottom: calc(var(--mbn-h) + env(safe-area-inset-bottom, 0px) + 4px);
     left: 12px;
     right: 12px;
     background: linear-gradient(135deg, #1e3a8a, #1e40af);
@@ -475,21 +501,20 @@
 @media (max-width: 768px) {
     .mobile-content {
         margin-left: 0 !important;
-        margin-top: 56px !important;
+        margin-top: var(--mtb-h) !important;
         width: 100% !important;
-        /* Extra bottom padding so content doesn't hide behind bottom nav */
-        padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+        /* Extra bottom padding so content clears the responsive bottom nav */
+        padding-bottom: calc(var(--mbn-h) + 10px + env(safe-area-inset-bottom, 0px)) !important;
         height: auto !important;
-        min-height: calc(100dvh - 56px) !important;
+        min-height: calc(100dvh - var(--mtb-h)) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
     }
 
-    /* Dashboard pages have an extra 32px college strip — push content down */
+    /* Dashboard pages have college strip — push content below both bars */
     .mobile-content[data-dashboard="1"] {
-        margin-top: 96px !important;
-        /* 56px top bar + 32px strip + 8px gap */
-        min-height: calc(100dvh - 96px) !important;
+        margin-top: calc(var(--mtb-h) + var(--mcs-h) + 8px) !important;
+        min-height: calc(100dvh - var(--mtb-h) - var(--mcs-h)) !important;
     }
 
     /* Elements that only show on desktop — hidden on mobile where a dedicated tab replaces them */
@@ -500,12 +525,10 @@
     /* Override heading text on mobile via CSS — desktop keeps 'Quick Links & Info' */
     .mobile-info-heading {
         font-size: 0 !important;
-        /* hide original text */
     }
 
     .mobile-info-heading::after {
         content: "Guidelines";
         font-size: 1rem;
-        /* restore normal font size */
     }
 }
