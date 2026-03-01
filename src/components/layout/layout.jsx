@@ -9,7 +9,7 @@ import "../../styles/layout-glass.css";
 import "../../styles/mobile-layout.css";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
-const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard"];
+const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard", "/student-application"];
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);

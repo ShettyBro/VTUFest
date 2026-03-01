@@ -4,7 +4,7 @@ import SessionTimerBadge from "../SessionTimerBadge";
 import "../../styles/mobile-layout.css";
 
 // Dashboard paths where we hide the page title and show college name instead
-const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard"];
+const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard", "/student-application"];
 
 
 

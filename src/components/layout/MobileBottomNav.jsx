@@ -52,13 +52,21 @@ const icons = {
             <rect x="3" y="11" width="18" height="10" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /><path d="M12 15v2" />
         </svg>
     ),
+    myApp: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+            <rect x="8" y="2" width="8" height="4" rx="1" />
+            <line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="12" y2="17" />
+        </svg>
+    ),
 };
 
 // ── Nav configs per role ──────────────────────────────────────────────────────
 function getNavItems(role, hasApplication, collegeLocked) {
     if (role === "student") {
         const items = [
-            { label: "Dashboard", path: "/dashboard", icon: icons.dashboard },
+            { label: "Home", path: "/dashboard", icon: icons.dashboard },
+            { label: "My App", path: "/student-application", icon: icons.myApp },
         ];
         if (!hasApplication && !collegeLocked) {
             items.push({ label: "Register", path: "/student-register", icon: icons.register });

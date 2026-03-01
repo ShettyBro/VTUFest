@@ -491,4 +491,21 @@
         /* 56px top bar + 32px strip + 8px gap */
         min-height: calc(100dvh - 96px) !important;
     }
+
+    /* Elements that only show on desktop — hidden on mobile where a dedicated tab replaces them */
+    .desktop-only {
+        display: none !important;
+    }
+
+    /* Override heading text on mobile via CSS — desktop keeps 'Quick Links & Info' */
+    .mobile-info-heading {
+        font-size: 0 !important;
+        /* hide original text */
+    }
+
+    .mobile-info-heading::after {
+        content: "Info";
+        font-size: 1rem;
+        /* restore normal font size */
+    }
 }

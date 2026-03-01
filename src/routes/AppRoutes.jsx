@@ -10,6 +10,7 @@ import AssignEvents from "../pages/AssignEvents";
 /* STUDENT */
 import Dashboard from "../pages/Dashboard";
 import StudentRegister from "../pages/StudentRegister";
+import StudentApplication from "../pages/StudentApplication";
 
 /* PRINCIPAL + MANAGER */
 import PrincipalDashboard from "../pages/PrincipalDashboard";
@@ -94,6 +95,9 @@ export default function AppRoutes() {
       } />
       <Route path="/student-register" element={
         <ProtectedRoute allowedRoles={["student"]}><StudentRegister /></ProtectedRoute>
+      } />
+      <Route path="/student-application" element={
+        <ProtectedRoute allowedRoles={["student"]}><StudentApplication /></ProtectedRoute>
       } />
 
       {/* ── PRINCIPAL + MANAGER ─────────────────────────────────────── */}

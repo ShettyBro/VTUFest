@@ -452,8 +452,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* --- CENTER COL: HERO STATUS --- */}
-            <div className="glass-card hero-card">
+            {/* --- CENTER COL: HERO STATUS (desktop only — mobile uses My App tab) --- */}
+            <div className="glass-card hero-card desktop-only">
               <h4>Application Progress</h4>
 
               {renderStepper()}
@@ -503,7 +503,7 @@ export default function Dashboard() {
 
             {/* --- RIGHT COL: NOTIFICATIONS & LINKS --- */}
             <div className="glass-card">
-              <h4>Quick Links & Info</h4>
+              <h4 className="mobile-info-heading">Quick Links &amp; Info</h4>
               <ul className="instruction-list">
                 {priority2PlusNotifications.slice(0, 3).map(notification => (
                   <li key={notification.id}>• {notification.message}</li>
@@ -512,14 +512,17 @@ export default function Dashboard() {
                 <li>• Report 30 mins before events</li>
               </ul>
 
-              <button
-                className={`neon-btn ${!settingsData.allocated_events_visible ? "disabled" : ""}`}
-                onClick={handleViewAllocatedEvents}
-                disabled={!settingsData.allocated_events_visible}
-                style={{ fontSize: '0.9rem', padding: '10px 20px', marginTop: '30px' }}
-              >
-                {settingsData.allocated_events_visible ? "Allocated Events" : "Allocated Events (Locked)"}
-              </button>
+              {/* Allocated Events — desktop only; mobile uses My App tab */}
+              <div className="desktop-only">
+                <button
+                  className={`neon-btn ${!settingsData.allocated_events_visible ? "disabled" : ""}`}
+                  onClick={handleViewAllocatedEvents}
+                  disabled={!settingsData.allocated_events_visible}
+                  style={{ fontSize: '0.9rem', padding: '10px 20px', marginTop: '30px' }}
+                >
+                  {settingsData.allocated_events_visible ? "Allocated Events" : "Allocated Events (Locked)"}
+                </button>
+              </div>
             </div>
 
           </div>
