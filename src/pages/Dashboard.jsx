@@ -379,38 +379,49 @@ export default function Dashboard() {
             </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
               dashboardData?.qr_code ? (
-                isMobile ? (
-                  // Mobile View: Show actual QR code directly
+                // Unified View: Show small, blurred QR preview with overlay text
+                <div
+                  onClick={() => setShowQrModal(true)}
+                  style={{
+                    position: 'relative',
+                    background: '#fff',
+                    padding: '8px',
+                    borderRadius: '10px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                    transition: 'transform 0.2s ease',
+                    overflow: 'hidden',
+                    width: '60px',
+                    height: '60px'
+                  }}
+                  onMouseOver={(e) => Object.assign(e.currentTarget.style, { transform: 'scale(1.05)' })}
+                  onMouseOut={(e) => Object.assign(e.currentTarget.style, { transform: 'scale(1)' })}
+                  title="Click to view QR Code"
+                >
+                  {/* Blurred QR Code background */}
+                  <div style={{ position: 'absolute', filter: 'blur(2.5px)', opacity: 0.7 }}>
+                    <QRCode value={dashboardData.qr_code} size={50} level="L" />
+                  </div>
+
+                  {/* Overlay Text */}
                   <div style={{
-                    background: '#fff', padding: '10px', borderRadius: '12px',
-                    display: 'inline-block', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-                  }} onClick={() => setShowQrModal(true)}>
-                    <QRCode value={dashboardData.qr_code} size={80} level="M" />
-                    <div style={{ color: '#333', fontWeight: 'bold', fontSize: '0.8rem', marginTop: 4, fontFamily: 'monospace', letterSpacing: '1px' }}>
-                      {dashboardData.qr_code}
-                    </div>
+                    position: 'relative',
+                    zIndex: 2,
+                    background: 'rgba(0,0,0,0.65)',
+                    color: '#fff',
+                    fontSize: '0.6rem',
+                    fontWeight: 'bold',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    textAlign: 'center',
+                    lineHeight: '1.2'
+                  }}>
+                    Click to<br />View QR
                   </div>
-                ) : (
-                  // Desktop View: Show text badge, click to expand QR modal
-                  <div
-                    onClick={() => setShowQrModal(true)}
-                    style={{
-                      background: 'rgba(255,255,255,0.05)', padding: '5px 15px', borderRadius: '10px',
-                      display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer',
-                      border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.2s',
-                    }}
-                    onMouseOver={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.1)', transform: 'translateY(-2px)' })}
-                    onMouseOut={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.05)', transform: 'translateY(0)' })}
-                    title="Click to view QR Code"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                    </svg>
-                    <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
-                      {dashboardData.qr_code}
-                    </span>
-                  </div>
-                )
+                </div>
               ) : (
                 <div style={{ border: '1px dashed var(--text-secondary)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
                   <span style={{ color: 'rgba(224, 214, 214, 0.99)', fontSize: '0.9rem' }}>Not Yet Allotted</span>

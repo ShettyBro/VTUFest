@@ -110,29 +110,7 @@ export default function StudentApplication() {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                        {/* Refresh button */}
-                        <button
-                            onClick={fetchData}
-                            disabled={loading}
-                            title="Refresh"
-                            style={{
-                                background: 'rgba(255,255,255,0.06)',
-                                border: '1px solid rgba(212,175,55,0.3)',
-                                borderRadius: '50%',
-                                width: 36, height: 36,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                color: '#d4af37',
-                                opacity: loading ? 0.5 : 1,
-                                WebkitTapHighlightColor: 'transparent',
-                            }}
-                        >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-                                style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }}>
-                                <path d="M23 4v6h-6" /><path d="M1 20v-6h6" />
-                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-                            </svg>
-                        </button>
+                        {/* Refresh button removed per request */}
 
                         {/* QR Code badge */}
                         <div className="qr-badge-right">
