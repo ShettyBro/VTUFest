@@ -4,7 +4,7 @@ import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext"; // Imported usePopup
 
 const API_BASE = {
-  submitApplication: "https://vtu-festserver-production.up.railway.app/api/student/submit-application"
+  submitApplication: "https://api.vtufest2026.acharyahabba.com/api/student/submit-application"
 };
 
 // Helper component for file upload to match AuthPage design
