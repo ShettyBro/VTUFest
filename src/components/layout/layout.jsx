@@ -103,7 +103,7 @@ export default function Layout({ children, hasApplication: hasApplicationProp, c
           style={{
             position: "relative",
             marginLeft: 0,
-            marginTop: isDashboard ? "84px" : "56px",
+            marginTop: isDashboard ? "96px" : "56px",
             width: "100%",
             paddingBottom: "calc(70px + env(safe-area-inset-bottom, 0px))",
             minHeight: "calc(100dvh - 56px)",

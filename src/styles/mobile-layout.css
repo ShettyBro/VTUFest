@@ -24,12 +24,12 @@
 .mtb-college-strip {
     position: fixed;
     top: 56px;
-    /* sits right below 56px top bar */
     left: 0;
     right: 0;
-    height: 28px;
+    height: 32px;
     background: rgba(212, 175, 55, 0.1);
     border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -65,7 +65,7 @@
 }
 
 .mtb-logo {
-    height: 36px;
+    height: 44px;
     width: auto;
     object-fit: contain;
 }
@@ -483,5 +483,12 @@
         min-height: calc(100dvh - 56px) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
+    }
+
+    /* Dashboard pages have an extra 32px college strip — push content down */
+    .mobile-content[data-dashboard="1"] {
+        margin-top: 96px !important;
+        /* 56px top bar + 32px strip + 8px gap */
+        min-height: calc(100dvh - 96px) !important;
     }
 }

@@ -6,19 +6,7 @@ import "../../styles/mobile-layout.css";
 // Dashboard paths where we hide the page title and show college name instead
 const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard"];
 
-const PAGE_TITLES = {
-    "/student-register": "Register",
-    "/approvals": "Applications",
-    "/approved-students": "Approved",
-    "/rejected-students": "Rejected",
-    "/accommodation": "Accommodation",
-    "/accompanist-form": "Accompanist",
-    "/assign-events": "Events",
-    "/fee-payment": "Fee Payment",
-    "/green-room": "Green Room",
-    "/rules": "Rules & Regulations",
-    "/changepassword": "Change Password",
-};
+
 
 export default function MobileTopBar({ notificationsData = [] }) {
     const navigate = useNavigate();
@@ -35,8 +23,6 @@ export default function MobileTopBar({ notificationsData = [] }) {
     const userPhoto = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
     const isDashboard = DASHBOARD_PATHS.includes(location.pathname);
-    // For non-dashboard pages, show page title; for dashboard, show nothing in center (college name is in sub-strip)
-    const pageTitle = isDashboard ? "" : (PAGE_TITLES[location.pathname] || "VTU HABBA");
 
     // Fetch college name (same as desktop navbar)
     useEffect(() => {
@@ -75,9 +61,8 @@ export default function MobileTopBar({ notificationsData = [] }) {
                     <img src="/main.webp" alt="VTU Fest" className="mtb-logo" />
                 </div>
 
-                {/* CENTER: Page Title (empty on dashboard pages) */}
-                {pageTitle && <div className="mtb-title">{pageTitle}</div>}
-                {!pageTitle && <div className="mtb-title" />}
+                {/* CENTER: spacer so logo stays left and actions stay right */}
+                <div className="mtb-title" />
 
                 {/* RIGHT: Session timer + Bell + Avatar */}
                 <div className="mtb-right">
