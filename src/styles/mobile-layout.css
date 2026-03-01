@@ -504,7 +504,7 @@
     }
 
     .mobile-info-heading::after {
-        content: "Info";
+        content: "Guidelines";
         font-size: 1rem;
         /* restore normal font size */
     }

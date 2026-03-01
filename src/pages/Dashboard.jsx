@@ -503,7 +503,7 @@ export default function Dashboard() {
 
             {/* --- RIGHT COL: NOTIFICATIONS & LINKS --- */}
             <div className="glass-card">
-              <h4 className="mobile-info-heading">Quick Links &amp; Info</h4>
+              <h4 className="mobile-info-heading">Quick Links &amp; Guidelines</h4>
               <ul className="instruction-list">
                 {priority2PlusNotifications.slice(0, 3).map(notification => (
                   <li key={notification.id}>• {notification.message}</li>

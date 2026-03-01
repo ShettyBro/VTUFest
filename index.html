@@ -31,6 +31,16 @@
 
 <body>
   <div id="root"></div>
+  <!-- Capture PWA install prompt early — before React mounts (fixes race condition) -->
+  <script>
+    window.__pwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__pwaPrompt = e;
+      // Dispatch a custom event so React components can react to it
+      window.dispatchEvent(new Event('pwapromptready'));
+    });
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
