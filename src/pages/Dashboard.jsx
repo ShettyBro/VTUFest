@@ -29,25 +29,17 @@ export default function Dashboard() {
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Sync timer with CSS animation duration — same formula as --ticker-duration in CSS
-  const [isFlashing, setIsFlashing] = useState(false);
-
+  // Rotate through priority 1 notifications every 6 seconds
   useEffect(() => {
-    if (priority1Notifications.length <= 1) return;
-    const msg = priority1Notifications[currentPriority1Index]?.message || '';
-    const durationMs = Math.max(8, Math.min(20, msg.length * 0.12)) * 1000;
-
-    // Wait for animation to finish, then flash + advance
-    const scrollTimer = setTimeout(() => {
-      setIsFlashing(true);
-      setTimeout(() => {
-        setIsFlashing(false);
-        setCurrentPriority1Index(prev => (prev + 1) % priority1Notifications.length);
-      }, 350);
-    }, durationMs);
-
-    return () => clearTimeout(scrollTimer);
-  }, [currentPriority1Index, priority1Notifications.length]);
+    if (priority1Notifications.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentPriority1Index((prevIndex) =>
+          (prevIndex + 1) % priority1Notifications.length
+        );
+      }, 6000);
+      return () => clearInterval(interval);
+    }
+  }, [priority1Notifications.length]);
 
   const priority2PlusNotifications = notificationsData
     .filter(n => n.priority >= 2)
@@ -399,17 +391,11 @@ export default function Dashboard() {
 
         {/* --- TICKER --- */}
         {priority1Notifications.length > 0 && (
-          <div className={`glass-banner${isFlashing ? ' ticker-flash' : ''}`}>
+          <div className="glass-banner">
             <SparkleEffect trigger={currentPriority1Index} />
             <span className="ticker-label">IMP</span>
             <div className="ticker-single">
-              <span
-                className="ticker-message"
-                key={currentPriority1Index}
-                style={{
-                  '--ticker-duration': `${Math.max(8, Math.min(20, (priority1Notifications[currentPriority1Index]?.message?.length || 60) * 0.12))}s`
-                }}
-              >
+              <span className="ticker-message" key={currentPriority1Index}>
                 {priority1Notifications[currentPriority1Index]?.message}
               </span>
             </div>
