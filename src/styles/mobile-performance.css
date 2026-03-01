@@ -20,10 +20,10 @@
         transition: none !important;
     }
 
-    /* Light-blue top → dark navy bottom (reversed as requested) */
+    /* Same colour as mobile top bar (#4c679096 opaque) — unified across all mobile views */
     body::before,
     .auth-page {
-        background: linear-gradient(180deg, #1e3a8a 0%, #0f2044 50%, #0f172a 100%) !important;
+        background: #4c6790 !important;
         animation: none !important;
     }
 
@@ -193,6 +193,27 @@
     .login-page {
         min-height: 100dvh !important;
         height: auto !important;
+    }
+
+    .auth-form-panel {
+        background: transparent !important;
+    }
+}
+
+/* ── PHONE AUTH PAGE — single unified screen (overrides ≤1024px rules above) ── */
+@media (max-width: 768px) {
+
+    /* Kill the dark-card and gradient panel — both must be fully transparent
+       so the page-level #4c6790 background shows uniformly through everything */
+    .auth-container {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .auth-info-panel {
+        background: transparent !important;
+        border: none !important;
     }
 
     .auth-form-panel {

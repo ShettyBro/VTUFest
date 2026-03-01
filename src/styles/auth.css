@@ -495,11 +495,11 @@ input[type="file"] {
 /* --- MOBILE RESPONSIVE — Unified single-screen design --- */
 @media (max-width: 768px) {
 
-    /* Override colorful animated gradient with calm dark navy on mobile */
+    /* Override colorful animated gradient — match mobile top bar colour */
     .auth-page {
         padding: 0;
         align-items: flex-start;
-        background: linear-gradient(170deg, #1a2f6e 0%, #0f2044 45%, #091525 100%) !important;
+        background: #4c6790 !important;
         animation: none !important;
     }
 
@@ -528,7 +528,7 @@ input[type="file"] {
     .auth-info-panel {
         padding: 52px 24px 28px;
         border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        border-bottom: none;
         background: transparent;
         flex: none;
         min-height: unset;
@@ -568,6 +568,18 @@ input[type="file"] {
     .form-title {
         font-size: 1.55rem;
         margin-bottom: 16px;
+    }
+
+    /* Role tab — smaller pill on mobile (only 'Student' shows) */
+    .role-tabs {
+        margin-bottom: 18px;
+    }
+
+    .role-tab {
+        padding: 7px 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border-radius: 20px;
     }
 
     /* Input fields: slightly more visible on the dark navy */

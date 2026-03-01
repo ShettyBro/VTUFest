@@ -786,7 +786,7 @@ export default function AuthPage({ initialView = "login" }) {
                                 onClick={toggleView}
                                 style={{ minWidth: 190 }}
                             >
-                                {view === 'login' ? '📝 Register Candidate' : '← Back to Login'}
+                                {view === 'login' ? '📝 Register' : '← Back to Login'}
                             </button>
                         </div>
                     )}
