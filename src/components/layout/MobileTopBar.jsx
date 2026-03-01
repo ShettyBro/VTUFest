@@ -122,7 +122,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
 
             {/* Notification Sheet */}
             {notifOpen && (
-                <div className="mtb-sheet notif-sheet">
+                <div className="mtb-sheet notif-sheet" onMouseDown={e => e.stopPropagation()}>
                     <div className="mtb-sheet-header">
                         <span>Notifications</span>
                         <button className="mtb-sheet-close" onClick={() => setNotifOpen(false)}>✕</button>
@@ -141,7 +141,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
 
             {/* Profile Sheet */}
             {profileOpen && (
-                <div className="mtb-sheet profile-sheet">
+                <div className="mtb-sheet profile-sheet" onMouseDown={e => e.stopPropagation()}>
                     <div className="mtb-sheet-header">
                         <div className="mtb-profile-info">
                             <img src={userPhoto} alt="Profile" className="mtb-sheet-avatar" />
