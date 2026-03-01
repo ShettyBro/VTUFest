@@ -16,7 +16,7 @@ export default function App() {
           textDecoration: 'none',
           zIndex: 999999,
           userSelect: 'none',
-          padding: '4px',
+          padding: '8px',
         }}>
           Dev by ShettyBro
         </a>
