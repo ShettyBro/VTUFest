@@ -340,6 +340,20 @@
     -webkit-overflow-scrolling: touch;
 }
 
+/* Right-fade overlay — visual hint that the nav can scroll horizontally */
+.mobile-bottom-nav::after {
+    content: '';
+    position: sticky;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 32px;
+    flex-shrink: 0;
+    background: linear-gradient(to right, transparent, #0a1628 85%);
+    pointer-events: none;
+    z-index: 2;
+}
+
 .mobile-bottom-nav::-webkit-scrollbar {
     display: none;
 }

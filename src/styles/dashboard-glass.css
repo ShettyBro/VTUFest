@@ -286,32 +286,61 @@ body::after {
     flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
     overflow: hidden;
+    /* clips the text while it scrolls */
     position: relative;
     min-height: 24px;
 }
 
 .ticker-message {
     display: inline-block;
+    white-space: nowrap;
     color: var(--text-primary);
     font-weight: 500;
-    font-size: 0.95rem;
-    text-align: center;
-    animation: fadeInMessage 0.5s ease-in;
-    padding: 0 20px;
+    font-size: 0.9rem;
+    /* Duration set via --ticker-duration CSS var (calculated from message length in JS) */
+    animation: news-ticker-scroll var(--ticker-duration, 13s) linear forwards;
+    padding: 0;
+    will-change: transform;
 }
 
-@keyframes fadeInMessage {
+/* News-channel right→left scroll */
+@keyframes news-ticker-scroll {
     0% {
+        transform: translateX(105%);
+        opacity: 1;
+    }
+
+    88% {
+        transform: translateX(-105%);
+        opacity: 1;
+    }
+
+    89% {
         opacity: 0;
-        transform: translateY(-10px);
     }
 
     100% {
-        opacity: 1;
-        transform: translateY(0);
+        transform: translateX(-105%);
+        opacity: 0;
     }
+}
+
+/* Gold flash on banner when cycling to next message */
+@keyframes ticker-banner-flash {
+    0% {
+        background: rgba(212, 175, 55, 0.25);
+        border-color: rgba(212, 175, 55, 0.7);
+    }
+
+    100% {
+        background: var(--glass-bg);
+        border-color: var(--glass-border);
+    }
+}
+
+.ticker-flash {
+    animation: ticker-banner-flash 0.35s ease-out forwards !important;
 }
 
 /* ── SHIMMER WIPE: gold light sweeps left→right across the banner ── */
@@ -882,12 +911,14 @@ select:focus {
     gap: 15px;
     overflow-x: auto;
     padding-bottom: 15px;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
+    /* Firefox */
     scroll-snap-type: x mandatory;
 }
 
 .calendar-mobile-scroll::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
+    /* Chrome/Safari */
 }
 
 @media (max-width: 768px) {
@@ -897,7 +928,7 @@ select:focus {
         scroll-snap-align: start;
         margin-bottom: 0;
     }
-    
+
     .dashboard-grid {
         display: flex;
         flex-direction: column;
@@ -905,10 +936,11 @@ select:focus {
     }
 
     .hero-card {
-        order: -1; /* Always put hero first on mobile */
+        order: -1;
+        /* Always put hero first on mobile */
         padding: 25px 20px;
     }
-    
+
     .glass-card {
         padding: 20px;
     }
@@ -921,7 +953,7 @@ select:focus {
     .welcome-text h1 {
         font-size: 1.8rem;
     }
-    
+
     .qr-badge-right {
         width: 100%;
         margin-top: 15px;
@@ -932,4 +964,3 @@ select:focus {
         box-sizing: border-box;
     }
 }
-

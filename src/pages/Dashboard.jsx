@@ -29,17 +29,16 @@ export default function Dashboard() {
     .filter(n => n.priority === 1)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // Rotate through priority 1 notifications every 6 seconds
-  useEffect(() => {
-    if (priority1Notifications.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentPriority1Index((prevIndex) =>
-          (prevIndex + 1) % priority1Notifications.length
-        );
-      }, 6000);
-      return () => clearInterval(interval);
-    }
-  }, [priority1Notifications.length]);
+  // Flash briefly then advance to next notification when ticker finishes scrolling
+  const [isFlashing, setIsFlashing] = useState(false);
+  const handleTickerEnd = () => {
+    if (priority1Notifications.length <= 1) return;
+    setIsFlashing(true);
+    setTimeout(() => {
+      setIsFlashing(false);
+      setCurrentPriority1Index(prev => (prev + 1) % priority1Notifications.length);
+    }, 350);
+  };
 
   const priority2PlusNotifications = notificationsData
     .filter(n => n.priority >= 2)
@@ -391,11 +390,18 @@ export default function Dashboard() {
 
         {/* --- TICKER --- */}
         {priority1Notifications.length > 0 && (
-          <div className="glass-banner">
+          <div className={`glass-banner${isFlashing ? ' ticker-flash' : ''}`}>
             <SparkleEffect trigger={currentPriority1Index} />
             <span className="ticker-label">IMP</span>
             <div className="ticker-single">
-              <span className="ticker-message" key={currentPriority1Index}>
+              <span
+                className="ticker-message"
+                key={currentPriority1Index}
+                style={{
+                  '--ticker-duration': `${Math.max(8, Math.min(20, (priority1Notifications[currentPriority1Index]?.message?.length || 60) * 0.12))}s`
+                }}
+                onAnimationEnd={handleTickerEnd}
+              >
                 {priority1Notifications[currentPriority1Index]?.message}
               </span>
             </div>

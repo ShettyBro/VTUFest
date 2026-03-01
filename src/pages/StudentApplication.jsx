@@ -96,40 +96,98 @@ export default function StudentApplication() {
     };
 
     return (
-        <Layout hasApplication={dashboardData?.application !== null} collegeLocked={isCollegeLocked}>
+        <Layout hasApplication={dashboardData ? dashboardData.application !== null : undefined} collegeLocked={isCollegeLocked}>
             <div className="dashboard-glass-wrapper">
 
                 {/* ── PAGE TITLE ──────────────────────────────── */}
                 <div className="dashboard-header relative-header">
                     <div className="welcome-text">
-                        <h1>My Application</h1>
+                        {loading ? (
+                            <div style={{ height: 36, width: 160, borderRadius: 8, background: 'rgba(255,255,255,0.08)', animation: 'none' }} />
+                        ) : (
+                            <h1>My Application</h1>
+                        )}
                     </div>
-                    {/* QR Code badge */}
-                    <div className="qr-badge-right">
-                        <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem', textAlign: 'center' }}>
-                            Your QR Code:
-                        </small>
-                        {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
-                            dashboardData?.qr_code ? (
-                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
-                                    <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
-                                        {dashboardData.qr_code}
-                                    </span>
-                                </div>
-                            ) : (
-                                <div style={{ border: '1px dashed var(--text-secondary)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
-                                    <span style={{ color: 'rgba(224, 214, 214, 0.99)', fontSize: '0.9rem' }}>Not Yet Allotted</span>
-                                </div>
-                            )
-                        }
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                        {/* Refresh button */}
+                        <button
+                            onClick={fetchData}
+                            disabled={loading}
+                            title="Refresh"
+                            style={{
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid rgba(212,175,55,0.3)',
+                                borderRadius: '50%',
+                                width: 36, height: 36,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                color: '#d4af37',
+                                opacity: loading ? 0.5 : 1,
+                                WebkitTapHighlightColor: 'transparent',
+                            }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                                style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }}>
+                                <path d="M23 4v6h-6" /><path d="M1 20v-6h6" />
+                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                            </svg>
+                        </button>
+
+                        {/* QR Code badge */}
+                        <div className="qr-badge-right">
+                            <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem', textAlign: 'center' }}>
+                                Your QR Code:
+                            </small>
+                            {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
+                                dashboardData?.qr_code ? (
+                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
+                                        <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                                            {dashboardData.qr_code}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div style={{ border: '1px dashed var(--text-secondary)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
+                                        <span style={{ color: 'rgba(224, 214, 214, 0.99)', fontSize: '0.9rem' }}>Not Yet Allotted</span>
+                                    </div>
+                                )
+                            }
+                        </div>
                     </div>
                 </div>
 
                 {loading ? (
-                    <div className="glass-card" style={{ margin: '16px' }}>
-                        <div className="skeleton-box" style={{ width: '60%', height: '20px', marginBottom: '10px', background: 'rgba(255,255,255,0.1)' }} />
-                        <div className="skeleton-box" style={{ width: '80%', height: '20px', marginBottom: '10px', background: 'rgba(255,255,255,0.1)' }} />
-                        <div className="skeleton-box" style={{ width: '70%', height: '20px', background: 'rgba(255,255,255,0.1)' }} />
+                    /* ── IMPROVED SKELETON — mirrors actual card layout ── */
+                    <div style={{ padding: '0 12px' }}>
+                        <div className="glass-card" style={{ margin: '0 0 12px' }}>
+                            {/* Card title bar */}
+                            <div style={{ height: 18, width: '40%', borderRadius: 6, background: 'rgba(255,255,255,0.1)', marginBottom: 16 }} />
+                            {/* Stepper placeholder */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 10px', gap: 8 }}>
+                                {[0, 1, 2].map(i => (
+                                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+                                        <div style={{ width: 48, height: 10, borderRadius: 4, background: 'rgba(255,255,255,0.07)' }} />
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Detail rows */}
+                            {[80, 60, 95, 50].map((w, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <div style={{ height: 14, width: '30%', borderRadius: 4, background: 'rgba(255,255,255,0.08)' }} />
+                                    <div style={{ height: 14, width: `${w - 30}%`, borderRadius: 4, background: 'rgba(255,255,255,0.05)' }} />
+                                </div>
+                            ))}
+                            {/* Button placeholder */}
+                            <div style={{ height: 44, width: '100%', borderRadius: 10, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', marginTop: 20 }} />
+                        </div>
+                        {/* Second card skeleton */}
+                        <div className="glass-card" style={{ margin: '0 0 12px' }}>
+                            <div style={{ height: 18, width: '50%', borderRadius: 6, background: 'rgba(255,255,255,0.1)', marginBottom: 12 }} />
+                            <div style={{ height: 14, width: '85%', borderRadius: 4, background: 'rgba(255,255,255,0.07)', marginBottom: 8 }} />
+                            <div style={{ height: 14, width: '65%', borderRadius: 4, background: 'rgba(255,255,255,0.05)', marginBottom: 20 }} />
+                            <div style={{ height: 44, width: '100%', borderRadius: 10, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)' }} />
+                        </div>
                     </div>
                 ) : (
                     <>
@@ -166,15 +224,15 @@ export default function StudentApplication() {
                             {/* Action Buttons */}
                             <div style={{ marginTop: '20px' }}>
                                 {!dashboardData?.application ? (
-                                    <button className="neon-btn" onClick={() => navigate("/Student-Register")} disabled={isCollegeLocked}>
+                                    <button className="neon-btn" onClick={() => navigate("/student-register")} disabled={isCollegeLocked}>
                                         Start Application
                                     </button>
                                 ) : dashboardData.application.status === 'IN_PROGRESS' ? (
-                                    <button className="neon-btn" onClick={() => navigate("/Student-Register")} disabled={isCollegeLocked}>
+                                    <button className="neon-btn" onClick={() => navigate("/student-register")} disabled={isCollegeLocked}>
                                         Resume Application
                                     </button>
                                 ) : dashboardData.application.status === 'REJECTED' && dashboardData.reapply_count < 2 ? (
-                                    <button className="neon-btn" onClick={() => navigate("/Student-Register")} disabled={isCollegeLocked}>
+                                    <button className="neon-btn" onClick={() => navigate("/student-register")} disabled={isCollegeLocked}>
                                         Reapply Now
                                     </button>
                                 ) : null}
@@ -212,6 +270,10 @@ export default function StudentApplication() {
                     <AllocatedEventsModal onClose={() => setShowAllocatedEventsModal(false)} />
                 )}
             </div>
+
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+            `}</style>
         </Layout>
     );
 }

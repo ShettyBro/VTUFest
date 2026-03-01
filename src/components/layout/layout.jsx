@@ -7,20 +7,10 @@ import MobileBottomNav from "./MobileBottomNav";
 import MobileInstallBanner from "./MobileInstallBanner";
 import "../../styles/layout-glass.css";
 import "../../styles/mobile-layout.css";
+import { isPhysicalMobile } from "../../utils/deviceDetect";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard", "/student-application"];
-
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
-    const handler = (e) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return isMobile;
-}
 
 export default function Layout({ children, hasApplication: hasApplicationProp, collegeLocked: collegeLockedProp }) {
   const role = localStorage.getItem("vtufest_role") || localStorage.getItem("role") || "student";
@@ -30,7 +20,8 @@ export default function Layout({ children, hasApplication: hasApplicationProp, c
   const [collegeLocked, setCollegeLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [notificationsData, setNotificationsData] = useState([]);
-  const isMobile = useIsMobile();
+  // Physical screen detection — bypasses 'Desktop mode' on phones
+  const isMobile = isPhysicalMobile();
 
   useEffect(() => {
     if (hasApplicationProp !== undefined) {
