@@ -70,7 +70,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
                             accentColor="#d4af37"
                             onExpired={() => {
                                 localStorage.clear();
-                                navigate("/");
+                                window.location.href = "/";
                             }}
                         />
                     </div>
@@ -128,7 +128,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         Change Password
                     </div>
-                    <div className="mtb-sheet-menu-item logout" onClick={() => { localStorage.clear(); navigate("/"); }}>
+                    <div className="mtb-sheet-menu-item logout" onClick={() => { localStorage.clear(); window.location.href = "/"; }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" /></svg>
                         Logout
                     </div>
