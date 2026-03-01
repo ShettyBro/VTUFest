@@ -548,10 +548,10 @@ export default function Dashboard() {
               <h4 className="mobile-info-heading">Quick Links &amp; Guidelines</h4>
               <ul className="instruction-list">
                 {priority2PlusNotifications.slice(0, 3).map(notification => (
-                  <li key={notification.id}>• {notification.message}</li>
+                  <li key={notification.id}>{notification.message}</li>
                 ))}
-                <li>• Carry College ID at all times</li>
-                <li>• Report 30 mins before events</li>
+                <li>Carry College ID at all times</li>
+                <li>Report 30 mins before events</li>
               </ul>
 
               {/* Allocated Events — desktop only; mobile uses My App tab */}
