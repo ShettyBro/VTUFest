@@ -15,7 +15,8 @@ export default function App() {
           color: 'rgba(255,255,255,0.08)',
           textDecoration: 'none',
           zIndex: 999999,
-          userSelect: 'none'
+          userSelect: 'none',
+          padding: '4px',
         }}>
           Dev by ShettyBro
         </a>
