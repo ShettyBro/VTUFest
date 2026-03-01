@@ -96,20 +96,11 @@ export default function Layout({ children, hasApplication: hasApplicationProp, c
         {/* Mobile Top App Bar */}
         <MobileTopBar notificationsData={notificationsData} />
 
-        {/* Main Content — shifted down from top bar + college strip on dashboards */}
+        {/* Main Content — CSS in mobile-layout.css handles all offsets via --mtb-h / --mcs-h tokens */}
         <main
           className="mobile-content"
-          data-dashboard={["/dashboard", "/principal-dashboard", "/manager-dashboard"].includes(window.location.pathname) ? "1" : "0"}
-          style={{
-            position: "relative",
-            marginLeft: 0,
-            marginTop: isDashboard ? "96px" : "56px",
-            width: "100%",
-            paddingBottom: "calc(70px + env(safe-area-inset-bottom, 0px))",
-            minHeight: "calc(100dvh - 56px)",
-            overflowY: "auto",
-            overflowX: "hidden",
-          }}
+          data-dashboard={isDashboard ? "1" : "0"}
+          style={{ position: "relative", marginLeft: 0, width: "100%" }}
         >
           {children}
         </main>

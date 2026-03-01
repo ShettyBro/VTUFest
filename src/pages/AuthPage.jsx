@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import PasswordStrength from "../components/PasswordStrength";
 import "../styles/auth.css";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
+import { isPhysicalMobile } from "../utils/deviceDetect";
 
 /* ================= UTILS & CONFIG ================= */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
@@ -30,6 +31,7 @@ const decodeJwt = (token) => {
 export default function AuthPage({ initialView = "login" }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const isMobileDevice = isPhysicalMobile(); // bulletproof: screen.width + touch
 
     // VIEW STATE
     const [view, setView] = useState(initialView); // 'login' or 'register'
@@ -94,7 +96,11 @@ export default function AuthPage({ initialView = "login" }) {
         if (!localStorage.getItem("role")) {
             localStorage.setItem("role", "student");
         }
-        setLoginRole(localStorage.getItem("role") || "student");
+        const savedRole = localStorage.getItem("role") || "student";
+        // On mobile, force role to student — managers/principals must use desktop
+        const effectiveRole = isMobileDevice && savedRole !== "student" ? "student" : savedRole;
+        if (effectiveRole !== savedRole) localStorage.setItem("role", "student");
+        setLoginRole(effectiveRole);
 
         // Check Reg Lock
         checkLockStatus();
@@ -414,21 +420,58 @@ export default function AuthPage({ initialView = "login" }) {
                         <form className="auth-form" onSubmit={handleLoginSubmit}>
                             <h2 className="form-title">Welcome Back</h2>
 
+                            {/* ROLE TABS */}
                             <div className="role-tabs">
-                                {["principal", "manager", "student"].map(r => (
-                                    <button
-                                        key={r}
-                                        type="button"
-                                        className={`role-tab ${loginRole === r ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setLoginRole(r);
-                                            localStorage.setItem("role", r);
-                                        }}
-                                    >
-                                        {r.charAt(0).toUpperCase() + r.slice(1)}
-                                    </button>
-                                ))}
+                                {isMobileDevice ? (
+                                    /* ── MOBILE: student only ──────────────────── */
+                                    <>
+                                        <button
+                                            type="button"
+                                            className="role-tab active"
+                                            style={{ flex: 1 }}
+                                        >
+                                            Student
+                                        </button>
+                                    </>
+                                ) : (
+                                    /* ── DESKTOP: all roles ─────────────────────── */
+                                    ["principal", "manager", "student"].map(r => (
+                                        <button
+                                            key={r}
+                                            type="button"
+                                            className={`role-tab ${loginRole === r ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setLoginRole(r);
+                                                localStorage.setItem("role", r);
+                                            }}
+                                        >
+                                            {r.charAt(0).toUpperCase() + r.slice(1)}
+                                        </button>
+                                    ))
+                                )}
                             </div>
+
+                            {/* Mobile notice for managers/principals */}
+                            {isMobileDevice && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                                    background: 'rgba(212,175,55,0.08)',
+                                    border: '1px solid rgba(212,175,55,0.3)',
+                                    borderLeft: '3px solid #d4af37',
+                                    borderRadius: 8,
+                                    padding: '10px 14px',
+                                    marginBottom: 4,
+                                    fontSize: '0.82rem',
+                                    color: '#d4af37',
+                                    lineHeight: 1.5,
+                                }}>
+                                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>🖥️</span>
+                                    <span>
+                                        <strong>Principals &amp; Team Managers</strong> must use a
+                                        {' '}<strong>desktop or laptop</strong> to access the portal.
+                                    </span>
+                                </div>
+                            )}
 
                             <div className="input-group">
                                 <label>Email Address</label>

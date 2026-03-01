@@ -6,10 +6,14 @@ import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import SparkleEffect from "../components/SparkleEffect";
 import "../styles/dashboard-glass.css";
-
 import { usePopup } from "../context/PopupContext";
+import MobileBlockScreen from "../components/MobileBlockScreen";
+import { isPhysicalMobile } from "../utils/deviceDetect";
 
 export default function ManagerDashboard() {
+  // ── MOBILE GUARD — physical phones cannot access manager portal ──
+  if (isPhysicalMobile()) return <MobileBlockScreen role="manager" />;
+
   const navigate = useNavigate();
   const role = localStorage.getItem("vtufest_role");
   const token = localStorage.getItem("vtufest_token");

@@ -4,11 +4,16 @@ import Layout from "../components/layout/layout";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import SparkleEffect from "../components/SparkleEffect";
-import "../styles/dashboard-glass.css"; // UPDATED CSS IMPORT
+import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
+import MobileBlockScreen from "../components/MobileBlockScreen";
+import { isPhysicalMobile } from "../utils/deviceDetect";
 
 export default function PrincipalDashboard() {
+  // ── MOBILE GUARD — physical phones cannot access principal portal ──
+  if (isPhysicalMobile()) return <MobileBlockScreen role="principal" />;
+
   const navigate = useNavigate();
   const role = localStorage.getItem("vtufest_role");
   const token = localStorage.getItem("vtufest_token");
