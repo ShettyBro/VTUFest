@@ -528,6 +528,7 @@ export default function SubmitApplication() {
                   <option value="2">2nd Year</option>
                   <option value="3">3rd Year</option>
                   <option value="4">4th Year</option>
+                  <option value="5">5th Year</option>
                 </select>
               </div>
 
@@ -541,7 +542,7 @@ export default function SubmitApplication() {
                   required
                 >
                   <option value="">Select Semester</option>
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => (
                     <option key={s} value={s}>
                       Semester {s}
                     </option>
