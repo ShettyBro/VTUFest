@@ -7,6 +7,8 @@ import SparkleEffect from "../components/SparkleEffect";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 import { ChevronDown } from "lucide-react";
+import QRCode from "react-qr-code";
+import { isPhysicalMobile } from "../utils/deviceDetect";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
@@ -23,6 +25,8 @@ export default function Dashboard() {
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [showAllocatedEventsModal, setShowAllocatedEventsModal] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const isMobile = isPhysicalMobile();
   const { showPopup } = usePopup();
 
   const priority1Notifications = notificationsData
@@ -368,18 +372,45 @@ export default function Dashboard() {
             <h1>Welcome, {dashboardData?.student?.full_name?.split(' ')[0] || "Student"}</h1>
           </div>
 
-          {/* QR CODE - RIGHT SIDE */}
-          <div className="qr-badge-right">
-            <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem', textAlign: 'center' }}>
-              {dashboardData?.qr_code ? "Your QR Code:" : "Your QR Code:"}
+          {/* QR CODE - RIGHT SIDE / BOTTOM ON MOBILE */}
+          <div className="qr-badge-right" style={{ textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? '10px' : '0' }}>
+            <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem' }}>
+              Your QR Code:
             </small>
             {loading ? <span style={{ color: '#aaa' }}>Loading...</span> :
               dashboardData?.qr_code ? (
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
-                  <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
-                    {dashboardData.qr_code}
-                  </span>
-                </div>
+                isMobile ? (
+                  // Mobile View: Show actual QR code directly
+                  <div style={{
+                    background: '#fff', padding: '10px', borderRadius: '12px',
+                    display: 'inline-block', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                  }} onClick={() => setShowQrModal(true)}>
+                    <QRCode value={dashboardData.qr_code} size={80} level="M" />
+                    <div style={{ color: '#333', fontWeight: 'bold', fontSize: '0.8rem', marginTop: 4, fontFamily: 'monospace', letterSpacing: '1px' }}>
+                      {dashboardData.qr_code}
+                    </div>
+                  </div>
+                ) : (
+                  // Desktop View: Show text badge, click to expand QR modal
+                  <div
+                    onClick={() => setShowQrModal(true)}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)', padding: '5px 15px', borderRadius: '10px',
+                      display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                      border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.2s',
+                    }}
+                    onMouseOver={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.1)', transform: 'translateY(-2px)' })}
+                    onMouseOut={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.05)', transform: 'translateY(0)' })}
+                    title="Click to view QR Code"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1.2rem', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                      {dashboardData.qr_code}
+                    </span>
+                  </div>
+                )
               ) : (
                 <div style={{ border: '1px dashed var(--text-secondary)', padding: '5px 15px', borderRadius: '10px', display: 'inline-block' }}>
                   <span style={{ color: 'rgba(224, 214, 214, 0.99)', fontSize: '0.9rem' }}>Not Yet Allotted</span>
@@ -577,6 +608,66 @@ export default function Dashboard() {
         {showAllocatedEventsModal && (
           <AllocatedEventsModal onClose={handleCloseAllocatedEventsModal} />
         )}
+
+        {/* ── QR CODE OVERLAY MODAL ── */}
+        {showQrModal && dashboardData?.qr_code && (
+          <div
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 10000, padding: 20
+            }}
+            onClick={() => setShowQrModal(false)}
+          >
+            <div
+              style={{
+                background: '#ffffff', padding: '30px', borderRadius: '24px',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.5)', textAlign: 'center',
+                maxWidth: '300px', width: '100%', position: 'relative',
+                animation: 'fadeInMessage 0.3s ease-out'
+              }}
+              onClick={e => e.stopPropagation()} // Prevent close when clicking card
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowQrModal(false)}
+                style={{
+                  position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.05)',
+                  border: 'none', borderRadius: '50%', width: 32, height: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#666', transition: 'all 0.2s'
+                }}
+                onMouseOver={e => Object.assign(e.currentTarget.style, { background: 'rgba(0,0,0,0.1)', color: '#000' })}
+                onMouseOut={e => Object.assign(e.currentTarget.style, { background: 'rgba(0,0,0,0.05)', color: '#666' })}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+
+              <h3 style={{ color: '#1a2f6e', marginBottom: 20, marginTop: 5, fontSize: '1.2rem', fontWeight: 600 }}>
+                Scan QR Code
+              </h3>
+
+              <div style={{ background: '#fff', padding: 10, borderRadius: 12, display: 'inline-block' }}>
+                <QRCode value={dashboardData.qr_code} size={200} level="M" />
+              </div>
+
+              <div style={{
+                marginTop: 24, padding: '12px', background: '#f5f7fa',
+                borderRadius: '12px', color: '#333', fontFamily: 'monospace',
+                fontSize: '1.4rem', fontWeight: 'bold', letterSpacing: '3px'
+              }}>
+                {dashboardData.qr_code}
+              </div>
+              <p style={{ color: '#666', fontSize: '0.85rem', marginTop: 15, marginBottom: 0 }}>
+                Present this code at the event venue.
+              </p>
+            </div>
+          </div>
+        )}
+
       </div>
     </Layout>
   );
