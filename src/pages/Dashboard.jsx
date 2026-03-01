@@ -6,6 +6,7 @@ import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import SparkleEffect from "../components/SparkleEffect";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
+import { ChevronDown } from "lucide-react";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [showAllocatedEventsModal, setShowAllocatedEventsModal] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
   const { showPopup } = usePopup();
 
   const priority1Notifications = notificationsData
@@ -323,6 +325,42 @@ export default function Dashboard() {
     return dashboardData.application.status.replace("_", " ");
   };
 
+  const renderStepper = () => {
+    const status = dashboardData?.application?.status || 'NOT_SUBMITTED';
+    const isRejected = status === 'REJECTED';
+
+    // Define steps based on status
+    let currentStep = 0;
+    if (status === 'IN_PROGRESS') currentStep = 1;
+    if (status === 'SUBMITTED') currentStep = 2;
+    if (status === 'UNDER_REVIEW') currentStep = 3;
+    if (status === 'APPROVED' || status === 'REJECTED') currentStep = 4;
+
+    const steps = [
+      { label: 'Started', active: currentStep >= 0, completed: currentStep > 0 },
+      { label: 'Draft', active: currentStep >= 1, completed: currentStep > 1 },
+      { label: 'Submitted', active: currentStep >= 2, completed: currentStep > 2 },
+      { label: 'Review', active: currentStep >= 3, completed: currentStep > 3 },
+      {
+        label: isRejected ? 'Rejected' : 'Approved',
+        active: currentStep >= 4,
+        completed: currentStep >= 4 && !isRejected,
+        rejected: isRejected
+      },
+    ];
+
+    return (
+      <div className="stepper-container">
+        {steps.map((step, index) => (
+          <div key={index} className={`step ${step.active ? 'active' : ''} ${step.completed ? 'completed' : ''} ${step.rejected ? 'rejected' : ''}`}>
+            <div className="step-circle">{index + 1}</div>
+            <div className="step-label">{step.label}</div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Layout hasApplication={dashboardData?.application !== null} collegeLocked={isCollegeLocked}>
       <div className="dashboard-glass-wrapper">
@@ -377,7 +415,7 @@ export default function Dashboard() {
             {/* --- LEFT COL: CALENDAR --- */}
             <div className="glass-card calendar-card">
               <h3>Upcoming Events</h3>
-              <div className="calendar-list">
+              <div className="calendar-mobile-scroll calendar-list">
                 {eventsCalendarData.calendarEvents
                   .slice()
                   .sort((a, b) => {
@@ -419,13 +457,11 @@ export default function Dashboard() {
 
             {/* --- CENTER COL: HERO STATUS --- */}
             <div className="glass-card hero-card">
-              <h4>Application Status</h4>
+              <h4>Application Progress</h4>
 
-              <div className={`status-badge-lg ${getStatusBadgeClass()}`}>
-                {getStatusText()}
-              </div>
+              {renderStepper()}
 
-              <div style={{ textAlign: 'left', marginTop: '20px' }}>
+              <div style={{ textAlign: 'left', marginTop: '30px' }}>
                 <div className="detail-row">
                   <span>Full Name</span>
                   <span>{dashboardData?.student?.full_name || "N/A"}</span>
@@ -443,11 +479,11 @@ export default function Dashboard() {
               {/* ACTION BUTTONS */}
               {!dashboardData?.application ? (
                 <button className="neon-btn" onClick={handleSubmitApplication} disabled={isCollegeLocked}>
-                  Submit Application
+                  Start Application
                 </button>
               ) : dashboardData.application.status === 'IN_PROGRESS' ? (
                 <button className="neon-btn" onClick={handleCompleteApplication} disabled={isCollegeLocked}>
-                  Complete Application
+                  Resume Application
                 </button>
               ) : dashboardData.application.status === 'REJECTED' && dashboardData.reapply_count < 2 ? (
                 <button className="neon-btn" onClick={handleReapply} disabled={isCollegeLocked}>
@@ -457,12 +493,12 @@ export default function Dashboard() {
 
               {!dashboardData?.application && (
                 isRegistrationLocked ? (
-                  <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
-                    ⚠️ Registration is closed for this year!!
+                  <div className="alert-banner alert-warning">
+                    ⚠️ Registration is closed for this year
                   </div>
                 ) : dashboardData?.college?.is_locked ? (
-                  <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
-                    ⚠️ Your college doesn't accept applications anymore!!
+                  <div className="alert-banner alert-warning">
+                    ⚠️ Your college doesn't accept applications anymore
                   </div>
                 ) : null
               )}
@@ -494,35 +530,45 @@ export default function Dashboard() {
 
         {/* --- MAP SECTION --- */}
         {!loading && (
-          <div className="glass-card">
-            <h3 style={{ marginBottom: '5px' }}>Campus Map</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '20px' }}>Interactive Event Locations</p>
-
-            <div className="map-container-full">
-              <div className="map-blocks-left">
-                {blockEvents.left.map((block, idx) => (
-                  <div className="block-item" key={idx}>
-                    <strong>{block.blockNo}. {block.blockName}</strong>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
-                      {block.events.map((e, i) => <div key={i}>• {e.name}</div>)}
-                    </div>
-                  </div>
-                ))}
+          <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div
+              className={`accordion-header ${mapExpanded ? 'active' : ''}`}
+              onClick={() => setMapExpanded(!mapExpanded)}
+            >
+              <div>
+                <h3 style={{ marginBottom: '5px', borderBottom: 'none', paddingBottom: 0 }}>Campus Map & Locations</h3>
+                <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem', fontWeight: 'normal' }}>Tap to view interactive event locations</p>
               </div>
+              <ChevronDown className="accordion-icon" />
+            </div>
 
-              <div className="map-card">
-                <CampusMap />
-              </div>
-
-              <div className="map-blocks-right">
-                {blockEvents.right.map((block, idx) => (
-                  <div className="block-item" key={idx}>
-                    <strong>{block.blockNo}. {block.blockName}</strong>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
-                      {block.events.map((e, i) => <div key={i}>• {e.name}</div>)}
+            <div className={`accordion-content ${mapExpanded ? 'expanded' : ''}`}>
+              <div className="map-container-full">
+                <div className="map-blocks-left">
+                  {blockEvents.left.map((block, idx) => (
+                    <div className="block-item" key={idx}>
+                      <strong>{block.blockNo}. {block.blockName}</strong>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
+                        {block.events.map((e, i) => <div key={i}>• {e.name}</div>)}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                <div className="map-card">
+                  <CampusMap />
+                </div>
+
+                <div className="map-blocks-right">
+                  {blockEvents.right.map((block, idx) => (
+                    <div className="block-item" key={idx}>
+                      <strong>{block.blockNo}. {block.blockName}</strong>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '5px' }}>
+                        {block.events.map((e, i) => <div key={i}>• {e.name}</div>)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
