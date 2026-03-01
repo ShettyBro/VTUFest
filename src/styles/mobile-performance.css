@@ -86,7 +86,7 @@
 
     /* Auth info panel: reversed — light blue top → dark navy bottom */
     .auth-info-panel {
-        background: linear-gradient(180deg, #1e3a8a 0%, #0f2044 60%, #0f172a 100%) !important;
+        background: linear-gradient(180deg, #707fa1 0%, #1e3159 60%, #0f172a 100%) !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
