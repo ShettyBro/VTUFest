@@ -495,11 +495,11 @@ input[type="file"] {
 /* --- MOBILE RESPONSIVE — Unified single-screen design --- */
 @media (max-width: 768px) {
 
-    /* Override colorful animated gradient — match mobile top bar colour */
+    /* Override colorful animated gradient with calm dark navy on mobile */
     .auth-page {
         padding: 0;
         align-items: flex-start;
-        background: #4c6790 !important;
+        background: linear-gradient(170deg, #1a2f6e 0%, #0f2044 45%, #091525 100%) !important;
         animation: none !important;
     }
 
