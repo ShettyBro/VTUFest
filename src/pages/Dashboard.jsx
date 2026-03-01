@@ -455,15 +455,16 @@ export default function Dashboard() {
                 </button>
               ) : null}
 
-              {isCollegeLocked && (
-                <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
-                  ⚠️ You Collage Accepts no more applications for this year!!
-                </div>
-              )}
-              {isRegistrationLocked && (
-                <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
-                  ⚠️ Registration is closed for this year!!
-                </div>
+              {!dashboardData?.application && (
+                isRegistrationLocked ? (
+                  <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
+                    ⚠️ Registration is closed for this year!!
+                  </div>
+                ) : dashboardData?.college?.is_locked ? (
+                  <div style={{ marginTop: '15px', color: '#FFC107', fontSize: '0.9rem' }}>
+                    ⚠️ Your college doesn't accept applications anymore!!
+                  </div>
+                ) : null
               )}
             </div>
 
