@@ -241,7 +241,7 @@ export default function ManagerProfileModal({ onComplete }) {
     uploadStatus.aadhaar_card === "done";
 
   return (
-    <div className="auth-page" style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+    <div className="auth-page" style={{ position: 'fixed', inset: 0, zIndex: 9999, overflowY: 'auto' }}>
       <div className="shape shape-1"></div>
       <div className="shape shape-2"></div>
 
