@@ -3,11 +3,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import SessionTimerBadge from "../SessionTimerBadge";
 import "../../styles/mobile-layout.css";
 
+// Dashboard paths where we hide the page title and show college name instead
+const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard"];
+
 const PAGE_TITLES = {
-    "/dashboard": "Dashboard",
     "/student-register": "Register",
-    "/principal-dashboard": "Dashboard",
-    "/manager-dashboard": "Dashboard",
     "/approvals": "Applications",
     "/approved-students": "Approved",
     "/rejected-students": "Rejected",
@@ -25,6 +25,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
     const location = useLocation();
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
+    const [collegeName, setCollegeName] = useState("");
     const profileRef = useRef(null);
     const notifRef = useRef(null);
 
@@ -33,7 +34,22 @@ export default function MobileTopBar({ notificationsData = [] }) {
     const avatarSeed = userUsn || userName || "default";
     const userPhoto = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
-    const pageTitle = PAGE_TITLES[location.pathname] || "VTU HABBA";
+    const isDashboard = DASHBOARD_PATHS.includes(location.pathname);
+    // For non-dashboard pages, show page title; for dashboard, show nothing in center (college name is in sub-strip)
+    const pageTitle = isDashboard ? "" : (PAGE_TITLES[location.pathname] || "VTU HABBA");
+
+    // Fetch college name (same as desktop navbar)
+    useEffect(() => {
+        const collegeId = localStorage.getItem("college_id");
+        if (!collegeId) return;
+        fetch(`https://api.vtufest2026.acharyahabba.com/api/shared/college-and-usn/college/${collegeId}`)
+            .then(r => r.json())
+            .then(result => {
+                const college = result?.data?.college;
+                if (college) setCollegeName(`${college.college_name}, ${college.place}`);
+            })
+            .catch(() => { });
+    }, []);
 
     const sortedNotifications = notificationsData
         .filter(n => n.priority >= 2)
@@ -59,8 +75,9 @@ export default function MobileTopBar({ notificationsData = [] }) {
                     <img src="/main.webp" alt="VTU Fest" className="mtb-logo" />
                 </div>
 
-                {/* CENTER: Page Title */}
-                <div className="mtb-title">{pageTitle}</div>
+                {/* CENTER: Page Title (empty on dashboard pages) */}
+                {pageTitle && <div className="mtb-title">{pageTitle}</div>}
+                {!pageTitle && <div className="mtb-title" />}
 
                 {/* RIGHT: Session timer + Bell + Avatar */}
                 <div className="mtb-right">
@@ -91,6 +108,17 @@ export default function MobileTopBar({ notificationsData = [] }) {
                     </div>
                 </div>
             </header>
+
+            {/* College Name Sub-Strip — only on dashboard pages, only in mobile layout */}
+            {isDashboard && collegeName && (
+                <div className="mtb-college-strip">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span>{collegeName}</span>
+                </div>
+            )}
 
             {/* Notification Sheet */}
             {notifOpen && (

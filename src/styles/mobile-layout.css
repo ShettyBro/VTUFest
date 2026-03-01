@@ -20,6 +20,44 @@
     gap: 10px;
 }
 
+/* College name sub-strip — shown below top bar on dashboard pages (mobile only) */
+.mtb-college-strip {
+    position: fixed;
+    top: 56px;
+    /* sits right below 56px top bar */
+    left: 0;
+    right: 0;
+    height: 28px;
+    background: rgba(212, 175, 55, 0.1);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 12px;
+    z-index: 999;
+    color: #d4af37;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mtb-college-strip svg {
+    flex-shrink: 0;
+    stroke: #d4af37;
+    opacity: 0.85;
+}
+
+.mtb-college-strip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
 .mtb-left {
     display: flex;
     align-items: center;

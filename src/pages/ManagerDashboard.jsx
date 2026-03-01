@@ -317,7 +317,7 @@ export default function ManagerDashboard() {
         {priority1Notifications.length > 0 && (
           <div className="glass-banner">
             <SparkleEffect trigger={currentPriority1Index} />
-            <span className="ticker-label">IMP Notification</span>
+            <span className="ticker-label">IMP</span>
             <div className="ticker-single">
               <span className="ticker-message">
                 {priority1Notifications[currentPriority1Index]?.message}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import MobileTopBar from "./MobileTopBar";
@@ -8,6 +9,7 @@ import "../../styles/layout-glass.css";
 import "../../styles/mobile-layout.css";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
+const DASHBOARD_PATHS = ["/dashboard", "/principal-dashboard", "/manager-dashboard"];
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
@@ -22,6 +24,8 @@ function useIsMobile() {
 
 export default function Layout({ children, hasApplication: hasApplicationProp, collegeLocked: collegeLockedProp }) {
   const role = localStorage.getItem("vtufest_role") || localStorage.getItem("role") || "student";
+  const location = useLocation();
+  const isDashboard = DASHBOARD_PATHS.includes(location.pathname);
   const [hasApplication, setHasApplication] = useState(null);
   const [collegeLocked, setCollegeLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,13 +96,14 @@ export default function Layout({ children, hasApplication: hasApplicationProp, c
         {/* Mobile Top App Bar */}
         <MobileTopBar notificationsData={notificationsData} />
 
-        {/* Main Content — shifted down from top bar, up from bottom nav */}
+        {/* Main Content — shifted down from top bar + college strip on dashboards */}
         <main
           className="mobile-content"
+          data-dashboard={["/dashboard", "/principal-dashboard", "/manager-dashboard"].includes(window.location.pathname) ? "1" : "0"}
           style={{
             position: "relative",
             marginLeft: 0,
-            marginTop: "56px",
+            marginTop: isDashboard ? "84px" : "56px",
             width: "100%",
             paddingBottom: "calc(70px + env(safe-area-inset-bottom, 0px))",
             minHeight: "calc(100dvh - 56px)",
