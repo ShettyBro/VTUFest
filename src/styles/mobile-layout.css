@@ -545,4 +545,19 @@
         content: "Guidelines";
         font-size: 1rem;
     }
+
+    /* Ticker label: 'Important Notification' on desktop → 'IMP' on mobile */
+    .ticker-imp-label {
+        font-size: 0 !important;
+        padding: 0 !important;
+        letter-spacing: 0 !important;
+    }
+
+    .ticker-imp-label::after {
+        content: "IMP";
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        padding: 0 4px;
+    }
 }
