@@ -17,7 +17,7 @@ export default function App() {
           zIndex: 999999,
           userSelect: 'none'
         }}>
-          dev by ShettyBro
+          Dev by ShettyBro
         </a>
       </BrowserRouter>
     </PopupProvider>
