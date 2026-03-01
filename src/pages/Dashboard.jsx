@@ -329,28 +329,25 @@ export default function Dashboard() {
     const status = dashboardData?.application?.status || 'NOT_SUBMITTED';
     const isRejected = status === 'REJECTED';
 
-    // Define steps based on status
+    // Define 3 steps based on status
     let currentStep = 0;
-    if (status === 'IN_PROGRESS') currentStep = 1;
-    if (status === 'SUBMITTED') currentStep = 2;
-    if (status === 'UNDER_REVIEW') currentStep = 3;
-    if (status === 'APPROVED' || status === 'REJECTED') currentStep = 4;
+    if (status === 'IN_PROGRESS') currentStep = 1; // "Applied" (Started)
+    if (status === 'SUBMITTED' || status === 'UNDER_REVIEW') currentStep = 2; // "Submitted"
+    if (status === 'APPROVED' || status === 'REJECTED') currentStep = 3; // "Approved" / "Rejected"
 
     const steps = [
-      { label: 'Started', active: currentStep >= 0, completed: currentStep > 0 },
-      { label: 'Draft', active: currentStep >= 1, completed: currentStep > 1 },
+      { label: 'Applied', active: currentStep >= 0, completed: currentStep > 0 },
       { label: 'Submitted', active: currentStep >= 2, completed: currentStep > 2 },
-      { label: 'Review', active: currentStep >= 3, completed: currentStep > 3 },
       {
         label: isRejected ? 'Rejected' : 'Approved',
-        active: currentStep >= 4,
-        completed: currentStep >= 4 && !isRejected,
+        active: currentStep >= 3,
+        completed: currentStep >= 3 && !isRejected,
         rejected: isRejected
       },
     ];
 
     return (
-      <div className="stepper-container">
+      <div className="stepper-container" style={{ margin: '30px 20px 20px 20px' }}>
         {steps.map((step, index) => (
           <div key={index} className={`step ${step.active ? 'active' : ''} ${step.completed ? 'completed' : ''} ${step.rejected ? 'rejected' : ''}`}>
             <div className="step-circle">{index + 1}</div>
