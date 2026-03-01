@@ -46,7 +46,7 @@ export default function Dashboard() {
   }, [priority1Notifications.length]);
 
   const priority2PlusNotifications = notificationsData
-    .filter(n => n.priority >= 2)
+    .filter(n => n.priority >= 3)
     .sort((a, b) => {
       if (a.priority !== b.priority) {
         return a.priority - b.priority;
