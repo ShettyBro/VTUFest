@@ -522,32 +522,27 @@ body,
    RESPONSIVE LAYOUT
    ========================================= */
 @media (max-width: 768px) {
+
+    /* ── Hide desktop navigation (replaced by MobileTopBar + MobileBottomNav) */
     .navbar {
-        height: 60px;
-        padding: 0 15px;
+        display: none !important;
     }
 
     .sidebar {
-        top: 60px;
-        height: calc(100vh - 60px);
-        width: 60px;
+        display: none !important;
     }
 
-    .sidebar.open {
-        width: 100%;
-        /* Full screening sidebar on mobile? Or just wider */
-        max-width: 300px;
-    }
-
+    /* Content area is managed by layout.jsx via .mobile-content inline styles;
+       apply fallback here in case any page directly uses .content class */
     .content {
-        margin-left: 60px;
-        margin-top: 60px;
-        width: calc(100% - 60px);
-        height: calc(100vh - 60px);
+        margin-left: 0 !important;
+        margin-top: 56px !important;
+        width: 100% !important;
+        height: auto !important;
+        padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     .college-code {
         display: none;
-        /* Hide on small screens if needed, or make smaller */
     }
 }

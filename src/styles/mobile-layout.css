@@ -1,0 +1,449 @@
+/* ================================================
+   MOBILE LAYOUT — Android App-Like Interface
+   Applied on screens ≤ 768px via layout.jsx logic
+   ================================================ */
+
+/* ── MOBILE TOP BAR ─────────────────────────────── */
+.mobile-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #0a1628;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    z-index: 1000;
+    gap: 10px;
+}
+
+.mtb-left {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.mtb-logo {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.mtb-title {
+    flex: 1;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 8px;
+}
+
+.mtb-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* Scale the session timer pill to fit in the compact top bar */
+.mtb-timer-wrap {
+    transform: scale(0.78);
+    transform-origin: center right;
+    flex-shrink: 0;
+}
+
+.mtb-icon-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    color: #cbd5e1;
+    transition: background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mtb-icon-btn:active {
+    background: rgba(212, 175, 55, 0.15);
+    color: #d4af37;
+}
+
+.mtb-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #d4af37;
+    color: #0a1628;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+}
+
+.mtb-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #d4af37;
+}
+
+/* ── BACKDROP ───────────────────────────────────── */
+.mtb-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1100;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+/* ── BOTTOM SHEETS (notification / profile) ─────── */
+.mtb-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    background: #0f1e36;
+    border-top: 2px solid rgba(212, 175, 55, 0.4);
+    border-radius: 20px 20px 0 0;
+    z-index: 1200;
+    max-height: 70vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+    bottom: 0;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.mtb-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    position: sticky;
+    top: 0;
+    background: #0f1e36;
+    z-index: 1;
+}
+
+.mtb-sheet-close {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #cbd5e1;
+    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mtb-sheet-empty {
+    padding: 30px 20px;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Notification items inside sheet */
+.mtb-notif-item {
+    padding: 14px 20px;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    line-height: 1.5;
+}
+
+.mtb-notif-item.priority-1 {
+    border-left: 3px solid #ef4444;
+}
+
+.mtb-notif-item.priority-2 {
+    border-left: 3px solid #d4af37;
+}
+
+.mtb-notif-item.priority-3 {
+    border-left: 3px solid #60a5fa;
+}
+
+.mtb-notif-item.priority-4 {
+    border-left: 3px solid #64748b;
+}
+
+/* Profile info row */
+.mtb-profile-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mtb-sheet-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #d4af37;
+    object-fit: cover;
+}
+
+.mtb-profile-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.mtb-profile-usn {
+    font-size: 0.8rem;
+    color: #d4af37;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* Profile menu items */
+.mtb-sheet-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+}
+
+.mtb-sheet-menu-item:active {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.mtb-sheet-menu-item.logout {
+    color: #f87171;
+}
+
+.mtb-sheet-menu-item.logout svg {
+    stroke: #f87171;
+}
+
+/* ── MOBILE BOTTOM NAV ──────────────────────────── */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+    min-height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: #0a1628;
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+    display: flex;
+    align-items: stretch;
+    z-index: 1000;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-bottom-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.mbn-item {
+    flex: 1;
+    min-width: 60px;
+    max-width: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 4px;
+    background: transparent;
+    border: none;
+    border-top: 2px solid transparent;
+    cursor: pointer;
+    color: #64748b;
+    font-family: 'Outfit', sans-serif;
+    transition: color 0.2s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+.mbn-item:active {
+    background: rgba(212, 175, 55, 0.08);
+}
+
+.mbn-item.active {
+    color: #d4af37;
+    border-top-color: #d4af37;
+}
+
+.mbn-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.mbn-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s;
+}
+
+.mbn-item.active .mbn-icon svg {
+    stroke-width: 2.5;
+    transform: scale(1.1);
+}
+
+.mbn-label {
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+    text-align: center;
+}
+
+.mbn-item.active .mbn-label {
+    font-weight: 700;
+}
+
+/* ── PWA INSTALL BANNER ─────────────────────────── */
+.pwa-install-banner {
+    position: fixed;
+    /* Sits just above the bottom nav (60px + safe area) */
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    z-index: 999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.pwa-banner-icon img {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px;
+}
+
+.pwa-banner-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pwa-banner-text strong {
+    font-size: 0.9rem;
+    color: #f1f5f9;
+    font-weight: 600;
+}
+
+.pwa-banner-text span {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.pwa-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.pwa-btn-install {
+    background: #d4af37;
+    color: #0a1628;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pwa-btn-dismiss {
+    background: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ── MOBILE CONTENT AREA OVERRIDE ───────────────── */
+/* Applied when isMobile=true via layout.jsx inline styles,
+   but also guard here at CSS level */
+@media (max-width: 768px) {
+    .mobile-content {
+        margin-left: 0 !important;
+        margin-top: 56px !important;
+        width: 100% !important;
+        /* Extra bottom padding so content doesn't hide behind bottom nav */
+        padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+        height: auto !important;
+        min-height: calc(100dvh - 56px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+}
