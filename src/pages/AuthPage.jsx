@@ -766,6 +766,31 @@ export default function AuthPage({ initialView = "login" }) {
                         </>
                     )}
 
+                    {/* ── Mobile only: register/login toggle at bottom of form ── */}
+                    {isMobileDevice && (
+                        <div style={{
+                            textAlign: 'center',
+                            marginTop: 36,
+                            paddingTop: 22,
+                            borderTop: '1px solid rgba(255,255,255,0.1)',
+                        }}>
+                            <p style={{
+                                color: 'rgba(255,255,255,0.6)',
+                                fontSize: '0.88rem',
+                                marginBottom: 12,
+                            }}>
+                                {view === 'login' ? 'New candidate?' : 'Already registered?'}
+                            </p>
+                            <button
+                                className="toggle-btn"
+                                onClick={toggleView}
+                                style={{ minWidth: 190 }}
+                            >
+                                {view === 'login' ? '📝 Register Candidate' : '← Back to Login'}
+                            </button>
+                        </div>
+                    )}
+
                 </div>
             </div>
 
