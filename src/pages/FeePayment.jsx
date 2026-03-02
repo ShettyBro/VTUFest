@@ -558,9 +558,12 @@ export default function FeePayment() {
               <div className="glass-card" style={{ borderLeft: "4px solid var(--academic-gold)" }}>
                 <h3 style={{ color: "var(--academic-gold)", margin: '0 0 15px 0' }}>Bank Details</h3>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  <p style={{ margin: '5px 0' }}><strong>Account:</strong> 123456789012</p>
-                  <p style={{ margin: '5px 0' }}><strong>IFSC:</strong> SBIN0000456</p>
-                  <p style={{ margin: '5px 0' }}><strong>Name:</strong> VTU HABBA FEST FUND</p>
+                  <p style={{ margin: '5px 0' }}><strong>Account Name:</strong> Acharya Institutes CMS A/c</p>
+                  <p style={{ margin: '5px 0' }}><strong>Account Number:</strong>002294600002503</p>
+                  <p style={{ margin: '5px 0' }}><strong>IFSC:</strong> YESB0000022</p>
+                  <p style={{ margin: '5px 0' }}><strong>Bank Name:</strong> YES BANK Limited</p>
+                  <p style={{ margin: '5px 0' }}><strong>Branch:</strong>Kasturba Road, Bengaluru – 560001</p>
+
                 </div>
               </div>
 
