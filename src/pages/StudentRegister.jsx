@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext"; // Imported usePopup
@@ -136,7 +136,7 @@ export default function SubmitApplication() {
     marksCard: "",
   });
 
-  const [documentHashes, setDocumentHashes] = useState({
+  const documentHashesRef = useRef({
     aadhaar: null,
     collegeId: null,
     marksCard: null,
@@ -240,7 +240,7 @@ export default function SubmitApplication() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setDocumentHashes((prev) => ({ ...prev, [docType]: null }));
+    documentHashesRef.current[docType] = null;
 
     // MIME type validation
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
@@ -282,7 +282,7 @@ export default function SubmitApplication() {
       return;
     }
 
-    const duplicate = Object.entries(documentHashes).find(
+    const duplicate = Object.entries(documentHashesRef.current).find(
       ([slot, h]) => h !== null && h === hash && slot !== docType
     );
     if (duplicate) {
@@ -291,7 +291,7 @@ export default function SubmitApplication() {
       return;
     }
 
-    setDocumentHashes((prev) => ({ ...prev, [docType]: hash }));
+    documentHashesRef.current[docType] = hash;
     setDocuments((prev) => ({ ...prev, [docType]: file }));
 
     if (file.type.startsWith("image/")) {
