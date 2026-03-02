@@ -544,17 +544,22 @@ export default function Dashboard() {
         {!loading && (
           <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
             <div
-              className={`accordion-header ${mapExpanded ? 'active' : ''}`}
-              onClick={() => setMapExpanded(!mapExpanded)}
+              className={`accordion-header ${(mapExpanded || !isMobile) ? 'active' : ''}`}
+              onClick={() => {
+                if (isMobile) setMapExpanded(!mapExpanded);
+              }}
+              style={{ cursor: isMobile ? 'pointer' : 'default' }}
             >
               <div>
                 <h3 style={{ marginBottom: '5px', borderBottom: 'none', paddingBottom: 0 }}>Campus Map & Locations</h3>
-                <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem', fontWeight: 'normal' }}>Tap to view interactive event locations</p>
+                <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem', fontWeight: 'normal' }}>
+                  {isMobile ? "Tap to view interactive event locations" : "Interactive event locations"}
+                </p>
               </div>
-              <ChevronDown className="accordion-icon" />
+              {isMobile && <ChevronDown className="accordion-icon" />}
             </div>
 
-            <div className={`accordion-content ${mapExpanded ? 'expanded' : ''}`}>
+            <div className={`accordion-content ${(mapExpanded || !isMobile) ? 'expanded' : ''}`}>
               <div className="map-container-full">
                 <div className="map-blocks-left">
                   {blockEvents.left.map((block, idx) => (
