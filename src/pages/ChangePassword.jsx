@@ -116,7 +116,7 @@ export default function ResetPassword() {
                 style={{ paddingRight: '42px' }}
               />
               <button type="button" onClick={() => setShowNewPassword(v => !v)}
-                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                 tabIndex={-1} aria-label={showNewPassword ? 'Hide password' : 'Show password'}
               >{showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
@@ -137,7 +137,7 @@ export default function ResetPassword() {
                 style={{ paddingRight: '42px' }}
               />
               <button type="button" onClick={() => setShowConfirmPassword(v => !v)}
-                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                 tabIndex={-1} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
               >{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>

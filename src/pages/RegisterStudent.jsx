@@ -687,7 +687,7 @@ export default function RegisterStudent() {
                 style={{ paddingRight: '42px' }}
               />
               <button type="button" onClick={() => setShowRegPassword(v => !v)}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#78350f', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                 tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
               >{showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
@@ -707,7 +707,7 @@ export default function RegisterStudent() {
                 style={{ paddingRight: '42px' }}
               />
               <button type="button" onClick={() => setShowRegConfirmPassword(v => !v)}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#78350f', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                 tabIndex={-1} aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
               >{showRegConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
