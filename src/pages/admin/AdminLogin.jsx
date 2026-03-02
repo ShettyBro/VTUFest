@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/auth.css";
 
@@ -111,9 +112,9 @@ export default function AdminLogin() {
                                     style={{ paddingRight: '42px' }}
                                 />
                                 <button type="button" onClick={() => setShowPassword(v => !v)}
-                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                                     tabIndex={-1} aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                >{showPassword ? '🙈' : '👁️'}</button>
+                                >{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                             </div>
                         </div>
 

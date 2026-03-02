@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "../styles/register.css";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
@@ -686,9 +687,9 @@ export default function RegisterStudent() {
                 style={{ paddingRight: '42px' }}
               />
               <button type="button" onClick={() => setShowRegPassword(v => !v)}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: '#78350f', padding: 0, lineHeight: 1 }}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#78350f', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                 tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
-              >{showRegPassword ? '🙈' : '👁️'}</button>
+              >{showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
 
             <PasswordStrength password={form.password} confirmPassword={form.confirmPassword} />
@@ -706,9 +707,9 @@ export default function RegisterStudent() {
                 style={{ paddingRight: '42px' }}
               />
               <button type="button" onClick={() => setShowRegConfirmPassword(v => !v)}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: '#78350f', padding: 0, lineHeight: 1 }}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#78350f', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                 tabIndex={-1} aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
-              >{showRegConfirmPassword ? '🙈' : '👁️'}</button>
+              >{showRegConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
 
             {!isUploadComplete && !timerExpired && (

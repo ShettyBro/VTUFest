@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PasswordStrength from "../components/PasswordStrength";
 import "../styles/auth.css";
@@ -559,9 +560,9 @@ export default function AuthPage({ initialView = "login" }) {
                                         style={{ paddingRight: '42px' }}
                                     />
                                     <button type="button" onClick={() => setShowLoginPassword(v => !v)}
-                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                                         tabIndex={-1} aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
-                                    >{showLoginPassword ? '🙈' : '👁️'}</button>
+                                    >{showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                                 </div>
                             </div>
 
@@ -767,9 +768,9 @@ export default function AuthPage({ initialView = "login" }) {
                                                         style={{ paddingRight: '42px' }}
                                                     />
                                                     <button type="button" onClick={() => setShowRegPassword(v => !v)}
-                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                                                         tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
-                                                    >{showRegPassword ? '🙈' : '👁️'}</button>
+                                                    >{showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                                                 </div>
                                             </div>
 
@@ -786,9 +787,9 @@ export default function AuthPage({ initialView = "login" }) {
                                                         style={{ paddingRight: '42px' }}
                                                     />
                                                     <button type="button" onClick={() => setShowRegConfirmPassword(v => !v)}
-                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: 'rgba(255,255,255,0.7)', padding: 0, lineHeight: 1 }}
+                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
                                                         tabIndex={-1} aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
-                                                    >{showRegConfirmPassword ? '🙈' : '👁️'}</button>
+                                                    >{showRegConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                                                 </div>
                                             </div>
 
