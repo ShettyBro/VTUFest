@@ -54,118 +54,118 @@ export default function Dashboard() {
       return new Date(b.date) - new Date(a.date);
     });
 
-  // const blockEvents = {
-  //   left: [
-  //     {
-  //       blockNo: 1,
-  //       blockName: "Main Auditorium",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 2,
-  //       blockName: "ANA Block",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 3,
-  //       blockName: "CSE Block",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 4,
-  //       blockName: "AIGS Block",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 5,
-  //       blockName: "Mechanical Block",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 6,
-  //       blockName: "ASD Block",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 7,
-  //       blockName: "Architecture Block",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //   ],
-  //   right: [
-  //     {
-  //       blockNo: 8,
-  //       blockName: "EC Block",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 9,
-  //       blockName: "Central Library",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 10,
-  //       blockName: "Basketball Court",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 11,
-  //       blockName: "Student Activity Office",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 12,
-  //       blockName: "Stadium",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 13,
-  //       blockName: "Udupi Canteen",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     // Block 14 skipped as requested
-  //     {
-  //       blockNo: 15,
-  //       blockName: "Two Wheeler Parking",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //     {
-  //       blockNo: 16,
-  //       blockName: "Indoor Stadium",
-  //       events: [
-  //         // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
-  //       ],
-  //     },
-  //   ],
-  // };
+  const blockEvents = {
+    left: [
+      {
+        blockNo: 1,
+        blockName: "Main Auditorium",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 2,
+        blockName: "ANA Block",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 3,
+        blockName: "CSE Block",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 4,
+        blockName: "AIGS Block",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 5,
+        blockName: "Mechanical Block",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 6,
+        blockName: "ASD Block",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 7,
+        blockName: "Architecture Block",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+    ],
+    right: [
+      {
+        blockNo: 8,
+        blockName: "EC Block",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 9,
+        blockName: "Central Library",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 10,
+        blockName: "Basketball Court",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 11,
+        blockName: "Student Activity Office",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 12,
+        blockName: "Stadium",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 13,
+        blockName: "Udupi Canteen",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      // Block 14 skipped as requested
+      {
+        blockNo: 15,
+        blockName: "Two Wheeler Parking",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+      {
+        blockNo: 16,
+        blockName: "Indoor Stadium",
+        events: [
+          // { name: "Sample Event", room: "Sample Room", day: "Day 1" }
+        ],
+      },
+    ],
+  };
 
   const fetchDashboardData = async (isManualRefresh = false) => {
     const token = localStorage.getItem("vtufest_token");
