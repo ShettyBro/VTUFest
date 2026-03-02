@@ -466,7 +466,7 @@ export default function AuthPage({ initialView = "login" }) {
                             {view === "login" ? "New here?" : "Already registered?"}
                         </p>
                         <button className="toggle-btn" onClick={toggleView}>
-                            {view === "login" ? "Register Candidate" : "Back to Login"}
+                            {view === "login" ? "Register" : "Back to Login"}
                         </button>
                     </div>
                 </div>
