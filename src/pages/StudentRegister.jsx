@@ -7,6 +7,35 @@ const API_BASE = {
   submitApplication: "https://api.vtufest2026.acharyahabba.com/api/student/submit-application"
 };
 
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const MAGIC_NUMBERS = {
+  "image/jpeg": { bytes: [0xFF, 0xD8, 0xFF], length: 3 },
+  "image/png": { bytes: [0x89, 0x50, 0x4E, 0x47], length: 4 },
+  "application/pdf": { bytes: [0x25, 0x50, 0x44, 0x46], length: 4 },
+};
+
+const getFileExtension = (filename) => {
+  const idx = filename.lastIndexOf(".");
+  return idx !== -1 ? filename.slice(idx).toLowerCase() : "";
+};
+
+const validateMagicNumber = async (file) => {
+  const magic = MAGIC_NUMBERS[file.type];
+  if (!magic) return false;
+  const buffer = await file.slice(0, magic.length).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  return magic.bytes.every((b, i) => bytes[i] === b);
+};
+
+const computeSHA256 = async (file) => {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+};
+
 // Helper component for file upload to match AuthPage design
 const FileUploadField = ({ label, docType, blobType, accept, title, documents, documentPreviews, uploadStatus, handleDocumentChange, uploadDocument, loading }) => (
   <div className="file-upload-wrapper" style={{ flex: 1, padding: '15px', background: 'rgba(0, 0, 0, 0.3)', border: '2px dashed rgba(255, 255, 255, 0.5)', minWidth: '200px' }}>
@@ -107,6 +136,12 @@ export default function SubmitApplication() {
     marksCard: "",
   });
 
+  const [documentHashes, setDocumentHashes] = useState({
+    aadhaar: null,
+    collegeId: null,
+    marksCard: null,
+  });
+
   const [sessionData, setSessionData] = useState(null);
   const [token, setToken] = useState("");
 
@@ -201,20 +236,62 @@ export default function SubmitApplication() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDocumentChange = (docType) => (e) => {
+  const handleDocumentChange = (docType) => async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+    setDocumentHashes((prev) => ({ ...prev, [docType]: null }));
+
+    // MIME type validation
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       showPopup("Only PNG, JPG, or PDF files allowed", "warning");
+      e.target.value = "";
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    // File extension validation
+    const ext = getFileExtension(file.name);
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      showPopup("Invalid file extension. Only .jpg, .jpeg, .png, .pdf allowed", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    // File size validation
+    if (file.size > MAX_FILE_SIZE) {
       showPopup("File must be less than 5MB", "warning");
+      e.target.value = "";
       return;
     }
 
+    // Magic number (file signature) validation
+    const magicValid = await validateMagicNumber(file);
+    if (!magicValid) {
+      showPopup("File content does not match its type. Please use a valid file.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    // SHA-256 duplicate detection across slots
+    let hash;
+    try {
+      hash = await computeSHA256(file);
+    } catch {
+      showPopup("Failed to verify file integrity. Please try again.", "error");
+      e.target.value = "";
+      return;
+    }
+
+    const duplicate = Object.entries(documentHashes).find(
+      ([slot, h]) => h !== null && h === hash && slot !== docType
+    );
+    if (duplicate) {
+      showPopup("This document has already been uploaded in another field. Each field requires a unique document.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    setDocumentHashes((prev) => ({ ...prev, [docType]: hash }));
     setDocuments((prev) => ({ ...prev, [docType]: file }));
 
     if (file.type.startsWith("image/")) {
@@ -602,7 +679,7 @@ export default function SubmitApplication() {
                 title="Aadhaar Card"
                 docType="aadhaar"
                 blobType="aadhaar"
-                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                accept="image/png,image/jpeg,application/pdf"
                 documents={documents}
                 documentPreviews={documentPreviews}
                 uploadStatus={uploadStatus}
@@ -616,7 +693,7 @@ export default function SubmitApplication() {
                 title="College ID Card"
                 docType="collegeId"
                 blobType="college_id_card"
-                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                accept="image/png,image/jpeg,application/pdf"
                 documents={documents}
                 documentPreviews={documentPreviews}
                 uploadStatus={uploadStatus}
@@ -630,7 +707,7 @@ export default function SubmitApplication() {
                 title="10th Marks Card"
                 docType="marksCard"
                 blobType="marks_card_10th"
-                accept="image/png,image/jpeg,image/jpg,application/pdf"
+                accept="image/png,image/jpeg,application/pdf"
                 documents={documents}
                 documentPreviews={documentPreviews}
                 uploadStatus={uploadStatus}
