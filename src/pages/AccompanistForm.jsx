@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
@@ -6,6 +6,35 @@ import { usePopup } from "../context/PopupContext";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api";
+
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const MAGIC_NUMBERS = {
+  "image/jpeg": { bytes: [0xFF, 0xD8, 0xFF], length: 3 },
+  "image/png": { bytes: [0x89, 0x50, 0x4E, 0x47], length: 4 },
+  "application/pdf": { bytes: [0x25, 0x50, 0x44, 0x46], length: 4 },
+};
+
+const getFileExtension = (filename) => {
+  const idx = filename.lastIndexOf(".");
+  return idx !== -1 ? filename.slice(idx).toLowerCase() : "";
+};
+
+const validateMagicNumber = async (file) => {
+  const magic = MAGIC_NUMBERS[file.type];
+  if (!magic) return false;
+  const buffer = await file.slice(0, magic.length).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  return magic.bytes.every((b, i) => bytes[i] === b);
+};
+
+const computeSHA256 = async (file) => {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+};
 
 // Helper component matching StudentRegister.jsx
 const FileUploadField = ({ label, docType, accept, title, documents, documentPreviews, uploadStatus, handleDocumentChange, uploadDocument, loading }) => (
@@ -135,6 +164,10 @@ export default function AccompanistForm() {
   const [accompanistsLoaded, setAccompanistsLoaded] = useState(false);
   const [removingId, setRemovingId] = useState(null);
 
+  const documentHashesRef = useRef({
+    government_id_proof: null,
+    passport_photo: null,
+  });
 
   const { showPopup } = usePopup();
 
@@ -146,6 +179,7 @@ export default function AccompanistForm() {
     fetchQuota();
     fetchAccompanists();
   }, []);
+
   const fetchQuota = async () => {
     try {
       setLoading(true);
@@ -233,6 +267,7 @@ export default function AccompanistForm() {
     setDocumentPreviews({ government_id_proof: null, passport_photo: null });
     setUploadStatus({ government_id_proof: "", passport_photo: "" });
     setUploadProgress({ government_id_proof: "", passport_photo: "" });
+    documentHashesRef.current = { government_id_proof: null, passport_photo: null };
     setTimer(null);
     setTimerExpired(false);
   };
@@ -254,20 +289,62 @@ export default function AccompanistForm() {
     }
   };
 
-  const handleFileChange = (e, key) => {
+  const handleFileChange = async (e, key) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+    documentHashesRef.current[key] = null;
+
+    // MIME type validation
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       showPopup("Only PNG, JPG, or PDF files allowed", "warning");
+      e.target.value = "";
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    // File extension validation
+    const ext = getFileExtension(file.name);
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      showPopup("Invalid file extension. Only .jpg, .jpeg, .png, .pdf allowed", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    // File size validation
+    if (file.size > MAX_FILE_SIZE) {
       showPopup("File must be less than 5MB", "warning");
+      e.target.value = "";
       return;
     }
 
+    // Magic number (file signature) validation
+    const magicValid = await validateMagicNumber(file);
+    if (!magicValid) {
+      showPopup("File content does not match its type. Please use a valid file.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    // SHA-256 duplicate detection across slots
+    let hash;
+    try {
+      hash = await computeSHA256(file);
+    } catch {
+      showPopup("Failed to verify file integrity. Please try again.", "error");
+      e.target.value = "";
+      return;
+    }
+
+    const duplicate = Object.entries(documentHashesRef.current).find(
+      ([slot, h]) => h !== null && h === hash && slot !== key
+    );
+    if (duplicate) {
+      showPopup("This document has already been uploaded in another field. Each field requires a unique document.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    documentHashesRef.current[key] = hash;
     setUploadFiles((prev) => ({ ...prev, [key]: file }));
 
     // Generate Preview
@@ -590,7 +667,7 @@ export default function AccompanistForm() {
                     label="Govt ID Proof *"
                     title="Government ID Proof"
                     docType="government_id_proof"
-                    accept="image/*,.pdf"
+                    accept="image/png,image/jpeg,application/pdf"
                     documents={uploadFiles}
                     documentPreviews={documentPreviews}
                     uploadStatus={uploadStatus}
@@ -602,7 +679,7 @@ export default function AccompanistForm() {
                     label="Passport Photo *"
                     title="Passport Photo"
                     docType="passport_photo"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,application/pdf"
                     documents={uploadFiles}
                     documentPreviews={documentPreviews}
                     uploadStatus={uploadStatus}

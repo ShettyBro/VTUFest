@@ -35,6 +35,29 @@ const EVENT_NAMES = {
   'event_spot_photography': 'Spot Photography',
 };
 
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const MAGIC_NUMBERS = {
+  "image/jpeg": { bytes: [0xFF, 0xD8, 0xFF], length: 3 },
+  "image/png": { bytes: [0x89, 0x50, 0x4E, 0x47], length: 4 },
+  "application/pdf": { bytes: [0x25, 0x50, 0x44, 0x46], length: 4 },
+};
+
+const getFileExtension = (filename) => {
+  const idx = filename.lastIndexOf(".");
+  return idx !== -1 ? filename.slice(idx).toLowerCase() : "";
+};
+
+const validateMagicNumber = async (file) => {
+  const magic = MAGIC_NUMBERS[file.type];
+  if (!magic) return false;
+  const buffer = await file.slice(0, magic.length).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  return magic.bytes.every((b, i) => bytes[i] === b);
+};
+
 // File Upload Component (Inline for single file use here, matching design)
 const FileUploadField = ({ label, accept, document, documentPreview, uploadStatus, handleFileChange, uploadFile, loading }) => (
   <div className="file-upload-wrapper" style={{ padding: '20px', background: 'rgba(255, 255, 255, 0.03)', border: '1px dashed var(--glass-border)', borderRadius: '12px' }}>
@@ -264,17 +287,37 @@ export default function FeePayment() {
     setSubmitting(false);
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+    // MIME type validation
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       showPopup("Only PNG, JPG, or PDF files allowed", "warning");
+      e.target.value = "";
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    // File extension validation
+    const ext = getFileExtension(file.name);
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      showPopup("Invalid file extension. Only .jpg, .jpeg, .png, .pdf allowed", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    // File size validation
+    if (file.size > MAX_FILE_SIZE) {
       showPopup("File must be less than 5MB", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    // Magic number (file signature) validation
+    const magicValid = await validateMagicNumber(file);
+    if (!magicValid) {
+      showPopup("File content does not match its type. Please use a valid file.", "warning");
+      e.target.value = "";
       return;
     }
 
@@ -619,7 +662,7 @@ export default function FeePayment() {
 
             <FileUploadField
               label="Payment Screenshot / Receipt *"
-              accept="image/*,.pdf"
+              accept="image/png,image/jpeg,application/pdf"
               document={uploadFile}
               documentPreview={uploadPreview}
               uploadStatus={uploadStatus}

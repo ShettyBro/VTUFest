@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PasswordStrength from "../components/PasswordStrength";
@@ -16,6 +15,29 @@ const API_ENDPOINTS = {
     checkUsn: `${API_BASE_URL}/api/shared/college-and-usn/check-usn`,
     checkLock: `${API_BASE_URL}/api/shared/college-and-usn/check-lock-status`,
     uploadPhoto: `${API_BASE_URL}/api/student/upload-photo`
+};
+
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const MAGIC_NUMBERS = {
+    "image/jpeg": { bytes: [0xFF, 0xD8, 0xFF], length: 3 },
+    "image/png": { bytes: [0x89, 0x50, 0x4E, 0x47], length: 4 },
+    "application/pdf": { bytes: [0x25, 0x50, 0x44, 0x46], length: 4 },
+};
+
+const getFileExtension = (filename) => {
+    const idx = filename.lastIndexOf(".");
+    return idx !== -1 ? filename.slice(idx).toLowerCase() : "";
+};
+
+const validateMagicNumber = async (file) => {
+    const magic = MAGIC_NUMBERS[file.type];
+    if (!magic) return false;
+    const buffer = await file.slice(0, magic.length).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    return magic.bytes.every((b, i) => bytes[i] === b);
 };
 
 const decodeJwt = (token) => {
@@ -288,6 +310,47 @@ export default function AuthPage({ initialView = "login" }) {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePhotoChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // MIME type validation
+        if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+            setGlobalError("Only JPG, PNG, or PDF files are allowed.");
+            e.target.value = "";
+            return;
+        }
+
+        // File extension validation
+        const ext = getFileExtension(file.name);
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            setGlobalError("Invalid file extension. Only .jpg, .jpeg, .png, .pdf allowed.");
+            e.target.value = "";
+            return;
+        }
+
+        // File size validation
+        if (file.size > MAX_FILE_SIZE) {
+            setGlobalError("File must be less than 5MB.");
+            e.target.value = "";
+            return;
+        }
+
+        // Magic number (file signature) validation
+        const magicValid = await validateMagicNumber(file);
+        if (!magicValid) {
+            setGlobalError("File content does not match its type. Please use a valid file.");
+            e.target.value = "";
+            return;
+        }
+
+        setGlobalError("");
+        setPhotoFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setPhotoPreview(reader.result);
+        reader.readAsDataURL(file);
     };
 
     const handlePhotoUpload = async () => {
@@ -664,16 +727,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                     <input
                                                         id="file-upload"
                                                         type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => {
-                                                            const file = e.target.files[0];
-                                                            if (file) {
-                                                                setPhotoFile(file);
-                                                                const reader = new FileReader();
-                                                                reader.onloadend = () => setPhotoPreview(reader.result);
-                                                                reader.readAsDataURL(file);
-                                                            }
-                                                        }}
+                                                        accept="image/png,image/jpeg,application/pdf"
+                                                        onChange={handlePhotoChange}
                                                     />
 
                                                     {photoFile && (
