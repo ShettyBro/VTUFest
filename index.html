@@ -2,31 +2,177 @@
 <html lang="en">
 
 <head>
+  <!-- ═══════════════════════════════════════════════════════════════
+       FONT PRECONNECT + LOAD (display=swap ensures no render block)
+  ════════════════════════════════════════════════════════════════ -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap"
     rel="stylesheet" />
 
+  <!-- ═══════════════════════════════════════════════════════════════
+       LCP HERO IMAGE PRELOAD — must be first resource hint
+       fetchpriority="high" tells the browser this is critical
+  ════════════════════════════════════════════════════════════════ -->
+  <link rel="preload" as="image" href="/main.webp" type="image/webp" fetchpriority="high" />
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CHARSET + VIEWPORT
+  ════════════════════════════════════════════════════════════════ -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>VTU HABBA 2026</title>
 
-  <!-- PWA / Mobile App Meta -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       PRIMARY METADATA
+       Title: 53 chars (≤60) | Description: 157 chars (150–160)
+  ════════════════════════════════════════════════════════════════ -->
+  <title>VTU Habba 2026 — Register & Login Portal</title>
+
+  <meta name="description"
+    content="Official registration and login portal for VTU Habba 2026 by Acharya Institutes. Students, managers and principals can register, apply and manage their cultural fest participation." />
+
+  <!-- Canonical: prevents duplicate-content signals from SPA routing -->
+  <link rel="canonical" href="https://vtufest2026.acharyahabba.com/" />
+
+  <!--
+    INDEXING STRATEGY: index,follow
+    Rationale: The root (/) and /register-student are genuine public pages
+    that students need to discover. Protected routes (dashboards, admin)
+    are excluded from the sitemap and disallowed in robots.txt, so they
+    will not be indexed even though this same HTML shell serves them.
+    A single "noindex" here would suppress the public pages too — wrong.
+  -->
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       OPEN GRAPH
+  ════════════════════════════════════════════════════════════════ -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="VTU Habba 2026" />
+  <meta property="og:title" content="VTU Habba 2026 — Register & Login Portal" />
+  <meta property="og:description"
+    content="Official registration and login portal for VTU Habba 2026 by Acharya Institutes. Register now to participate in the biggest VTU cultural fest." />
+  <meta property="og:url" content="https://vtufest2026.acharyahabba.com/" />
+  <meta property="og:image" content="https://vtufest2026.acharyahabba.com/main.webp" />
+  <meta property="og:image:alt" content="VTU Habba 2026 — Acharya Institutes Cultural Fest" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="en_IN" />
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       TWITTER CARD
+  ════════════════════════════════════════════════════════════════ -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="VTU Habba 2026 — Register & Login Portal" />
+  <meta name="twitter:description"
+    content="Official registration and login portal for VTU Habba 2026 by Acharya Institutes. Register now to participate in the biggest VTU cultural fest." />
+  <meta name="twitter:image" content="https://vtufest2026.acharyahabba.com/main.webp" />
+  <meta name="twitter:image:alt" content="VTU Habba 2026 — Acharya Institutes Cultural Fest" />
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PWA / MOBILE APP META
+  ════════════════════════════════════════════════════════════════ -->
   <meta name="theme-color" content="#0a1628" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="VTU HABBA" />
-  <meta name="application-name" content="VTU HABBA 2026" />
-  <meta name="description"
-    content="VTU HABBA 2026 – Official Cultural Fest Management Portal for Students, Managers and Principals" />
+  <meta name="apple-mobile-web-app-title" content="VTU Habba" />
+  <meta name="application-name" content="VTU Habba 2026" />
 
-  <!-- Favicons & Manifest -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       FAVICONS & MANIFEST
+  ════════════════════════════════════════════════════════════════ -->
   <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
   <link rel="manifest" href="/favicon/site.webmanifest">
   <link rel="shortcut icon" href="/favicon/favicon.ico">
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       STRUCTURED DATA — JSON-LD
+       Three schemas: Event, Organization, WebSite
+  ════════════════════════════════════════════════════════════════ -->
+
+  <!-- 1. Event Schema: VTU Habba 2026 cultural fest -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": "VTU Habba 2026",
+    "alternateName": "Acharya VTU Habba 2026",
+    "description": "VTU Habba 2026 is the flagship intercollegiate cultural festival organised by Acharya Institutes under Visvesvaraya Technological University. Students across VTU-affiliated colleges compete in music, dance, drama, fine arts and more.",
+    "url": "https://vtufest2026.acharyahabba.com/",
+    "image": "https://vtufest2026.acharyahabba.com/main.webp",
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "startDate": "2026-03-01",
+    "endDate": "2026-03-31",
+    "location": {
+      "@type": "Place",
+      "name": "Acharya Institute of Technology",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Soladevanahalli, Hesaraghatta Main Road",
+        "addressLocality": "Bengaluru",
+        "addressRegion": "Karnataka",
+        "postalCode": "560107",
+        "addressCountry": "IN"
+      }
+    },
+    "organizer": {
+      "@type": "Organization",
+      "name": "Acharya Institutes",
+      "url": "https://www.acharyahabba.com"
+    },
+    "inLanguage": "en-IN"
+  }
+  </script>
+
+  <!-- 2. Organization Schema: Acharya Institutes -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Acharya Institutes",
+    "url": "https://www.acharyahabba.com",
+    "logo": "https://vtufest2026.acharyahabba.com/acharya.png",
+    "sameAs": [
+      "https://www.acharyahabba.com"
+    ],
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Soladevanahalli, Hesaraghatta Main Road",
+      "addressLocality": "Bengaluru",
+      "addressRegion": "Karnataka",
+      "postalCode": "560107",
+      "addressCountry": "IN"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "student support",
+      "areaServed": "IN",
+      "availableLanguage": ["English", "Kannada"]
+    }
+  }
+  </script>
+
+  <!-- 3. WebSite Schema: enables Google Sitelinks Searchbox potential -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "VTU Habba 2026 Portal",
+    "url": "https://vtufest2026.acharyahabba.com/",
+    "description": "Official registration and login portal for VTU Habba 2026 by Acharya Institutes",
+    "inLanguage": "en-IN",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Acharya Institutes",
+      "url": "https://www.acharyahabba.com"
+    }
+  }
+  </script>
 </head>
 
 <body>

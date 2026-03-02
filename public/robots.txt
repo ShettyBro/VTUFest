@@ -1,0 +1,47 @@
+# =========================================================
+# robots.txt — VTU Habba 2026 Portal
+# https://vtufest2026.acharyahabba.com/
+# =========================================================
+#
+# STRATEGY: Allow all crawlers on public pages.
+# Disallow all authenticated/protected routes — they serve
+# no useful content to unauthenticated crawlers and would
+# waste crawl budget if indexed.
+# =========================================================
+
+User-agent: *
+
+# Public pages — allow full crawling
+Allow: /$
+Allow: /register-student$
+Allow: /forgot-password$
+
+# Protected routes — disallow all variations
+Disallow: /dashboard
+Disallow: /student-register
+Disallow: /student-application
+Disallow: /principal-dashboard
+Disallow: /manager-dashboard
+Disallow: /approvals
+Disallow: /approved-students
+Disallow: /rejected-students
+Disallow: /accommodation
+Disallow: /accompanist-form
+Disallow: /fee-payment
+Disallow: /rules
+Disallow: /green-room
+Disallow: /assign-events
+Disallow: /changepassword
+Disallow: /force-reset-password
+
+# Admin panel — disallow completely
+Disallow: /ad-
+Disallow: /admin
+
+# Event Manager panel — disallow completely
+Disallow: /em-
+Disallow: /gr-
+Disallow: /accounts-dashboard
+
+# Sitemap location
+Sitemap: https://vtufest2026.acharyahabba.com/sitemap.xml

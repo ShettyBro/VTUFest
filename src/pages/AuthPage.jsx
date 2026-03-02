@@ -449,406 +449,420 @@ export default function AuthPage({ initialView = "login" }) {
             <div className="shape shape-1"></div>
             <div className="shape shape-2"></div>
 
-            <div className="auth-container">
+            {/* MAIN landmark — single entry point for screen readers and crawlers */}
+            <main aria-label="Authentication portal">
+                <div className="auth-container">
 
-                {/* --- LEFT PANEL: BRANDING & INFO --- */}
-                <div className="auth-info-panel">
-                    <div className="auth-brand">
-                        <img src="/main.webp" alt="VTU Fest Logos" style={{ height: 'auto', maxWidth: '100%', maxHeight: '120px' }} />
-                    </div>
-                    <div className="brand-text">
-                        <h3> Acharya VTU HABBA 2026</h3>
-                        <span>Visvesvaraya Technological University</span>
-                    </div>
+                    {/* --- LEFT PANEL: BRANDING & INFO --- */}
+                    <div className="auth-info-panel">
+                        <div className="auth-brand">
+                            {/* fetchpriority + loading=eager: ensures browser loads this as LCP immediately */}
+                            <img
+                                src="/main.webp"
+                                alt="VTU Habba 2026 — Acharya Institutes and VTU logos"
+                                width="560"
+                                height="120"
+                                style={{ height: 'auto', maxWidth: '100%', maxHeight: '120px' }}
+                                fetchpriority="high"
+                                loading="eager"
+                                decoding="async"
+                            />
+                        </div>
+                        <div className="brand-text">
+                            {/* h1: the only h1 on the page — required for heading structure and SEO */}
+                            <h1>Acharya VTU HABBA 2026</h1>
+                            <span>Visvesvaraya Technological University</span>
+                        </div>
 
-                    <div className="auth-toggle-msg">
-                        <p style={{ marginBottom: '10px', fontSize: '1.1rem' }}>
-                            {view === "login" ? "New here?" : "Already registered?"}
-                        </p>
-                        <button className="toggle-btn" onClick={toggleView}>
-                            {view === "login" ? "Register Candidate" : "Back to Login"}
-                        </button>
-                    </div>
-                </div>
-
-                {/* --- RIGHT PANEL: FORMS --- */}
-                <div className="auth-form-panel">
-
-                    {/* MESSAGES */}
-                    {globalError && <div className="error-msg">{globalError}</div>}
-                    {globalSuccess && <div className="success-msg">{globalSuccess}</div>}
-                    {showForceResetToast && <div className="success-msg">Use the popup to reset password!</div>}
-
-                    {/* === LOGIN FORM === */}
-                    {view === "login" && (
-                        <form className="auth-form" onSubmit={handleLoginSubmit}>
-                            <h2 className="form-title">Welcome Back</h2>
-
-                            {/* ROLE TABS */}
-                            <div className="role-tabs">
-                                {isMobileDevice ? (
-                                    /* ── MOBILE: student only ──────────────────── */
-                                    <>
-                                        <button
-                                            type="button"
-                                            className="role-tab active"
-                                            style={{ flex: 1 }}
-                                        >
-                                            Student
-                                        </button>
-                                    </>
-                                ) : (
-                                    /* ── DESKTOP: all roles ─────────────────────── */
-                                    ["principal", "manager", "student"].map(r => (
-                                        <button
-                                            key={r}
-                                            type="button"
-                                            className={`role-tab ${loginRole === r ? 'active' : ''}`}
-                                            onClick={() => {
-                                                setLoginRole(r);
-                                                localStorage.setItem("role", r);
-                                            }}
-                                        >
-                                            {r.charAt(0).toUpperCase() + r.slice(1)}
-                                        </button>
-                                    ))
-                                )}
-                            </div>
-
-                            {/* Mobile notice for managers/principals */}
-                            {isMobileDevice && (
-                                <div style={{
-                                    display: 'flex', alignItems: 'flex-start', gap: 10,
-                                    background: 'rgba(212,175,55,0.08)',
-                                    border: '1px solid rgba(212,175,55,0.3)',
-                                    borderLeft: '3px solid #d4af37',
-                                    borderRadius: 8,
-                                    padding: '10px 14px',
-                                    marginBottom: 4,
-                                    fontSize: '0.82rem',
-                                    color: '#d4af37',
-                                    lineHeight: 1.5,
-                                }}>
-                                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>🖥️</span>
-                                    <span>
-                                        <strong>Principals &amp; Team Managers</strong> must use a
-                                        {' '}<strong>desktop or laptop</strong> to access the portal.
-                                    </span>
-                                </div>
-                            )}
-
-                            <div className="input-group">
-                                <label>Email Address</label>
-                                <input
-                                    type="email"
-                                    placeholder={`Enter ${loginRole} email`}
-                                    value={loginEmail}
-                                    onChange={e => setLoginEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div className="input-group">
-                                <label>Password</label>
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type={showLoginPassword ? 'text' : 'password'}
-                                        placeholder="Enter password"
-                                        value={loginPassword}
-                                        onChange={e => setLoginPassword(e.target.value)}
-                                        required
-                                        style={{ paddingRight: '42px' }}
-                                    />
-                                    <button type="button" onClick={() => setShowLoginPassword(v => !v)}
-                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
-                                        tabIndex={-1} aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
-                                    >{showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
-                                </div>
-                            </div>
-
-                            <button className="auth-btn" disabled={loading}>
-                                {loading ? "Logging In..." : "Log In"}
-                            </button>
-
-                            <button
-                                type="button"
-                                className="text-btn"
-                                onClick={() => navigate("/forgot-password")}
-                            >
-                                Forgot Password?
-                            </button>
-                        </form>
-                    )}
-
-                    {/* === REGISTER FORM === */}
-                    {view === "register" && (
-                        <>
-                            {regLocked ? (
-                                <div style={{ textAlign: 'center', color: 'white' }}>
-                                    <h2>🛑 Registrations Closed</h2>
-                                    {/* <p>Please contact admin for support.</p> */}
-                                </div>
-                            ) : (
-                                <div className="auth-form">
-                                    <h2 className="form-title">
-                                        {regStep === 1 ? "Candidate Registration" : "Complete Profile"}
-                                    </h2>
-
-                                    {/* STEP 1: DETAILS */}
-                                    {regStep === 1 && (
-                                        <form onSubmit={handleRegStep1}>
-                                            <div className="input-group">
-                                                <label>USN *</label>
-                                                <input
-                                                    name="usn"
-                                                    value={regForm.usn}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, usn: e.target.value.toUpperCase() }))}
-                                                    onBlur={e => checkUSN(e.target.value)}
-                                                    placeholder="VTU2026CS001"
-                                                />
-                                                {usnStatus === "checking" && <small>Checking...</small>}
-                                                {usnStatus === "valid" && <small style={{ color: '#a8edea' }}>USN Available</small>}
-                                            </div>
-
-                                            <div className="input-group">
-                                                <label>Full Name *</label>
-                                                <input
-                                                    name="fullName"
-                                                    value={regForm.fullName}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, fullName: e.target.value }))}
-                                                    disabled={usnStatus !== "valid"}
-                                                    placeholder="Letters, spaces, dots, hyphens only"
-                                                    style={{
-                                                        opacity: usnStatus !== "valid" ? 0.5 : 1,
-                                                        borderColor: regForm.fullName && !/^[a-zA-Z\s.'-]+$/.test(regForm.fullName) ? '#ef4444' : '',
-                                                    }}
-                                                    required
-                                                />
-                                                {regForm.fullName && !/^[a-zA-Z\s.'-]+$/.test(regForm.fullName) && (
-                                                    <small style={{ color: '#ef4444', fontSize: '0.75rem' }}>
-                                                        ⛔ Only letters, spaces, . - or ' allowed
-                                                    </small>
-                                                )}
-                                            </div>
-
-                                            <div className="input-group">
-                                                <label>College *</label>
-                                                <select
-                                                    name="collegeId"
-                                                    value={regForm.collegeId}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, collegeId: e.target.value }))}
-                                                    disabled={usnStatus !== "valid"}
-                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
-                                                    required
-                                                >
-                                                    <option value="">Select College</option>
-                                                    {colleges.map(c => (
-                                                        <option key={c.id} value={c.id}>
-                                                            {c.college_name}, {c.place}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            <div className="input-group">
-                                                <label>Email *</label>
-                                                <input
-                                                    name="email"
-                                                    type="email"
-                                                    value={regForm.email}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, email: e.target.value }))}
-                                                    disabled={usnStatus !== "valid"}
-                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="input-group">
-                                                <label>Phone *</label>
-                                                <input
-                                                    type="tel"
-                                                    inputMode="numeric"
-                                                    name="phone"
-                                                    value={regForm.phone}
-                                                    maxLength={10}
-                                                    pattern="[6-9][0-9]{9}"
-                                                    placeholder="e.g. 9876543210 (start with 6-9)"
-                                                    onChange={e => setRegForm(prev => ({ ...prev, phone: sanitizePhone(e.target.value) }))}
-                                                    disabled={usnStatus !== "valid"}
-                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
-                                                    required
-                                                />
-                                                <small style={{ color: 'rgba(168,237,234,0.7)', fontSize: '0.75rem' }}>Must be 10 digits starting with 6, 7, 8, or 9</small>
-                                            </div>
-
-                                            <div className="input-group">
-                                                <label>Gender *</label>
-                                                <select
-                                                    name="gender"
-                                                    value={regForm.gender}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, gender: e.target.value }))}
-                                                    disabled={usnStatus !== "valid"}
-                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
-                                                    required
-                                                >
-                                                    <option value="">Select Gender</option>
-                                                    <option value="Male">Male</option>
-                                                    <option value="Female">Female</option>
-                                                    <option value="Other">Other</option>
-                                                </select>
-                                            </div>
-
-                                            <button className="auth-btn" disabled={loading || usnStatus !== "valid"}>
-                                                {loading ? "Processing..." : "Next Step"}
-                                            </button>
-                                        </form>
-                                    )}
-
-                                    {/* STEP 2: PHOTO & PASSWORD */}
-                                    {regStep === 2 && (
-                                        <form onSubmit={handleRegFinalize}>
-                                            <div className="timer-display">
-                                                Time Remaining: {Math.floor(regTimer / 60)}:{(regTimer % 60).toString().padStart(2, '0')}
-                                            </div>
-
-                                            {/* Photo Upload */}
-                                            <div className="file-upload-wrapper">
-                                                <div className="preview-container">
-                                                    {photoPreview ? (
-                                                        <img src={photoPreview} alt="Preview" className="preview-img" />
-                                                    ) : (
-                                                        <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📷</div>
-                                                    )}
-                                                </div>
-                                                <div style={{ textAlign: "center" }}>
-                                                    <label htmlFor="file-upload" className="custom-file-upload">
-                                                        <span style={{ marginRight: '10px' }}>📁</span>
-                                                        {photoFile ? "Change Photo" : "Choose Photo"}
-                                                    </label>
-                                                    <input
-                                                        id="file-upload"
-                                                        type="file"
-                                                        accept="image/png,image/jpeg,application/pdf"
-                                                        onChange={handlePhotoChange}
-                                                    />
-
-                                                    {photoFile && (
-                                                        <div className="file-name-display">
-                                                            {photoFile.name}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {photoFile && uploadStatus !== "success" && (
-                                                    <button
-                                                        type="button"
-                                                        className="secondary-btn"
-                                                        onClick={handlePhotoUpload}
-                                                        disabled={uploadStatus === "uploading"}
-                                                        style={{
-                                                            marginTop: '20px',
-                                                            borderRadius: '50px',
-                                                            padding: '10px 25px',
-                                                            background: 'rgba(255,255,255,0.1)'
-                                                        }}
-                                                    >
-                                                        {uploadStatus === "uploading" ? `Uploading ${uploadProgress}%` : "Upload Now"}
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            <div className="input-group">
-                                                <label>Password *</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <input
-                                                        type={showRegPassword ? 'text' : 'password'}
-                                                        value={regForm.password}
-                                                        onChange={e => setRegForm({ ...regForm, password: e.target.value })}
-                                                        required
-                                                        style={{ paddingRight: '42px' }}
-                                                    />
-                                                    <button type="button" onClick={() => setShowRegPassword(v => !v)}
-                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
-                                                        tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
-                                                    >{showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
-                                                </div>
-                                            </div>
-
-                                            <PasswordStrength password={regForm.password} confirmPassword={regForm.confirmPassword} compact />
-
-                                            <div className="input-group">
-                                                <label>Confirm Password *</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <input
-                                                        type={showRegConfirmPassword ? 'text' : 'password'}
-                                                        value={regForm.confirmPassword}
-                                                        onChange={e => setRegForm({ ...regForm, confirmPassword: e.target.value })}
-                                                        required
-                                                        style={{ paddingRight: '42px' }}
-                                                    />
-                                                    <button type="button" onClick={() => setShowRegConfirmPassword(v => !v)}
-                                                        style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
-                                                        tabIndex={-1} aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
-                                                    >{showRegConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
-                                                </div>
-                                            </div>
-
-                                            <button className="auth-btn" disabled={loading || uploadStatus !== "success"}>
-                                                {loading ? "Finalizing..." : "Complete Registration"}
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                className="text-btn"
-                                                onClick={() => {
-                                                    setRegStep(1);
-                                                    setRegSession(null);
-                                                    setRegTimer(null);
-                                                    setPhotoFile(null);
-                                                    setPhotoPreview("");
-                                                    setUploadStatus("idle");
-                                                    setUploadProgress(0);
-                                                    setGlobalError("");
-                                                }}
-                                                disabled={loading}
-                                                style={{ marginTop: '8px' }}
-                                            >
-                                                ← Back to Details
-                                            </button>
-                                        </form>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* ── Mobile only: register/login toggle at bottom of form ── */}
-                    {isMobileDevice && (
-                        <div style={{
-                            textAlign: 'center',
-                            marginTop: 36,
-                            paddingTop: 22,
-                            borderTop: '1px solid rgba(255,255,255,0.1)',
-                        }}>
-                            <p style={{
-                                color: 'rgba(255,255,255,0.6)',
-                                fontSize: '0.88rem',
-                                marginBottom: 12,
-                            }}>
-                                {view === 'login' ? 'New candidate?' : 'Already registered?'}
+                        <div className="auth-toggle-msg">
+                            <p style={{ marginBottom: '10px', fontSize: '1.1rem' }}>
+                                {view === "login" ? "New here?" : "Already registered?"}
                             </p>
-                            <button
-                                className="toggle-btn"
-                                onClick={toggleView}
-                                style={{ minWidth: 190 }}
-                            >
-                                {view === 'login' ? '📝 Register' : '← Back to Login'}
+                            <button className="toggle-btn" onClick={toggleView}>
+                                {view === "login" ? "Register Candidate" : "Back to Login"}
                             </button>
                         </div>
-                    )}
+                    </div>
 
+                    {/* --- RIGHT PANEL: FORMS --- */}
+                    <div className="auth-form-panel">
+
+                        {/* MESSAGES */}
+                        {globalError && <div className="error-msg">{globalError}</div>}
+                        {globalSuccess && <div className="success-msg">{globalSuccess}</div>}
+                        {showForceResetToast && <div className="success-msg">Use the popup to reset password!</div>}
+
+                        {/* === LOGIN FORM === */}
+                        {view === "login" && (
+                            <form className="auth-form" onSubmit={handleLoginSubmit}>
+                                <h2 className="form-title">Welcome Back</h2>
+
+                                {/* ROLE TABS */}
+                                <div className="role-tabs">
+                                    {isMobileDevice ? (
+                                        /* ── MOBILE: student only ──────────────────── */
+                                        <>
+                                            <button
+                                                type="button"
+                                                className="role-tab active"
+                                                style={{ flex: 1 }}
+                                            >
+                                                Student
+                                            </button>
+                                        </>
+                                    ) : (
+                                        /* ── DESKTOP: all roles ─────────────────────── */
+                                        ["principal", "manager", "student"].map(r => (
+                                            <button
+                                                key={r}
+                                                type="button"
+                                                className={`role-tab ${loginRole === r ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    setLoginRole(r);
+                                                    localStorage.setItem("role", r);
+                                                }}
+                                            >
+                                                {r.charAt(0).toUpperCase() + r.slice(1)}
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+
+                                {/* Mobile notice for managers/principals */}
+                                {isMobileDevice && (
+                                    <div style={{
+                                        display: 'flex', alignItems: 'flex-start', gap: 10,
+                                        background: 'rgba(212,175,55,0.08)',
+                                        border: '1px solid rgba(212,175,55,0.3)',
+                                        borderLeft: '3px solid #d4af37',
+                                        borderRadius: 8,
+                                        padding: '10px 14px',
+                                        marginBottom: 4,
+                                        fontSize: '0.82rem',
+                                        color: '#d4af37',
+                                        lineHeight: 1.5,
+                                    }}>
+                                        <span style={{ fontSize: '1rem', flexShrink: 0 }}>🖥️</span>
+                                        <span>
+                                            <strong>Principals &amp; Team Managers</strong> must use a
+                                            {' '}<strong>desktop or laptop</strong> to access the portal.
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="input-group">
+                                    <label>Email Address</label>
+                                    <input
+                                        type="email"
+                                        placeholder={`Enter ${loginRole} email`}
+                                        value={loginEmail}
+                                        onChange={e => setLoginEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="input-group">
+                                    <label>Password</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type={showLoginPassword ? 'text' : 'password'}
+                                            placeholder="Enter password"
+                                            value={loginPassword}
+                                            onChange={e => setLoginPassword(e.target.value)}
+                                            required
+                                            style={{ paddingRight: '42px' }}
+                                        />
+                                        <button type="button" onClick={() => setShowLoginPassword(v => !v)}
+                                            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                                            tabIndex={-1} aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                                        >{showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                                    </div>
+                                </div>
+
+                                <button className="auth-btn" disabled={loading}>
+                                    {loading ? "Logging In..." : "Log In"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="text-btn"
+                                    onClick={() => navigate("/forgot-password")}
+                                >
+                                    Forgot Password?
+                                </button>
+                            </form>
+                        )}
+
+                        {/* === REGISTER FORM === */}
+                        {view === "register" && (
+                            <>
+                                {regLocked ? (
+                                    <div style={{ textAlign: 'center', color: 'white' }}>
+                                        <h2>🛑 Registrations Closed</h2>
+                                        {/* <p>Please contact admin for support.</p> */}
+                                    </div>
+                                ) : (
+                                    <div className="auth-form">
+                                        <h2 className="form-title">
+                                            {regStep === 1 ? "Candidate Registration" : "Complete Profile"}
+                                        </h2>
+
+                                        {/* STEP 1: DETAILS */}
+                                        {regStep === 1 && (
+                                            <form onSubmit={handleRegStep1}>
+                                                <div className="input-group">
+                                                    <label>USN *</label>
+                                                    <input
+                                                        name="usn"
+                                                        value={regForm.usn}
+                                                        onChange={e => setRegForm(prev => ({ ...prev, usn: e.target.value.toUpperCase() }))}
+                                                        onBlur={e => checkUSN(e.target.value)}
+                                                        placeholder="VTU2026CS001"
+                                                    />
+                                                    {usnStatus === "checking" && <small>Checking...</small>}
+                                                    {usnStatus === "valid" && <small style={{ color: '#a8edea' }}>USN Available</small>}
+                                                </div>
+
+                                                <div className="input-group">
+                                                    <label>Full Name *</label>
+                                                    <input
+                                                        name="fullName"
+                                                        value={regForm.fullName}
+                                                        onChange={e => setRegForm(prev => ({ ...prev, fullName: e.target.value }))}
+                                                        disabled={usnStatus !== "valid"}
+                                                        placeholder="Letters, spaces, dots, hyphens only"
+                                                        style={{
+                                                            opacity: usnStatus !== "valid" ? 0.5 : 1,
+                                                            borderColor: regForm.fullName && !/^[a-zA-Z\s.'-]+$/.test(regForm.fullName) ? '#ef4444' : '',
+                                                        }}
+                                                        required
+                                                    />
+                                                    {regForm.fullName && !/^[a-zA-Z\s.'-]+$/.test(regForm.fullName) && (
+                                                        <small style={{ color: '#ef4444', fontSize: '0.75rem' }}>
+                                                            ⛔ Only letters, spaces, . - or ' allowed
+                                                        </small>
+                                                    )}
+                                                </div>
+
+                                                <div className="input-group">
+                                                    <label>College *</label>
+                                                    <select
+                                                        name="collegeId"
+                                                        value={regForm.collegeId}
+                                                        onChange={e => setRegForm(prev => ({ ...prev, collegeId: e.target.value }))}
+                                                        disabled={usnStatus !== "valid"}
+                                                        style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
+                                                        required
+                                                    >
+                                                        <option value="">Select College</option>
+                                                        {colleges.map(c => (
+                                                            <option key={c.id} value={c.id}>
+                                                                {c.college_name}, {c.place}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div className="input-group">
+                                                    <label>Email *</label>
+                                                    <input
+                                                        name="email"
+                                                        type="email"
+                                                        value={regForm.email}
+                                                        onChange={e => setRegForm(prev => ({ ...prev, email: e.target.value }))}
+                                                        disabled={usnStatus !== "valid"}
+                                                        style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <div className="input-group">
+                                                    <label>Phone *</label>
+                                                    <input
+                                                        type="tel"
+                                                        inputMode="numeric"
+                                                        name="phone"
+                                                        value={regForm.phone}
+                                                        maxLength={10}
+                                                        pattern="[6-9][0-9]{9}"
+                                                        placeholder="e.g. 9876543210 (start with 6-9)"
+                                                        onChange={e => setRegForm(prev => ({ ...prev, phone: sanitizePhone(e.target.value) }))}
+                                                        disabled={usnStatus !== "valid"}
+                                                        style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
+                                                        required
+                                                    />
+                                                    <small style={{ color: 'rgba(168,237,234,0.7)', fontSize: '0.75rem' }}>Must be 10 digits starting with 6, 7, 8, or 9</small>
+                                                </div>
+
+                                                <div className="input-group">
+                                                    <label>Gender *</label>
+                                                    <select
+                                                        name="gender"
+                                                        value={regForm.gender}
+                                                        onChange={e => setRegForm(prev => ({ ...prev, gender: e.target.value }))}
+                                                        disabled={usnStatus !== "valid"}
+                                                        style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
+                                                        required
+                                                    >
+                                                        <option value="">Select Gender</option>
+                                                        <option value="Male">Male</option>
+                                                        <option value="Female">Female</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+
+                                                <button className="auth-btn" disabled={loading || usnStatus !== "valid"}>
+                                                    {loading ? "Processing..." : "Next Step"}
+                                                </button>
+                                            </form>
+                                        )}
+
+                                        {/* STEP 2: PHOTO & PASSWORD */}
+                                        {regStep === 2 && (
+                                            <form onSubmit={handleRegFinalize}>
+                                                <div className="timer-display">
+                                                    Time Remaining: {Math.floor(regTimer / 60)}:{(regTimer % 60).toString().padStart(2, '0')}
+                                                </div>
+
+                                                {/* Photo Upload */}
+                                                <div className="file-upload-wrapper">
+                                                    <div className="preview-container">
+                                                        {photoPreview ? (
+                                                            <img src={photoPreview} alt="Preview" className="preview-img" />
+                                                        ) : (
+                                                            <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📷</div>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ textAlign: "center" }}>
+                                                        <label htmlFor="file-upload" className="custom-file-upload">
+                                                            <span style={{ marginRight: '10px' }}>📁</span>
+                                                            {photoFile ? "Change Photo" : "Choose Photo"}
+                                                        </label>
+                                                        <input
+                                                            id="file-upload"
+                                                            type="file"
+                                                            accept="image/png,image/jpeg,application/pdf"
+                                                            onChange={handlePhotoChange}
+                                                        />
+
+                                                        {photoFile && (
+                                                            <div className="file-name-display">
+                                                                {photoFile.name}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {photoFile && uploadStatus !== "success" && (
+                                                        <button
+                                                            type="button"
+                                                            className="secondary-btn"
+                                                            onClick={handlePhotoUpload}
+                                                            disabled={uploadStatus === "uploading"}
+                                                            style={{
+                                                                marginTop: '20px',
+                                                                borderRadius: '50px',
+                                                                padding: '10px 25px',
+                                                                background: 'rgba(255,255,255,0.1)'
+                                                            }}
+                                                        >
+                                                            {uploadStatus === "uploading" ? `Uploading ${uploadProgress}%` : "Upload Now"}
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                <div className="input-group">
+                                                    <label>Password *</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <input
+                                                            type={showRegPassword ? 'text' : 'password'}
+                                                            value={regForm.password}
+                                                            onChange={e => setRegForm({ ...regForm, password: e.target.value })}
+                                                            required
+                                                            style={{ paddingRight: '42px' }}
+                                                        />
+                                                        <button type="button" onClick={() => setShowRegPassword(v => !v)}
+                                                            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                                                            tabIndex={-1} aria-label={showRegPassword ? 'Hide password' : 'Show password'}
+                                                        >{showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                                                    </div>
+                                                </div>
+
+                                                <PasswordStrength password={regForm.password} confirmPassword={regForm.confirmPassword} compact />
+
+                                                <div className="input-group">
+                                                    <label>Confirm Password *</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <input
+                                                            type={showRegConfirmPassword ? 'text' : 'password'}
+                                                            value={regForm.confirmPassword}
+                                                            onChange={e => setRegForm({ ...regForm, confirmPassword: e.target.value })}
+                                                            required
+                                                            style={{ paddingRight: '42px' }}
+                                                        />
+                                                        <button type="button" onClick={() => setShowRegConfirmPassword(v => !v)}
+                                                            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#000', padding: 0, lineHeight: 1, display: 'flex', alignItems: 'center' }}
+                                                            tabIndex={-1} aria-label={showRegConfirmPassword ? 'Hide password' : 'Show password'}
+                                                        >{showRegConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                                                    </div>
+                                                </div>
+
+                                                <button className="auth-btn" disabled={loading || uploadStatus !== "success"}>
+                                                    {loading ? "Finalizing..." : "Complete Registration"}
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    className="text-btn"
+                                                    onClick={() => {
+                                                        setRegStep(1);
+                                                        setRegSession(null);
+                                                        setRegTimer(null);
+                                                        setPhotoFile(null);
+                                                        setPhotoPreview("");
+                                                        setUploadStatus("idle");
+                                                        setUploadProgress(0);
+                                                        setGlobalError("");
+                                                    }}
+                                                    disabled={loading}
+                                                    style={{ marginTop: '8px' }}
+                                                >
+                                                    ← Back to Details
+                                                </button>
+                                            </form>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* ── Mobile only: register/login toggle at bottom of form ── */}
+                        {isMobileDevice && (
+                            <div style={{
+                                textAlign: 'center',
+                                marginTop: 36,
+                                paddingTop: 22,
+                                borderTop: '1px solid rgba(255,255,255,0.1)',
+                            }}>
+                                <p style={{
+                                    color: 'rgba(255,255,255,0.6)',
+                                    fontSize: '0.88rem',
+                                    marginBottom: 12,
+                                }}>
+                                    {view === 'login' ? 'New candidate?' : 'Already registered?'}
+                                </p>
+                                <button
+                                    className="toggle-btn"
+                                    onClick={toggleView}
+                                    style={{ minWidth: 190 }}
+                                >
+                                    {view === 'login' ? '📝 Register' : '← Back to Login'}
+                                </button>
+                            </div>
+                        )}
+
+                    </div>
                 </div>
-            </div>
+            </main>{/* /main landmark */}
 
             {/* FORCED RESET TOAST */}
             {showForceResetToast && (
