@@ -1,9 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { usePopup } from "../context/PopupContext";
 
 const API_URL = "https://api.vtufest2026.acharyahabba.com/api/manager/manager-profile";
+
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAGIC_NUMBERS = {
+  "image/jpeg": [0xff, 0xd8, 0xff],
+  "image/png": [0x89, 0x50, 0x4e, 0x47],
+  "application/pdf": [0x25, 0x50, 0x44, 0x46],
+};
+
+const getFileExtension = (filename) => {
+  const idx = filename.lastIndexOf(".");
+  return idx !== -1 ? filename.slice(idx).toLowerCase() : "";
+};
+
+const validateMagicNumber = async (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const bytes = new Uint8Array(reader.result);
+      const magic = MAGIC_NUMBERS[file.type];
+      if (!magic) { resolve(false); return; }
+      resolve(magic.every((byte, i) => bytes[i] === byte));
+    };
+    reader.readAsArrayBuffer(file.slice(0, 8));
+  });
+};
+
+const computeSHA256 = async (file) => {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+};
 
 // File upload card — same style as StudentRegister page
 const FileUploadField = ({ label, docKey, files, filePreviews, uploadStatus, handleFileChange, uploadFile, timerExpired, loading }) => (
@@ -28,7 +61,7 @@ const FileUploadField = ({ label, docKey, files, filePreviews, uploadStatus, han
       <input
         id={`file-${docKey}`}
         type="file"
-        accept="image/png,image/jpeg,image/jpg,application/pdf"
+        accept="image/png,image/jpeg,application/pdf"
         onChange={(e) => handleFileChange(e, docKey)}
         disabled={timerExpired || uploadStatus[docKey] === "done"}
         style={{ display: 'none' }}
@@ -90,6 +123,12 @@ export default function ManagerProfileModal({ onComplete }) {
     passport_photo: "",
     college_id_card: "",
     aadhaar_card: "",
+  });
+
+  const documentHashesRef = useRef({
+    passport_photo: null,
+    college_id_card: null,
+    aadhaar_card: null,
   });
 
   const { showPopup } = usePopup();
@@ -158,17 +197,50 @@ export default function ManagerProfileModal({ onComplete }) {
     }
   };
 
-  const handleFileChange = (e, key) => {
+  const handleFileChange = async (e, key) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!["image/png", "image/jpeg", "image/jpg", "application/pdf"].includes(file.type)) {
+
+    documentHashesRef.current[key] = null;
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       showPopup("Only PNG, JPG, or PDF files allowed", "warning");
+      e.target.value = "";
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
+
+    const ext = getFileExtension(file.name);
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      showPopup("Invalid file extension. Use .jpg, .jpeg, .png, or .pdf", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
       showPopup("File must be less than 5MB", "warning");
+      e.target.value = "";
       return;
     }
+
+    const magicValid = await validateMagicNumber(file);
+    if (!magicValid) {
+      showPopup("File content does not match its type. Please use a valid file.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    const hash = await computeSHA256(file);
+    const duplicate = Object.entries(documentHashesRef.current).find(
+      ([slot, h]) => slot !== key && h === hash
+    );
+    if (duplicate) {
+      showPopup("This file has already been uploaded in another document slot. Please use a different file.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    documentHashesRef.current[key] = hash;
+
     setFiles((prev) => ({ ...prev, [key]: file }));
     if (file.type.startsWith("image/")) {
       const reader = new FileReader();
@@ -188,7 +260,10 @@ export default function ManagerProfileModal({ onComplete }) {
       setUploadStatus((prev) => ({ ...prev, [key]: "uploading" }));
       const response = await fetch(session.upload_urls[key], {
         method: "PUT",
-        headers: { "x-ms-blob-type": "BlockBlob" },
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Type": files[key].type,
+        },
         body: files[key],
       });
       if (!response.ok) throw new Error(`Upload failed: ${response.status}`);
