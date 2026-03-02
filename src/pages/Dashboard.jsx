@@ -453,7 +453,7 @@ export default function Dashboard() {
 
             {/* --- LEFT COL: CALENDAR --- */}
             <div className="glass-card calendar-card">
-              <h3>Calendar</h3>
+              <h3>Events Calendar</h3>
               <div className="calendar-mobile-scroll calendar-list">
                 {eventsCalendarData.calendarEvents
                   .slice()
