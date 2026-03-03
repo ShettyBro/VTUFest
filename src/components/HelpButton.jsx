@@ -15,8 +15,15 @@ const CONTACT_PHONE = "+91 98765 43210";
 const CONTACT_PHONE_HREF = "tel:+919876543210";
 const CONTACT_HOURS = "Mon–Sat, 9 AM – 6 PM";
 
+const VIDEO_URLS = {
+    "Student": "https://youtu.be/C7z6AwYm0sI", // Replace with real links
+    "Team Manager": "https://youtu.be/URlIvlqJ4GA",
+    "Principal": "https://youtu.be/RwYz3bLncOo",
+};
+
 export default function HelpButton({ className = "", style = {} }) {
     const [showHelp, setShowHelp] = useState(false);
+    const [selectedVideo, setSelectedVideo] = useState(null);
 
     return (
         <>
@@ -37,31 +44,95 @@ export default function HelpButton({ className = "", style = {} }) {
                     <div className="help-modal" onClick={e => e.stopPropagation()}>
                         <button
                             className="help-modal-close"
-                            onClick={() => setShowHelp(false)}
+                            onClick={() => {
+                                setShowHelp(false);
+                                setSelectedVideo(null);
+                            }}
                             aria-label="Close"
                         >
                             &times;
                         </button>
-                        <div className="help-modal-icon">🎯</div>
-                        <h3 className="help-modal-title">Need Help?</h3>
-                        <p className="help-modal-subtitle">Contact our support team for assistance</p>
-                        <div className="help-contact-list">
-                            <a href={`mailto:${CONTACT_EMAIL}`} className="help-contact-item">
-                                <span className="help-contact-icon">✉️</span>
-                                <div>
-                                    <div className="help-contact-label">Email Support</div>
-                                    <div className="help-contact-value">{CONTACT_EMAIL}</div>
+
+                        {!selectedVideo ? (
+                            <>
+                                <div className="help-modal-icon">🎯</div>
+                                <h3 className="help-modal-title">Need Help?</h3>
+                                <p className="help-modal-subtitle">Watch a tutorial or contact our support team</p>
+
+                                {/* Tutorial Section */}
+                                <div className="help-tutorials-section">
+                                    <div className="help-section-label">Video Tutorials</div>
+                                    <div className="help-tutorial-buttons">
+                                        {Object.keys(VIDEO_URLS).map(role => (
+                                            <button
+                                                key={role}
+                                                className="help-tutorial-btn"
+                                                onClick={() => setSelectedVideo(role)}
+                                            >
+                                                <span className="help-tutorial-btn-icon">▶</span>
+                                                {role} Guide
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </a>
-                            <a href={CONTACT_PHONE_HREF} className="help-contact-item">
-                                <span className="help-contact-icon">📞</span>
-                                <div>
-                                    <div className="help-contact-label">Phone Support</div>
-                                    <div className="help-contact-value">{CONTACT_PHONE}</div>
+
+                                {/* Divider */}
+                                <div className="help-divider">
+                                    <span>OR</span>
                                 </div>
-                            </a>
-                        </div>
-                        <p className="help-modal-note">Available {CONTACT_HOURS}</p>
+
+                                {/* Contact Section */}
+                                <div className="help-contact-list">
+                                    <a
+                                        href={`mailto:${CONTACT_EMAIL}`}
+                                        className="help-contact-item"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <span className="help-contact-icon">✉️</span>
+                                        <div>
+                                            <div className="help-contact-label">Email Support</div>
+                                            <div className="help-contact-value">{CONTACT_EMAIL}</div>
+                                        </div>
+                                    </a>
+                                    <a href={CONTACT_PHONE_HREF} className="help-contact-item">
+                                        <span className="help-contact-icon">📞</span>
+                                        <div>
+                                            <div className="help-contact-label">Phone Support</div>
+                                            <div className="help-contact-value">{CONTACT_PHONE}</div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <p className="help-modal-note">Available {CONTACT_HOURS}</p>
+                            </>
+                        ) : (
+                            <div className="help-video-container">
+                                <button
+                                    className="help-video-back"
+                                    onClick={() => setSelectedVideo(null)}
+                                >
+                                    ← Back
+                                </button>
+                                <h3 className="help-video-title">{selectedVideo} Tutorial</h3>
+                                <div className="help-video-wrapper">
+                                    {VIDEO_URLS[selectedVideo] ? (
+                                        <iframe
+                                            width="100%"
+                                            height="100%"
+                                            src={`${VIDEO_URLS[selectedVideo]}?autoplay=1&rel=0`}
+                                            title={`${selectedVideo} Tutorial Video`}
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : (
+                                        <div className="help-video-placeholder">
+                                            Video coming soon!
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
