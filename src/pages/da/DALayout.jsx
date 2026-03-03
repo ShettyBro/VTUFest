@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDA } from "../../context/DAContext";
 import { usePopup } from "../../context/PopupContext";
+import SessionTimerBadge from "../../components/SessionTimerBadge";
 import "../../styles/dashboard-glass.css";
 
 const NAV_ITEMS = [
@@ -160,19 +161,26 @@ export default function DALayout({ children }) {
                     <h2 style={{ margin: 0, color: "#f1f5f9", fontSize: "1.05rem", fontWeight: 600 }}>
                         {currentNav?.icon} {currentNav?.label || "DA Portal"}
                     </h2>
-                    <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "4px 12px",
-                        background: "rgba(239,68,68,0.1)",
-                        border: "1px solid rgba(239,68,68,0.3)",
-                        borderRadius: "20px",
-                        color: "#f87171",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                    }}>
-                        ⚠️ Internal Tool — All actions are audited
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <SessionTimerBadge
+                            tokenKey="vtufest_da_token"
+                            accentColor="#c084fc"
+                            onExpired={handleLogout}
+                        />
+                        <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            padding: "4px 12px",
+                            background: "rgba(239,68,68,0.1)",
+                            border: "1px solid rgba(239,68,68,0.3)",
+                            borderRadius: "20px",
+                            color: "#f87171",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                        }}>
+                            ⚠️ Internal Tool — All actions are audited
+                        </div>
                     </div>
                 </div>
 

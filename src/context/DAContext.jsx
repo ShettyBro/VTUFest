@@ -8,17 +8,24 @@ import { createContext, useContext, useState } from "react";
 const DAContext = createContext(null);
 
 export function DAProvider({ children }) {
-    const [token, setToken] = useState(null);
-    const [officer, setOfficer] = useState(null); // { name, email }
+    const [token, setToken] = useState(() => localStorage.getItem("vtufest_da_token") || null);
+    const [officer, setOfficer] = useState(() => {
+        const stored = localStorage.getItem("vtufest_da_officer");
+        return stored ? JSON.parse(stored) : null;
+    });
 
     const clearToken = () => {
         setToken(null);
         setOfficer(null);
+        localStorage.removeItem("vtufest_da_token");
+        localStorage.removeItem("vtufest_da_officer");
     };
 
     const login = (jwt, officerInfo) => {
         setToken(jwt);
         setOfficer(officerInfo);
+        localStorage.setItem("vtufest_da_token", jwt);
+        localStorage.setItem("vtufest_da_officer", JSON.stringify(officerInfo));
     };
 
     return (
