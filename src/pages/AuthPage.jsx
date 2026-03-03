@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LifeBuoy } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PasswordStrength from "../components/PasswordStrength";
 import "../styles/auth.css";
@@ -458,7 +458,7 @@ export default function AuthPage({ initialView = "login" }) {
                     onClick={() => setShowHelp(true)}
                     aria-label="Need Help"
                 >
-                    <span className="help-btn-icon">?</span>
+                    <LifeBuoy size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
                     <span className="help-btn-text">Need Help?</span>
                 </button>
 
@@ -877,7 +877,7 @@ export default function AuthPage({ initialView = "login" }) {
                 <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
                     <div className="help-modal" onClick={e => e.stopPropagation()}>
                         <button className="help-modal-close" onClick={() => setShowHelp(false)} aria-label="Close">&times;</button>
-                        {/* <div className="help-modal-icon">🎯</div> */}
+                        <div className="help-modal-icon">🎯</div>
                         <h3 className="help-modal-title">Need Help?</h3>
                         <p className="help-modal-subtitle">Contact our support team for assistance</p>
                         <div className="help-contact-list">
