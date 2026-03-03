@@ -16,9 +16,25 @@ const CONTACT_PHONE_HREF = "tel:+919876543210";
 const CONTACT_HOURS = "Mon–Sat, 9 AM – 6 PM";
 
 const VIDEO_URLS = {
-    "Student": "https://youtu.be/C7z6AwYm0sI", // Replace with real links
+    "Student": "https://youtu.be/C7z6AwYm0sI",
     "Team Manager": "https://youtu.be/URlIvlqJ4GA",
     "Principal": "https://youtu.be/RwYz3bLncOo",
+};
+
+// Helper: convert any youtube link (watch?v=, youtu.be) into an embed format
+const getEmbedUrl = (rawUrl) => {
+    if (!rawUrl) return "";
+    let videoId = "";
+    if (rawUrl.includes("youtu.be/")) {
+        videoId = rawUrl.split("youtu.be/")[1]?.split("?")[0];
+    } else if (rawUrl.includes("watch?v=")) {
+        videoId = rawUrl.split("watch?v=")[1]?.split("&")[0];
+    } else if (rawUrl.includes("embed/")) {
+        videoId = rawUrl.split("embed/")[1]?.split("?")[0];
+    } else {
+        videoId = rawUrl; // fallback if just id
+    }
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 };
 
 export default function HelpButton({ className = "", style = {} }) {
@@ -41,7 +57,7 @@ export default function HelpButton({ className = "", style = {} }) {
             {/* MODAL */}
             {showHelp && (
                 <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
-                    <div className="help-modal" onClick={e => e.stopPropagation()}>
+                    <div className={`help-modal ${selectedVideo ? 'video-active' : ''}`} onClick={e => e.stopPropagation()}>
                         <button
                             className="help-modal-close"
                             onClick={() => {
@@ -119,7 +135,7 @@ export default function HelpButton({ className = "", style = {} }) {
                                         <iframe
                                             width="100%"
                                             height="100%"
-                                            src={`${VIDEO_URLS[selectedVideo]}?autoplay=1&rel=0`}
+                                            src={getEmbedUrl(VIDEO_URLS[selectedVideo])}
                                             title={`${selectedVideo} Tutorial Video`}
                                             frameBorder="0"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
