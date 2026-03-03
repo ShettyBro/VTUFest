@@ -18,6 +18,7 @@ export default function Navbar() {
   const role = localStorage.getItem("vtufest_role") || "student";
   const userName = localStorage.getItem("name") || "User";
   const userUsn = localStorage.getItem("usn") || "";
+  const userStudentId = localStorage.getItem("student_id") || "";
 
   // Generate gender-neutral robot avatars using DiceBear API
   // Using USN as seed ensures same user always gets same avatar
@@ -163,7 +164,16 @@ export default function Navbar() {
 
             <div className="profile-name-wrapper">
               <span className="username">{userName}</span>
-              {userUsn && <span className="usn-tooltip">{userUsn}</span>}
+              {(userUsn || userStudentId) && (
+                <span className="usn-tooltip">
+                  {userUsn && <span>USN: {userUsn}</span>}
+                  {userStudentId && (
+                    <span style={{ color: '#a8edea', marginTop: '2px' }}>
+                      Habba ID: {userStudentId}
+                    </span>
+                  )}
+                </span>
+              )}
             </div>
           </div>
 
@@ -171,7 +181,7 @@ export default function Navbar() {
             <div className="profile-menu">
               <div
                 className="menu-item"
-                onClick={() => navigate("/change-password")}
+                onClick={() => navigate("/forgot-password")}
               >
                 Change Password
               </div>

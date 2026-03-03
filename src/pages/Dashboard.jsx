@@ -213,6 +213,11 @@ export default function Dashboard() {
       setDashboardData(data.data);
       setRetryCount(0);
 
+      // Persist student_id so other components (e.g. navbar) can read it
+      if (data.data?.student?.id) {
+        localStorage.setItem("student_id", `AVH${data.data.student.id}2026`);
+      }
+
     } catch (error) {
       if (retryCount < 4) {
         setTimeout(() => {

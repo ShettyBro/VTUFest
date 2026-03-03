@@ -358,6 +358,18 @@ export default function AssignEvents() {
   };
 
   const handleRemove = async (eventSlug, personId, personType) => {
+    // Guard: cannot remove a participant while accompanists still exist
+    if (personType === "student") {
+      const currentAccompanists = eventData[eventSlug]?.accompanists?.length || 0;
+      if (currentAccompanists > 0) {
+        showPopup(
+          `Remove all ${currentAccompanists} accompanist(s) first before removing the participant.`,
+          "warning"
+        );
+        return;
+      }
+    }
+
     if (!confirm("Are you sure you want to remove this assignment?")) {
       return;
     }

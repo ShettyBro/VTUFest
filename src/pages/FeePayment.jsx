@@ -481,10 +481,22 @@ export default function FeePayment() {
 
         {/* LOCKED STATE */}
         {isPaymentLocked && !hasStatus && (
-          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
-            <h3>Payment Locked</h3>
-            <p>{paymentInfo.message || "Final approval not done yet."}</p>
-            <button className="neon-btn" style={{ marginTop: '20px', maxWidth: '200px' }} onClick={() => navigate(isPrincipal ? "/principal-dashboard" : "/manager-dashboard")}>Back to Dashboard</button>
+          <div className="glass-card" style={{ maxWidth: '600px', margin: '40px auto', textAlign: 'center', padding: '40px 32px' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
+            <h3 style={{ color: 'var(--academic-gold)', marginBottom: '12px', fontSize: '1.3rem' }}>
+              Payment Portal Not Yet Open
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px' }}>
+              {paymentInfo.message || "Your college's final approval is pending. Fee payment will be enabled once the principal completes the final approval process."}
+            </p>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.25)',
+              borderRadius: '8px', padding: '10px 18px',
+              color: 'var(--academic-gold)', fontSize: '0.85rem', fontWeight: '500'
+            }}>
+              <span>📋</span> Please check back after the principal grants final approval.
+            </div>
           </div>
         )}
 

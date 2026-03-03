@@ -343,7 +343,7 @@ body,
     background: var(--academic-gold);
     color: var(--navy-dark);
     font-weight: 700;
-    padding: 5px 12px;
+    padding: 7px 14px;
     border-radius: 6px;
     font-size: 0.75rem;
     white-space: nowrap;
@@ -351,6 +351,10 @@ body,
     pointer-events: none;
     transition: opacity 0.2s;
     box-shadow: 0 2px 8px var(--gold-glow);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: center;
 }
 
 .profile-trigger:hover .usn-tooltip {

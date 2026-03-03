@@ -102,6 +102,10 @@ export default function PrincipalDashboard() {
 
       if (data.success) {
         setDashboardData(data.data);
+        // Store user_id so navbar can show Habba ID in profile tooltip
+        if (data.data?.user_id) {
+          localStorage.setItem("student_id", `AVH${data.data.user_id}2026`);
+        }
       }
     } catch (error) {
       console.error("Dashboard fetch error:", error);

@@ -19,6 +19,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
 
     const userName = localStorage.getItem("name") || "User";
     const userUsn = localStorage.getItem("usn") || "";
+    const userHabbaId = localStorage.getItem("student_id") || "";
     const avatarSeed = userUsn || userName || "default";
     const userPhoto = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(avatarSeed)}`;
 
@@ -132,12 +133,13 @@ export default function MobileTopBar({ notificationsData = [] }) {
                             <img src={userPhoto} alt="Profile" className="mtb-sheet-avatar" />
                             <div>
                                 <div className="mtb-profile-name">{userName}</div>
-                                {userUsn && <div className="mtb-profile-usn">{userUsn}</div>}
+                                {userUsn && <div className="mtb-profile-usn">USN: {userUsn}</div>}
+                                {userHabbaId && <div className="mtb-profile-usn" style={{ color: '#a8edea', marginTop: '2px' }}>Habba ID: {userHabbaId}</div>}
                             </div>
                         </div>
                         <button className="mtb-sheet-close" onClick={() => setProfileOpen(false)}>✕</button>
                     </div>
-                    <div className="mtb-sheet-menu-item" onClick={() => { navigate("/changepassword"); setProfileOpen(false); }}>
+                    <div className="mtb-sheet-menu-item" onClick={() => { navigate("/forgot-password"); setProfileOpen(false); }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         Change Password
                     </div>
