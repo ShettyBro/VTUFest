@@ -134,7 +134,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
                             <div>
                                 <div className="mtb-profile-name">{userName}</div>
                                 {userUsn && <div className="mtb-profile-usn">USN: {userUsn}</div>}
-                                {userHabbaId && <div className="mtb-profile-usn" style={{ color: '#a8edea', marginTop: '2px' }}>Habba ID: {userHabbaId}</div>}
+                                {userHabbaId && <div className="mtb-profile-usn" style={{ color: 'var(--navy-dark)', marginTop: '2px', fontWeight: 'bold' }}>Habba ID: {userHabbaId}</div>}
                             </div>
                         </div>
                         <button className="mtb-sheet-close" onClick={() => setProfileOpen(false)}>✕</button>

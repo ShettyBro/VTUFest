@@ -95,6 +95,9 @@ export default function ManagerDashboard() {
 
       if (data.success) {
         setDashboardData(data.data);
+        if (data.data?.user_id) {
+          localStorage.setItem("student_id", `AVH${data.data.user_id}2026`);
+        }
       }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
