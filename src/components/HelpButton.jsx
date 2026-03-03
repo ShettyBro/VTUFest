@@ -15,14 +15,15 @@ const CONTACT_PHONE = "+91 98765 43210";
 const CONTACT_PHONE_HREF = "tel:+919876543210";
 const CONTACT_HOURS = "Mon–Sat, 9 AM – 6 PM";
 
-export default function HelpButton() {
+export default function HelpButton({ className = "", style = {} }) {
     const [showHelp, setShowHelp] = useState(false);
 
     return (
         <>
             {/* TRIGGER BUTTON */}
             <button
-                className="help-btn"
+                className={`help-btn ${className}`}
+                style={style}
                 onClick={() => setShowHelp(true)}
                 aria-label="Need Help"
             >

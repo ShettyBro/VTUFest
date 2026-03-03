@@ -9,6 +9,7 @@ import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 import MobileBlockScreen from "../components/MobileBlockScreen";
 import { isPhysicalMobile } from "../utils/deviceDetect";
+import HelpButton from "../components/HelpButton";
 
 export default function ManagerDashboard() {
   // ── MOBILE GUARD — physical phones cannot access manager portal ──
@@ -315,6 +316,7 @@ export default function ManagerDashboard() {
             <h1>Manager Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Team Manager Panel</p>
           </div>
+          <HelpButton style={{ top: '75px', right: '25px' }} />
         </div>
 
         {/* --- TICKER --- */}
