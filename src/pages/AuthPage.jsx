@@ -877,7 +877,7 @@ export default function AuthPage({ initialView = "login" }) {
                 <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
                     <div className="help-modal" onClick={e => e.stopPropagation()}>
                         <button className="help-modal-close" onClick={() => setShowHelp(false)} aria-label="Close">&times;</button>
-                        <div className="help-modal-icon">🎯</div>
+                        {/* <div className="help-modal-icon">🎯</div> */}
                         <h3 className="help-modal-title">Need Help?</h3>
                         <p className="help-modal-subtitle">Contact our support team for assistance</p>
                         <div className="help-contact-list">
