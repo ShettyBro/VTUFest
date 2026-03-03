@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DALayout from "./DALayout";
 import { useDA } from "../../context/DAContext";
 import { daFetch } from "../../utils/daFetch";
@@ -19,9 +19,9 @@ function UnlockModal({ collegeName, onConfirm, onCancel, loading }) {
                 <div style={{ fontSize: "1.6rem", marginBottom: "10px" }}>🔓</div>
                 <h3 className="da-modal-title">Unlock College Registration</h3>
                 <p className="da-modal-body">
-                    You are about to unlock registration for <strong style={{ color: "#fb923c" }}>{collegeName}</strong>.
+                    You are about to unlock registration for{" "}
+                    <strong style={{ color: "#fb923c" }}>{collegeName}</strong>.
                 </p>
-
                 <div className="da-alert da-alert-orange" style={{ marginBottom: "16px" }}>
                     <span>⚠️</span>
                     <span>
@@ -29,7 +29,6 @@ function UnlockModal({ collegeName, onConfirm, onCancel, loading }) {
                         This action cannot be undone.
                     </span>
                 </div>
-
                 <div className="da-reason-wrap">
                     <label className="da-reason-label">Reason for unlocking (required)</label>
                     <textarea
@@ -43,11 +42,8 @@ function UnlockModal({ collegeName, onConfirm, onCancel, loading }) {
                         {reason.length} chars {!ok && <span style={{ color: "#ef4444" }}>— need at least 10</span>}
                     </div>
                 </div>
-
                 <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                    <button className="da-btn da-btn-ghost" onClick={onCancel} disabled={loading}>
-                        Cancel
-                    </button>
+                    <button className="da-btn da-btn-ghost" onClick={onCancel} disabled={loading}>Cancel</button>
                     <button
                         className="da-btn da-btn-warning"
                         onClick={() => onConfirm(reason.trim())}
@@ -61,7 +57,7 @@ function UnlockModal({ collegeName, onConfirm, onCancel, loading }) {
     );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Badges ────────────────────────────────────────────────────────────────────
 
 function LockStatusBadge({ locked }) {
     if (locked) return <span className="da-badge da-badge-red">🔒 LOCKED</span>;
@@ -69,13 +65,11 @@ function LockStatusBadge({ locked }) {
 }
 
 function ReceiptStatusBadge({ status }) {
-    const map = {
-        VERIFIED: "da-badge-green",
-        PENDING: "da-badge-yellow",
-        REJECTED: "da-badge-red",
-    };
+    const map = { VERIFIED: "da-badge-green", PENDING: "da-badge-yellow", REJECTED: "da-badge-red" };
     return <span className={`da-badge ${map[status] || "da-badge-gray"}`}>{status}</span>;
 }
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function DACollegeUnlock() {
     const { token } = useDA();
@@ -83,8 +77,8 @@ export default function DACollegeUnlock() {
 
     const [colleges, setColleges] = useState([]);
     const [collegesLoading, setCollegesLoading] = useState(true);
+    const [search, setSearch] = useState("");
     const [selectedCollegeId, setSelectedCollegeId] = useState("");
-    const [collegeSearch, setCollegeSearch] = useState("");
 
     const [status, setStatus] = useState(null);
     const [fetching, setFetching] = useState(false);
@@ -93,8 +87,7 @@ export default function DACollegeUnlock() {
     const [showModal, setShowModal] = useState(false);
     const [unlocking, setUnlocking] = useState(false);
 
-    // FIX: was /api/da/colleges (didn't exist) — now correctly calls /api/da/colleges
-    // which is the new da-colleges.js route returning {college_id, name}
+    // FIX: was hitting wrong/missing route — now /api/da/colleges (da-colleges.js)
     useEffect(() => {
         daFetch(`${API_BASE}/api/da/colleges`, token)
             .then(r => r.json())
@@ -104,14 +97,15 @@ export default function DACollegeUnlock() {
     }, [token]);
 
     const filteredColleges = colleges.filter(c =>
-        c.name.toLowerCase().includes(collegeSearch.toLowerCase())
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        (c.college_code || "").toLowerCase().includes(search.toLowerCase())
     );
 
     const handleCollegeSelect = async (collegeId) => {
-        if (!collegeId) return;
         setSelectedCollegeId(collegeId);
         setStatus(null);
         setFetchError("");
+        if (!collegeId) return;
         setFetching(true);
         try {
             const res = await daFetch(`${API_BASE}/api/da/college/${collegeId}/lock-status`, token);
@@ -136,7 +130,7 @@ export default function DACollegeUnlock() {
             if (!res.ok) throw new Error(data.message || "Failed to unlock college");
             showPopup("College unlocked successfully. Registration is now open.", "success");
             setShowModal(false);
-            handleCollegeSelect(selectedCollegeId); // refresh
+            handleCollegeSelect(selectedCollegeId); // refresh status
         } catch (err) {
             showPopup(err.message, "error");
         } finally {
@@ -144,28 +138,53 @@ export default function DACollegeUnlock() {
         }
     };
 
-    const selectedCollege = colleges.find(c => String(c.college_id) === String(selectedCollegeId));
-
     return (
         <DALayout>
             <div className="da-page">
                 <h1 className="da-page-title">College Unlock</h1>
                 <p className="da-page-subtitle">View college lock status and unlock registration when authorized.</p>
 
-                {/* College search */}
+                {/* ── Search bar (AdminColleges style) ── */}
+                <div style={{ marginBottom: "8px", position: "relative", maxWidth: "480px" }}>
+                    <span style={{
+                        position: "absolute", left: "14px", top: "50%",
+                        transform: "translateY(-50%)",
+                        color: "var(--text-muted)", fontSize: "1rem", pointerEvents: "none",
+                    }}>🔍</span>
+                    <input
+                        placeholder="Search by college name or code…"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            padding: "11px 36px 11px 40px",
+                            background: "rgba(255,255,255,0.07)",
+                            border: "1px solid rgba(255,255,255,0.15)",
+                            borderRadius: "10px",
+                            color: "#f1f5f9",
+                            fontSize: "0.92rem",
+                            outline: "none",
+                        }}
+                    />
+                    {search && (
+                        <button
+                            onClick={() => setSearch("")}
+                            style={{
+                                position: "absolute", right: "12px", top: "50%",
+                                transform: "translateY(-50%)",
+                                background: "none", border: "none",
+                                color: "var(--text-muted)", cursor: "pointer", fontSize: "1rem",
+                            }}
+                        >✕</button>
+                    )}
+                </div>
+
+                {/* ── College dropdown ── */}
                 <div style={{ marginBottom: "24px", maxWidth: "480px" }}>
-                    <div style={{ marginBottom: "8px" }}>
-                        <input
-                            className="da-search-input"
-                            style={{ maxWidth: "100%", width: "100%" }}
-                            placeholder="Search college name…"
-                            value={collegeSearch}
-                            onChange={e => setCollegeSearch(e.target.value)}
-                        />
-                    </div>
                     {collegesLoading ? (
-                        <div style={{ color: "#64748b", fontSize: "0.85rem" }}>
-                            <span className="da-spinner" />Loading colleges…
+                        <div style={{ color: "#64748b", fontSize: "0.85rem", padding: "8px 0" }}>
+                            <span className="da-spinner" /> Loading colleges…
                         </div>
                     ) : (
                         <select
@@ -176,7 +195,9 @@ export default function DACollegeUnlock() {
                         >
                             <option value="">— Select a college —</option>
                             {filteredColleges.map(c => (
-                                <option key={c.college_id} value={c.college_id}>{c.name}</option>
+                                <option key={c.college_id} value={c.college_id}>
+                                    {c.name}{c.college_code ? ` (${c.college_code})` : ""}
+                                </option>
                             ))}
                         </select>
                     )}
@@ -192,22 +213,21 @@ export default function DACollegeUnlock() {
                     <div className="da-empty"><span className="da-spinner" />Fetching lock status…</div>
                 )}
 
-                {/* Status Card */}
+                {/* ── Status Card ── */}
                 {status && !fetching && (
                     <div className="da-student-card" style={{ maxWidth: "640px" }}>
                         <div style={{ padding: "20px 24px" }}>
+
                             {/* Header */}
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
-                                <div>
-                                    <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "1.05rem", marginBottom: "4px" }}>
-                                        🏫 {status.college?.college_name || selectedCollege?.name}
-                                    </div>
+                                <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "1.05rem" }}>
+                                    🏫 {status.college?.college_name}
                                 </div>
                                 <LockStatusBadge locked={status.is_locked} />
                             </div>
 
                             {/* Participant counts */}
-                            {/* FIX: was status.temp_count / status.final_count — backend nests under participant_counts */}
+                            {/* FIX: was status.temp_count / status.final_count — now status.participant_counts.* */}
                             <div className="da-section-label">Participant Counts</div>
                             <div className="da-info-grid" style={{ marginBottom: "16px" }}>
                                 <div className="da-info-item">
@@ -225,8 +245,8 @@ export default function DACollegeUnlock() {
                             </div>
 
                             {/* Payment receipts */}
-                            {/* FIX: was status.receipts — backend nests under payment_summary.receipts */}
-                            {status.payment_summary?.receipts && status.payment_summary.receipts.length > 0 && (
+                            {/* FIX: was status.receipts — now status.payment_summary.receipts, amount was r.amount now r.amount_paid */}
+                            {status.payment_summary?.receipts?.length > 0 && (
                                 <>
                                     <div className="da-section-label">Payment Receipts</div>
                                     <div className="da-receipt-list">
@@ -234,7 +254,6 @@ export default function DACollegeUnlock() {
                                             <div key={i} className="da-receipt-row">
                                                 <span>{r.utr_reference_number || r.id || `Receipt ${i + 1}`}</span>
                                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                    {/* FIX: was r.amount — backend column is amount_paid */}
                                                     {r.amount_paid && (
                                                         <span style={{ color: "#e2e8f0", fontWeight: 500 }}>
                                                             ₹{r.amount_paid}
@@ -247,13 +266,13 @@ export default function DACollegeUnlock() {
                                     </div>
                                 </>
                             )}
-                            {status.payment_summary?.receipts && status.payment_summary.receipts.length === 0 && (
+                            {status.payment_summary?.receipts?.length === 0 && (
                                 <div style={{ color: "#64748b", fontSize: "0.83rem", margin: "8px 0 16px" }}>
                                     No payment receipts found.
                                 </div>
                             )}
 
-                            {/* Block reason (if can't unlock) */}
+                            {/* Cannot unlock reason */}
                             {!status.can_unlock && status.block_reason && (
                                 <div className="da-alert da-alert-red" style={{ marginTop: "12px" }}>
                                     <span>🚫</span>
@@ -275,10 +294,7 @@ export default function DACollegeUnlock() {
                             {/* Unlock button */}
                             {status.can_unlock && (
                                 <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-                                    <button
-                                        className="da-btn da-btn-warning"
-                                        onClick={() => setShowModal(true)}
-                                    >
+                                    <button className="da-btn da-btn-warning" onClick={() => setShowModal(true)}>
                                         🔓 Unlock College
                                     </button>
                                 </div>
@@ -287,16 +303,15 @@ export default function DACollegeUnlock() {
                     </div>
                 )}
 
+                {/* Initial empty state */}
                 {!selectedCollegeId && !fetching && (
-                    <div className="da-empty">
-                        Select a college above to view its lock status.
-                    </div>
+                    <div className="da-empty">Search and select a college above to view its lock status.</div>
                 )}
             </div>
 
             {showModal && (
                 <UnlockModal
-                    collegeName={status?.college?.college_name || selectedCollege?.name}
+                    collegeName={status?.college?.college_name}
                     onConfirm={handleUnlock}
                     onCancel={() => setShowModal(false)}
                     loading={unlocking}
