@@ -930,3 +930,39 @@ input[type="file"] {
     padding: 0 10px;
     font-weight: 600;
 }
+
+/* Mobile Tweaks for Modal Data */
+@media (max-width: 768px) {
+    .help-modal {
+        padding: 26px 20px 20px;
+        max-width: calc(100vw - 32px);
+    }
+
+    .help-modal.video-active {
+        padding: 16px 12px;
+        border-radius: 16px;
+    }
+
+    .help-video-title {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .help-video-wrapper {
+        border-radius: 8px;
+    }
+
+    .help-tutorial-btn {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .help-contact-item {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .help-contact-icon {
+        font-size: 1.2rem;
+    }
+}
