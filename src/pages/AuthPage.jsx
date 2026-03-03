@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, LifeBuoy } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import HelpButton from "../components/HelpButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import PasswordStrength from "../components/PasswordStrength";
 import "../styles/auth.css";
@@ -63,7 +64,7 @@ export default function AuthPage({ initialView = "login" }) {
     const [loading, setLoading] = useState(false);
     const [globalError, setGlobalError] = useState("");
     const [globalSuccess, setGlobalSuccess] = useState("");
-    const [showHelp, setShowHelp] = useState(false);
+
 
     /* ================= LOGIN STATE & LOGIC ================= */
     const [loginRole, setLoginRole] = useState("student");
@@ -453,14 +454,7 @@ export default function AuthPage({ initialView = "login" }) {
             <div className="auth-container">
 
                 {/* NEED HELP BUTTON */}
-                <button
-                    className="help-btn"
-                    onClick={() => setShowHelp(true)}
-                    aria-label="Need Help"
-                >
-                    <LifeBuoy size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-                    <span className="help-btn-text">Need Help?</span>
-                </button>
+                <HelpButton />
 
                 {/* --- LEFT PANEL: BRANDING & INFO --- */}
                 <div className="auth-info-panel">
@@ -872,34 +866,7 @@ export default function AuthPage({ initialView = "login" }) {
                 </div>
             )}
 
-            {/* HELP MODAL */}
-            {showHelp && (
-                <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
-                    <div className="help-modal" onClick={e => e.stopPropagation()}>
-                        <button className="help-modal-close" onClick={() => setShowHelp(false)} aria-label="Close">&times;</button>
-                        <div className="help-modal-icon">🎯</div>
-                        <h3 className="help-modal-title">Need Help?</h3>
-                        <p className="help-modal-subtitle">Contact our support team for assistance</p>
-                        <div className="help-contact-list">
-                            <a href="mailto:vtufest2026@acharyahabba.com" className="help-contact-item">
-                                <span className="help-contact-icon">✉️</span>
-                                <div>
-                                    <div className="help-contact-label">Email Support</div>
-                                    <div className="help-contact-value">adsa@acharya.ac.in</div>
-                                </div>
-                            </a>
-                            <a href="tel:+919876543210" className="help-contact-item">
-                                <span className="help-contact-icon">📞</span>
-                                <div>
-                                    <div className="help-contact-label">Phone Support</div>
-                                    <div className="help-contact-value">+91 98765 43210</div>
-                                </div>
-                            </a>
-                        </div>
-                        <p className="help-modal-note">Available Mon–Sat, 9 AM – 6 PM</p>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 }

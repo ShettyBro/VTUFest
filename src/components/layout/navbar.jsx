@@ -18,7 +18,16 @@ export default function Navbar() {
   const role = localStorage.getItem("vtufest_role") || "student";
   const userName = localStorage.getItem("name") || "User";
   const userUsn = localStorage.getItem("usn") || "";
-  const userStudentId = localStorage.getItem("student_id") || "";
+
+  const [userStudentId, setUserStudentId] = useState(localStorage.getItem("student_id") || "");
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUserStudentId(localStorage.getItem("student_id") || "");
+    };
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Generate gender-neutral robot avatars using DiceBear API
   // Using USN as seed ensures same user always gets same avatar
@@ -168,7 +177,7 @@ export default function Navbar() {
                 <span className="usn-tooltip">
                   {userUsn && <span>USN: {userUsn}</span>}
                   {userStudentId && (
-                    <span style={{ color: '#a8edea', marginTop: '2px' }}>
+                    <span style={{ color: 'var(--navy-dark)', marginTop: '2px', fontWeight: 'bold' }}>
                       Habba ID: {userStudentId}
                     </span>
                   )}

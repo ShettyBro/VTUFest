@@ -9,6 +9,7 @@ import { usePopup } from "../context/PopupContext";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 import MobileBlockScreen from "../components/MobileBlockScreen";
 import { isPhysicalMobile } from "../utils/deviceDetect";
+import HelpButton from "../components/HelpButton";
 
 export default function PrincipalDashboard() {
   // ── MOBILE GUARD — physical phones cannot access principal portal ──
@@ -387,6 +388,7 @@ export default function PrincipalDashboard() {
             <h1>Principal Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Principal Administration Panel</p>
           </div>
+          <HelpButton />
         </div>
 
         {/* --- TICKER --- */}
