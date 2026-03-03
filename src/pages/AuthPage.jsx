@@ -885,7 +885,7 @@ export default function AuthPage({ initialView = "login" }) {
                                 <span className="help-contact-icon">✉️</span>
                                 <div>
                                     <div className="help-contact-label">Email Support</div>
-                                    <div className="help-contact-value">vtufest2026@acharyahabba.com</div>
+                                    <div className="help-contact-value">adsa@acharya.ac.in</div>
                                 </div>
                             </a>
                             <a href="tel:+919876543210" className="help-contact-item">
