@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+import { DAProvider, useDA } from "../context/DAContext";
 
 /* PUBLIC */
 import AuthPage from "../pages/AuthPage";
@@ -35,6 +36,13 @@ import AdminPayments from "../pages/admin/AdminPayments";
 import AdminFindPerson from "../pages/admin/Adminfindperson";
 import AdminAccommodation from "../pages/admin/AdminAccommodation";
 
+/* DATA_ADMIN */
+import DALogin from "../pages/da/DALogin";
+import DAStudents from "../pages/da/DAStudents";
+import DAManagers from "../pages/da/DAManagers";
+import DACollegeUnlock from "../pages/da/DACollegeUnlock";
+import DAAuditLog from "../pages/da/DAAuditLog";
+
 /* GREEN ROOM (MANAGER SIDE) */
 import GreenRoom from "../pages/GreenRoom";
 
@@ -51,6 +59,12 @@ function AdminRoute({ children }) {
   const role = localStorage.getItem("vtufest_admin_role");
   if (!token || !["SUPER_ADMIN", "SUB_ADMIN"].includes(role))
     return <Navigate to="/ad-login" replace />;
+  return children;
+}
+
+function DARoute({ children }) {
+  const { token } = useDA();
+  if (!token) return <Navigate to="/da-login" replace />;
   return children;
 }
 
@@ -76,82 +90,92 @@ function AccountsRoute({ children }) {
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      {/* ── PUBLIC ──────────────────────────────────────────────────── */}
-      <Route path="/" element={<AuthPage initialView="login" />} />
-      <Route path="/register-student" element={<AuthPage initialView="register" />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/assign-events" element={<AssignEvents />} />
-      <Route path="/force-reset-password" element={<ForceResetPassword />} />
+    <DAProvider>
+      <Routes>
+        {/* ── PUBLIC ──────────────────────────────────────────────────── */}
+        <Route path="/" element={<AuthPage initialView="login" />} />
+        <Route path="/register-student" element={<AuthPage initialView="register" />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/assign-events" element={<AssignEvents />} />
+        <Route path="/force-reset-password" element={<ForceResetPassword />} />
 
-      {/* ── RESET PASSWORD ──────────────────────────────────────────── */}
-      <Route path="/changepassword" element={
-        <ProtectedRoute isResetPage={true}><ResetPassword /></ProtectedRoute>
-      } />
+        {/* ── RESET PASSWORD ──────────────────────────────────────────── */}
+        <Route path="/changepassword" element={
+          <ProtectedRoute isResetPage={true}><ResetPassword /></ProtectedRoute>
+        } />
 
-      {/* ── STUDENT ─────────────────────────────────────────────────── */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute allowedRoles={["student"]}><Dashboard /></ProtectedRoute>
-      } />
-      <Route path="/student-register" element={
-        <ProtectedRoute allowedRoles={["student"]}><StudentRegister /></ProtectedRoute>
-      } />
-      <Route path="/student-application" element={
-        <ProtectedRoute allowedRoles={["student"]}><StudentApplication /></ProtectedRoute>
-      } />
+        {/* ── STUDENT ─────────────────────────────────────────────────── */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute allowedRoles={["student"]}><Dashboard /></ProtectedRoute>
+        } />
+        <Route path="/student-register" element={
+          <ProtectedRoute allowedRoles={["student"]}><StudentRegister /></ProtectedRoute>
+        } />
+        <Route path="/student-application" element={
+          <ProtectedRoute allowedRoles={["student"]}><StudentApplication /></ProtectedRoute>
+        } />
 
-      {/* ── PRINCIPAL + MANAGER ─────────────────────────────────────── */}
-      <Route path="/principal-dashboard" element={
-        <ProtectedRoute allowedRoles={["principal"]}><PrincipalDashboard /></ProtectedRoute>
-      } />
-      <Route path="/manager-dashboard" element={
-        <ProtectedRoute allowedRoles={["manager"]}><ManagerDashboard /></ProtectedRoute>
-      } />
-      <Route path="/approvals" element={
-        <ProtectedRoute allowedRoles={["principal", "manager"]}><Approvals /></ProtectedRoute>
-      } />
-      <Route path="/approved-students" element={
-        <ProtectedRoute allowedRoles={["principal", "manager"]}><ApprovedStudents /></ProtectedRoute>
-      } />
-      <Route path="/rejected-students" element={
-        <ProtectedRoute allowedRoles={["principal", "manager"]}><RejectedStudents /></ProtectedRoute>
-      } />
-      <Route path="/accommodation" element={
-        <ProtectedRoute allowedRoles={["principal", "manager"]}><Accommodation /></ProtectedRoute>
-      } />
-      <Route path="/accompanist-form" element={
-        <ProtectedRoute allowedRoles={["principal", "manager"]}><AccompanistForm /></ProtectedRoute>
-      } />
-      <Route path="/fee-payment" element={
-        <ProtectedRoute allowedRoles={["principal", "manager"]}><FeePayment /></ProtectedRoute>
-      } />
-      <Route path="/rules" element={
-        <ProtectedRoute allowedRoles={["student", "principal", "manager"]}><Rules /></ProtectedRoute>
-      } />
+        {/* ── PRINCIPAL + MANAGER ─────────────────────────────────────── */}
+        <Route path="/principal-dashboard" element={
+          <ProtectedRoute allowedRoles={["principal"]}><PrincipalDashboard /></ProtectedRoute>
+        } />
+        <Route path="/manager-dashboard" element={
+          <ProtectedRoute allowedRoles={["manager"]}><ManagerDashboard /></ProtectedRoute>
+        } />
+        <Route path="/approvals" element={
+          <ProtectedRoute allowedRoles={["principal", "manager"]}><Approvals /></ProtectedRoute>
+        } />
+        <Route path="/approved-students" element={
+          <ProtectedRoute allowedRoles={["principal", "manager"]}><ApprovedStudents /></ProtectedRoute>
+        } />
+        <Route path="/rejected-students" element={
+          <ProtectedRoute allowedRoles={["principal", "manager"]}><RejectedStudents /></ProtectedRoute>
+        } />
+        <Route path="/accommodation" element={
+          <ProtectedRoute allowedRoles={["principal", "manager"]}><Accommodation /></ProtectedRoute>
+        } />
+        <Route path="/accompanist-form" element={
+          <ProtectedRoute allowedRoles={["principal", "manager"]}><AccompanistForm /></ProtectedRoute>
+        } />
+        <Route path="/fee-payment" element={
+          <ProtectedRoute allowedRoles={["principal", "manager"]}><FeePayment /></ProtectedRoute>
+        } />
+        <Route path="/rules" element={
+          <ProtectedRoute allowedRoles={["student", "principal", "manager"]}><Rules /></ProtectedRoute>
+        } />
 
-      {/* ── ADMIN ───────────────────────────────────────────────────── */}
-      <Route path="/ad-login" element={<AdminLogin />} />
-      <Route path="/ad-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-      <Route path="/ad-notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
-      <Route path="/ad-calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
-      <Route path="/ad-settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
-      <Route path="/ad-colleges" element={<AdminRoute><AdminColleges /></AdminRoute>} />
-      <Route path="/ad-payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
-      <Route path="/ad-find-person" element={<AdminRoute><AdminFindPerson /></AdminRoute>} />
-      <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
-      <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
+        {/* ── ADMIN ───────────────────────────────────────────────────── */}
+        <Route path="/ad-login" element={<AdminLogin />} />
+        <Route path="/ad-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/ad-notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+        <Route path="/ad-calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
+        <Route path="/ad-settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+        <Route path="/ad-colleges" element={<AdminRoute><AdminColleges /></AdminRoute>} />
+        <Route path="/ad-payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
+        <Route path="/ad-find-person" element={<AdminRoute><AdminFindPerson /></AdminRoute>} />
+        <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
+        <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 
-      {/* ── GREEN ROOM (MANAGER SIDE) ────────────────────────────────── */}
-      <Route path="/green-room" element={
-        <ProtectedRoute allowedRoles={["manager"]}><GreenRoom /></ProtectedRoute>
-      } />
+        {/* ── DATA_ADMIN ───────────────────────────────────────────── */}
+        <Route path="/da-login" element={<DALogin />} />
+        <Route path="/da-students" element={<DARoute><DAStudents /></DARoute>} />
+        <Route path="/da-managers" element={<DARoute><DAManagers /></DARoute>} />
+        <Route path="/da-college-unlock" element={<DARoute><DACollegeUnlock /></DARoute>} />
+        <Route path="/da-audit" element={<DARoute><DAAuditLog /></DARoute>} />
+        <Route path="/da" element={<Navigate to="/da-login" replace />} />
 
-      {/* ── EVENT MANAGER ───────────────────────────────────────────── */}
-      <Route path="/em-login" element={<EMLogin />} />
-      <Route path="/em-dashboard" element={<EMRoute><EMDashboard /></EMRoute>} />
-      <Route path="/em-accommodation" element={<EMRoute><EMAccommodation /></EMRoute>} />
-      <Route path="/gr-dashboard" element={<GRRoute><GRDashboard /></GRRoute>} />
-      <Route path="/accounts-dashboard" element={<AccountsRoute><AccountsDashboard /></AccountsRoute>} />
-    </Routes>
+        {/* ── GREEN ROOM (MANAGER SIDE) ────────────────────────────────── */}
+        <Route path="/green-room" element={
+          <ProtectedRoute allowedRoles={["manager"]}><GreenRoom /></ProtectedRoute>
+        } />
+
+        {/* ── EVENT MANAGER ───────────────────────────────────────────── */}
+        <Route path="/em-login" element={<EMLogin />} />
+        <Route path="/em-dashboard" element={<EMRoute><EMDashboard /></EMRoute>} />
+        <Route path="/em-accommodation" element={<EMRoute><EMAccommodation /></EMRoute>} />
+        <Route path="/gr-dashboard" element={<GRRoute><GRDashboard /></GRRoute>} />
+        <Route path="/accounts-dashboard" element={<AccountsRoute><AccountsDashboard /></AccountsRoute>} />
+      </Routes>
+    </DAProvider>
   );
 }

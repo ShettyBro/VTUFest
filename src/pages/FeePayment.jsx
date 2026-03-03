@@ -50,6 +50,51 @@ const getFileExtension = (filename) => {
   return idx !== -1 ? filename.slice(idx).toLowerCase() : "";
 };
 
+// ── Copy-to-clipboard row ────────────────────────────────────────────────────
+function CopyField({ label, value }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    });
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '7px 0', gap: '8px' }}>
+      <p style={{ margin: 0 }}><strong>{label}:</strong> {value}</p>
+      <button
+        type="button"
+        onClick={handleCopy}
+        title={`Copy ${label}`}
+        style={{
+          flexShrink: 0,
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '4px 6px',
+          borderRadius: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          color: copied ? '#4ade80' : 'rgba(255,255,255,0.4)',
+          transition: 'color 0.2s, background 0.2s',
+        }}
+        onMouseEnter={e => { if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+        onMouseLeave={e => { if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'none'; }}
+      >
+        {copied ? (
+          <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.3px' }}>Copied!</span>
+        ) : (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
 const validateMagicNumber = async (file) => {
   const magic = MAGIC_NUMBERS[file.type];
   if (!magic) return false;
@@ -570,12 +615,11 @@ export default function FeePayment() {
               <div className="glass-card" style={{ borderLeft: "4px solid var(--academic-gold)" }}>
                 <h3 style={{ color: "var(--academic-gold)", margin: '0 0 15px 0' }}>Bank Details</h3>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  <p style={{ margin: '5px 0' }}><strong>Account Name:</strong> Acharya Institutes CMS A/c</p>
-                  <p style={{ margin: '5px 0' }}><strong>Account Number:</strong>002294600002503</p>
-                  <p style={{ margin: '5px 0' }}><strong>IFSC:</strong> YESB0000022</p>
-                  <p style={{ margin: '5px 0' }}><strong>Bank Name:</strong> YES BANK Limited</p>
-                  <p style={{ margin: '5px 0' }}><strong>Branch:</strong>Kasturba Road, Bengaluru – 560001</p>
-
+                  <CopyField label="Account Name" value="Acharya Institutes CMS A/c" />
+                  <CopyField label="Account Number" value="002294600002503" />
+                  <CopyField label="IFSC" value="YESB0000022" />
+                  <CopyField label="Bank Name" value="YES BANK Limited" />
+                  <CopyField label="Branch" value="Kasturba Road, Bengaluru – 560001" />
                 </div>
               </div>
 
