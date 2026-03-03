@@ -63,6 +63,7 @@ export default function AuthPage({ initialView = "login" }) {
     const [loading, setLoading] = useState(false);
     const [globalError, setGlobalError] = useState("");
     const [globalSuccess, setGlobalSuccess] = useState("");
+    const [showHelp, setShowHelp] = useState(false);
 
     /* ================= LOGIN STATE & LOGIC ================= */
     const [loginRole, setLoginRole] = useState("student");
@@ -450,6 +451,16 @@ export default function AuthPage({ initialView = "login" }) {
             <div className="shape shape-2"></div>
 
             <div className="auth-container">
+
+                {/* NEED HELP BUTTON */}
+                <button
+                    className="help-btn"
+                    onClick={() => setShowHelp(true)}
+                    aria-label="Need Help"
+                >
+                    <span className="help-btn-icon">?</span>
+                    <span className="help-btn-text">Need Help?</span>
+                </button>
 
                 {/* --- LEFT PANEL: BRANDING & INFO --- */}
                 <div className="auth-info-panel">
@@ -858,6 +869,35 @@ export default function AuthPage({ initialView = "login" }) {
                     borderRadius: "8px", zIndex: 9999, boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
                 }}>
                     👋  Welcome! First-time login detected. Redirecting to password reset...
+                </div>
+            )}
+
+            {/* HELP MODAL */}
+            {showHelp && (
+                <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
+                    <div className="help-modal" onClick={e => e.stopPropagation()}>
+                        <button className="help-modal-close" onClick={() => setShowHelp(false)} aria-label="Close">&times;</button>
+                        <div className="help-modal-icon">🎯</div>
+                        <h3 className="help-modal-title">Need Help?</h3>
+                        <p className="help-modal-subtitle">Contact our support team for assistance</p>
+                        <div className="help-contact-list">
+                            <a href="mailto:vtufest2026@acharyahabba.com" className="help-contact-item">
+                                <span className="help-contact-icon">✉️</span>
+                                <div>
+                                    <div className="help-contact-label">Email Support</div>
+                                    <div className="help-contact-value">vtufest2026@acharyahabba.com</div>
+                                </div>
+                            </a>
+                            <a href="tel:+919876543210" className="help-contact-item">
+                                <span className="help-contact-icon">📞</span>
+                                <div>
+                                    <div className="help-contact-label">Phone Support</div>
+                                    <div className="help-contact-value">+91 98765 43210</div>
+                                </div>
+                            </a>
+                        </div>
+                        <p className="help-modal-note">Available Mon–Sat, 9 AM – 6 PM</p>
+                    </div>
                 </div>
             )}
         </div>
