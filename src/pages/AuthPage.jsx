@@ -487,7 +487,7 @@ export default function AuthPage({ initialView = "login" }) {
                     {/* === LOGIN FORM === */}
                     {view === "login" && (
                         <form className="auth-form" onSubmit={handleLoginSubmit}>
-                            <h2 className="form-title">Welcome Back</h2>
+                            <h2 className="form-title">Welcome, Champions!</h2>
 
                             {/* ROLE TABS */}
                             <div className="role-tabs">
