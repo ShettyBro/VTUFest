@@ -62,16 +62,17 @@ export default function DAManagers() {
     const [selectedCollegeId, setSelectedCollegeId] = useState("");
     const [collegeSearch, setCollegeSearch] = useState("");
 
-    const [manager, setManager] = useState(null);
+    const [managerData, setManagerData] = useState(null); // holds full {college, manager} response
     const [fetching, setFetching] = useState(false);
     const [fetchError, setFetchError] = useState("");
 
     const [showModal, setShowModal] = useState(false);
     const [removing, setRemoving] = useState(false);
 
-    // Load colleges list for the dropdown
+    // FIX: was /api/da/college (hit the unlock router, returned 404)
+    // Now correctly uses /api/da/colleges — the new da-colleges.js route
     useEffect(() => {
-        daFetch(`${API_BASE}/api/da/college`, token)
+        daFetch(`${API_BASE}/api/da/colleges`, token)
             .then(r => r.json())
             .then(d => { if (d.data) setColleges(d.data); })
             .catch(() => { })
@@ -85,14 +86,14 @@ export default function DAManagers() {
     const handleCollegeSelect = async (collegeId) => {
         if (!collegeId) return;
         setSelectedCollegeId(collegeId);
-        setManager(null);
+        setManagerData(null);
         setFetchError("");
         setFetching(true);
         try {
             const res = await daFetch(`${API_BASE}/api/da/manager/${collegeId}`, token);
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Manager not found");
-            setManager(data.data);
+            setManagerData(data.data); // { college, manager, message? }
         } catch (err) {
             setFetchError(err.message);
         } finally {
@@ -111,7 +112,7 @@ export default function DAManagers() {
             if (!res.ok) throw new Error(data.message || "Failed to remove manager");
             showPopup("Manager removed. Principal can now assign a new manager.", "success");
             setShowModal(false);
-            setManager(null);
+            setManagerData(null);
         } catch (err) {
             showPopup(err.message, "error");
         } finally {
@@ -120,6 +121,8 @@ export default function DAManagers() {
     };
 
     const selectedCollege = colleges.find(c => String(c.college_id) === String(selectedCollegeId));
+    // FIX: backend returns { college, manager } — extract manager from nested response
+    const manager = managerData?.manager;
 
     return (
         <DALayout>
@@ -178,11 +181,12 @@ export default function DAManagers() {
                         <div style={{ padding: "20px 24px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                                 <div>
+                                    {/* FIX: was manager.name — backend returns manager.full_name (from users.full_name) */}
                                     <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "1.05rem", marginBottom: "3px" }}>
-                                        👤 {manager.name}
+                                        👤 {manager.full_name}
                                     </div>
                                     <div style={{ color: "#64748b", fontSize: "0.78rem" }}>
-                                        {selectedCollege?.name}
+                                        {managerData?.college?.college_name || selectedCollege?.name}
                                     </div>
                                 </div>
                                 <span className="da-badge da-badge-purple">MANAGER</span>
@@ -203,12 +207,14 @@ export default function DAManagers() {
                                 </div>
                                 <div className="da-info-item">
                                     <label>Last Login</label>
-                                    <span>{manager.last_login ? new Date(manager.last_login).toLocaleString("en-IN") : "Never"}</span>
+                                    {/* FIX: was manager.last_login — backend returns manager.last_login_at */}
+                                    <span>{manager.last_login_at ? new Date(manager.last_login_at).toLocaleString("en-IN") : "Never"}</span>
                                 </div>
                                 <div className="da-info-item">
                                     <label>Accompanists Created</label>
+                                    {/* FIX: was manager.accompanists_count — backend returns manager.accompanists_created */}
                                     <span style={{ color: "#c084fc", fontWeight: 700 }}>
-                                        {manager.accompanists_count ?? 0}
+                                        {manager.accompanists_created ?? 0}
                                     </span>
                                 </div>
                             </div>
@@ -226,7 +232,7 @@ export default function DAManagers() {
                 )}
 
                 {/* No manager found */}
-                {!fetching && !fetchError && selectedCollegeId && !manager && (
+                {!fetching && !fetchError && selectedCollegeId && managerData && !manager && (
                     <div className="da-empty">
                         No manager assigned to this college.
                     </div>
@@ -239,10 +245,10 @@ export default function DAManagers() {
                 )}
             </div>
 
-            {showModal && (
+            {showModal && manager && (
                 <DeleteModal
                     title="Remove Manager"
-                    description={`This will remove ${manager?.name} as manager for ${selectedCollege?.name}. The principal will be able to assign a new manager after this.`}
+                    description={`This will remove ${manager.full_name} as manager for ${managerData?.college?.college_name || selectedCollege?.name}. The principal will be able to assign a new manager after this.`}
                     onConfirm={handleRemoveManager}
                     onCancel={() => setShowModal(false)}
                     loading={removing}

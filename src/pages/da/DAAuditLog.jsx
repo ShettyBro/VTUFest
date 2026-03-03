@@ -75,26 +75,30 @@ export default function DAAuditLog() {
                             <tbody>
                                 {logs.map((log, i) => (
                                     <tr key={log.id || i}>
+                                        {/* FIX: was log.created_at — backend returns performed_at */}
                                         <td style={{ whiteSpace: "nowrap", color: "#64748b", fontSize: "0.78rem" }}>
-                                            {log.created_at
-                                                ? new Date(log.created_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })
+                                            {log.performed_at
+                                                ? new Date(log.performed_at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })
                                                 : "—"
                                             }
                                         </td>
+                                        {/* FIX: was log.action — backend returns action_type */}
                                         <td>
-                                            <ActionBadge action={log.action} />
+                                            <ActionBadge action={log.action_type} />
                                         </td>
                                         <td style={{ color: "#94a3b8", fontSize: "0.82rem" }}>
                                             {log.target_type || "—"}
                                         </td>
                                         <td>
-                                            <div style={{ color: "#e2e8f0", fontWeight: 500 }}>{log.name || "—"}</div>
+                                            {/* FIX: was log.name — backend returns student_name */}
+                                            <div style={{ color: "#e2e8f0", fontWeight: 500 }}>{log.student_name || "—"}</div>
                                             {log.usn && (
                                                 <div style={{ color: "#64748b", fontSize: "0.75rem" }}>{log.usn}</div>
                                             )}
                                         </td>
+                                        {/* FIX: was log.college — backend returns college_name */}
                                         <td style={{ color: "#94a3b8", fontSize: "0.82rem" }}>
-                                            {log.college || "—"}
+                                            {log.college_name || "—"}
                                         </td>
                                         <td style={{ maxWidth: "200px" }}>
                                             <div style={{

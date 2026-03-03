@@ -93,6 +93,8 @@ export default function DACollegeUnlock() {
     const [showModal, setShowModal] = useState(false);
     const [unlocking, setUnlocking] = useState(false);
 
+    // FIX: was /api/da/colleges (didn't exist) — now correctly calls /api/da/colleges
+    // which is the new da-colleges.js route returning {college_id, name}
     useEffect(() => {
         daFetch(`${API_BASE}/api/da/colleges`, token)
             .then(r => r.json())
@@ -198,37 +200,44 @@ export default function DACollegeUnlock() {
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
                                 <div>
                                     <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "1.05rem", marginBottom: "4px" }}>
-                                        🏫 {status.college_name || selectedCollege?.name}
+                                        🏫 {status.college?.college_name || selectedCollege?.name}
                                     </div>
                                 </div>
                                 <LockStatusBadge locked={status.is_locked} />
                             </div>
 
                             {/* Participant counts */}
+                            {/* FIX: was status.temp_count / status.final_count — backend nests under participant_counts */}
                             <div className="da-section-label">Participant Counts</div>
                             <div className="da-info-grid" style={{ marginBottom: "16px" }}>
                                 <div className="da-info-item">
                                     <label>Temp (Unconfirmed)</label>
-                                    <span style={{ color: "#fbbf24", fontWeight: 700 }}>{status.temp_count ?? "—"}</span>
+                                    <span style={{ color: "#fbbf24", fontWeight: 700 }}>
+                                        {status.participant_counts?.temp_master_count ?? "—"}
+                                    </span>
                                 </div>
                                 <div className="da-info-item">
                                     <label>Final Master</label>
-                                    <span style={{ color: "#4ade80", fontWeight: 700 }}>{status.final_count ?? "—"}</span>
+                                    <span style={{ color: "#4ade80", fontWeight: 700 }}>
+                                        {status.participant_counts?.final_master_count ?? "—"}
+                                    </span>
                                 </div>
                             </div>
 
                             {/* Payment receipts */}
-                            {status.receipts && status.receipts.length > 0 && (
+                            {/* FIX: was status.receipts — backend nests under payment_summary.receipts */}
+                            {status.payment_summary?.receipts && status.payment_summary.receipts.length > 0 && (
                                 <>
                                     <div className="da-section-label">Payment Receipts</div>
                                     <div className="da-receipt-list">
-                                        {status.receipts.map((r, i) => (
+                                        {status.payment_summary.receipts.map((r, i) => (
                                             <div key={i} className="da-receipt-row">
-                                                <span>{r.receipt_number || r.id || `Receipt ${i + 1}`}</span>
+                                                <span>{r.utr_reference_number || r.id || `Receipt ${i + 1}`}</span>
                                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                    {r.amount && (
+                                                    {/* FIX: was r.amount — backend column is amount_paid */}
+                                                    {r.amount_paid && (
                                                         <span style={{ color: "#e2e8f0", fontWeight: 500 }}>
-                                                            ₹{r.amount}
+                                                            ₹{r.amount_paid}
                                                         </span>
                                                     )}
                                                     <ReceiptStatusBadge status={r.status} />
@@ -238,7 +247,7 @@ export default function DACollegeUnlock() {
                                     </div>
                                 </>
                             )}
-                            {status.receipts && status.receipts.length === 0 && (
+                            {status.payment_summary?.receipts && status.payment_summary.receipts.length === 0 && (
                                 <div style={{ color: "#64748b", fontSize: "0.83rem", margin: "8px 0 16px" }}>
                                     No payment receipts found.
                                 </div>
@@ -252,6 +261,14 @@ export default function DACollegeUnlock() {
                                         <strong style={{ display: "block", marginBottom: "3px" }}>Cannot unlock</strong>
                                         {status.block_reason}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Not locked info */}
+                            {!status.is_locked && (
+                                <div className="da-alert da-alert-yellow" style={{ marginTop: "12px" }}>
+                                    <span>ℹ️</span>
+                                    <span>This college is not currently locked. Nothing to unlock.</span>
                                 </div>
                             )}
 
@@ -279,7 +296,7 @@ export default function DACollegeUnlock() {
 
             {showModal && (
                 <UnlockModal
-                    collegeName={status?.college_name || selectedCollege?.name}
+                    collegeName={status?.college?.college_name || selectedCollege?.name}
                     onConfirm={handleUnlock}
                     onCancel={() => setShowModal(false)}
                     loading={unlocking}
