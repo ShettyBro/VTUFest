@@ -10,7 +10,7 @@ import "../styles/auth.css"; // all help-* CSS classes live here
    reflect on every page that imports this component.
    ───────────────────────────────────────────────────────────────── */
 
-const CONTACT_EMAIL = "adsa@acharya.ac.in";
+const CONTACT_EMAIL = "support@acharyahabba.com";
 const CONTACT_PHONE = "+91 98765 43210";
 const CONTACT_PHONE_HREF = "tel:+919876543210";
 const CONTACT_HOURS = "Mon–Sat, 9 AM – 6 PM";
