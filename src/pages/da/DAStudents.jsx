@@ -108,8 +108,28 @@ export default function DAStudents() {
         try {
             const res = await daFetch(`${API_BASE}/api/da/student/${id}`, token);
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Student not found");
-            setStudent(data.data);
+            if (!res.ok || !data.data) throw new Error(data.message || "Student not found");
+
+            // Map the nested API response strictly into the flat structure the UI expects
+            const d = data.data;
+            setStudent({
+                student_id: d.student?.id,
+                name: d.student?.full_name,
+                usn: d.student?.usn,
+                email: d.student?.email,
+                phone: d.student?.phone,
+                gender: d.student?.gender,
+                photo_url: d.student?.photo_url,
+                created_at: d.student?.created_at,
+                last_login: d.student?.last_login_at,
+                college_name: d.college?.college_name,
+                college_code: d.college?.college_code,
+                application: d.application,
+                event_tables: d.event_tables_found || [],
+                can_delete_application: d.permissions?.can_delete_application,
+                can_delete_student: d.permissions?.can_delete_student,
+                block_reason: d.permissions?.block_reason,
+            });
         } catch (err) {
             setSearchError(err.message);
         } finally {
@@ -258,7 +278,7 @@ export default function DAStudents() {
                                         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
                                             {student.event_tables.map((ev, i) => (
                                                 <span key={i} className="da-event-chip">
-                                                    ⚡ {ev.event_name || ev.table_name || `Event ${i + 1}`}
+                                                    ⚡ {typeof ev === 'string' ? ev : (ev.event_name || ev.table_name || `Event ${i + 1}`)}
                                                 </span>
                                             ))}
                                         </div>
@@ -266,7 +286,7 @@ export default function DAStudents() {
                                 )}
 
                                 {/* Block Reason */}
-                                {student.block_reason && (
+                                {!student.can_delete_application && !student.can_delete_student && student.block_reason && (
                                     <div className={`da-alert ${student.block_reason.toLowerCase().includes("manager to remove") ? "da-alert-orange" : "da-alert-yellow"}`}>
                                         <span>{student.block_reason.toLowerCase().includes("manager to remove") ? "🔶" : "⚠️"}</span>
                                         <div>

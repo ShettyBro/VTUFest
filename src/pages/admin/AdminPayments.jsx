@@ -93,7 +93,15 @@ export default function AdminPayments() {
                 }),
             });
             const data = await res.json();
+
+            if (res.status === 429) {
+                const limitMsg = data.message || "Daily payment verification limit reached.";
+                window.alert(`🚨 LIMIT EXCEEDED 🚨\n\n${limitMsg}`);
+                throw new Error(limitMsg);
+            }
+
             if (!res.ok || !data.success) throw new Error(data.message || "Action failed");
+
             setExpandedId(null);
             setRemarks((prev) => { const n = { ...prev }; delete n[id]; return n; });
             fetchPayments();

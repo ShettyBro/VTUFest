@@ -71,7 +71,7 @@ export default function DAManagers() {
 
     // Load colleges list for the dropdown
     useEffect(() => {
-        daFetch(`${API_BASE}/api/da/colleges`, token)
+        daFetch(`${API_BASE}/api/da/college`, token)
             .then(r => r.json())
             .then(d => { if (d.data) setColleges(d.data); })
             .catch(() => { })
