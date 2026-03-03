@@ -19,11 +19,22 @@ export default function Navbar() {
   const userName = localStorage.getItem("name") || "User";
   const userUsn = localStorage.getItem("usn") || "";
 
-  const [userStudentId, setUserStudentId] = useState(localStorage.getItem("student_id") || "");
+  const getHabbaId = () => {
+    const rawStudentId = localStorage.getItem("student_id");
+    if (rawStudentId) return rawStudentId;
+
+    // Fallback: AuthPage saves user_id during login
+    const rawUserId = localStorage.getItem("user_id");
+    if (rawUserId) return `AVH${rawUserId}2026`;
+
+    return "";
+  };
+
+  const [userStudentId, setUserStudentId] = useState(getHabbaId());
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setUserStudentId(localStorage.getItem("student_id") || "");
+      setUserStudentId(getHabbaId());
     };
     const interval = setInterval(handleStorageChange, 1000);
     return () => clearInterval(interval);
