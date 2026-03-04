@@ -173,7 +173,7 @@ export default function AppRoutes() {
 
         {/* ── EVENT MANAGER ───────────────────────────────────────────── */}
         <Route path="/em-login" element={<EMLogin />} />
-        <Route path="/em-dashboard" element={<EMRoute><EMDashboard /></EMRoute>} />
+        <Route path="/em-dashboard" element={<Navigate to="/em-accommodation" replace />} />
         <Route path="/em-accommodation" element={<EMRoute><EMAccommodation /></EMRoute>} />
         <Route path="/gr-dashboard" element={<GRRoute><GRDashboard /></GRRoute>} />
         <Route path="/accounts-dashboard" element={<AccountsRoute><AccountsDashboard /></AccountsRoute>} />

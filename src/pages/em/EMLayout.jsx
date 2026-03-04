@@ -6,7 +6,6 @@ import { usePopup } from "../../context/PopupContext";
 import SessionTimerBadge from "../../components/SessionTimerBadge";
 
 const NAV_ITEMS = [
-    { path: "/em-dashboard", label: "Dashboard", icon: "📊" },
     { path: "/em-accommodation", label: "Accommodation", icon: "🛏️" },
 ];
 

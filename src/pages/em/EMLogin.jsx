@@ -13,7 +13,7 @@ export default function EMLogin() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [selectedRole, setSelectedRole] = useState("em");
+    const [selectedRole, setSelectedRole] = useState("EVENT_MANAGER");
 
     useEffect(() => {
         // EM / GR already logged in
@@ -21,7 +21,7 @@ export default function EMLogin() {
         const emRole = localStorage.getItem("vtufest_em_role");
         if (emToken) {
             if (emRole === "GR_INCHARGE") navigate("/gr-dashboard");
-            else navigate("/em-dashboard");
+            else navigate("/em-accommodation");
             return;
         }
         // Accounts already logged in
@@ -72,7 +72,7 @@ export default function EMLogin() {
                 localStorage.setItem("vtufest_em_role", selectedRole);
 
                 if (selectedRole === "GR_INCHARGE") navigate("/gr-dashboard");
-                else navigate("/em-dashboard");
+                else navigate("/em-accommodation");
             }
         } catch (err) {
             setError(err.message);
@@ -82,7 +82,7 @@ export default function EMLogin() {
     };
 
     const roleLabels = {
-        em: "Event Manager Portal",
+        EVENT_MANAGER: "Event Manager Portal",
         GR_INCHARGE: "Green Room Incharge Portal",
         ACCOUNTS: "Accounts Department Portal",
     };
@@ -117,8 +117,8 @@ export default function EMLogin() {
                         <div className="role-tabs">
                             <button
                                 type="button"
-                                className={`role-tab ${selectedRole === "em" ? "active" : ""}`}
-                                onClick={() => { setSelectedRole("em"); setError(""); }}
+                                className={`role-tab ${selectedRole === "EVENT_MANAGER" ? "active" : ""}`}
+                                onClick={() => { setSelectedRole("EVENT_MANAGER"); setError(""); }}
                             >
                                 Event Manager
                             </button>
