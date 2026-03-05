@@ -174,9 +174,9 @@ export default function AdminFeedback() {
         ];
 
         const byRoleData = [
-            { label: "Students", value: by_role?.student || 0, color: ROLE_COLORS.student },
-            { label: "Managers", value: by_role?.manager || 0, color: ROLE_COLORS.manager },
-            { label: "Principals", value: by_role?.principal || 0, color: ROLE_COLORS.principal },
+            { label: "Students", value: by_role?.student || by_role?.STUDENT || 0, color: ROLE_COLORS.student },
+            { label: "Managers", value: by_role?.manager || by_role?.MANAGER || 0, color: ROLE_COLORS.manager },
+            { label: "Principals", value: by_role?.principal || by_role?.PRINCIPAL || 0, color: ROLE_COLORS.principal },
         ];
         const maxRole = Math.max(...byRoleData.map((d) => d.value), 1);
 
@@ -220,7 +220,7 @@ export default function AdminFeedback() {
                             return (
                                 <div key={r} style={{ marginBottom: "12px" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "4px" }}>
-                                        <span style={{ color: ROLE_COLORS[r], fontWeight: 600, textTransform: "capitalize" }}>{r}</span>
+                                        <span style={{ color: ROLE_COLORS[r.toLowerCase()], fontWeight: 600, textTransform: "capitalize" }}>{r}</span>
                                         <span style={{ color: "#94a3b8", fontSize: "0.72rem" }}>
                                             {s.given || 0} given · {s.skipped || 0} skipped · {s.not_shown || 0} not shown
                                         </span>
@@ -383,8 +383,8 @@ export default function AdminFeedback() {
                                                     <span style={{
                                                         padding: "2px 10px",
                                                         borderRadius: "20px",
-                                                        background: `${ROLE_COLORS[row.role] || "#94a3b8"}22`,
-                                                        color: ROLE_COLORS[row.role] || "#94a3b8",
+                                                        background: `${ROLE_COLORS[row.role?.toLowerCase()] || "#94a3b8"}22`,
+                                                        color: ROLE_COLORS[row.role?.toLowerCase()] || "#94a3b8",
                                                         fontSize: "0.75rem",
                                                         fontWeight: 600,
                                                         textTransform: "capitalize",

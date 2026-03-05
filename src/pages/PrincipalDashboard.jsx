@@ -109,12 +109,9 @@ export default function PrincipalDashboard() {
         if (data.data?.user_id) {
           localStorage.setItem("student_id", `AVH${data.data.user_id}2026`);
         }
-        // Show feedback popup if college is finally approved and feedback not yet given
-        if (
-          data.data?.college?.is_final_approved === true &&
-          data.data?.feedback_status === "not_shown"
-        ) {
-          setShowFeedbackPopup(true);
+        // Show feedback popup if college is finally approved
+        if (data.data?.college?.is_final_approved === true) {
+          checkFeedbackStatus(token);
         }
       }
     } catch (error) {
@@ -123,6 +120,20 @@ export default function PrincipalDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const checkFeedbackStatus = async (token) => {
+    try {
+      const res = await fetch("https://api.vtufest2026.acharyahabba.com/api/feedback/my", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const status = data?.feedback_status;
+      if (!status || status === "not_shown") {
+        setShowFeedbackPopup(true);
+      }
+    } catch (_) { }
   };
 
   const checkLockStatus = async () => {

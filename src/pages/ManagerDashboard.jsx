@@ -100,10 +100,10 @@ export default function ManagerDashboard() {
         if (data.data?.user_id) {
           localStorage.setItem("student_id", `AVH${data.data.user_id}2026`);
         }
-        // Show feedback popup if payment receipt uploaded and feedback not yet given
+        // Show feedback popup if payment receipt uploaded
         const hasPayment = data.data?.payment_receipts?.length > 0 || !!data.data?.payment_receipt_url;
-        if (hasPayment && data.data?.feedback_status === "not_shown") {
-          setShowFeedbackPopup(true);
+        if (hasPayment) {
+          checkFeedbackStatus(token);
         }
       }
     } catch (error) {
@@ -112,6 +112,20 @@ export default function ManagerDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const checkFeedbackStatus = async (token) => {
+    try {
+      const res = await fetch("https://api.vtufest2026.acharyahabba.com/api/feedback/my", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const status = data?.feedback_status;
+      if (!status || status === "not_shown") {
+        setShowFeedbackPopup(true);
+      }
+    } catch (_) { }
   };
 
   const checkProfileCompletion = async () => {
