@@ -396,7 +396,7 @@ export default function AdminFeedback() {
                                                 <td style={{ ...tdStyle, fontSize: "1.1rem" }}>{emojiForRating(row.rating_ease_of_use)}</td>
                                                 <td style={{ ...tdStyle, fontSize: "1.1rem" }}>{emojiForRating(row.rating_role_specific)}</td>
                                                 <td style={{ ...tdStyle, color: "#64748b", fontSize: "0.78rem" }}>
-                                                    {row.created_at ? new Date(row.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
+                                                    {row.submitted_at ? new Date(row.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
                                                 </td>
                                                 <td style={{ ...tdStyle, color: "#64748b", fontSize: "0.78rem" }}>
                                                     {row.updated_at ? new Date(row.updated_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
