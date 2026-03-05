@@ -80,7 +80,7 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
 
     useEffect(() => {
-        adminFetch(`${API_BASE}/api/da/colleges`, { headers })
+        adminFetch(`${API_BASE}/api/admin/volunteers/colleges`, { headers })
             .then((r) => r.json())
             .then((d) => { if (d.success) setColleges(d.data || []); })
             .catch(() => { });
@@ -106,7 +106,7 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
     const filteredColleges = useMemo(() => {
         const q = collegeSearch.toLowerCase();
         return colleges.filter((c) =>
-            c.name?.toLowerCase().includes(q) ||
+            c.college_name?.toLowerCase().includes(q) ||
             c.college_code?.toLowerCase().includes(q)
         );
     }, [colleges, collegeSearch]);
@@ -222,27 +222,97 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
 
                     {vType === "college_buddy" && (
                         <Field label="Allocated College" required>
-                            <input
-                                type="text"
-                                placeholder="Search college…"
-                                value={collegeSearch}
-                                onChange={(e) => setCollegeSearch(e.target.value)}
-                                style={{ ...inputStyle, marginBottom: "6px" }}
-                            />
-                            <select
-                                required
-                                value={form.college_id}
-                                onChange={(e) => set("college_id", e.target.value)}
-                                style={{ ...inputStyle, cursor: "pointer", maxHeight: "160px" }}
-                                size={Math.min(6, filteredColleges.length + 1)}
-                            >
-                                <option value="">— Select College —</option>
-                                {filteredColleges.map((c) => (
-                                    <option key={c.college_id} value={c.college_id}>
-                                        [{c.college_code}] {c.name}
-                                    </option>
-                                ))}
-                            </select>
+                            {/* Search bar — same style as AdminColleges page */}
+                            <div style={{ position: "relative", marginBottom: "8px" }}>
+                                <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none", fontSize: "0.95rem" }}>🔍</span>
+                                <input
+                                    type="text"
+                                    placeholder="Search by college name or code…"
+                                    value={collegeSearch}
+                                    onChange={(e) => setCollegeSearch(e.target.value)}
+                                    style={{
+                                        ...inputStyle,
+                                        paddingLeft: "36px",
+                                        paddingRight: collegeSearch ? "34px" : "12px",
+                                    }}
+                                />
+                                {collegeSearch && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCollegeSearch("")}
+                                        style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1rem", lineHeight: 1 }}
+                                    >✕</button>
+                                )}
+                            </div>
+
+                            {/* Scrollable clickable list */}
+                            <div style={{
+                                border: "1px solid rgba(255,255,255,0.15)",
+                                borderRadius: "8px",
+                                maxHeight: "190px",
+                                overflowY: "auto",
+                                background: "rgba(255,255,255,0.04)",
+                                scrollbarWidth: "thin",
+                                scrollbarColor: "rgba(129,140,248,0.4) transparent",
+                            }}>
+                                {filteredColleges.length === 0 ? (
+                                    <div style={{ padding: "14px 16px", color: "var(--text-muted)", fontSize: "0.83rem", textAlign: "center" }}>
+                                        {collegeSearch ? `No colleges matching "${collegeSearch}"` : "Loading colleges…"}
+                                    </div>
+                                ) : filteredColleges.map((c, idx) => {
+                                    const isSelected = String(form.college_id) === String(c.id);
+                                    return (
+                                        <div
+                                            key={c.id}
+                                            onClick={() => set("college_id", c.id)}
+                                            style={{
+                                                display: "flex", alignItems: "center", gap: "10px",
+                                                padding: "9px 14px",
+                                                borderBottom: idx < filteredColleges.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                                                cursor: "pointer",
+                                                background: isSelected ? "rgba(129,140,248,0.12)" : "transparent",
+                                                transition: "background 0.12s",
+                                            }}
+                                            onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                                            onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+                                        >
+                                            <span style={{
+                                                width: "16px", height: "16px", borderRadius: "50%", flexShrink: 0,
+                                                border: isSelected ? "none" : "2px solid rgba(255,255,255,0.2)",
+                                                background: isSelected ? "#818cf8" : "transparent",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                fontSize: "0.6rem", color: "#0f172a", fontWeight: 900,
+                                            }}>
+                                                {isSelected ? "✓" : ""}
+                                            </span>
+                                            <code style={{ color: "var(--text-muted)", fontSize: "0.75rem", background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: "4px", flexShrink: 0 }}>
+                                                {c.college_code}
+                                            </code>
+                                            <span style={{ color: isSelected ? "#f1f5f9" : "var(--text-secondary)", fontSize: "0.85rem", fontWeight: isSelected ? 600 : 400 }}>
+                                                {c.college_name}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Selected confirmation chip */}
+                            {form.college_id && (() => {
+                                const sel = colleges.find((c) => String(c.id) === String(form.college_id));
+                                return sel ? (
+                                    <div style={{ marginTop: "7px", display: "flex", alignItems: "center", gap: "7px" }}>
+                                        <span style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8", padding: "3px 10px", borderRadius: "20px", fontSize: "0.76rem", fontWeight: 700 }}>
+                                            ✓ {sel.college_name}
+                                        </span>
+                                        <button type="button" onClick={() => set("college_id", "")} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.75rem" }}>
+                                            clear
+                                        </button>
+                                    </div>
+                                ) : null;
+                            })()}
+
+                            {/* Hidden required-guard */}
+                            <input type="text" required readOnly value={form.college_id || ""} style={{ position: "absolute", opacity: 0, height: 0, width: 0, pointerEvents: "none" }} tabIndex={-1} />
                         </Field>
                     )}
 
