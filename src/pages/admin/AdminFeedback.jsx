@@ -174,9 +174,9 @@ export default function AdminFeedback() {
         ];
 
         const byRoleData = [
-            { label: "Students", value: by_role?.student || by_role?.STUDENT || 0, color: ROLE_COLORS.student },
-            { label: "Managers", value: by_role?.manager || by_role?.MANAGER || 0, color: ROLE_COLORS.manager },
-            { label: "Principals", value: by_role?.principal || by_role?.PRINCIPAL || 0, color: ROLE_COLORS.principal },
+            { label: "Students", value: (by_role?.student || by_role?.STUDENT || by_role?.Student || 0), color: ROLE_COLORS.student },
+            { label: "Managers", value: (by_role?.manager || by_role?.MANAGER || by_role?.Manager || 0), color: ROLE_COLORS.manager },
+            { label: "Principals", value: (by_role?.principal || by_role?.PRINCIPAL || by_role?.Principal || 0), color: ROLE_COLORS.principal },
         ];
         const maxRole = Math.max(...byRoleData.map((d) => d.value), 1);
 
