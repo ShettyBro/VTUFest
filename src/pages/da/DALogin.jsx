@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useDA } from "../../context/DAContext";
@@ -16,10 +16,9 @@ export default function DALogin() {
     const [error, setError] = useState("");
 
     // Already logged in → go to students page
-    if (token) {
-        navigate("/da-students", { replace: true });
-        return null;
-    }
+    useEffect(() => {
+        if (token) navigate("/da-students", { replace: true });
+    }, [token]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
