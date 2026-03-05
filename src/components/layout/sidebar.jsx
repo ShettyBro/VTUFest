@@ -7,7 +7,10 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) =>
+    Array.isArray(path)
+      ? path.includes(location.pathname)
+      : location.pathname === path;
 
   const Icon = ({ children }) => (
     <span className="sidebar-icon">{children}</span>
@@ -44,6 +47,20 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
             </svg>
           </Icon>
           <span className="label">Register</span>
+        </div>
+      )}
+
+      {role === "student" && (
+        <div
+          className={`sidebar-item ${isActive("/student/feedback") ? "active" : ""}`}
+          onClick={() => navigate("/student/feedback")}
+        >
+          <Icon>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </Icon>
+          <span className="label">Feedback</span>
         </div>
       )}
 
@@ -140,6 +157,18 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
               </svg>
             </Icon>
             <span className="label">Fees Payment</span>
+          </div>
+
+          <div
+            className={`sidebar-item ${isActive("/principal/feedback") ? "active" : ""}`}
+            onClick={() => navigate("/principal/feedback")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </Icon>
+            <span className="label">Feedback</span>
           </div>
         </>
       )}
@@ -264,6 +293,18 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
               </svg>
             </Icon>
             <span className="label">Fee Payment</span>
+          </div>
+
+          <div
+            className={`sidebar-item ${isActive("/manager/feedback") ? "active" : ""}`}
+            onClick={() => navigate("/manager/feedback")}
+          >
+            <Icon>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </Icon>
+            <span className="label">Feedback</span>
           </div>
         </>
       )}

@@ -10,6 +10,7 @@ import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 import MobileBlockScreen from "../components/MobileBlockScreen";
 import { isPhysicalMobile } from "../utils/deviceDetect";
 import HelpButton from "../components/HelpButton";
+import FeedbackPopup from "../components/feedback/FeedbackPopup";
 
 export default function PrincipalDashboard() {
   // ── MOBILE GUARD — physical phones cannot access principal portal ──
@@ -24,6 +25,7 @@ export default function PrincipalDashboard() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
 
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [notificationsData, setNotificationsData] = useState([]);
@@ -106,6 +108,13 @@ export default function PrincipalDashboard() {
         // Store user_id so navbar can show Habba ID in profile tooltip
         if (data.data?.user_id) {
           localStorage.setItem("student_id", `AVH${data.data.user_id}2026`);
+        }
+        // Show feedback popup if college is finally approved and feedback not yet given
+        if (
+          data.data?.college?.is_final_approved === true &&
+          data.data?.feedback_status === "not_shown"
+        ) {
+          setShowFeedbackPopup(true);
         }
       }
     } catch (error) {
@@ -585,6 +594,14 @@ export default function PrincipalDashboard() {
           isRegistrationLock={lockStatus.registration_lock}
         />
       )} */}
+
+      {showFeedbackPopup && (
+        <FeedbackPopup
+          role="principal"
+          triggerEvent="final_approval_given"
+          onClose={() => setShowFeedbackPopup(false)}
+        />
+      )}
     </Layout>
   );
 }

@@ -10,6 +10,7 @@ import { usePopup } from "../context/PopupContext";
 import MobileBlockScreen from "../components/MobileBlockScreen";
 import { isPhysicalMobile } from "../utils/deviceDetect";
 import HelpButton from "../components/HelpButton";
+import FeedbackPopup from "../components/feedback/FeedbackPopup";
 
 export default function ManagerDashboard() {
   // ── MOBILE GUARD — physical phones cannot access manager portal ──
@@ -24,6 +25,7 @@ export default function ManagerDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
 
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [notificationsData, setNotificationsData] = useState([]);
@@ -97,6 +99,11 @@ export default function ManagerDashboard() {
         setDashboardData(data.data);
         if (data.data?.user_id) {
           localStorage.setItem("student_id", `AVH${data.data.user_id}2026`);
+        }
+        // Show feedback popup if payment receipt uploaded and feedback not yet given
+        const hasPayment = data.data?.payment_receipts?.length > 0 || !!data.data?.payment_receipt_url;
+        if (hasPayment && data.data?.feedback_status === "not_shown") {
+          setShowFeedbackPopup(true);
         }
       }
     } catch (error) {
@@ -430,6 +437,14 @@ export default function ManagerDashboard() {
       </div>
 
       {showProfileModal && <ManagerProfileModal onComplete={() => setShowProfileModal(false)} />}
+
+      {showFeedbackPopup && (
+        <FeedbackPopup
+          role="manager"
+          triggerEvent="payment_proof_uploaded"
+          onClose={() => setShowFeedbackPopup(false)}
+        />
+      )}
 
       {/* {showFinalApprovalOverlay && lockStatus && (
         <FinalApprovalOverlay

@@ -9,6 +9,7 @@ import { usePopup } from "../context/PopupContext";
 import { ChevronDown } from "lucide-react";
 import QRCode from "react-qr-code";
 import { isPhysicalMobile } from "../utils/deviceDetect";
+import FeedbackPopup from "../components/feedback/FeedbackPopup";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [showAllocatedEventsModal, setShowAllocatedEventsModal] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
   const isMobile = isPhysicalMobile();
   const { showPopup } = usePopup();
 
@@ -216,6 +218,14 @@ export default function Dashboard() {
       // Persist student_id so other components (e.g. navbar) can read it
       if (data.data?.student?.id) {
         localStorage.setItem("student_id", `AVH${data.data.student.id}2026`);
+      }
+
+      // Show feedback popup if student has submitted an application and hasn't given feedback yet
+      if (
+        data.data?.application &&
+        data.data?.feedback_status === "not_shown"
+      ) {
+        setShowFeedbackPopup(true);
       }
 
     } catch (error) {
@@ -660,6 +670,14 @@ export default function Dashboard() {
         )}
 
       </div>
+
+      {showFeedbackPopup && (
+        <FeedbackPopup
+          role="student"
+          triggerEvent="application_submitted"
+          onClose={() => setShowFeedbackPopup(false)}
+        />
+      )}
     </Layout>
   );
 }

@@ -12,6 +12,7 @@ import AssignEvents from "../pages/AssignEvents";
 import Dashboard from "../pages/Dashboard";
 import StudentRegister from "../pages/StudentRegister";
 import StudentApplication from "../pages/StudentApplication";
+import StudentFeedback from "../pages/student/StudentFeedback";
 
 /* PRINCIPAL + MANAGER */
 import PrincipalDashboard from "../pages/PrincipalDashboard";
@@ -24,6 +25,8 @@ import Rules from "../pages/Rules";
 import FeePayment from "../pages/FeePayment";
 import ManagerDashboard from "../pages/ManagerDashboard";
 import ForceResetPassword from "../pages/ForceResetPassword";
+import ManagerFeedback from "../pages/manager/ManagerFeedback";
+import PrincipalFeedback from "../pages/principal/PrincipalFeedback";
 
 /* ADMIN */
 import AdminLogin from "../pages/admin/AdminLogin";
@@ -36,6 +39,7 @@ import AdminPayments from "../pages/admin/AdminPayments";
 import AdminFindPerson from "../pages/admin/Adminfindperson";
 import AdminAccommodation from "../pages/admin/AdminAccommodation";
 import AdminVolunteers from "../pages/admin/AdminVolunteers";
+import AdminFeedback from "../pages/admin/AdminFeedback";
 
 /* DATA_ADMIN */
 import DALogin from "../pages/da/DALogin";
@@ -116,6 +120,9 @@ export default function AppRoutes() {
         <Route path="/student-application" element={
           <ProtectedRoute allowedRoles={["student"]}><StudentApplication /></ProtectedRoute>
         } />
+        <Route path="/student/feedback" element={
+          <ProtectedRoute allowedRoles={["student"]}><StudentFeedback /></ProtectedRoute>
+        } />
 
         {/* ── PRINCIPAL + MANAGER ─────────────────────────────────────── */}
         <Route path="/principal-dashboard" element={
@@ -145,6 +152,12 @@ export default function AppRoutes() {
         <Route path="/rules" element={
           <ProtectedRoute allowedRoles={["student", "principal", "manager"]}><Rules /></ProtectedRoute>
         } />
+        <Route path="/manager/feedback" element={
+          <ProtectedRoute allowedRoles={["manager"]}><ManagerFeedback /></ProtectedRoute>
+        } />
+        <Route path="/principal/feedback" element={
+          <ProtectedRoute allowedRoles={["principal"]}><PrincipalFeedback /></ProtectedRoute>
+        } />
 
         {/* ── ADMIN ───────────────────────────────────────────────────── */}
         <Route path="/ad-login" element={<AdminLogin />} />
@@ -157,6 +170,7 @@ export default function AppRoutes() {
         <Route path="/ad-find-person" element={<AdminRoute><AdminFindPerson /></AdminRoute>} />
         <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
         <Route path="/ad-volunteers" element={<AdminRoute><AdminVolunteers /></AdminRoute>} />
+        <Route path="/ad-feedback" element={<AdminRoute><AdminFeedback /></AdminRoute>} />
         <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 
         {/* ── DATA_ADMIN ───────────────────────────────────────────── */}

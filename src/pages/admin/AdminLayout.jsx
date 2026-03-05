@@ -12,6 +12,7 @@ const NAV_ITEMS = [
     { path: "/ad-volunteers", label: "Volunteers", icon: "🙋" },
     { path: "/ad-accommodation", label: "Accommodation", icon: "🛏️" },
     { path: "/ad-find-person", label: "Find Person", icon: "🔍" },
+    { path: "/ad-feedback", label: "Feedback", icon: "💬" },
     { path: "/ad-calendar", label: "Calendar", icon: "📅" },
     { path: "/ad-notifications", label: "Notifications", icon: "🔔" },
     { path: "/ad-settings", label: "Settings", icon: "⚙️" },
