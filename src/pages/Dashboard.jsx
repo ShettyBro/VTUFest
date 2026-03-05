@@ -220,12 +220,11 @@ export default function Dashboard() {
         localStorage.setItem("student_id", `AVH${data.data.student.id}2026`);
       }
 
-      // Show feedback popup if student has submitted an application and hasn't given feedback yet
-      if (
-        data.data?.application &&
-        data.data?.feedback_status === "not_shown"
-      ) {
-        setShowFeedbackPopup(true);
+      // Show feedback popup if student has an application.
+      // We call /api/feedback/my directly so this works even if the dashboard
+      // API doesn't yet include feedback_status in its response.
+      if (data.data?.application) {
+        checkFeedbackStatus(token);
       }
 
     } catch (error) {
@@ -239,6 +238,26 @@ export default function Dashboard() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Check feedback status independently so the popup works even if
+  // the dashboard API doesn't yet return feedback_status.
+  const checkFeedbackStatus = async (token) => {
+    try {
+      const res = await fetch(
+        "https://api.vtufest2026.acharyahabba.com/api/feedback/my",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) return; // API not ready yet — skip silently
+      const data = await res.json();
+      // Show popup only if status is not_shown (i.e. user hasn't interacted with feedback)
+      const status = data?.data?.feedback_status;
+      if (!status || status === "not_shown") {
+        setShowFeedbackPopup(true);
+      }
+    } catch (_) {
+      // Network error — don't block the dashboard
     }
   };
 
