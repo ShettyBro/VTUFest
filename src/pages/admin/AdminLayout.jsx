@@ -7,14 +7,14 @@ import SessionTimerBadge from "../../components/SessionTimerBadge";
 
 const NAV_ITEMS = [
     { path: "/ad-dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/ad-notifications", label: "Notifications", icon: "🔔" },
-    { path: "/ad-calendar", label: "Calendar", icon: "📅" },
-    { path: "/ad-settings", label: "Settings", icon: "⚙️" },
     { path: "/ad-colleges", label: "Colleges", icon: "🏫" },
     { path: "/ad-payments", label: "Payments", icon: "💳" },
+    { path: "/ad-volunteers", label: "Volunteers", icon: "🙋" },
     { path: "/ad-accommodation", label: "Accommodation", icon: "🛏️" },
     { path: "/ad-find-person", label: "Find Person", icon: "🔍" },
-    { path: "/ad-volunteers", label: "Volunteers", icon: "🙋" },
+    { path: "/ad-calendar", label: "Calendar", icon: "📅" },
+    { path: "/ad-notifications", label: "Notifications", icon: "🔔" },
+    { path: "/ad-settings", label: "Settings", icon: "⚙️" },
 ];
 
 export default function AdminLayout({ children }) {
