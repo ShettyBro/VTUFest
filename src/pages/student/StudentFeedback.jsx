@@ -19,7 +19,12 @@ export default function StudentFeedback() {
         try {
             const res = await fetch(`${API_BASE}/api/feedback/my`, { headers: { Authorization: `Bearer ${token}` } });
             const data = await res.json();
-            if (data.success) setFeedbackData(data.data || null);
+            if (data.success) {
+                setFeedbackData(data);
+                if (data.feedback_status === "given") {
+                    setSuccess(true);
+                }
+            }
         } catch (_) { } finally { setLoading(false); }
     };
 
