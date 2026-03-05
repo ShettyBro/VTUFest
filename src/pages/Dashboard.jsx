@@ -251,9 +251,8 @@ export default function Dashboard() {
       );
       if (!res.ok) return; // API not ready yet — skip silently
       const data = await res.json();
-      // Show popup only if status is not_shown (i.e. user hasn't interacted with feedback)
-      const status = data?.data?.feedback_status;
-      if (!status || status === "not_shown") {
+      const status = data?.feedback_status;
+      if (status === "not_shown") {
         setShowFeedbackPopup(true);
       }
     } catch (_) {
