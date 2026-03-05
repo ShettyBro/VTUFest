@@ -163,7 +163,7 @@ export default function AdminFeedback() {
             },
             {
                 label: "Avg Ease of Use",
-                value: `${emojiForRating(Math.round(summary?.avg_ease || 0))} ${(summary?.avg_ease || 0).toFixed(1)}`,
+                value: `${emojiForRating(Math.round(summary?.avg_ease_of_use || 0))} ${(summary?.avg_ease_of_use || 0).toFixed(1)}`,
                 color: "#34d399",
             },
             {
@@ -256,7 +256,7 @@ export default function AdminFeedback() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "20px" }}>
                         {[
                             { key: "overall", label: "Overall" },
-                            { key: "ease", label: "Ease of Use" },
+                            { key: "ease_of_use", label: "Ease of Use" },
                             { key: "role_specific", label: "Role-Specific" },
                         ].map(({ key, label }) => {
                             const dist = rating_distribution?.[key] || {};
@@ -393,7 +393,7 @@ export default function AdminFeedback() {
                                                     </span>
                                                 </td>
                                                 <td style={{ ...tdStyle, fontSize: "1.1rem" }}>{emojiForRating(row.rating_overall)}</td>
-                                                <td style={{ ...tdStyle, fontSize: "1.1rem" }}>{emojiForRating(row.rating_ease)}</td>
+                                                <td style={{ ...tdStyle, fontSize: "1.1rem" }}>{emojiForRating(row.rating_ease_of_use)}</td>
                                                 <td style={{ ...tdStyle, fontSize: "1.1rem" }}>{emojiForRating(row.rating_role_specific)}</td>
                                                 <td style={{ ...tdStyle, color: "#64748b", fontSize: "0.78rem" }}>
                                                     {row.created_at ? new Date(row.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
