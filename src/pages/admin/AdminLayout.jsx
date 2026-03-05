@@ -14,6 +14,7 @@ const NAV_ITEMS = [
     { path: "/ad-payments", label: "Payments", icon: "💳" },
     { path: "/ad-accommodation", label: "Accommodation", icon: "🛏️" },
     { path: "/ad-find-person", label: "Find Person", icon: "🔍" },
+    { path: "/ad-volunteers", label: "Volunteers", icon: "🙋" },
 ];
 
 export default function AdminLayout({ children }) {

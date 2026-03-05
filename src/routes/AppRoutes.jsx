@@ -35,6 +35,7 @@ import AdminColleges from "../pages/admin/AdminColleges";
 import AdminPayments from "../pages/admin/AdminPayments";
 import AdminFindPerson from "../pages/admin/Adminfindperson";
 import AdminAccommodation from "../pages/admin/AdminAccommodation";
+import AdminVolunteers from "../pages/admin/AdminVolunteers";
 
 /* DATA_ADMIN */
 import DALogin from "../pages/da/DALogin";
@@ -155,6 +156,7 @@ export default function AppRoutes() {
         <Route path="/ad-payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
         <Route path="/ad-find-person" element={<AdminRoute><AdminFindPerson /></AdminRoute>} />
         <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
+        <Route path="/ad-volunteers" element={<AdminRoute><AdminVolunteers /></AdminRoute>} />
         <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 
         {/* ── DATA_ADMIN ───────────────────────────────────────────── */}
