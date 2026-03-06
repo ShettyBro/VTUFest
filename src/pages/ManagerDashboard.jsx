@@ -320,8 +320,8 @@ export default function ManagerDashboard() {
     <Layout hasApplication={false} collegeLocked={null}>
       <div className="dashboard-glass-wrapper">
 
-        <MandatoryTour />
-        <GuideTour />
+        {!loading && <MandatoryTour />}
+        {!loading && <GuideTour />}
 
         {/* --- HEADER --- */}
         <div className="dashboard-header relative-header">

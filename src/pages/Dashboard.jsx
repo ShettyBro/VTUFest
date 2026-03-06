@@ -368,8 +368,8 @@ export default function Dashboard() {
     <Layout hasApplication={dashboardData?.application !== null} collegeLocked={isCollegeLocked}>
       <div className="dashboard-glass-wrapper">
 
-        <MandatoryTour />
-        <GuideTour />
+        {!loading && <MandatoryTour />}
+        {!loading && <GuideTour />}
         <GuideButton style={{ top: '75px', right: '25px' }} />
 
         {/* --- HEADER --- */}

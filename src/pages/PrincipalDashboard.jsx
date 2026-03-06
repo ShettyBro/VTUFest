@@ -387,8 +387,8 @@ export default function PrincipalDashboard() {
     <Layout>
       <div className="dashboard-glass-wrapper">
 
-        <MandatoryTour />
-        <GuideTour />
+        {!loading && <MandatoryTour />}
+        {!loading && <GuideTour />}
 
         {/* --- HEADER --- */}
         <div className="dashboard-header relative-header">
