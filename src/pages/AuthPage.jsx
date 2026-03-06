@@ -471,7 +471,7 @@ export default function AuthPage({ initialView = "login" }) {
                             {view === "login" ? "New here?" : "Already registered?"}
                         </p>
                         <button className="toggle-btn" onClick={toggleView}>
-                            {view === "login" ? "Register" : "Back to Login"}
+                            {view === "login" ? "Student Registration" : "Back to Login"}
                         </button>
                     </div>
                 </div>
@@ -591,12 +591,12 @@ export default function AuthPage({ initialView = "login" }) {
                             {regLocked ? (
                                 <div style={{ textAlign: 'center', color: 'white' }}>
                                     <h2>🛑 Registrations Closed</h2>
-                                    {/* <p>Please contact admin for support.</p> */}
+                                    <p>Please contact support.</p>
                                 </div>
                             ) : (
                                 <div className="auth-form">
                                     <h2 className="form-title">
-                                        {regStep === 1 ? "Candidate Registration" : "Complete Profile"}
+                                        {regStep === 1 ? "Student Registration" : "Complete Profile"}
                                     </h2>
 
                                     {/* STEP 1: DETAILS */}
@@ -847,7 +847,7 @@ export default function AuthPage({ initialView = "login" }) {
                                 onClick={toggleView}
                                 style={{ minWidth: 190 }}
                             >
-                                {view === 'login' ? '📝 Register' : '← Back to Login'}
+                                {view === 'login' ? '📝 Student Registration' : '← Back to Login'}
                             </button>
                         </div>
                     )}
