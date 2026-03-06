@@ -187,6 +187,11 @@ export default function Login() {
       // ✅ Store onboarding_completed flag for the tour
       localStorage.setItem("onboarding_completed", data.onboarding_completed ? "true" : "false");
 
+      // ✅ Store profile_completed flag (principal only) for the profile-completion popup
+      if (role === "principal") {
+        localStorage.setItem("profile_completed", data.profile_completed ? "true" : "false");
+      }
+
       // After successful login
       localStorage.setItem("should_fetch_dashboard", "true");
 

@@ -14,6 +14,7 @@ import GuideButton from '../components/onboarding/GuideButton';
 import MandatoryTour from '../components/onboarding/MandatoryTour';
 import GuideTour from '../components/onboarding/GuideTour';
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
+import PrincipalProfileModal from "./PrincipalProfileModal";
 
 export default function PrincipalDashboard() {
   // ── MOBILE GUARD — physical phones cannot access principal portal ──
@@ -30,6 +31,9 @@ export default function PrincipalDashboard() {
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(
+    () => localStorage.getItem("profile_completed") === "false"
+  );
 
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [notificationsData, setNotificationsData] = useState([]);
@@ -719,6 +723,12 @@ export default function PrincipalDashboard() {
           role="principal"
           triggerEvent="final_approval_given"
           onClose={() => setShowFeedbackPopup(false)}
+        />
+      )}
+
+      {showProfileModal && (
+        <PrincipalProfileModal
+          onComplete={() => setShowProfileModal(false)}
         />
       )}
     </Layout>
