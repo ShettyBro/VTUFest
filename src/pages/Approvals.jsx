@@ -5,6 +5,128 @@ import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation"; // UPDATED CSS
 
+const validateImageDimensions = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        if (img.width < 300 || img.height < 400) {
+          reject(new Error("Photo is too small. Minimum size is 300x400 pixels."));
+        } else if (img.width > 800 || img.height > 1000) {
+          reject(new Error("Photo is too large. Maximum size is 800x1000 pixels."));
+        } else {
+          resolve(true);
+        }
+      };
+      img.onerror = () => reject(new Error("Invalid image file."));
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+const DocumentViewer = ({ application_id, blobUrl, label, canEdit, token, onReplaceSuccess }) => {
+  const [viewSas, setViewSas] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const { showPopup } = usePopup();
+
+  const handleView = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("https://api.vtufest2026.acharyahabba.com/api/manager/review-applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "get_view_sas", blob_url: blobUrl })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setViewSas(data.data.sas_url);
+      } else {
+        showPopup(data.error || "Failed to generate view link", "error");
+      }
+    } catch (e) {
+      showPopup("Network error", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReplace = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      showPopup("Only JPG/PNG formats are allowed for photos", "error");
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      await validateImageDimensions(file);
+
+      // get upload sas
+      const res = await fetch("https://api.vtufest2026.acharyahabba.com/api/manager/review-applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "get_upload_sas", application_id })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to get upload link");
+
+      const uploadUrl = data.data.upload_url;
+
+      // Put to Azure
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'x-ms-blob-type': 'BlockBlob',
+          'Content-Type': file.type
+        },
+        body: file
+      });
+
+      if (uploadRes.ok) {
+        showPopup("Photo replaced successfully!", "success");
+        setViewSas(null); // clear preview cache
+        if (onReplaceSuccess) onReplaceSuccess();
+      } else {
+        throw new Error("Azure upload failed");
+      }
+
+    } catch (err) {
+      showPopup(err.message, "error");
+    } finally {
+      setUploadLoading(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", margin: "5px 0" }}>
+      <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{label}</span>
+      {viewSas ? (
+        <a href={viewSas} target="_blank" rel="noreferrer" style={{ fontSize: "0.8rem", color: "var(--accent-info)", textDecoration: "underline" }}>Open Link</a>
+      ) : (
+        <button type="button" onClick={handleView} disabled={loading} style={{ background: "rgba(96,165,250,0.15)", border: "1px solid var(--accent-info)", color: "var(--accent-info)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer" }}>
+          {loading ? "Loading..." : "View Document"}
+        </button>
+      )}
+
+      {canEdit && (
+        <div style={{ position: "relative" }}>
+          <label style={{ background: "rgba(239,68,68,0.15)", border: "1px solid #ef4444", color: "#ef4444", padding: "2px 8px", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer", opacity: uploadLoading ? 0.6 : 1 }}>
+            {uploadLoading ? "Uploading..." : "Replace"}
+            <input type="file" accept="image/jpeg,image/png" style={{ display: "none" }} onChange={handleReplace} disabled={uploadLoading} />
+          </label>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Approvals() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
@@ -582,7 +704,29 @@ export default function Approvals() {
 
   const renderStudentDetails = (student, isEditing, editForm, setEditForm) => (
     <div style={{ padding: "15px", background: "rgba(0,0,0,0.2)", borderRadius: "8px", marginTop: "10px" }}>
-      <div className="detail-row">
+      {student.passport_photo_url && (
+        <DocumentViewer
+          application_id={student.application_id}
+          blobUrl={student.passport_photo_url}
+          label="Passport Photo"
+          canEdit={!isReadOnly && !isReadOnlyMode && isEditing}
+          token={token}
+          onReplaceSuccess={() => { }}
+        />
+      )}
+
+      {student.documents && Object.entries(student.documents).map(([key, url]) => (
+        <DocumentViewer
+          key={key}
+          application_id={student.application_id}
+          blobUrl={url}
+          label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          canEdit={false}
+          token={token}
+        />
+      ))}
+
+      <div className="detail-row" style={{ marginTop: "12px" }}>
         <span>Full Name:</span>
         {isEditing ? (
           <input
