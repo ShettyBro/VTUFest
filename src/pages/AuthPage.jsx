@@ -782,7 +782,7 @@ export default function AuthPage({ initialView = "login" }) {
                                                     {photoPreview ? (
                                                         <img src={photoPreview} alt="Preview" className="preview-img" />
                                                     ) : (
-                                                        <div style={{ marginBottom: '15px', fontSize: '3rem', opacity: 0.7 }}>📷</div>
+                                                        <div style={{ marginBottom: '8px', fontSize: '1.8rem', opacity: 0.7 }}>📷</div>
                                                     )}
                                                 </div>
                                                 <div style={{ textAlign: "center" }}>
@@ -803,10 +803,6 @@ export default function AuthPage({ initialView = "login" }) {
                                                         </div>
                                                     )}
 
-                                                    <div style={{ marginTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-                                                        📐 Square photo only (1:1 ratio) &nbsp;|&nbsp; Min: 300×300 px &nbsp;|&nbsp; Max: 600×600 px<br />
-                                                        🖼️ JPG or PNG &nbsp;|&nbsp; Max file size: 5 MB
-                                                    </div>
                                                 </div>
 
                                                 {photoFile && uploadStatus !== "success" && (
