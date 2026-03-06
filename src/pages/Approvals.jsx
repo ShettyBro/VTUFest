@@ -33,12 +33,14 @@ const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onRepla
   const [imgErr, setImgErr] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [timestamp, setTimestamp] = useState(Date.now());
   const { showPopup } = usePopup();
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
+        setLoading(true);
         const res = await fetch("https://api.vtufest2026.acharyahabba.com/api/manager/review-applications", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -55,7 +57,7 @@ const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onRepla
       }
     })();
     return () => { active = false; };
-  }, [url, token]);
+  }, [url, token, timestamp]);
 
   const handleReplace = async (e) => {
     const file = e.target.files[0];
@@ -91,6 +93,7 @@ const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onRepla
       });
 
       if (uploadRes.ok) {
+        setTimestamp(Date.now());
         showPopup("Photo replaced successfully!", "success");
         if (onReplaceSuccess) onReplaceSuccess();
       } else {
@@ -106,6 +109,7 @@ const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onRepla
   };
 
   const isPdf = sas && sas.split('?')[0].toLowerCase().endsWith('.pdf');
+  const cacheBustedSas = sas ? `${sas}&_cb=${timestamp}` : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px", padding: "10px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", minWidth: "120px" }}>
@@ -116,7 +120,7 @@ const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onRepla
         <>
           {imgErr || isPdf ? (
             <div style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)", borderRadius: "6px" }}>
-              <a href={sas} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "var(--accent-info)" }}>Open PDF</a>
+              <a href={cacheBustedSas} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "var(--accent-info)" }}>Open PDF</a>
             </div>
           ) : (
             <>
@@ -125,7 +129,7 @@ const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onRepla
                 onClick={() => setExpanded(true)}
                 title="Click to view image"
               >
-                <img src={sas} alt={label} onError={() => setImgErr(true)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={cacheBustedSas} alt={label} onError={() => setImgErr(true)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
               <div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Click to expand</div>
             </>
@@ -145,7 +149,7 @@ const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onRepla
               onClick={() => setExpanded(false)}
             >
               <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%" }} onClick={e => e.stopPropagation()}>
-                <img src={sas} alt={label} style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: "8px", border: "2px solid rgba(255,255,255,0.1)" }} />
+                <img src={cacheBustedSas} alt={label} style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: "8px", border: "2px solid rgba(255,255,255,0.1)" }} />
                 <button
                   onClick={() => setExpanded(false)}
                   style={{ position: "absolute", top: "-15px", right: "-15px", background: "#ef4444", color: "white", border: "none", width: "30px", height: "30px", borderRadius: "50%", cursor: "pointer", fontWeight: "bold", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}
