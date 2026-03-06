@@ -914,13 +914,13 @@ export default function Approvals() {
   // RENDER HELPERS
   // ============================================================================
 
-  const renderStudentDetails = (student, isEditing, editForm, setEditForm) => (
+  const renderStudentDetails = (student, isEditing, editForm, setEditForm, isApprovedSection = false) => (
     <div style={{ padding: "15px", background: "rgba(0,0,0,0.2)", borderRadius: "8px", marginTop: "10px" }}>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", paddingBottom: "15px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <div>
           <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem", display: "block", marginBottom: "5px" }}>Document Status</span>
-          {verifiedDocs[student.application_id] ? (
+          {isApprovedSection || verifiedDocs[student.application_id] ? (
             <span style={{ color: "var(--accent-success)", fontWeight: "bold", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "5px" }}>
               ✓ Documents Verified
             </span>
@@ -931,19 +931,21 @@ export default function Approvals() {
           )}
         </div>
 
-        <button
-          className="neon-btn"
-          style={{
-            margin: 0,
-            padding: "8px 15px",
-            background: verifiedDocs[student.application_id] ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.1)",
-            borderColor: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)",
-            color: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)"
-          }}
-          onClick={() => { setDocsTarget(student); setShowDocsModal(true); }}
-        >
-          {verifiedDocs[student.application_id] ? "Review Documents" : "📄 Verify Documents"}
-        </button>
+        {!isApprovedSection && (
+          <button
+            className="neon-btn"
+            style={{
+              margin: 0,
+              padding: "8px 15px",
+              background: verifiedDocs[student.application_id] ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.1)",
+              borderColor: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)",
+              color: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)"
+            }}
+            onClick={() => { setDocsTarget(student); setShowDocsModal(true); }}
+          >
+            {verifiedDocs[student.application_id] ? "Review Documents" : "📄 Verify Documents"}
+          </button>
+        )}
       </div>
 
       <div className="detail-row" style={{ marginTop: "12px" }}>
@@ -1310,7 +1312,8 @@ export default function Approvals() {
                             student,
                             editingApproved === student.student_id,
                             editFormApproved,
-                            setEditFormApproved
+                            setEditFormApproved,
+                            true
                           )}
 
                           <div style={{ display: "flex", gap: "10px", marginTop: "15px", flexWrap: "wrap" }}>
