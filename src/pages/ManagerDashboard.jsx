@@ -10,6 +10,9 @@ import { usePopup } from "../context/PopupContext";
 import MobileBlockScreen from "../components/MobileBlockScreen";
 import { isPhysicalMobile } from "../utils/deviceDetect";
 import HelpButton from "../components/HelpButton";
+import GuideButton from '../components/onboarding/GuideButton';
+import MandatoryTour from '../components/onboarding/MandatoryTour';
+import { useOnboarding } from '../context/OnboardingContext';
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
 
 export default function ManagerDashboard() {
@@ -316,6 +319,8 @@ export default function ManagerDashboard() {
     <Layout hasApplication={false} collegeLocked={null}>
       <div className="dashboard-glass-wrapper">
 
+        <MandatoryTour />
+
         {/* --- HEADER --- */}
         <div className="dashboard-header relative-header">
           <div className="welcome-text">
@@ -323,6 +328,7 @@ export default function ManagerDashboard() {
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Team Manager Panel</p>
           </div>
           <HelpButton style={{ top: '75px', right: '25px' }} />
+          <GuideButton style={{ top: '115px', right: '25px' }} />
         </div>
 
         {/* --- TICKER (Priority 1) --- */}
@@ -379,7 +385,7 @@ export default function ManagerDashboard() {
         ) : (
           <>
             {/* --- STATS GRID --- */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+            <div id="manager-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
 
               <div className="glass-card">
                 <h4>Total Registrations</h4>
@@ -404,6 +410,7 @@ export default function ManagerDashboard() {
               </div>
 
               <div
+                id="manager-approvals-card"
                 className="glass-card clickable"
                 style={{ cursor: 'pointer', borderLeft: '4px solid var(--accent-success)' }}
                 onClick={() => navigate("/approvals")}

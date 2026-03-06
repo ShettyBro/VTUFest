@@ -118,6 +118,7 @@ export default function MobileBottomNav({ role, hasApplication = false, collegeL
             {navItems.map((item) => (
                 <button
                     key={item.path}
+                    id={`mobile-nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
                     className={`mbn-item ${isActive(item.path) ? "active" : ""}`}
                     onClick={() => navigate(item.path)}
                     aria-label={item.label}

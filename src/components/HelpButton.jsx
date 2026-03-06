@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LifeBuoy } from "lucide-react";
-import "../styles/auth.css"; // all help-* CSS classes live here
+import "../styles/auth.css";
+import { useOnboarding } from "../context/OnboardingContext";
 
 /* ─────────────────────────────────────────────────────────────────
    HelpButton  –  reusable "Need Help?" floating button + modal
@@ -42,6 +43,8 @@ const getEmbedUrl = (rawUrl) => {
 export default function HelpButton({ className = "", style = {} }) {
     const [showHelp, setShowHelp] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState(null);
+    const { startGuide } = useOnboarding();
+    const role = localStorage.getItem('vtufest_role') || localStorage.getItem('role');
 
     return (
         <>
@@ -93,6 +96,20 @@ export default function HelpButton({ className = "", style = {} }) {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* App Tour */}
+                                <div className="help-section-label" style={{ marginTop: '12px' }}>App Tour</div>
+                                <button
+                                    className="help-tutorial-btn"
+                                    onClick={() => {
+                                        startGuide(role);
+                                        setShowHelp(false);
+                                        setSelectedVideo(null);
+                                    }}
+                                >
+                                    <span className="help-tutorial-btn-icon">🗺</span>
+                                    Restart Tour
+                                </button>
 
                                 {/* Divider */}
                                 <div className="help-divider">

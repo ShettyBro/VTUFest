@@ -10,6 +10,8 @@ import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 import MobileBlockScreen from "../components/MobileBlockScreen";
 import { isPhysicalMobile } from "../utils/deviceDetect";
 import HelpButton from "../components/HelpButton";
+import GuideButton from '../components/onboarding/GuideButton';
+import MandatoryTour from '../components/onboarding/MandatoryTour';
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
 
 export default function PrincipalDashboard() {
@@ -384,6 +386,8 @@ export default function PrincipalDashboard() {
     <Layout>
       <div className="dashboard-glass-wrapper">
 
+        <MandatoryTour />
+
         {/* --- HEADER --- */}
         <div className="dashboard-header relative-header">
           <div className="welcome-text">
@@ -391,6 +395,7 @@ export default function PrincipalDashboard() {
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Principal Administration Panel</p>
           </div>
           <HelpButton style={{ top: '75px', right: '25px' }} />
+          <GuideButton style={{ top: '115px', right: '25px' }} />
         </div>
 
         {/* --- TICKER (Priority 1) --- */}
@@ -442,6 +447,7 @@ export default function PrincipalDashboard() {
         {dashboardData && !dashboardData.has_team_manager && (
           <div style={{ marginBottom: '16px' }}>
             <button
+              id="principal-assign-manager-btn"
               className="neon-btn"
               onClick={() => setShowAssignModal(true)}
               disabled={assigningManager}
@@ -453,7 +459,7 @@ export default function PrincipalDashboard() {
         )}
 
         {/* --- STATS GRID --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+        <div id="principal-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
 
           <div className="glass-card">
             <h4>Total Registrations</h4>

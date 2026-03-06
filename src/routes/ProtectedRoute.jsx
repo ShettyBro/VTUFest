@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams, useLocation } from "react-router-dom";
 
 /**
  * ProtectedRoute Component
@@ -72,6 +72,24 @@ export default function ProtectedRoute({ children, allowedRoles, isResetPage = f
 
     // Fallback to login
     return <Navigate to="/" replace />;
+  }
+
+  // ── ONBOARDING GUARD ──────────────────────────────────────────────────────
+  const location = useLocation();
+  const onboardingDone = localStorage.getItem("onboarding_completed");
+  const tourRoles = ["student", "principal", "manager"];
+  const firstPageMap = {
+    student: "/dashboard",
+    manager: "/manager-dashboard",
+    principal: "/principal-dashboard",
+  };
+
+  if (
+    tourRoles.includes(role) &&
+    onboardingDone === "false" &&
+    location.pathname !== firstPageMap[role]
+  ) {
+    return <Navigate to={firstPageMap[role]} replace />;
   }
 
   // STATE 1: Authenticated with correct role → Allow access

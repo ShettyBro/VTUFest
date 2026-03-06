@@ -10,6 +10,8 @@ import { ChevronDown } from "lucide-react";
 import QRCode from "react-qr-code";
 import { isPhysicalMobile } from "../utils/deviceDetect";
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
+import MandatoryTour from "../components/onboarding/MandatoryTour";
+import GuideButton from "../components/onboarding/GuideButton";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
@@ -365,14 +367,17 @@ export default function Dashboard() {
     <Layout hasApplication={dashboardData?.application !== null} collegeLocked={isCollegeLocked}>
       <div className="dashboard-glass-wrapper">
 
+        <MandatoryTour />
+        <GuideButton style={{ top: '75px', right: '25px' }} />
+
         {/* --- HEADER --- */}
-        <div className="dashboard-header relative-header">
+        <div className="dashboard-header relative-header" id="student-dashboard-header">
           <div className="welcome-text">
             <h1>Welcome, {dashboardData?.student?.full_name?.split(' ')[0] || "Student"}</h1>
           </div>
 
           {/* QR CODE - RIGHT SIDE / BOTTOM ON MOBILE */}
-          <div className="qr-badge-right" style={{ textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? '10px' : '0' }}>
+          <div className="qr-badge-right" id="student-qr-area" style={{ textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? '10px' : '0' }}>
             <small style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '5px', fontSize: '0.8rem' }}>
               Your QR Code:
             </small>
@@ -494,7 +499,7 @@ export default function Dashboard() {
             </div>
 
             {/* --- CENTER COL: HERO STATUS (desktop only — mobile uses My App tab) --- */}
-            <div className="glass-card hero-card desktop-only">
+            <div className="glass-card hero-card desktop-only" id="student-status-card">
               <h4>Application Progress</h4>
 
               {renderStepper()}

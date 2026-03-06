@@ -24,6 +24,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
     >
       {role === "student" && (
         <div
+          id="sidebar-student-dashboard"
           className={`sidebar-item ${isActive("/dashboard") ? "active" : ""}`}
           onClick={() => navigate("/dashboard")}
         >
@@ -37,6 +38,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
       )}
       {role === "student" && !hasApplication && !collegeLocked && (
         <div
+          id="sidebar-student-register"
           className={`sidebar-item ${isActive("/student-register") ? "active" : ""
             }`}
           onClick={() => navigate("/student-register")}
@@ -68,6 +70,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
       {(role === "principal") && (
         <>
           <div
+            id="sidebar-principal-dashboard"
             className={`sidebar-item ${isActive("/principal-dashboard") ? "active" : ""
               }`}
             onClick={() => navigate("/principal-dashboard")}
@@ -81,6 +84,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
           </div>
 
           <div
+            id="sidebar-principal-approvals"
             className={`sidebar-item ${isActive("/approvals") ? "active" : ""
               }`}
             onClick={() => navigate("/approvals")}
@@ -135,6 +139,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
 
 
           <div
+            id="sidebar-principal-fee"
             className={`sidebar-item ${isActive("/fee-payment") ? "active" : ""
               }`}
             onClick={() => navigate("/fee-payment")}
@@ -176,6 +181,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
       {(role === "manager") && (
         <>
           <div
+            id="sidebar-manager-dashboard"
             className={`sidebar-item ${isActive("/principal-dashboard") ? "active" : ""
               }`}
             onClick={() => navigate("/principal-dashboard")}
@@ -189,6 +195,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
           </div>
 
           <div
+            id="sidebar-manager-approvals"
             className={`sidebar-item ${isActive("/approvals") ? "active" : ""
               }`}
             onClick={() => navigate("/approvals")}
@@ -271,6 +278,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
           </div>
 
           <div
+            id="sidebar-manager-fee"
             className={`sidebar-item ${isActive("/fee-payment") ? "active" : ""
               }`}
             onClick={() => navigate("/fee-payment")}
