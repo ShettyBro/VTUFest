@@ -184,6 +184,9 @@ export default function Login() {
       localStorage.setItem("vtufest_token", data.token);
       localStorage.setItem("vtufest_role", role);
 
+      // ✅ Store onboarding_completed flag for the tour
+      localStorage.setItem("onboarding_completed", data.onboarding_completed ? "true" : "false");
+
       // After successful login
       localStorage.setItem("should_fetch_dashboard", "true");
 

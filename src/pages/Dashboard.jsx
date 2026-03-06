@@ -11,6 +11,7 @@ import QRCode from "react-qr-code";
 import { isPhysicalMobile } from "../utils/deviceDetect";
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
 import MandatoryTour from "../components/onboarding/MandatoryTour";
+import GuideTour from "../components/onboarding/GuideTour";
 import GuideButton from "../components/onboarding/GuideButton";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
@@ -368,6 +369,7 @@ export default function Dashboard() {
       <div className="dashboard-glass-wrapper">
 
         <MandatoryTour />
+        <GuideTour />
         <GuideButton style={{ top: '75px', right: '25px' }} />
 
         {/* --- HEADER --- */}

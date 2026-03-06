@@ -12,6 +12,7 @@ import { isPhysicalMobile } from "../utils/deviceDetect";
 import HelpButton from "../components/HelpButton";
 import GuideButton from '../components/onboarding/GuideButton';
 import MandatoryTour from '../components/onboarding/MandatoryTour';
+import GuideTour from '../components/onboarding/GuideTour';
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
 
 export default function PrincipalDashboard() {
@@ -387,6 +388,7 @@ export default function PrincipalDashboard() {
       <div className="dashboard-glass-wrapper">
 
         <MandatoryTour />
+        <GuideTour />
 
         {/* --- HEADER --- */}
         <div className="dashboard-header relative-header">
@@ -395,7 +397,7 @@ export default function PrincipalDashboard() {
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Principal Administration Panel</p>
           </div>
           <HelpButton style={{ top: '75px', right: '25px' }} />
-          <GuideButton style={{ top: '115px', right: '25px' }} />
+          <GuideButton style={{ top: '75px', right: '145px' }} />
         </div>
 
         {/* --- TICKER (Priority 1) --- */}
