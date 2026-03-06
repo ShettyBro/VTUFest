@@ -11,6 +11,7 @@ const NAV_ITEMS = [
     { path: "/da-principals", label: "Principals", icon: "🏫" },
     { path: "/da-college-unlock", label: "College Unlock", icon: "🔓" },
     { path: "/da-audit", label: "Audit Log", icon: "📋" },
+    { path: "/da-broadcast", label: "Broadcast Email", icon: "🚀" },
 ];
 
 export default function DALayout({ children }) {

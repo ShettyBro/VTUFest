@@ -15,7 +15,6 @@ const NAV_ITEMS = [
     { path: "/ad-feedback", label: "Feedback", icon: "💬" },
     { path: "/ad-calendar", label: "Calendar", icon: "📅" },
     { path: "/ad-notifications", label: "Notifications", icon: "🔔" },
-    { path: "/ad-broadcast", label: "Broadcast Email", icon: "🚀" },
     { path: "/ad-settings", label: "Settings", icon: "⚙️" },
 ];
 

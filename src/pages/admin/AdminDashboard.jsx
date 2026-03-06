@@ -310,10 +310,6 @@ export default function AdminDashboard() {
                                 color={COLORS.purple} />
                         )}
 
-                        {/* ── NEW stat cards ── */}
-                        <StatCard icon="📧" label="Emails Sent" value={stats?.principal_email_stats?.sent} color={COLORS.green} sub={`of ${stats?.principal_email_stats?.total} principals`} />
-                        <StatCard icon="⏳" label="Email Pending" value={stats?.principal_email_stats?.pending} color={COLORS.amber} />
-                        <StatCard icon="🔑" label="Principals In" value={stats?.principal_email_stats?.logged_in} color={COLORS.teal} sub="logged in so far" />
                         <StatCard icon="💬" label="Total Feedback" value={stats?.total_feedback} color={COLORS.purple} />
                         <StatCard icon="👥" label="Managers" value={stats?.total_managers} color={COLORS.blue} />
                         <StatCard icon="🎵" label="Accompanists" value={stats?.total_accompanists} color={COLORS.rose} />
@@ -529,43 +525,6 @@ export default function AdminDashboard() {
                             </>
                         )}
 
-                        {/* ══════════════════════════════════════════════════
-                            ── Principal Onboarding Status (Funnel) ──
-                        ═══════════════════════════════════════════════════ */}
-                        {analytics?.principal_email_funnel && (() => {
-                            const funnel = analytics.principal_email_funnel;
-                            const total = parseInt(funnel.total) || 1;
-                            return (
-                                <>
-                                    <SectionTitle>Principal Onboarding Status</SectionTitle>
-                                    <ChartCard>
-                                        <ProgressBar
-                                            label="Email Not Sent"
-                                            value={parseInt(funnel.not_sent)}
-                                            max={total}
-                                            color={COLORS.amber}
-                                        />
-                                        <ProgressBar
-                                            label="Email Sent, Not Logged In"
-                                            value={parseInt(funnel.sent_not_logged_in)}
-                                            max={total}
-                                            color={COLORS.blue}
-                                        />
-                                        <ProgressBar
-                                            label="Logged In ✓"
-                                            value={parseInt(funnel.logged_in)}
-                                            max={total}
-                                            color={COLORS.green}
-                                        />
-                                        <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-                                            <MiniBox value={funnel.not_sent} label="Not Sent" color={COLORS.amber} />
-                                            <MiniBox value={funnel.sent_not_logged_in} label="Sent / Pending" color={COLORS.blue} />
-                                            <MiniBox value={funnel.logged_in} label="Logged In" color={COLORS.green} />
-                                        </div>
-                                    </ChartCard>
-                                </>
-                            );
-                        })()}
 
                         {/* ══════════════════════════════════════════════════
                             ── Feedback Analytics ──
@@ -695,7 +654,6 @@ export default function AdminDashboard() {
                         { label: "Accommodation", path: "/ad-accommodation", icon: "🛏️" },
                         { label: "Find Person", path: "/ad-find-person", icon: "🔍" },
                         { label: "Feedback", path: "/ad-feedback", icon: "💬" },
-                        { label: "Broadcast", path: "/ad-broadcast", icon: "🚀" },
                         { label: "DA Colleges", path: "/ad-da-view", icon: "🎓" },
                     ].map(item => (
                         <a key={item.path} href={item.path} className="glass-card"

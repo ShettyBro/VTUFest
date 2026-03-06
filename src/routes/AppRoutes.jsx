@@ -40,7 +40,6 @@ import AdminFindPerson from "../pages/admin/Adminfindperson";
 import AdminAccommodation from "../pages/admin/AdminAccommodation";
 import AdminVolunteers from "../pages/admin/AdminVolunteers";
 import AdminFeedback from "../pages/admin/AdminFeedback";
-import AdminBroadcastEmail from "../pages/admin/AdminBroadcastEmail";
 
 
 /* DATA_ADMIN */
@@ -50,6 +49,8 @@ import DAManagers from "../pages/da/DAManagers";
 import DACollegeUnlock from "../pages/da/DACollegeUnlock";
 import DAAuditLog from "../pages/da/DAAuditLog";
 import DAPrincipals from "../pages/da/DAPrincipals";
+import DABroadcastEmail from "../pages/da/DABroadcastEmail";
+
 
 /* GREEN ROOM (MANAGER SIDE) */
 import GreenRoom from "../pages/GreenRoom";
@@ -173,7 +174,6 @@ export default function AppRoutes() {
         <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
         <Route path="/ad-volunteers" element={<AdminRoute><AdminVolunteers /></AdminRoute>} />
         <Route path="/ad-feedback" element={<AdminRoute><AdminFeedback /></AdminRoute>} />
-        <Route path="/ad-broadcast" element={<AdminRoute><AdminBroadcastEmail /></AdminRoute>} />
 
         <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 
@@ -184,6 +184,8 @@ export default function AppRoutes() {
         <Route path="/da-principals" element={<DARoute><DAPrincipals /></DARoute>} />
         <Route path="/da-college-unlock" element={<DARoute><DACollegeUnlock /></DARoute>} />
         <Route path="/da-audit" element={<DARoute><DAAuditLog /></DARoute>} />
+        <Route path="/da-broadcast" element={<DARoute><DABroadcastEmail /></DARoute>} />
+
         <Route path="/da" element={<Navigate to="/da-login" replace />} />
 
         {/* ── GREEN ROOM (MANAGER SIDE) ────────────────────────────────── */}

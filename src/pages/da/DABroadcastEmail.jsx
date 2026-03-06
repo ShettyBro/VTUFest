@@ -1,18 +1,19 @@
 import { useState } from "react";
-import AdminLayout from "./AdminLayout";
+import DALayout from "./DALayout";
+import { useDA } from "../../context/DAContext";
 import { usePopup } from "../../context/PopupContext";
 
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
 const MODES = [
-    { id: "managers", label: "Managers", icon: "👔" },
+    { id: "managers", label: "Managers", icon: "👤" },
     { id: "principals", label: "Principals", icon: "🏫" },
     { id: "custom", label: "Custom List", icon: "📧" },
 ];
 
-export default function AdminBroadcastEmail() {
+export default function DABroadcastEmail() {
     const { showPopup } = usePopup();
-    const token = localStorage.getItem("vtufest_admin_token");
+    const { token } = useDA();
 
     const [mode, setMode] = useState("managers");
     const [subject, setSubject] = useState("");
@@ -75,7 +76,6 @@ export default function AdminBroadcastEmail() {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`
-                    // Note: Content-Type is set automatically for FormData
                 },
                 body: formData
             });
@@ -97,7 +97,7 @@ export default function AdminBroadcastEmail() {
     };
 
     return (
-        <AdminLayout>
+        <DALayout>
             <div style={{ padding: "10px 0" }}>
                 <h3 style={{ color: "var(--text-primary)", marginBottom: "20px" }}>Mass Email Broadcast</h3>
 
@@ -113,10 +113,10 @@ export default function AdminBroadcastEmail() {
                                     style={{
                                         flex: 1,
                                         padding: "12px",
-                                        background: mode === m.id ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.05)",
-                                        border: `1px solid ${mode === m.id ? "#d4af37" : "rgba(255,255,255,0.1)"}`,
+                                        background: mode === m.id ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.05)",
+                                        border: `1px solid ${mode === m.id ? "#c084fc" : "rgba(255,255,255,0.1)"}`,
                                         borderRadius: "10px",
-                                        color: mode === m.id ? "#d4af37" : "var(--text-secondary)",
+                                        color: mode === m.id ? "#c084fc" : "var(--text-secondary)",
                                         cursor: "pointer",
                                         transition: "all 0.2s",
                                         display: "flex",
@@ -201,14 +201,29 @@ export default function AdminBroadcastEmail() {
 
                         <div style={{ marginBottom: "24px" }}>
                             <label style={{ display: "block", color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "8px", fontWeight: 600 }}>Attachment (Optional, Max 15MB)</label>
-                            <input
-                                type="file"
-                                onChange={handleFileChange}
-                                style={{
-                                    color: "#94a3b8",
-                                    fontSize: "0.85rem"
-                                }}
-                            />
+                            <div style={{
+                                position: "relative",
+                                width: "100%",
+                                padding: "12px",
+                                background: "rgba(255,255,255,0.05)",
+                                border: "1px dashed rgba(255,255,255,0.2)",
+                                borderRadius: "8px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "10px",
+                                cursor: "pointer"
+                            }} onClick={() => document.getElementById("fileInputDA").click()}>
+                                <span style={{ fontSize: "1.2rem" }}>📎</span>
+                                <span style={{ color: attachment ? "#f1f5f9" : "#94a3b8", fontSize: "0.85rem" }}>
+                                    {attachment ? attachment.name : "Click to select or drag a file"}
+                                </span>
+                                <input
+                                    id="fileInputDA"
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    style={{ display: "none" }}
+                                />
+                            </div>
                         </div>
 
                         <button
@@ -217,10 +232,10 @@ export default function AdminBroadcastEmail() {
                             style={{
                                 width: "100%",
                                 padding: "14px",
-                                background: loading ? "rgba(212,175,55,0.2)" : "linear-gradient(135deg, #d4af37 0%, #b8962d 100%)",
+                                background: loading ? "rgba(168,85,247,0.2)" : "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)",
                                 border: "none",
                                 borderRadius: "8px",
-                                color: "#000",
+                                color: "#fff",
                                 fontWeight: 700,
                                 fontSize: "1rem",
                                 cursor: loading ? "not-allowed" : "pointer",
@@ -228,7 +243,7 @@ export default function AdminBroadcastEmail() {
                                 opacity: loading ? 0.7 : 1
                             }}
                         >
-                            {loading ? "🚀 Sending Broadcast..." : "📤 Send Mass Email"}
+                            {loading ? "🚀 Sending..." : "📤 Send Email"}
                         </button>
                     </form>
                 </div>
@@ -278,6 +293,6 @@ export default function AdminBroadcastEmail() {
                     </div>
                 )}
             </div>
-        </AdminLayout>
+        </DALayout>
     );
 }
