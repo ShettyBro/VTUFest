@@ -321,10 +321,13 @@ export default function AuthPage({ initialView = "login" }) {
             const objectUrl = URL.createObjectURL(file);
             img.onload = () => {
                 URL.revokeObjectURL(objectUrl);
-                if (img.width < 300 || img.height < 400) {
-                    reject(new Error("Photo is too small. Minimum size is 300x400 pixels."));
-                } else if (img.width > 800 || img.height > 1000) {
-                    reject(new Error("Photo is too large. Maximum size is 800x1000 pixels."));
+                const { width, height } = img;
+                if (Math.abs(width - height) > 10) {
+                    reject(new Error("Photo must be square (1:1 ratio). Please crop your photo to a square before uploading."));
+                } else if (width < 300 || height < 300) {
+                    reject(new Error("Photo is too small. Minimum size is 300×300 pixels."));
+                } else if (width > 600 || height > 600) {
+                    reject(new Error("Photo is too large. Maximum size is 600×600 pixels."));
                 } else {
                     resolve(true);
                 }
@@ -332,7 +335,7 @@ export default function AuthPage({ initialView = "login" }) {
             img.onerror = () => {
                 URL.revokeObjectURL(objectUrl);
                 reject(new Error("Invalid image file."));
-            }
+            };
             img.src = objectUrl;
         });
     };
@@ -745,8 +748,32 @@ export default function AuthPage({ initialView = "login" }) {
                                     {/* STEP 2: PHOTO & PASSWORD */}
                                     {regStep === 2 && (
                                         <form onSubmit={handleRegFinalize}>
-                                            <div className="timer-display">
-                                                Time Remaining: {Math.floor(regTimer / 60)}:{(regTimer % 60).toString().padStart(2, '0')}
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: '10px',
+                                                background: 'rgba(168,237,234,0.08)',
+                                                border: '1px solid rgba(168,237,234,0.3)',
+                                                borderLeft: '3px solid #a8edea',
+                                                borderRadius: '8px',
+                                                padding: '10px 14px',
+                                                marginBottom: '12px',
+                                                fontSize: 'clamp(0.75rem, 2.5vw, 0.85rem)',
+                                                color: 'rgba(168,237,234,0.9)',
+                                                lineHeight: 1.6,
+                                                flexWrap: 'wrap',
+                                            }}>
+                                                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>🪪</span>
+                                                <span style={{ flex: 1, minWidth: 0 }}>
+                                                    <strong>Important:</strong> The passport-size photo you upload will be printed on your <strong>Event Day ID Card</strong>. Please ensure it is a clear, recent, front-facing photo.
+                                                    <br />
+                                                    <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: '6px' }}>
+                                                        <span>📐 <strong>Square only</strong> (1:1 ratio)</span>
+                                                        <span>📏 Min: <strong>300 × 300 px</strong></span>
+                                                        <span>📏 Max: <strong>600 × 600 px</strong></span>
+                                                        <span>🖼️ JPG or PNG &nbsp;|&nbsp; Max 5 MB</span>
+                                                    </span>
+                                                </span>
                                             </div>
 
                                             {/* Photo Upload */}
@@ -766,7 +793,7 @@ export default function AuthPage({ initialView = "login" }) {
                                                     <input
                                                         id="file-upload"
                                                         type="file"
-                                                        accept="image/png,image/jpeg,application/pdf"
+                                                        accept="image/png,image/jpeg"
                                                         onChange={handlePhotoChange}
                                                     />
 
@@ -775,6 +802,11 @@ export default function AuthPage({ initialView = "login" }) {
                                                             {photoFile.name}
                                                         </div>
                                                     )}
+
+                                                    <div style={{ marginTop: '8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                                                        📐 Square photo only (1:1 ratio) &nbsp;|&nbsp; Min: 300×300 px &nbsp;|&nbsp; Max: 600×600 px<br />
+                                                        🖼️ JPG or PNG &nbsp;|&nbsp; Max file size: 5 MB
+                                                    </div>
                                                 </div>
 
                                                 {photoFile && uploadStatus !== "success" && (
