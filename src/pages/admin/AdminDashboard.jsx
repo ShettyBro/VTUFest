@@ -695,6 +695,7 @@ export default function AdminDashboard() {
                         { label: "Accommodation", path: "/ad-accommodation", icon: "🛏️" },
                         { label: "Find Person", path: "/ad-find-person", icon: "🔍" },
                         { label: "Feedback", path: "/ad-feedback", icon: "💬" },
+                        { label: "Broadcast", path: "/ad-broadcast", icon: "🚀" },
                         { label: "DA Colleges", path: "/ad-da-view", icon: "🎓" },
                     ].map(item => (
                         <a key={item.path} href={item.path} className="glass-card"
