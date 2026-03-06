@@ -912,27 +912,35 @@ export default function Approvals() {
 
   const renderStudentDetails = (student, isEditing, editForm, setEditForm) => (
     <div style={{ padding: "15px", background: "rgba(0,0,0,0.2)", borderRadius: "8px", marginTop: "10px" }}>
-      {student.passport_photo_url && (
-        <DocumentViewer
-          application_id={student.application_id}
-          blobUrl={student.passport_photo_url}
-          label="Passport Photo"
-          canEdit={!isReadOnly && !isReadOnlyMode && isEditing}
-          token={token}
-          onReplaceSuccess={() => { }}
-        />
-      )}
 
-      {student.documents && Object.entries(student.documents).map(([key, url]) => (
-        <DocumentViewer
-          key={key}
-          application_id={student.application_id}
-          blobUrl={url}
-          label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-          canEdit={false}
-          token={token}
-        />
-      ))}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", paddingBottom: "15px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div>
+          <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem", display: "block", marginBottom: "5px" }}>Document Status</span>
+          {verifiedDocs[student.application_id] ? (
+            <span style={{ color: "var(--accent-success)", fontWeight: "bold", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "5px" }}>
+              ✓ Documents Verified
+            </span>
+          ) : (
+            <span style={{ color: "var(--accent-warning)", fontSize: "0.9rem" }}>
+              Pending Verification
+            </span>
+          )}
+        </div>
+
+        <button
+          className="neon-btn"
+          style={{
+            margin: 0,
+            padding: "8px 15px",
+            background: verifiedDocs[student.application_id] ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.1)",
+            borderColor: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)",
+            color: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)"
+          }}
+          onClick={() => { setDocsTarget(student); setShowDocsModal(true); }}
+        >
+          {verifiedDocs[student.application_id] ? "Review Documents" : "📄 Verify Documents"}
+        </button>
+      </div>
 
       <div className="detail-row" style={{ marginTop: "12px" }}>
         <span>Full Name:</span>
