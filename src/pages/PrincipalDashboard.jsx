@@ -31,8 +31,9 @@ export default function PrincipalDashboard() {
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  // null = still checking, true = show modal, false = hide
   const [showProfileModal, setShowProfileModal] = useState(
-    () => localStorage.getItem("profile_completed") === "false"
+    () => localStorage.getItem("profile_completed") === "false" ? true : null
   );
 
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
@@ -74,8 +75,8 @@ export default function PrincipalDashboard() {
     }
 
     fetchDashboardData();
-    fetchDashboardData();
     checkLockStatus();
+    checkPrincipalProfileStatus();
 
     // Fetch Notifications
     fetch("https://api.vtufest2026.acharyahabba.com/api/shared/notifications")
@@ -100,6 +101,32 @@ export default function PrincipalDashboard() {
       return () => clearInterval(interval);
     }
   }, [priority1Notifications.length]);
+
+  const checkPrincipalProfileStatus = async () => {
+    try {
+      const res = await fetch(
+        "https://api.vtufest2026.acharyahabba.com/api/principal/principal-profile",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: "check_profile_status" }),
+        }
+      );
+      if (!res.ok) return; // don't block dashboard on failure
+      const data = await res.json();
+      if (data.success) {
+        const completed = data.profile_completed === true;
+        localStorage.setItem("profile_completed", completed ? "true" : "false");
+        setShowProfileModal(!completed);
+      }
+    } catch (err) {
+      console.error("Profile status check error:", err);
+      // fall back to whatever was set from localStorage on login
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
