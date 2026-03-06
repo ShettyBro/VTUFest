@@ -7,26 +7,6 @@ const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
 const EMPTY_FORM = { message: "", type: "announcement", priority: 2, expires_at: "" };
 
-const PRIORITY_META = {
-    1: { label: "P1 · All — Ticker Banner", color: "#f87171", bg: "rgba(248,113,113,0.12)", icon: "📢" },
-    2: { label: "P2 · All — Bell Icon", color: "#f59e0b", bg: "rgba(245,158,11,0.12)", icon: "🔔" },
-    3: { label: "P3 · Students — Guidelines", color: "#60a5fa", bg: "rgba(96,165,250,0.12)", icon: "🎓" },
-    4: { label: "P4 · Managers — Notice Card", color: "#fb923c", bg: "rgba(251,146,60,0.12)", icon: "📋" },
-    5: { label: "P5 · Principals — Notice Card", color: "#a78bfa", bg: "rgba(167,139,250,0.12)", icon: "🏛️" },
-};
-
-const inputStyle = {
-    width: "100%",
-    padding: "10px 14px",
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    borderRadius: "8px",
-    color: "#f1f5f9",
-    fontSize: "0.9rem",
-    boxSizing: "border-box",
-    outline: "none",
-};
-
 export default function AdminNotifications() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +18,7 @@ export default function AdminNotifications() {
 
     const token = localStorage.getItem("vtufest_admin_token");
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
+
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
     const { showConfirm } = usePopup();
 
@@ -104,111 +85,70 @@ export default function AdminNotifications() {
         setForm({ message: n.message, type: n.type, priority: n.priority, expires_at: n.expires_at?.slice(0, 10) || "" });
         setEditingId(n.id);
         setShowForm(true);
-        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const pm = PRIORITY_META[form.priority] || PRIORITY_META[2];
+    const priorityColor = (p) => p === 1 ? "#f87171" : p === 2 ? "var(--accent-warning)" : "var(--accent-info)";
 
     return (
         <AdminLayout>
             <div style={{ padding: "10px 0" }}>
-
-                {/* ── HEADER ── */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
-                    <div>
-                        <h3 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.4rem" }}>Notifications</h3>
-                        <p style={{ margin: "4px 0 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                            Manage system-wide notifications by priority and audience
-                        </p>
-                    </div>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                    <h3 style={{ margin: 0, color: "var(--text-primary)" }}>Notifications</h3>
                     {isSuperAdmin && (
-                        <button
-                            className="neon-btn"
-                            style={{ width: "auto", marginTop: 0, padding: "10px 24px" }}
-                            onClick={() => { setForm(EMPTY_FORM); setEditingId(null); setShowForm(v => !v); }}
-                        >
-                            {showForm && !editingId ? "✕ Cancel" : "+ Add Notification"}
+                        <button className="neon-btn" style={{ width: "auto", marginTop: 0, padding: "10px 24px" }}
+                            onClick={() => { setForm(EMPTY_FORM); setEditingId(null); setShowForm(true); }}>
+                            + Add Notification
                         </button>
                     )}
                 </div>
 
-                {/* ── ERROR BANNER ── */}
                 {error && (
-                    <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171", padding: "12px 16px", borderRadius: "10px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span>⚠️ {error}</span>
-                        <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "1.1rem" }}>✕</button>
+                    <div style={{ background: "rgba(239,68,68,0.15)", border: "1px solid #ef4444", color: "#f87171", padding: "12px 16px", borderRadius: "8px", marginBottom: "16px" }}>
+                        {error} <button onClick={() => setError("")} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", float: "right" }}>✕</button>
                     </div>
                 )}
 
-                {/* ── PRIORITY LEGEND ── */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
-                    {Object.entries(PRIORITY_META).map(([p, m]) => (
-                        <span key={p} style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 600, background: m.bg, color: m.color, border: `1px solid ${m.color}40` }}>
-                            {m.icon} {m.label}
-                        </span>
-                    ))}
-                </div>
-
-                {/* ── CREATE / EDIT FORM ── */}
+                {/* Create/Edit Form */}
                 {showForm && isSuperAdmin && (
-                    <div className="glass-card" style={{ marginBottom: "24px", borderLeft: `4px solid ${pm.color}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-                            <span style={{ fontSize: "1.3rem" }}>{pm.icon}</span>
-                            <div>
-                                <h4 style={{ margin: 0, color: "var(--text-primary)" }}>
-                                    {editingId ? "Edit Notification" : "New Notification"}
-                                </h4>
-                                <small style={{ color: pm.color }}>{pm.label}</small>
-                            </div>
-                        </div>
-
+                    <div className="glass-card" style={{ marginBottom: "24px" }}>
+                        <h4 style={{ marginTop: 0 }}>{editingId ? "Edit Notification" : "New Notification"}</h4>
                         <form onSubmit={handleSubmit}>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
                                 <div>
-                                    <label style={{ color: "var(--text-secondary)", fontSize: "0.82rem", display: "block", marginBottom: "6px" }}>Type</label>
-                                    <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={inputStyle}>
-                                        {["announcement", "deadline", "info", "reminder"].map(t => (
-                                            <option key={t} value={t} style={{ background: "#1e293b" }}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                                        ))}
+                                    <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem", display: "block", marginBottom: "6px" }}>Type</label>
+                                    <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+                                        style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.9rem" }}>
+                                        {["announcement", "deadline", "info", "reminder"].map(t => <option key={t} value={t}>{t}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label style={{ color: "var(--text-secondary)", fontSize: "0.82rem", display: "block", marginBottom: "6px" }}>Priority & Audience</label>
-                                    <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={{ ...inputStyle, borderColor: pm.color + "80" }}>
-                                        {Object.entries(PRIORITY_META).map(([p, m]) => (
-                                            <option key={p} value={p} style={{ background: "#1e293b" }}>{m.icon} {m.label}</option>
-                                        ))}
+                                    <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem", display: "block", marginBottom: "6px" }}>Priority (1=highest)</label>
+                                    <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))}
+                                        style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.9rem" }}>
+                                        {[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
                                     </select>
                                 </div>
                             </div>
 
                             <div style={{ marginBottom: "16px" }}>
-                                <label style={{ color: "var(--text-secondary)", fontSize: "0.82rem", display: "block", marginBottom: "6px" }}>Message *</label>
-                                <textarea
-                                    value={form.message}
-                                    onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
-                                    required rows={3}
-                                    placeholder="Type your notification message here..."
-                                    style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit", lineHeight: 1.6 }}
-                                />
+                                <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem", display: "block", marginBottom: "6px" }}>Message *</label>
+                                <textarea value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} required rows={3}
+                                    style={{ width: "100%", padding: "10px 12px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.9rem", resize: "vertical", boxSizing: "border-box" }} />
                             </div>
 
-                            <div style={{ marginBottom: "20px" }}>
-                                <label style={{ color: "var(--text-secondary)", fontSize: "0.82rem", display: "block", marginBottom: "6px" }}>Expires At <span style={{ color: "var(--text-muted)" }}>(optional — leave blank for no expiry)</span></label>
-                                <input
-                                    type="date"
-                                    value={form.expires_at}
-                                    onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))}
-                                    style={{ ...inputStyle, width: "auto" }}
-                                />
+                            <div style={{ marginBottom: "16px" }}>
+                                <label style={{ color: "var(--text-secondary)", fontSize: "0.85rem", display: "block", marginBottom: "6px" }}>Expires At (optional)</label>
+                                <input type="date" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))}
+                                    style={{ padding: "10px 12px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.9rem" }} />
                             </div>
 
                             <div style={{ display: "flex", gap: "12px" }}>
                                 <button type="submit" className="neon-btn" style={{ width: "auto", marginTop: 0, padding: "10px 28px" }} disabled={saving}>
                                     {saving ? "Saving..." : editingId ? "Update" : "Create"}
                                 </button>
-                                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setForm(EMPTY_FORM); }}
-                                    style={{ padding: "10px 24px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.9rem" }}>
+                                <button type="button" onClick={() => { setShowForm(false); setEditingId(null); }}
+                                    style={{ padding: "10px 24px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
                                     Cancel
                                 </button>
                             </div>
@@ -216,75 +156,62 @@ export default function AdminNotifications() {
                     </div>
                 )}
 
-                {/* ── NOTIFICATIONS LIST ── */}
+                {/* Table */}
                 {loading ? (
-                    <div className="glass-card" style={{ textAlign: "center", padding: "48px", color: "var(--text-secondary)" }}>
-                        <div className="spinner" style={{ margin: "0 auto 12px" }} />
-                        Loading notifications...
-                    </div>
-                ) : notifications.length === 0 ? (
-                    <div className="glass-card" style={{ textAlign: "center", padding: "48px", color: "var(--text-muted)" }}>
-                        <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🔕</div>
-                        <p style={{ margin: 0 }}>No notifications yet. Click <strong>+ Add Notification</strong> to create one.</p>
-                    </div>
+                    <div className="glass-card" style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>Loading...</div>
                 ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        {notifications.map(n => {
-                            const meta = PRIORITY_META[n.priority] || PRIORITY_META[2];
-                            return (
-                                <div key={n.id} className="glass-card" style={{ padding: "16px 20px", borderLeft: `4px solid ${meta.color}`, opacity: n.is_active ? 1 : 0.55, transition: "opacity 0.2s" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", flexWrap: "wrap" }}>
-
-                                        {/* LEFT: Content */}
-                                        <div style={{ flex: 1, minWidth: "220px" }}>
-                                            {/* Priority + Type + Status badges */}
-                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" }}>
-                                                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 10px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: 700, background: meta.bg, color: meta.color, border: `1px solid ${meta.color}40` }}>
-                                                    {meta.icon} {meta.label}
-                                                </span>
-                                                <span style={{ padding: "2px 10px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: 600, background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", textTransform: "capitalize" }}>
-                                                    {n.type}
-                                                </span>
-                                                <span style={{ padding: "2px 10px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: 600, background: n.is_active ? "rgba(16,185,129,0.15)" : "rgba(156,163,175,0.12)", color: n.is_active ? "#10b981" : "#9ca3af" }}>
-                                                    {n.is_active ? "● Active" : "○ Hidden"}
-                                                </span>
-                                                {n.expires_at && (
-                                                    <span style={{ padding: "2px 10px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: 600, background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
-                                                        Expires {new Date(n.expires_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {/* Message */}
-                                            <p style={{ margin: 0, color: "var(--text-primary)", fontSize: "0.92rem", lineHeight: 1.6 }}>{n.message}</p>
-                                            {/* Date */}
-                                            <p style={{ margin: "6px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                                                Created {new Date(n.date || n.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                            </p>
-                                        </div>
-
-                                        {/* RIGHT: Actions */}
-                                        {isSuperAdmin ? (
-                                            <div style={{ display: "flex", gap: "8px", flexShrink: 0, alignItems: "center" }}>
-                                                <button onClick={() => handleToggle(n.id)}
-                                                    style={{ padding: "6px 14px", background: n.is_active ? "rgba(156,163,175,0.12)" : "rgba(96,165,250,0.12)", border: `1px solid ${n.is_active ? "#9ca3af" : "#60a5fa"}`, color: n.is_active ? "#9ca3af" : "#60a5fa", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
-                                                    {n.is_active ? "Hide" : "Show"}
-                                                </button>
-                                                <button onClick={() => handleEdit(n)}
-                                                    style={{ padding: "6px 14px", background: "rgba(212,175,55,0.12)", border: "1px solid #d4af37", color: "#d4af37", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
-                                                    Edit
-                                                </button>
-                                                <button onClick={() => handleDelete(n.id)}
-                                                    style={{ padding: "6px 14px", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", flexShrink: 0 }}>View only</span>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                                    {["Priority", "Type", "Message", "Status", "Expires", "Actions"].map(h => (
+                                        <th key={h} style={{ padding: "14px 16px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {notifications.map(n => (
+                                    <tr key={n.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                                        onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                        <td style={{ padding: "14px 16px" }}>
+                                            <span style={{ background: `${priorityColor(n.priority)}20`, color: priorityColor(n.priority), padding: "3px 10px", borderRadius: "12px", fontSize: "0.8rem", fontWeight: 700 }}>P{n.priority}</span>
+                                        </td>
+                                        <td style={{ padding: "14px 16px", color: "var(--text-secondary)", fontSize: "0.85rem", textTransform: "capitalize" }}>{n.type}</td>
+                                        <td style={{ padding: "14px 16px", color: "var(--text-primary)", fontSize: "0.9rem", maxWidth: "350px" }}>{n.message}</td>
+                                        <td style={{ padding: "14px 16px" }}>
+                                            <span style={{ background: n.is_active ? "rgba(16,185,129,0.2)" : "rgba(156,163,175,0.2)", color: n.is_active ? "#10b981" : "#9ca3af", padding: "3px 10px", borderRadius: "12px", fontSize: "0.8rem", fontWeight: 600 }}>
+                                                {n.is_active ? "Active" : "Hidden"}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: "14px 16px", color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                                            {n.expires_at ? new Date(n.expires_at).toLocaleDateString("en-IN") : "—"}
+                                        </td>
+                                        <td style={{ padding: "14px 16px" }}>
+                                            {isSuperAdmin ? (
+                                                <div style={{ display: "flex", gap: "8px" }}>
+                                                    <button onClick={() => handleToggle(n.id)}
+                                                        style={{ padding: "5px 12px", background: "rgba(96,165,250,0.15)", border: "1px solid #60a5fa", color: "#60a5fa", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                                                        {n.is_active ? "Hide" : "Show"}
+                                                    </button>
+                                                    <button onClick={() => handleEdit(n)}
+                                                        style={{ padding: "5px 12px", background: "rgba(212,175,55,0.15)", border: "1px solid #d4af37", color: "#d4af37", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                                                        Edit
+                                                    </button>
+                                                    <button onClick={() => handleDelete(n.id)}
+                                                        style={{ padding: "5px 12px", background: "rgba(239,68,68,0.15)", border: "1px solid #ef4444", color: "#f87171", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            ) : <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>View only</span>}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {notifications.length === 0 && (
+                                    <tr><td colSpan={6} style={{ padding: "32px", textAlign: "center", color: "var(--text-muted)" }}>No notifications found</td></tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </div>
