@@ -285,6 +285,7 @@ export default function AdminDashboard() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "16px" }}>
                         {/* Existing cards */}
                         <StatCard icon="🏫" label="Total Colleges" value={stats?.total_colleges} color={COLORS.blue} sub={cp ? `${cp.locked_colleges} locked` : null} />
+                        <StatCard icon="👔" label="Active Managers" value={stats?.total_managers || 0} color={COLORS.blue} />
                         <StatCard icon="👨‍🎓" label="Total Students" value={stats?.total_students} color={COLORS.green} />
                         <StatCard icon="📝" label="Total Applications" value={stats?.total_applications} color={COLORS.purple} />
                         <StatCard icon="💳" label="Pending Payments" value={stats?.pending_payments} color={COLORS.amber} />

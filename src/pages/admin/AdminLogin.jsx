@@ -37,8 +37,8 @@ export default function AdminLogin() {
             if (!res.ok) throw new Error(data.message || "Login failed");
 
             localStorage.setItem("vtufest_admin_token", data.data.token);
-            localStorage.setItem("vtufest_admin_role", data.data.role);
-            localStorage.setItem("vtufest_admin_name", data.data.name);
+            localStorage.setItem("vtufest_admin_role", data.data.admin.role);
+            localStorage.setItem("vtufest_admin_name", data.data.admin.name);
             navigate("/ad-dashboard");
         } catch (err) {
             setError(err.message);

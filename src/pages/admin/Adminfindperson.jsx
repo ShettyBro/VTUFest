@@ -142,6 +142,51 @@ function DocCard({ doc }) {
     );
 }
 
+function StudentDocsCell({ documents }) {
+    const [loading, setLoading] = useState(null);
+
+    const openDoc = async (url, key) => {
+        setLoading(key);
+        const token = localStorage.getItem("vtufest_admin_token");
+        try {
+            const r = await adminFetch(`${API}/sas`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ blob_url: url }),
+            });
+            const data = await r.json();
+            if (!r.ok || !data.success) throw new Error(data.message || "Failed");
+            window.open(data.data.sas_url, "_blank");
+        } catch (e) {
+            alert("Failed to open document: " + e.message);
+        } finally {
+            setLoading(null);
+        }
+    };
+
+    if (!documents || documents.length === 0) return <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>—</span>;
+
+    return (
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", maxWidth: "180px" }}>
+            {documents.map((d, i) => (
+                <button
+                    key={i}
+                    onClick={() => openDoc(d.url, d.key)}
+                    disabled={loading === d.key}
+                    style={{
+                        background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)",
+                        color: "#a5b4fc", borderRadius: "4px", padding: "2px 6px",
+                        fontSize: "0.72rem", cursor: loading === d.key ? "wait" : "pointer",
+                        whiteSpace: "nowrap"
+                    }}
+                >
+                    {loading === d.key ? "…" : d.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 function InfoCell({ label, value, mono }) {
     if (!value && value !== 0) return null;
     return (
@@ -750,7 +795,7 @@ export default function AdminFindPerson() {
                                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "780px" }}>
                                         <thead>
                                             <tr>
-                                                {["#", "Full Name", "USN", "Department", "Year", "Gender", "Registered On"].map((h, i) => (
+                                                {["Internal ID", "Full Name", "USN", "Department", "Documents", "Account", "Registered On"].map((h, i) => (
                                                     <th key={i} style={thStyle(i === 0 ? "center" : "left")}>{h}</th>
                                                 ))}
                                             </tr>
@@ -766,14 +811,13 @@ export default function AdminFindPerson() {
                                                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                                                     >
                                                         <td style={tdStyle("center", { color: "var(--text-muted)", fontSize: "0.82rem" })}>
-                                                            {idx + 1}
+                                                            #{s.id}
                                                         </td>
                                                         <td style={tdStyle("left")}>
                                                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                                                 <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.88rem" }}>
                                                                     {s.full_name}
                                                                 </span>
-                                                                {inactive && chip("rgba(239,68,68,0.15)", "#f87171", "rgba(239,68,68,0.35)", "Inactive")}
                                                             </div>
                                                         </td>
                                                         <td style={tdStyle("left")}>
@@ -784,11 +828,14 @@ export default function AdminFindPerson() {
                                                         <td style={tdStyle("left", { color: "var(--text-secondary)", fontSize: "0.83rem" })}>
                                                             {s.department || "—"}
                                                         </td>
-                                                        <td style={tdStyle("left", { color: "var(--text-secondary)", fontSize: "0.83rem" })}>
-                                                            {s.year_of_study ? `${s.year_of_study}${["st", "nd", "rd"][s.year_of_study - 1] || "th"}` : "—"}
+                                                        <td style={tdStyle("left")}>
+                                                            <StudentDocsCell documents={s.documents} />
                                                         </td>
-                                                        <td style={tdStyle("left", { color: "var(--text-secondary)", fontSize: "0.83rem" })}>
-                                                            {s.gender ? s.gender.charAt(0).toUpperCase() + s.gender.slice(1).toLowerCase() : "—"}
+                                                        <td style={tdStyle("left")}>
+                                                            {inactive ?
+                                                                chip("rgba(239,68,68,0.15)", "#f87171", "rgba(239,68,68,0.35)", "Inactive") :
+                                                                chip("rgba(16,185,129,0.15)", "#34d399", "rgba(16,185,129,0.35)", "✅ Active")
+                                                            }
                                                         </td>
                                                         <td style={tdStyle("left", { color: "var(--text-muted)", fontSize: "0.78rem" })}>
                                                             {fmtDate(s.created_at)}
