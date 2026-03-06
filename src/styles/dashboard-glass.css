@@ -201,6 +201,32 @@ body::after {
     }
 }
 
+/* Amber pulse — Manager Notice (Priority 4) */
+@keyframes pulse-amber {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.12);
+    }
+
+    50% {
+        box-shadow: 0 0 22px rgba(245, 158, 11, 0.35);
+    }
+}
+
+/* Purple pulse — Principal Notice (Priority 5) */
+@keyframes pulse-purple {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(139, 92, 246, 0.15);
+    }
+
+    50% {
+        box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
+    }
+}
+
 /* Subtle Radial Depth Behind Dashboard */
 .dashboard-glass-container {
     position: relative;

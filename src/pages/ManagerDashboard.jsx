@@ -22,6 +22,7 @@ export default function ManagerDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
+  const [eventsCalendarData, setEventsCalendarData] = useState({ calendarEvents: [] });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
@@ -32,6 +33,11 @@ export default function ManagerDashboard() {
 
   const priority1Notifications = notificationsData
     .filter(n => n.priority === 1)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Priority 4 — targeted to managers only
+  const priority4Notifications = notificationsData
+    .filter(n => n.priority === 4)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const priority2PlusNotifications = notificationsData
@@ -60,6 +66,12 @@ export default function ManagerDashboard() {
     fetch("https://api.vtufest2026.acharyahabba.com/api/shared/notifications")
       .then(r => r.json())
       .then(d => { if (d.success) setNotificationsData(d.data); });
+
+    // Fetch Calendar Events
+    fetch("https://api.vtufest2026.acharyahabba.com/api/shared/calendar-events")
+      .then(r => r.json())
+      .then(d => { if (d.success) setEventsCalendarData(d.data); })
+      .catch(() => { });
 
   }, []);
 
@@ -313,7 +325,7 @@ export default function ManagerDashboard() {
           <HelpButton style={{ top: '75px', right: '25px' }} />
         </div>
 
-        {/* --- TICKER --- */}
+        {/* --- TICKER (Priority 1) --- */}
         {priority1Notifications.length > 0 && (
           <div className="glass-banner">
             <SparkleEffect trigger={currentPriority1Index} />
@@ -323,6 +335,38 @@ export default function ManagerDashboard() {
                 {priority1Notifications[currentPriority1Index]?.message}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* --- MANAGER NOTICE (Priority 4) --- */}
+        {priority4Notifications.length > 0 && (
+          <div style={{
+            marginBottom: '20px',
+            borderRadius: '10px',
+            border: '1px solid rgba(245,158,11,0.5)',
+            borderLeft: '4px solid #F59E0B',
+            background: 'rgba(245,158,11,0.07)',
+            padding: '14px 18px',
+            boxShadow: '0 0 16px rgba(245,158,11,0.15)',
+            animation: 'pulse-amber 2.5s infinite',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <span style={{ fontSize: '1.1rem' }}>📢</span>
+              <strong style={{ color: '#F59E0B', fontSize: '0.95rem', letterSpacing: '0.03em' }}>Manager Notice</strong>
+            </div>
+            {priority4Notifications.map(n => (
+              <div key={n.id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                gap: '12px', padding: '7px 0',
+                borderTop: '1px solid rgba(245,158,11,0.15)',
+                fontSize: '0.88rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.5
+              }}>
+                <span>• {n.message}</span>
+                <span style={{ flexShrink: 0, fontSize: '0.72rem', color: 'rgba(245,158,11,0.7)' }}>
+                  {new Date(n.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 
@@ -410,6 +454,62 @@ export default function ManagerDashboard() {
                 <small style={{ color: 'var(--text-secondary)' }}>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
               </div>
 
+            </div>
+
+            {/* --- CALENDAR SECTION --- */}
+            <div className="glass-card" style={{ marginTop: '0' }}>
+              <h3 style={{ marginBottom: '5px' }}>Events Calendar</h3>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.88rem' }}>Upcoming & past event schedule</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                {eventsCalendarData.calendarEvents.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>No events scheduled.</p>
+                ) : eventsCalendarData.calendarEvents
+                  .slice()
+                  .sort((a, b) => {
+                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+                    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+                    const da = new Date(a.date), db = new Date(b.date);
+                    const tier = (d) => d >= todayStart && d <= todayEnd ? 0 : d > todayEnd ? 1 : 2;
+                    const ta = tier(da), tb = tier(db);
+                    if (ta !== tb) return ta - tb;
+                    return ta <= 1 ? da - db : db - da;
+                  })
+                  .map((event, idx) => {
+                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+                    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+                    const d = new Date(event.date);
+                    const isToday = d >= todayStart && d <= todayEnd;
+                    const isFuture = d > todayEnd;
+                    const accentColor = isToday ? 'var(--accent-success)' : isFuture ? 'var(--gold-solid)' : 'rgba(255,255,255,0.2)';
+                    return (
+                      <div key={idx} style={{
+                        display: 'flex', alignItems: 'center', gap: '14px',
+                        padding: '10px 14px', borderRadius: '10px',
+                        background: isToday ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.03)',
+                        borderLeft: `3px solid ${accentColor}`,
+                        opacity: (!isToday && !isFuture) ? 0.55 : 1,
+                      }}>
+                        <div style={{ minWidth: '54px', textAlign: 'center', flexShrink: 0 }}>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {new Date(event.date).toLocaleDateString('en-IN', { month: 'short' })}
+                          </div>
+                          <div style={{ fontSize: '1.3rem', fontWeight: '700', color: accentColor, lineHeight: 1.1 }}>
+                            {new Date(event.date).getDate()}
+                          </div>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {isToday && <span style={{ background: 'var(--accent-success)', color: '#0f172a', fontSize: '0.6rem', fontWeight: 700, padding: '1px 6px', borderRadius: '10px', marginRight: '6px', verticalAlign: 'middle', textTransform: 'uppercase' }}>Today</span>}
+                            {event.title}
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                            {event.time} &nbsp;•&nbsp; 📍 {event.place}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
             </div>
 
             {/* --- MAP SECTION --- */}

@@ -54,12 +54,10 @@ export default function Navbar() {
   }, []);
 
   // Computed directly — always in sync with notificationsData
+  // Bell shows only priority-2 notifications — shared across all roles, sorted newest first
   const sortedNotifications = notificationsData
-    .filter(n => n.priority >= 2)
-    .sort((a, b) => {
-      if (a.priority !== b.priority) return a.priority - b.priority;
-      return new Date(b.date) - new Date(a.date);
-    });
+    .filter(n => n.priority === 2)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   /* ================= COLLEGE DATA ================= */
   useEffect(() => {
@@ -158,11 +156,11 @@ export default function Navbar() {
             <div className="notif-dropdown">
               {sortedNotifications.length > 0 ? (
                 sortedNotifications.map(notification => (
-                  <div
-                    key={notification.id}
-                    className={`notif-item priority-${notification.priority}`}
-                  >
-                    {notification.message}
+                  <div key={notification.id} className="notif-item priority-2">
+                    <span style={{ display: 'block', lineHeight: 1.4 }}>{notification.message}</span>
+                    <span style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>
+                      {new Date(notification.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
                   </div>
                 ))
               ) : (

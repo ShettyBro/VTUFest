@@ -47,14 +47,10 @@ export default function Dashboard() {
     }
   }, [priority1Notifications.length]);
 
-  const priority2PlusNotifications = notificationsData
-    .filter(n => n.priority >= 3)
-    .sort((a, b) => {
-      if (a.priority !== b.priority) {
-        return a.priority - b.priority;
-      }
-      return new Date(b.date) - new Date(a.date);
-    });
+  // Priority 3 — shown only in student dashboard Quick Links card
+  const priority3Notifications = notificationsData
+    .filter(n => n.priority === 3)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const blockEvents = {
     left: [
@@ -550,7 +546,7 @@ export default function Dashboard() {
             <div className="glass-card">
               <h4 className="mobile-info-heading">Quick Links &amp; Guidelines</h4>
               <ul className="instruction-list">
-                {priority2PlusNotifications.slice(0, 3).map(notification => (
+                {priority3Notifications.slice(0, 3).map(notification => (
                   <li key={notification.id}>{notification.message}</li>
                 ))}
                 <li>Carry College ID at all times</li>
