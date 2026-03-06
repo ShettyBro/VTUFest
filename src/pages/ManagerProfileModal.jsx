@@ -315,100 +315,190 @@ export default function ManagerProfileModal({ onComplete }) {
     uploadStatus.college_id_card === "done" &&
     uploadStatus.aadhaar_card === "done";
 
+  /* ── timer countdown (runs when session is active) ── */
+  useEffect(() => {
+    if (timer === null) return;
+    if (timer <= 0) { setTimerExpired(true); return; }
+    const id = setTimeout(() => setTimer((t) => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [timer]);
+
+  const fmtTimer = (secs) => {
+    if (secs === null) return null;
+    const m = Math.floor(secs / 60).toString().padStart(2, "0");
+    const s = (secs % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
   return (
-    <div className="auth-page" style={{ position: 'fixed', inset: 0, zIndex: 9999, overflowY: 'auto' }}>
-      <div className="shape shape-1"></div>
-      <div className="shape shape-2"></div>
+    <>
+      {/* ── blurred overlay ── */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.88)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px', overflowY: 'auto',
+      }}>
+        {/* ── card ── */}
+        <div style={{
+          width: '100%', maxWidth: '680px',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
+          border: '1px solid rgba(139,92,246,0.45)',
+          borderRadius: '18px',
+          padding: '36px 32px',
+          boxShadow: '0 0 40px rgba(139,92,246,0.25), 0 0 80px rgba(139,92,246,0.08)',
+          animation: 'mgr-slideIn 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+        }}>
+
+          {/* icon */}
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '1.5rem', margin: '0 auto 18px',
+            boxShadow: '0 0 18px rgba(124,58,237,0.5)',
+          }}>📋</div>
+
+          {/* title */}
+          <h2 style={{ color: '#fff', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, marginBottom: 6 }}>
+            Complete Your Profile
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: '0.84rem', marginBottom: 22, lineHeight: 1.5 }}>
+            Upload the following documents to continue. You will be counted in the 45-person quota after completion.
+          </p>
+
+          {/* mandatory warning */}
+          <div style={{
+            background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)',
+            borderLeft: '4px solid #f59e0b', borderRadius: 8,
+            padding: '10px 14px', marginBottom: 24,
+            fontSize: '0.82rem', color: '#fbbf24', fontWeight: 600,
+          }}>
+            ⚠️ This step is mandatory and cannot be skipped.
+          </div>
+
+          {/* ── STEP 1: init session ── */}
+          {!session ? (
+            <button
+              onClick={handleInit}
+              disabled={loading}
+              style={{
+                width: '100%', padding: '13px',
+                borderRadius: 10, border: 'none',
+                background: loading ? 'rgba(124,58,237,0.4)' : 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+                color: '#fff', fontSize: '1rem', fontWeight: 700,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow: loading ? 'none' : '0 0 20px rgba(124,58,237,0.45)',
+                letterSpacing: '0.03em',
+              }}
+            >
+              {loading ? 'Initializing…' : 'Start Upload'}
+            </button>
+          ) : (
+            <>
+              {/* timer + warning */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                flexWrap: 'wrap', gap: 8,
+                background: timerExpired ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+                border: `1px solid ${timerExpired ? 'rgba(239,68,68,0.4)' : 'rgba(245,158,11,0.4)'}`,
+                borderLeft: `4px solid ${timerExpired ? '#ef4444' : '#f59e0b'}`,
+                borderRadius: 8, padding: '10px 14px', marginBottom: 20,
+                fontSize: '0.82rem',
+                color: timerExpired ? '#fca5a5' : '#fbbf24',
+                fontWeight: 600,
+              }}>
+                <span>{timerExpired ? '✗ Upload window expired. Please restart.' : '⚠️ Upload links valid for 5 minutes. Upload promptly.'}</span>
+                {!timerExpired && timer !== null && (
+                  <span style={{
+                    background: 'rgba(0,0,0,0.3)', borderRadius: 6,
+                    padding: '3px 10px', fontFamily: 'monospace', fontSize: '0.9rem',
+                    color: timer <= 60 ? '#fca5a5' : '#fbbf24',
+                  }}>
+                    {fmtTimer(timer)}
+                  </span>
+                )}
+              </div>
+
+              {/* file upload cards */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 22 }}>
+                <FileUploadField
+                  label="Passport Photo"
+                  docKey="passport_photo"
+                  files={files} filePreviews={filePreviews} uploadStatus={uploadStatus}
+                  handleFileChange={handleFileChange} uploadFile={uploadFile}
+                  timerExpired={timerExpired} loading={loading}
+                />
+                <FileUploadField
+                  label="College ID Card"
+                  docKey="college_id_card"
+                  files={files} filePreviews={filePreviews} uploadStatus={uploadStatus}
+                  handleFileChange={handleFileChange} uploadFile={uploadFile}
+                  timerExpired={timerExpired} loading={loading}
+                />
+                <FileUploadField
+                  label="Aadhaar Card"
+                  docKey="aadhaar_card"
+                  files={files} filePreviews={filePreviews} uploadStatus={uploadStatus}
+                  handleFileChange={handleFileChange} uploadFile={uploadFile}
+                  timerExpired={timerExpired} loading={loading}
+                />
+              </div>
+
+              {/* progress indicator */}
+              {(() => {
+                const done = ['passport_photo', 'college_id_card', 'aadhaar_card']
+                  .filter(k => uploadStatus[k] === 'done').length;
+                return (
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
+                      <span>Documents uploaded</span>
+                      <span style={{ color: done === 3 ? '#34d399' : '#fbbf24' }}>{done} / 3</span>
+                    </div>
+                    <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 99,
+                        width: `${(done / 3) * 100}%`,
+                        background: done === 3
+                          ? 'linear-gradient(90deg,#34d399,#10b981)'
+                          : 'linear-gradient(90deg,#7c3aed,#fbbf24)',
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* submit */}
+              <button
+                onClick={handleFinalize}
+                disabled={!allUploaded || loading}
+                style={{
+                  width: '100%', padding: '13px',
+                  borderRadius: 10, border: 'none',
+                  background: (!allUploaded || loading)
+                    ? 'rgba(124,58,237,0.3)'
+                    : 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+                  color: '#fff', fontSize: '1rem', fontWeight: 700,
+                  cursor: (!allUploaded || loading) ? 'not-allowed' : 'pointer',
+                  boxShadow: (!allUploaded || loading) ? 'none' : '0 0 20px rgba(124,58,237,0.45)',
+                  letterSpacing: '0.03em', transition: 'all 0.2s',
+                }}
+              >
+                {loading ? 'Submitting…' : 'Complete Profile'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
       <style>{`
-        .upload-grid-manager {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 15px;
-          margin-top: 20px;
-        }
-        @media (max-width: 768px) {
-          .upload-grid-manager { flex-direction: column; }
-        }
-        .auth-container.manager-profile-container {
-          padding: 25px;
-          max-width: 750px;
-          min-height: auto;
-          flex-direction: column;
-          overflow-y: visible;
-          max-height: none;
+        @keyframes mgr-slideIn {
+          from { opacity: 0; transform: scale(0.88) translateY(24px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0); }
         }
       `}</style>
-
-      <div className="auth-container manager-profile-container">
-        <h2 className="form-title" style={{ textAlign: 'center' }}>Complete Your Profile</h2>
-        <p style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: '10px', fontSize: '0.9rem' }}>
-          Upload the following documents to continue. You will be counted in the 45-person quota after completion.
-        </p>
-
-        {!session ? (
-          <button className="auth-btn" onClick={handleInit} disabled={loading} style={{ marginTop: '15px' }}>
-            {loading ? "Initializing..." : "Start Upload"}
-          </button>
-        ) : (
-          <>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
-              borderLeft: '4px solid #f59e0b', borderRadius: '8px',
-              padding: '10px 14px', marginBottom: '10px',
-              color: '#fbbf24', fontWeight: 600, fontSize: '0.88rem',
-            }}>
-              ⚠️ File upload link is valid for 5 minutes. Please upload your documents promptly.
-            </div>
-
-            <div className="upload-grid-manager">
-              <FileUploadField
-                label="Passport Photo"
-                docKey="passport_photo"
-                files={files}
-                filePreviews={filePreviews}
-                uploadStatus={uploadStatus}
-                handleFileChange={handleFileChange}
-                uploadFile={uploadFile}
-                timerExpired={false}
-                loading={loading}
-              />
-              <FileUploadField
-                label="College ID Card"
-                docKey="college_id_card"
-                files={files}
-                filePreviews={filePreviews}
-                uploadStatus={uploadStatus}
-                handleFileChange={handleFileChange}
-                uploadFile={uploadFile}
-                timerExpired={false}
-                loading={loading}
-              />
-              <FileUploadField
-                label="Aadhaar Card"
-                docKey="aadhaar_card"
-                files={files}
-                filePreviews={filePreviews}
-                uploadStatus={uploadStatus}
-                handleFileChange={handleFileChange}
-                uploadFile={uploadFile}
-                timerExpired={false}
-                loading={loading}
-              />
-            </div>
-
-            <button
-              className="auth-btn"
-              onClick={handleFinalize}
-              disabled={!allUploaded || loading}
-              style={{ marginTop: '20px' }}
-            >
-              {loading ? "Submitting..." : "Complete Profile"}
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+    </>
   );
 }
