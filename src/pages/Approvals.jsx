@@ -7,23 +7,160 @@ import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation"; //
 
 const validateImageDimensions = (file) => {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        if (img.width < 300 || img.height < 400) {
-          reject(new Error("Photo is too small. Minimum size is 300x400 pixels."));
-        } else if (img.width > 800 || img.height > 1000) {
-          reject(new Error("Photo is too large. Maximum size is 800x1000 pixels."));
-        } else {
-          resolve(true);
-        }
-      };
-      img.onerror = () => reject(new Error("Invalid image file."));
-      img.src = e.target.result;
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      if (img.width < 300 || img.height < 400) {
+        reject(new Error("Photo is too small. Minimum size is 300x400 pixels."));
+      } else if (img.width > 800 || img.height > 1000) {
+        reject(new Error("Photo is too large. Maximum size is 800x1000 pixels."));
+      } else {
+        resolve(true);
+      }
     };
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Invalid image file."));
+    }
+    img.src = objectUrl;
   });
+};
+
+const DocumentThumbnail = ({ application_id, label, url, token, canEdit, onReplaceSuccess }) => {
+  const [sas, setSas] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [imgErr, setImgErr] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const { showPopup } = usePopup();
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("https://api.vtufest2026.acharyahabba.com/api/manager/review-applications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ action: "get_view_sas", blob_url: url })
+        });
+        const data = await res.json();
+        if (data.success && active) {
+          setSas(data.data.sas_url);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [url, token]);
+
+  const handleReplace = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      showPopup("Only JPG/PNG formats are allowed for photos", "error");
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      await validateImageDimensions(file);
+
+      const res = await fetch("https://api.vtufest2026.acharyahabba.com/api/manager/review-applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "get_upload_sas", application_id })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to get upload link");
+
+      const uploadUrl = data.data.upload_url;
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'x-ms-blob-type': 'BlockBlob',
+          'Content-Type': file.type
+        },
+        body: file
+      });
+
+      if (uploadRes.ok) {
+        showPopup("Photo replaced successfully!", "success");
+        if (onReplaceSuccess) onReplaceSuccess();
+      } else {
+        throw new Error("Azure upload failed");
+      }
+
+    } catch (err) {
+      showPopup(err.message, "error");
+    } finally {
+      setUploadLoading(false);
+      e.target.value = "";
+    }
+  };
+
+  const isPdf = sas && sas.split('?')[0].toLowerCase().endsWith('.pdf');
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px", padding: "10px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", minWidth: "120px" }}>
+      <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", minHeight: "20px" }}>{label}</div>
+      {loading ? (
+        <div style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: "0.7rem" }}>Loading...</div>
+      ) : sas ? (
+        <>
+          {imgErr || isPdf ? (
+            <div style={{ width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.2)", borderRadius: "6px" }}>
+              <a href={sas} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", color: "var(--accent-info)" }}>Open PDF</a>
+            </div>
+          ) : (
+            <>
+              <div
+                style={{ width: "60px", height: "60px", cursor: "pointer", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "6px", overflow: "hidden" }}
+                onClick={() => setExpanded(true)}
+                title="Click to view image"
+              >
+                <img src={sas} alt={label} onError={() => setImgErr(true)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+              <div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Click to expand</div>
+            </>
+          )}
+
+          {canEdit && (
+            <label style={{ background: "rgba(239,68,68,0.15)", border: "1px solid #ef4444", color: "#ef4444", padding: "2px 8px", borderRadius: "4px", fontSize: "0.7rem", cursor: "pointer", opacity: uploadLoading ? 0.6 : 1, marginTop: "5px" }}>
+              {uploadLoading ? "..." : "Replace"}
+              <input type="file" accept="image/jpeg,image/png" style={{ display: "none" }} onChange={handleReplace} disabled={uploadLoading} />
+            </label>
+          )}
+
+          {/* Expanded Modal Layer */}
+          {expanded && (
+            <div
+              style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(5px)" }}
+              onClick={() => setExpanded(false)}
+            >
+              <div style={{ position: "relative", maxWidth: "90%", maxHeight: "90%" }} onClick={e => e.stopPropagation()}>
+                <img src={sas} alt={label} style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: "8px", border: "2px solid rgba(255,255,255,0.1)" }} />
+                <button
+                  onClick={() => setExpanded(false)}
+                  style={{ position: "absolute", top: "-15px", right: "-15px", background: "#ef4444", color: "white", border: "none", width: "30px", height: "30px", borderRadius: "50%", cursor: "pointer", fontWeight: "bold", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ fontSize: "0.7rem", color: "#ef4444" }}>Failed</div>
+      )}
+    </div>
+  );
 };
 
 const DocumentViewer = ({ application_id, blobUrl, label, canEdit, token, onReplaceSuccess }) => {
@@ -127,6 +264,72 @@ const DocumentViewer = ({ application_id, blobUrl, label, canEdit, token, onRepl
   );
 };
 
+const DocumentVerificationModal = ({ student, onClose, onVerify, token, canEdit }) => {
+  const [agreed, setAgreed] = useState(false);
+
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)",
+      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000
+    }}>
+      <div className="glass-card" style={{ width: "95%", maxWidth: "800px", maxHeight: "90vh", overflowY: "auto", padding: "25px", background: "rgba(15,23,42,0.95)", position: "relative" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.5rem", cursor: "pointer" }}>×</button>
+
+        <h3 style={{ marginTop: 0, color: "var(--text-primary)", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "10px" }}>
+          Verify Documents: {student.full_name}
+        </h3>
+
+        <div style={{ display: "flex", gap: "15px", overflowX: "auto", padding: "15px 0" }}>
+          {student.passport_photo_url && (
+            <DocumentThumbnail
+              application_id={student.application_id}
+              url={student.passport_photo_url}
+              label="Passport Photo"
+              canEdit={canEdit}
+              token={token}
+              onReplaceSuccess={() => { }}
+            />
+          )}
+          {student.documents && Object.entries(student.documents).map(([key, url]) => (
+            <DocumentThumbnail
+              key={key}
+              application_id={student.application_id}
+              url={url}
+              label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              canEdit={false}
+              token={token}
+            />
+          ))}
+        </div>
+
+        <div style={{ marginTop: "20px", padding: "15px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
+            <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} style={{ marginTop: "4px", transform: "scale(1.2)" }} />
+            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+              I agree that I have verified all documents (Passport Photo, College Id, Aadhar, SSLC, etc.) for this student. The photo is clear and meets requirements. The information matches the registration details.
+            </span>
+          </label>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "20px" }}>
+          <button className="neon-btn" style={{ borderColor: "var(--text-secondary)", color: "var(--text-secondary)", padding: "8px 15px", margin: 0 }} onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="neon-btn"
+            style={{ borderColor: agreed ? "var(--accent-success)" : "rgba(255,255,255,0.2)", color: agreed ? "var(--accent-success)" : "rgba(255,255,255,0.2)", padding: "8px 15px", margin: 0, opacity: agreed ? 1 : 0.5, cursor: agreed ? "pointer" : "not-allowed" }}
+            onClick={() => { if (agreed) onVerify(); }}
+            disabled={!agreed}
+          >
+            Verify & Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Approvals() {
   const navigate = useNavigate();
   const token = localStorage.getItem("vtufest_token");
@@ -167,6 +370,11 @@ export default function Approvals() {
   const [editFormPending, setEditFormPending] = useState({});
   const [editFormApproved, setEditFormApproved] = useState({});
   const [savingEdit, setSavingEdit] = useState(false);
+
+  // Verification states
+  const [verifiedDocs, setVerifiedDocs] = useState({});
+  const [showDocsModal, setShowDocsModal] = useState(false);
+  const [docsTarget, setDocsTarget] = useState(null);
 
   // Modal states
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -1010,9 +1218,16 @@ export default function Approvals() {
 
                             <button
                               className="neon-btn"
-                              style={{ fontSize: "0.8rem", padding: "8px", flex: 1, borderColor: "var(--accent-success)", color: "var(--accent-success)" }}
+                              style={{
+                                fontSize: "0.8rem", padding: "8px", flex: 1,
+                                borderColor: verifiedDocs[student.application_id] ? "var(--accent-success)" : "rgba(255,255,255,0.2)",
+                                color: verifiedDocs[student.application_id] ? "var(--accent-success)" : "rgba(255,255,255,0.2)",
+                                opacity: verifiedDocs[student.application_id] ? 1 : 0.5,
+                                cursor: verifiedDocs[student.application_id] ? "pointer" : "not-allowed"
+                              }}
                               onClick={() => approvePendingStudent(student)}
-                              disabled={editingPending === student.application_id || isQuotaExhausted}
+                              disabled={editingPending === student.application_id || isQuotaExhausted || !verifiedDocs[student.application_id]}
+                              title={!verifiedDocs[student.application_id] ? "Please verify documents first" : ""}
                             >
                               Approve
                             </button>
@@ -1214,6 +1429,20 @@ export default function Approvals() {
 
             </div>
           </div>
+        )}
+
+        {showDocsModal && docsTarget && (
+          <DocumentVerificationModal
+            student={docsTarget}
+            token={token}
+            canEdit={!isReadOnly && !isReadOnlyMode}
+            onClose={() => { setShowDocsModal(false); setDocsTarget(null); }}
+            onVerify={() => {
+              setVerifiedDocs(prev => ({ ...prev, [docsTarget.application_id]: true }));
+              setShowDocsModal(false);
+              setDocsTarget(null);
+            }}
+          />
         )}
 
       </div>

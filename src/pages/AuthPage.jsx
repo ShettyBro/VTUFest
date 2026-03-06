@@ -317,22 +317,23 @@ export default function AuthPage({ initialView = "login" }) {
 
     const validateImageDimensions = (file) => {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    if (img.width < 300 || img.height < 400) {
-                        reject(new Error("Photo is too small. Minimum size is 300x400 pixels."));
-                    } else if (img.width > 800 || img.height > 1000) {
-                        reject(new Error("Photo is too large. Maximum size is 800x1000 pixels."));
-                    } else {
-                        resolve(true);
-                    }
-                };
-                img.onerror = () => reject(new Error("Invalid image file."));
-                img.src = e.target.result;
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+            img.onload = () => {
+                URL.revokeObjectURL(objectUrl);
+                if (img.width < 300 || img.height < 400) {
+                    reject(new Error("Photo is too small. Minimum size is 300x400 pixels."));
+                } else if (img.width > 800 || img.height > 1000) {
+                    reject(new Error("Photo is too large. Maximum size is 800x1000 pixels."));
+                } else {
+                    resolve(true);
+                }
             };
-            reader.readAsDataURL(file);
+            img.onerror = () => {
+                URL.revokeObjectURL(objectUrl);
+                reject(new Error("Invalid image file."));
+            }
+            img.src = objectUrl;
         });
     };
 
