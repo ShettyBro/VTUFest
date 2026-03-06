@@ -38,62 +38,98 @@ const computeSHA256 = async (file) => {
   return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
 };
 
-// File upload card — same style as StudentRegister page
+// File upload card
 const FileUploadField = ({ label, docKey, files, filePreviews, uploadStatus, handleFileChange, uploadFile, timerExpired, loading }) => (
-  <div className="file-upload-wrapper" style={{ flex: 1, padding: '15px', background: 'rgba(0, 0, 0, 0.3)', border: '2px dashed rgba(255, 255, 255, 0.5)', minWidth: '200px' }}>
-    <h4 style={{ color: 'white', marginBottom: '10px', fontSize: '14px', textAlign: 'center' }}>{label}</h4>
-    <div style={{ margin: '10px 0', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  <div style={{
+    flex: 1, minWidth: '160px',
+    background: 'rgba(0,0,0,0.35)',
+    border: `2px dashed ${uploadStatus[docKey] === 'done' ? 'rgba(52,211,153,0.7)' : 'rgba(139,92,246,0.5)'}`,
+    borderRadius: 10, padding: '10px 10px',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
+    transition: 'border-color 0.3s',
+  }}>
+    <h4 style={{ color: 'white', margin: 0, fontSize: '12px', fontWeight: 600, textAlign: 'center' }}>{label}</h4>
+
+    {/* preview area */}
+    <div style={{
+      width: '100%', height: 80, borderRadius: 7,
+      background: 'rgba(255,255,255,0.04)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
       {filePreviews[docKey] ? (
-        filePreviews[docKey] === "PDF" ? (
-          <div style={{ fontSize: '2rem', color: '#fff' }}>📄</div>
+        filePreviews[docKey] === 'PDF' ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem' }}>📄</div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.68rem', marginTop: 2 }}>PDF</div>
+          </div>
         ) : (
-          <img src={filePreviews[docKey]} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover' }} />
+          <img
+            src={filePreviews[docKey]}
+            alt="Preview"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
+          />
         )
       ) : (
-        <div style={{ fontSize: '2rem', opacity: 0.7 }}>📄</div>
-      )}
-    </div>
-    <div style={{ textAlign: 'center' }}>
-      <label htmlFor={`file-${docKey}`} className="custom-file-upload" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '8px 16px', borderRadius: '50px', cursor: 'pointer', display: 'inline-block', fontSize: '12px' }}>
-        <span style={{ marginRight: '5px' }}>📁</span>
-        {files[docKey] ? "Change" : "Choose"}
-      </label>
-      <input
-        id={`file-${docKey}`}
-        type="file"
-        accept="image/png,image/jpeg,application/pdf"
-        onChange={(e) => handleFileChange(e, docKey)}
-        disabled={timerExpired || uploadStatus[docKey] === "done"}
-        style={{ display: 'none' }}
-      />
-      {files[docKey] && (
-        <div style={{ marginTop: '5px', color: '#a8edea', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px', margin: '5px auto 0' }}>
-          {files[docKey].name}
+        <div style={{ textAlign: 'center', opacity: 0.35 }}>
+          <div style={{ fontSize: '1.8rem' }}>🖼️</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.65rem', marginTop: 2 }}>No file selected</div>
         </div>
       )}
     </div>
 
-    {files[docKey] && uploadStatus[docKey] !== "done" && (
+    {/* choose button */}
+    <label
+      htmlFor={`file-${docKey}`}
+      style={{
+        background: 'linear-gradient(135deg,#667eea,#764ba2)',
+        color: 'white', padding: '5px 13px', borderRadius: 50,
+        cursor: (timerExpired || uploadStatus[docKey] === 'done') ? 'not-allowed' : 'pointer',
+        opacity: (timerExpired || uploadStatus[docKey] === 'done') ? 0.5 : 1,
+        display: 'inline-block', fontSize: '11px', fontWeight: 600,
+      }}
+    >
+      📁 {files[docKey] ? 'Change' : 'Choose'}
+    </label>
+    <input
+      id={`file-${docKey}`}
+      type="file"
+      accept="image/png,image/jpeg,application/pdf"
+      onChange={(e) => handleFileChange(e, docKey)}
+      disabled={timerExpired || uploadStatus[docKey] === 'done'}
+      style={{ display: 'none' }}
+    />
+
+    {/* filename */}
+    {files[docKey] && (
+      <div style={{ color: '#a8edea', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px', textAlign: 'center' }}>
+        {files[docKey].name}
+      </div>
+    )}
+
+    {/* upload button */}
+    {files[docKey] && uploadStatus[docKey] !== 'done' && (
       <button
         type="button"
-        className="secondary-btn"
         onClick={() => uploadFile(docKey)}
-        disabled={timerExpired || loading || uploadStatus[docKey] === "uploading"}
-        style={{ marginTop: '10px', borderRadius: '50px', padding: '6px 12px', background: 'rgba(255,255,255,0.1)', border: '1px solid white', color: 'white', cursor: 'pointer', fontSize: '12px', width: '100%' }}
+        disabled={timerExpired || loading || uploadStatus[docKey] === 'uploading'}
+        style={{
+          width: '100%', padding: '6px', borderRadius: 7, border: '1px solid rgba(139,92,246,0.5)',
+          background: 'rgba(124,58,237,0.2)', color: 'white',
+          cursor: (timerExpired || loading || uploadStatus[docKey] === 'uploading') ? 'not-allowed' : 'pointer',
+          fontSize: '12px', fontWeight: 600,
+        }}
       >
-        {uploadStatus[docKey] === "uploading" ? "..." : "Upload"}
+        {uploadStatus[docKey] === 'uploading' ? '⏳ Uploading…' : '⬆ Upload'}
       </button>
     )}
 
-    {uploadStatus[docKey] === "done" && (
-      <p style={{ color: "#a8edea", marginTop: '5px', fontSize: "12px", textAlign: "center", fontWeight: "600" }}>
-        ✓ Done
-      </p>
+    {/* status */}
+    {uploadStatus[docKey] === 'done' && (
+      <p style={{ color: '#34d399', margin: 0, fontSize: '12px', fontWeight: 700 }}>✓ Uploaded</p>
     )}
-    {uploadStatus[docKey] === "failed" && (
-      <p style={{ color: "#ff6b6b", marginTop: '5px', fontSize: "12px", textAlign: "center" }}>
-        ✗ Failed — try again
-      </p>
+    {uploadStatus[docKey] === 'failed' && (
+      <p style={{ color: '#ff6b6b', margin: 0, fontSize: '12px' }}>✗ Failed — try again</p>
     )}
   </div>
 );
@@ -315,20 +351,7 @@ export default function ManagerProfileModal({ onComplete }) {
     uploadStatus.college_id_card === "done" &&
     uploadStatus.aadhaar_card === "done";
 
-  /* ── timer countdown (runs when session is active) ── */
-  useEffect(() => {
-    if (timer === null) return;
-    if (timer <= 0) { setTimerExpired(true); return; }
-    const id = setTimeout(() => setTimer((t) => t - 1), 1000);
-    return () => clearTimeout(id);
-  }, [timer]);
 
-  const fmtTimer = (secs) => {
-    if (secs === null) return null;
-    const m = Math.floor(secs / 60).toString().padStart(2, "0");
-    const s = (secs % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
-  };
 
   return (
     <>
@@ -342,38 +365,38 @@ export default function ManagerProfileModal({ onComplete }) {
       }}>
         {/* ── card ── */}
         <div style={{
-          width: '100%', maxWidth: '680px',
+          width: '100%', maxWidth: '620px',
           background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
           border: '1px solid rgba(139,92,246,0.45)',
-          borderRadius: '18px',
-          padding: '36px 32px',
+          borderRadius: '16px',
+          padding: '22px 24px',
           boxShadow: '0 0 40px rgba(139,92,246,0.25), 0 0 80px rgba(139,92,246,0.08)',
           animation: 'mgr-slideIn 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         }}>
 
           {/* icon */}
           <div style={{
-            width: 56, height: 56, borderRadius: '50%',
+            width: 42, height: 42, borderRadius: '50%',
             background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.5rem', margin: '0 auto 18px',
-            boxShadow: '0 0 18px rgba(124,58,237,0.5)',
+            fontSize: '1.2rem', margin: '0 auto 10px',
+            boxShadow: '0 0 14px rgba(124,58,237,0.5)',
           }}>📋</div>
 
           {/* title */}
-          <h2 style={{ color: '#fff', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, marginBottom: 6 }}>
+          <h2 style={{ color: '#fff', textAlign: 'center', fontSize: '1.1rem', fontWeight: 700, marginBottom: 4 }}>
             Complete Your Profile
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: '0.84rem', marginBottom: 22, lineHeight: 1.5 }}>
+          <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: '0.78rem', marginBottom: 12, lineHeight: 1.4 }}>
             Upload the following documents to continue. You will be counted in the 45-person quota after completion.
           </p>
 
           {/* mandatory warning */}
           <div style={{
             background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)',
-            borderLeft: '4px solid #f59e0b', borderRadius: 8,
-            padding: '10px 14px', marginBottom: 24,
-            fontSize: '0.82rem', color: '#fbbf24', fontWeight: 600,
+            borderLeft: '4px solid #f59e0b', borderRadius: 7,
+            padding: '7px 12px', marginBottom: 14,
+            fontSize: '0.78rem', color: '#fbbf24', fontWeight: 600,
           }}>
             ⚠️ This step is mandatory and cannot be skipped.
           </div>
@@ -384,8 +407,8 @@ export default function ManagerProfileModal({ onComplete }) {
               onClick={handleInit}
               disabled={loading}
               style={{
-                width: '100%', padding: '13px',
-                borderRadius: 10, border: 'none',
+                width: '100%', padding: '10px',
+                borderRadius: 9, border: 'none',
                 background: loading ? 'rgba(124,58,237,0.4)' : 'linear-gradient(135deg,#7c3aed,#4f46e5)',
                 color: '#fff', fontSize: '1rem', fontWeight: 700,
                 cursor: loading ? 'not-allowed' : 'pointer',
@@ -397,10 +420,8 @@ export default function ManagerProfileModal({ onComplete }) {
             </button>
           ) : (
             <>
-              {/* timer + warning */}
+              {/* session warning — no timer */}
               <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                flexWrap: 'wrap', gap: 8,
                 background: timerExpired ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
                 border: `1px solid ${timerExpired ? 'rgba(239,68,68,0.4)' : 'rgba(245,158,11,0.4)'}`,
                 borderLeft: `4px solid ${timerExpired ? '#ef4444' : '#f59e0b'}`,
@@ -409,16 +430,9 @@ export default function ManagerProfileModal({ onComplete }) {
                 color: timerExpired ? '#fca5a5' : '#fbbf24',
                 fontWeight: 600,
               }}>
-                <span>{timerExpired ? '✗ Upload window expired. Please restart.' : '⚠️ Upload links valid for 5 minutes. Upload promptly.'}</span>
-                {!timerExpired && timer !== null && (
-                  <span style={{
-                    background: 'rgba(0,0,0,0.3)', borderRadius: 6,
-                    padding: '3px 10px', fontFamily: 'monospace', fontSize: '0.9rem',
-                    color: timer <= 60 ? '#fca5a5' : '#fbbf24',
-                  }}>
-                    {fmtTimer(timer)}
-                  </span>
-                )}
+                {timerExpired
+                  ? '✗ Upload window expired. Please click "Start Upload" to get new links.'
+                  : '⚠️ Upload links are valid for 5 minutes. Please choose and upload your files promptly.'}
               </div>
 
               {/* file upload cards */}
