@@ -6,7 +6,7 @@ import {
     PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
 } from "recharts";
 
-const API_BASE = "https://api.vtufest2026.acharyahabba.com";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 const COLORS = {
@@ -119,6 +119,9 @@ export default function AdminDashboard() {
     const [loadingAnalytics, setLoadingAnalytics] = useState(true);
     const [error, setError] = useState("");
     const [lastFetched, setLastFetched] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [principalDetails, setPrincipalDetails] = useState([]);
+    const [loadingDetails, setLoadingDetails] = useState(false);
     const [adminRole, setAdminRole] = useState(
         () => localStorage.getItem("vtufest_admin_role") || null
     );
@@ -155,6 +158,16 @@ export default function AdminDashboard() {
             .catch(() => { }) // non-critical
             .finally(() => setLoadingAnalytics(false));
     }, [token]);
+
+    const fetchPrincipalDetails = () => {
+        setLoadingDetails(true);
+        setShowModal(true);
+        adminFetch(`${API_BASE}/api/admin/analytics/principals-logged-in`, { headers })
+            .then(r => r.json())
+            .then(d => { if (d.success) setPrincipalDetails(d.data); })
+            .catch(() => { })
+            .finally(() => setLoadingDetails(false));
+    };
 
     useEffect(() => { fetchStats(); fetchAnalytics(); }, []);
 
@@ -313,7 +326,9 @@ export default function AdminDashboard() {
                         {/* ── NEW stat cards ── */}
                         <StatCard icon="📧" label="Emails Sent" value={stats?.principal_email_stats?.sent} color={COLORS.green} sub={`of ${stats?.principal_email_stats?.total} principals`} />
                         <StatCard icon="⏳" label="Email Pending" value={stats?.principal_email_stats?.pending} color={COLORS.amber} />
-                        <StatCard icon="🔑" label="Principals In" value={stats?.principal_email_stats?.logged_in} color={COLORS.teal} sub="logged in so far" />
+                        <div onClick={fetchPrincipalDetails} style={{ cursor: "pointer" }}>
+                            <StatCard icon="🔑" label="Principals In" value={stats?.principal_email_stats?.logged_in} color={COLORS.teal} sub="Click to view details" />
+                        </div>
                         <StatCard icon="💬" label="Total Feedback" value={stats?.total_feedback} color={COLORS.purple} />
                         <StatCard icon="👥" label="Managers" value={stats?.total_managers} color={COLORS.blue} />
                         <StatCard icon="🎵" label="Accompanists" value={stats?.total_accompanists} color={COLORS.rose} />
@@ -704,6 +719,43 @@ export default function AdminDashboard() {
                         </a>
                     ))}
                 </div>
+
+                {showModal && (
+                    <div className="modal-overlay" style={{
+                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                        background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', padding: '20px'
+                    }}>
+                        <div className="glass-card" style={{ width: '100%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto', padding: '24px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                <h3 style={{ margin: 0 }}>Logged-in Principals</h3>
+                                <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            </div>
+                            {loadingDetails ? <p>Loading...</p> : (
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}>
+                                            <th style={{ textAlign: 'left', padding: '8px' }}>College</th>
+                                            <th style={{ textAlign: 'left', padding: '8px' }}>Principal Name</th>
+                                            <th style={{ textAlign: 'right', padding: '8px' }}>Last Login</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {principalDetails.map((p, i) => (
+                                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <td style={{ padding: '12px 8px' }}>{p.college_name} ({p.college_code})</td>
+                                                <td style={{ padding: '12px 8px' }}>{p.full_name}</td>
+                                                <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                                                    {new Date(p.last_login_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                )}
 
             </div>
         </AdminLayout>
