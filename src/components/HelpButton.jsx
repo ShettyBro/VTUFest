@@ -11,8 +11,10 @@ import "../styles/auth.css"; // all help-* CSS classes live here
    ───────────────────────────────────────────────────────────────── */
 
 const CONTACT_EMAIL = "support@acharyahabba.com";
-const CONTACT_PHONE = "+91 98765 43210";
-const CONTACT_PHONE_HREF = "tel:+919876543210";
+const CONTACTS = [
+    { name: "Prof. Tejas K", role: "Organising Secretary", phone: "+91 94498 90035", href: "tel:+919449890035" },
+    { name: "Mohithesh H U", role: "Support", phone: "+91 94484 61034", href: "tel:+919448461034" },
+];
 const CONTACT_HOURS = "Mon–Sat, 9 AM – 6 PM";
 
 const VIDEO_URLS = {
@@ -111,13 +113,15 @@ export default function HelpButton({ className = "", style = {} }) {
                                             <div className="help-contact-value">{CONTACT_EMAIL}</div>
                                         </div>
                                     </a>
-                                    <a href={CONTACT_PHONE_HREF} className="help-contact-item">
-                                        <span className="help-contact-icon">📞</span>
-                                        <div>
-                                            <div className="help-contact-label">Phone Support</div>
-                                            <div className="help-contact-value">{CONTACT_PHONE}</div>
-                                        </div>
-                                    </a>
+                                    {CONTACTS.map(c => (
+                                        <a key={c.name} href={c.href} className="help-contact-item">
+                                            <span className="help-contact-icon">📞</span>
+                                            <div>
+                                                <div className="help-contact-label">{c.name} — {c.role}</div>
+                                                <div className="help-contact-value">{c.phone}</div>
+                                            </div>
+                                        </a>
+                                    ))}
                                 </div>
                                 <p className="help-modal-note">Available {CONTACT_HOURS}</p>
                             </>
