@@ -770,7 +770,7 @@ export default function AuthPage({ initialView = "login" }) {
                                                     <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: '6px' }}>
                                                         <span>📐 <strong>Square only</strong> (1:1 ratio)</span>
                                                         <span>📏 Min: <strong>300 × 300 px</strong></span>
-                                                        <span>📏 Max: <strong>600 × 600 px</strong></span>
+                                                        <span>📏 Max: <strong>800 × 800 px</strong></span>
                                                         <span>🖼️ JPG or PNG &nbsp;|&nbsp; Max 5 MB</span>
                                                     </span>
                                                 </span>
