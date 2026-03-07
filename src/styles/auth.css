@@ -780,6 +780,27 @@ input[type="file"] {
     word-break: break-all;
 }
 
+.help-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: rgba(168, 237, 234, 0.9);
+    cursor: pointer;
+    padding: 3px 5px;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+    line-height: 1;
+}
+
+.help-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    transform: scale(1.1);
+}
+
 .help-modal-note {
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.4);

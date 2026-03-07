@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LifeBuoy } from "lucide-react";
+import { LifeBuoy, Copy, Check } from "lucide-react";
 import "../styles/auth.css";
 import { useOnboarding } from "../context/OnboardingContext";
 
@@ -43,8 +43,18 @@ const getEmbedUrl = (rawUrl) => {
 export default function HelpButton({ className = "", style = {} }) {
     const [showHelp, setShowHelp] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState(null);
+    const [copiedKey, setCopiedKey] = useState(null);
     const { startGuide } = useOnboarding();
     const role = localStorage.getItem('vtufest_role') || localStorage.getItem('role');
+
+    const handleCopy = (text, key, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            setCopiedKey(key);
+            setTimeout(() => setCopiedKey(null), 1500);
+        });
+    };
 
     return (
         <>
@@ -111,17 +121,37 @@ export default function HelpButton({ className = "", style = {} }) {
                                         rel="noopener noreferrer"
                                     >
                                         <span className="help-contact-icon">✉️</span>
-                                        <div>
+                                        <div style={{ flex: 1 }}>
                                             <div className="help-contact-label">Email Support</div>
-                                            <div className="help-contact-value">{CONTACT_EMAIL}</div>
+                                            <div className="help-contact-value" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                {CONTACT_EMAIL}
+                                                <button
+                                                    className="help-copy-btn"
+                                                    onClick={(e) => handleCopy(CONTACT_EMAIL, 'email', e)}
+                                                    aria-label="Copy email"
+                                                    title={copiedKey === 'email' ? 'Copied!' : 'Copy'}
+                                                >
+                                                    {copiedKey === 'email' ? <Check size={12} /> : <Copy size={12} />}
+                                                </button>
+                                            </div>
                                         </div>
                                     </a>
                                     {CONTACTS.map(c => (
                                         <a key={c.name} href={c.href} className="help-contact-item">
                                             <span className="help-contact-icon">📞</span>
-                                            <div>
+                                            <div style={{ flex: 1 }}>
                                                 <div className="help-contact-label">{c.name} — {c.role}</div>
-                                                <div className="help-contact-value">{c.phone}</div>
+                                                <div className="help-contact-value" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    {c.phone}
+                                                    <button
+                                                        className="help-copy-btn"
+                                                        onClick={(e) => handleCopy(c.phone, c.name, e)}
+                                                        aria-label={`Copy ${c.name} phone`}
+                                                        title={copiedKey === c.name ? 'Copied!' : 'Copy'}
+                                                    >
+                                                        {copiedKey === c.name ? <Check size={12} /> : <Copy size={12} />}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </a>
                                     ))}
