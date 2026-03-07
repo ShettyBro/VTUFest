@@ -97,20 +97,6 @@ export default function HelpButton({ className = "", style = {} }) {
                                     </div>
                                 </div>
 
-                                {/* App Tour */}
-                                <div className="help-section-label" style={{ marginTop: '12px' }}>App Tour</div>
-                                <button
-                                    className="help-tutorial-btn"
-                                    onClick={() => {
-                                        startGuide(role);
-                                        setShowHelp(false);
-                                        setSelectedVideo(null);
-                                    }}
-                                >
-                                    <span className="help-tutorial-btn-icon">🗺</span>
-                                    Restart Tour
-                                </button>
-
                                 {/* Divider */}
                                 <div className="help-divider">
                                     <span>OR</span>

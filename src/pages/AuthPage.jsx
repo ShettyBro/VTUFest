@@ -326,8 +326,8 @@ export default function AuthPage({ initialView = "login" }) {
                     reject(new Error("Photo must be square (1:1 ratio). Please crop your photo to a square before uploading."));
                 } else if (width < 300 || height < 300) {
                     reject(new Error("Photo is too small. Minimum size is 300×300 pixels."));
-                } else if (width > 800 || height > 800) {
-                    reject(new Error("Photo is too large. Maximum size is 800×800 pixels."));
+                } else if (width > 600 || height > 600) {
+                    reject(new Error("Photo is too large. Maximum size is 600×600 pixels."));
                 } else {
                     resolve(true);
                 }
@@ -770,7 +770,7 @@ export default function AuthPage({ initialView = "login" }) {
                                                     <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: '6px' }}>
                                                         <span>📐 <strong>Square only</strong> (1:1 ratio)</span>
                                                         <span>📏 Min: <strong>300 × 300 px</strong></span>
-                                                        <span>📏 Max: <strong>800 × 800 px</strong></span>
+                                                        <span>📏 Max: <strong>600 × 600 px</strong></span>
                                                         <span>🖼️ JPG or PNG &nbsp;|&nbsp; Max 5 MB</span>
                                                     </span>
                                                 </span>
