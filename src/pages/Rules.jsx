@@ -23,12 +23,12 @@ export default function Rules() {
           <div className="instruction-list" style={{ color: 'var(--text-primary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
             <ol style={{ paddingLeft: '20px' }}>
               <li style={{ marginBottom: '12px' }}>
-                The 24th VTU Youth Festival is scheduled to take place from March
-                24 to March 27, 2026.
+                The 24th VTU Youth Festival is scheduled to take place from April
+                8 to April 11, 2026.
               </li>
               <li style={{ marginBottom: '12px' }}>
-                Team registrations will open on February 20, 2026, and close on
-                March 10, 2026.
+                Team registrations will open on March 6, 2026, and close on
+                March 16, 2026.
               </li>
               <li style={{ marginBottom: '12px' }}>
                 Late registrations and requests for modifications after submission
