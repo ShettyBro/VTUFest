@@ -90,6 +90,21 @@ export default function HelpButton({ className = "", style = {} }) {
                                 <h3 className="help-modal-title">Need Help?</h3>
                                 <p className="help-modal-subtitle">Watch a tutorial or contact our support team</p>
 
+                                {/* Brochure Download */}
+                                <a
+                                    href="/VTU Fest 2026.pdf"
+                                    download="VTU Fest 2026.pdf"
+                                    className="help-contact-item"
+                                    style={{ textDecoration: 'none', marginBottom: '4px' }}
+                                >
+                                    <span className="help-contact-icon">📄</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div className="help-contact-label">Download Brochure</div>
+                                        <div className="help-contact-value">VTU Fest 2026 — Official PDF</div>
+                                    </div>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)', alignSelf: 'center' }}>↓ 2.5 MB</span>
+                                </a>
+
                                 {/* Tutorial Section */}
                                 <div className="help-tutorials-section">
                                     <div className="help-section-label">Video Tutorials</div>
