@@ -10,7 +10,7 @@ export default function Rules() {
         <div className="dashboard-header">
           <div className="welcome-text">
             <h1>Instructions</h1>
-            <p>Guidelines for the 24th VTU Youth Festival</p>
+            <p>Guidelines for the 25th VTU Youth Festival</p>
           </div>
           {/* Optional Badge */}
           <div className="qr-badge-right">
@@ -23,7 +23,7 @@ export default function Rules() {
           <div className="instruction-list" style={{ color: 'var(--text-primary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
             <ol style={{ paddingLeft: '20px' }}>
               <li style={{ marginBottom: '12px' }}>
-                The 24th VTU Youth Festival is scheduled to take place from April
+                The 25th VTU Youth Festival is scheduled to take place from April
                 8 to April 11, 2026.
               </li>
               <li style={{ marginBottom: '12px' }}>
@@ -93,10 +93,7 @@ export default function Rules() {
                 An official authorization letter from the institution's
                 authorities is mandatory for all participants and accompanists.
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                If any participant wishes to swap overlapping events, it must be
-                reported to the registration desk at least 12 hours in advance.
-              </li>
+              
             </ol>
           </div>
         </div>
