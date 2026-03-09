@@ -93,10 +93,7 @@ export default function Rules() {
                 An official authorization letter from the institution's
                 authorities is mandatory for all participants and accompanists.
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                If any participant wishes to swap overlapping events, it must be
-                reported to the registration desk at least 12 hours in advance.
-              </li>
+              
             </ol>
           </div>
         </div>
