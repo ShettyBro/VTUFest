@@ -125,7 +125,6 @@ const appColCols = [
     { key: "usn", label: "USN" },
     { key: "department", label: "Dept" },
     { key: "status", label: "Status", color: row => ({ APPROVED: "#10b981", REJECTED: "#f87171", PENDING: "#f59e0b" }[row.status] || "#94a3b8") },
-    { key: "payment_status", label: "Payment", color: row => ({ VERIFIED: "#10b981", PENDING: "#f59e0b", REJECTED: "#f87171" }[row.payment_status] || "#94a3b8"), render: row => row.payment_status || "Not Paid" },
     { key: "applied_at", label: "Applied", render: row => row.applied_at ? new Date(row.applied_at).toLocaleDateString("en-IN") : "—" },
 ];
 
@@ -149,7 +148,24 @@ const MODAL_CONFIGS = {
     applications: { title: "📝 All Applications", url: `${API_BASE}/api/admin/analytics/applications`, dataKey: "applications", columns: appColCols },
     approved_apps: { title: "✅ Approved Applications", url: `${API_BASE}/api/admin/analytics/applications?status=APPROVED`, dataKey: "applications", columns: appColCols },
     rejected_apps: { title: "❌ Rejected Applications", url: `${API_BASE}/api/admin/analytics/applications?status=REJECTED`, dataKey: "applications", columns: appColCols },
-    pending_payments: { title: "💳 Pending Payments", url: `${API_BASE}/api/admin/analytics/applications`, dataKey: "applications", columns: appColCols },
+    pending_payments: {
+        title: "💳 Pending Payments",
+        url: `${API_BASE}/api/admin/analytics/payments`,
+        dataKey: "payments",
+        columns: [
+            { key: "college_code", label: "Code" },
+            { key: "college_name", label: "College" },
+            { key: "status", label: "Status", color: row => ({ VERIFIED: "#10b981", PENDING: "#f59e0b", waiting_for_verification: "#60a5fa", REJECTED: "#f87171" }[row.status] || "#94a3b8") },
+            { key: "amount_paid", label: "Amount", render: row => row.amount_paid ? `₹${row.amount_paid.toLocaleString("en-IN")}` : "—" },
+            { key: "utr_reference_number", label: "UTR" },
+            { key: "uploaded_by_name", label: "Uploaded By" },
+            { key: "uploaded_by_type", label: "Type" },
+            { key: "student_count", label: "Students" },
+            { key: "uploaded_at", label: "Uploaded", render: row => row.uploaded_at ? new Date(row.uploaded_at).toLocaleDateString("en-IN") : "—" },
+            { key: "verified_at", label: "Verified At", render: row => row.verified_at ? new Date(row.verified_at).toLocaleDateString("en-IN") : "—" },
+            { key: "admin_remarks", label: "Remarks", render: row => row.admin_remarks || "—" },
+        ],
+    },
     managers: {
         title: "👔 Active Managers",
         url: `${API_BASE}/api/admin/analytics/managers`,
