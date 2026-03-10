@@ -4,6 +4,7 @@ import AdminLayout from "./AdminLayout";
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
+    ComposedChart,
 } from "recharts";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
@@ -40,8 +41,14 @@ const tooltipStyle = {
 };
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
-const StatCard = ({ label, value, color, icon, sub }) => (
-    <div className="glass-card" style={{ textAlign: "center", padding: "20px 16px" }}>
+const StatCard = ({ label, value, color, icon, sub, onClick }) => (
+    <div
+        className="glass-card"
+        onClick={onClick}
+        style={{ textAlign: "center", padding: "20px 16px", cursor: onClick ? "pointer" : "default", transition: "transform 0.15s, box-shadow 0.15s" }}
+        onMouseEnter={e => { if (onClick) e.currentTarget.style.transform = "translateY(-2px)"; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = "none"; }}
+    >
         <div style={{ fontSize: "1.8rem", marginBottom: "6px" }}>{icon}</div>
         <div style={{ fontSize: "2rem", fontWeight: 800, color: color || COLORS.blue, lineHeight: 1 }}>
             {value ?? "—"}
@@ -111,6 +118,165 @@ const MiniBox = ({ value, label, color, bg }) => (
     </div>
 );
 
+// ─── Modal column configs ─────────────────────────────────────────────────────
+const appColCols = [
+    { key: "college_name", label: "College" },
+    { key: "full_name", label: "Student" },
+    { key: "usn", label: "USN" },
+    { key: "department", label: "Dept" },
+    { key: "status", label: "Status", color: row => ({ APPROVED: "#10b981", REJECTED: "#f87171", PENDING: "#f59e0b" }[row.status] || "#94a3b8") },
+    { key: "payment_status", label: "Payment", color: row => ({ VERIFIED: "#10b981", PENDING: "#f59e0b", REJECTED: "#f87171" }[row.payment_status] || "#94a3b8"), render: row => row.payment_status || "Not Paid" },
+    { key: "applied_at", label: "Applied", render: row => row.applied_at ? new Date(row.applied_at).toLocaleDateString("en-IN") : "—" },
+];
+
+const MODAL_CONFIGS = {
+    students: {
+        title: "👨‍🎓 All Students",
+        url: `${API_BASE}/api/admin/analytics/students`,
+        dataKey: "students",
+        columns: [
+            { key: "college_name", label: "College" },
+            { key: "full_name", label: "Name" },
+            { key: "usn", label: "USN" },
+            { key: "department", label: "Dept" },
+            { key: "year_of_study", label: "Year" },
+            { key: "gender", label: "Gender" },
+            { key: "phone", label: "Phone" },
+            { key: "application_status", label: "App Status", color: row => ({ APPROVED: "#10b981", REJECTED: "#f87171", PENDING: "#f59e0b" }[row.application_status] || "#94a3b8") },
+            { key: "created_at", label: "Registered", render: row => row.created_at ? new Date(row.created_at).toLocaleDateString("en-IN") : "—" },
+        ],
+    },
+    applications: { title: "📝 All Applications", url: `${API_BASE}/api/admin/analytics/applications`, dataKey: "applications", columns: appColCols },
+    approved_apps: { title: "✅ Approved Applications", url: `${API_BASE}/api/admin/analytics/applications?status=APPROVED`, dataKey: "applications", columns: appColCols },
+    rejected_apps: { title: "❌ Rejected Applications", url: `${API_BASE}/api/admin/analytics/applications?status=REJECTED`, dataKey: "applications", columns: appColCols },
+    pending_payments: { title: "💳 Pending Payments", url: `${API_BASE}/api/admin/analytics/applications`, dataKey: "applications", columns: appColCols },
+    managers: {
+        title: "👔 Active Managers",
+        url: `${API_BASE}/api/admin/analytics/managers`,
+        dataKey: "managers",
+        columns: [
+            { key: "college_name", label: "College" },
+            { key: "full_name", label: "Name" },
+            { key: "email", label: "Email" },
+            { key: "phone", label: "Phone" },
+            { key: "last_login_at", label: "Last Login", render: row => row.last_login_at ? new Date(row.last_login_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Never" },
+        ],
+    },
+    volunteers: {
+        title: "🙋 Volunteers",
+        url: `${API_BASE}/api/admin/analytics/volunteers`,
+        dataKey: "volunteers",
+        columns: [
+            { key: "full_name", label: "Name" },
+            { key: "volunteer_type", label: "Type", render: row => row.volunteer_type?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) },
+            { key: "college_name", label: "College" },
+            { key: "phone", label: "Phone" },
+            { key: "is_active", label: "Active", render: row => row.is_active ? "✅" : "❌", color: row => row.is_active ? "#10b981" : "#f87171" },
+        ],
+    },
+    accompanists: {
+        title: "🎵 Accompanists",
+        url: `${API_BASE}/api/admin/analytics/accompanists`,
+        dataKey: "accompanists",
+        columns: [
+            { key: "college_name", label: "College" },
+            { key: "full_name", label: "Name" },
+            { key: "accompanist_type", label: "Type" },
+            { key: "phone", label: "Phone" },
+            { key: "is_team_manager", label: "Team Mgr", render: row => row.is_team_manager ? "✅" : "—" },
+        ],
+    },
+    colleges: {
+        title: "🏫 All Colleges",
+        url: `${API_BASE}/api/admin/analytics/colleges`,
+        dataKey: "colleges",
+        columns: [
+            { key: "college_code", label: "Code" },
+            { key: "college_name", label: "College" },
+            { key: "place", label: "Place" },
+            { key: "student_count", label: "Students" },
+            { key: "application_count", label: "Apps" },
+            { key: "approved_count", label: "Approved" },
+            { key: "is_final_approved", label: "Locked", render: row => row.is_final_approved ? "🔒" : "🔓", color: row => row.is_final_approved ? "#10b981" : "#f59e0b" },
+            { key: "payment_status", label: "Payment", render: row => row.payment_status || "Unpaid", color: row => row.payment_status === "VERIFIED" ? "#10b981" : "#f59e0b" },
+            { key: "manager_name", label: "Manager", render: row => row.manager_name || "—" },
+        ],
+    },
+    feedback: {
+        title: "💬 Feedback",
+        url: `${API_BASE}/api/admin/analytics/feedback`,
+        dataKey: "feedback",
+        columns: [
+            { key: "submitted_by", label: "By" },
+            { key: "college_name", label: "College" },
+            { key: "role", label: "Role", render: row => row.role ? row.role.charAt(0).toUpperCase() + row.role.slice(1) : "—" },
+            { key: "rating", label: "Rating", render: row => "⭐".repeat(row.rating || 0) + ` (${row.rating})` },
+            { key: "comment", label: "Comment", render: row => row.comment ? (row.comment.length > 60 ? row.comment.substring(0, 60) + "…" : row.comment) : "—" },
+            { key: "submitted_at", label: "Date", render: row => row.submitted_at ? new Date(row.submitted_at).toLocaleDateString("en-IN") : "—" },
+        ],
+    },
+    principals: {
+        title: "🔑 Logged-in Principals",
+        url: `${API_BASE}/api/admin/analytics/principals-logged-in`,
+        dataKey: null,
+        columns: [
+            { key: "college_name", label: "College", render: row => `${row.college_name} (${row.college_code})` },
+            { key: "full_name", label: "Principal Name" },
+            { key: "last_login_at", label: "Last Login", render: row => row.last_login_at ? new Date(row.last_login_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—" },
+        ],
+    },
+};
+
+// ─── Generic Detail Modal ─────────────────────────────────────────────────────
+function DetailModal({ title, columns = [], rows = [], loading, onClose }) {
+    const [search, setSearch] = useState("");
+    const filtered = search
+        ? rows.filter(row => columns.some(col => String(row[col.key] ?? "").toLowerCase().includes(search.toLowerCase())))
+        : rows;
+    return (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+            <div className="glass-card" style={{ width: "100%", maxWidth: "900px", maxHeight: "85vh", display: "flex", flexDirection: "column", padding: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <h3 style={{ margin: 0 }}>{title} {!loading && <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", fontWeight: 400 }}>({filtered.length})</span>}</h3>
+                    <button onClick={onClose} style={{ background: "none", border: "none", color: "#fff", fontSize: "1.5rem", cursor: "pointer" }}>×</button>
+                </div>
+                <input
+                    value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Search..."
+                    style={{ marginBottom: "12px", padding: "8px 12px", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.85rem", width: "100%", boxSizing: "border-box" }}
+                />
+                <div style={{ overflowY: "auto", flex: 1 }}>
+                    {loading ? (
+                        <p style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>Loading…</p>
+                    ) : (
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                            <thead>
+                                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", color: "var(--text-muted)", position: "sticky", top: 0, background: "#0f172a" }}>
+                                    {columns.map(col => <th key={col.key} style={{ textAlign: "left", padding: "10px 8px", whiteSpace: "nowrap" }}>{col.label}</th>)}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filtered.map((row, i) => (
+                                    <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                        {columns.map(col => (
+                                            <td key={col.key} style={{ padding: "10px 8px", color: col.color ? col.color(row) : "var(--text-primary)" }}>
+                                                {col.render ? col.render(row) : String(row[col.key] ?? "—")}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                                {filtered.length === 0 && (
+                                    <tr><td colSpan={columns.length} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>No results found</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
@@ -119,9 +285,7 @@ export default function AdminDashboard() {
     const [loadingAnalytics, setLoadingAnalytics] = useState(true);
     const [error, setError] = useState("");
     const [lastFetched, setLastFetched] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [principalDetails, setPrincipalDetails] = useState([]);
-    const [loadingDetails, setLoadingDetails] = useState(false);
+    const [modalState, setModalState] = useState({ type: null, data: [], loading: false });
     const [adminRole, setAdminRole] = useState(
         () => localStorage.getItem("vtufest_admin_role") || null
     );
@@ -159,15 +323,24 @@ export default function AdminDashboard() {
             .finally(() => setLoadingAnalytics(false));
     }, [token]);
 
-    const fetchPrincipalDetails = () => {
-        setLoadingDetails(true);
-        setShowModal(true);
-        adminFetch(`${API_BASE}/api/admin/analytics/principals-logged-in`, { headers })
-            .then(r => r.json())
-            .then(d => { if (d.success) setPrincipalDetails(d.data); })
-            .catch(() => { })
-            .finally(() => setLoadingDetails(false));
+    const openModal = async (type) => {
+        const cfg = MODAL_CONFIGS[type];
+        if (!cfg) return;
+        setModalState({ type, data: [], loading: true });
+        try {
+            const r = await adminFetch(cfg.url, { headers });
+            const d = await r.json();
+            if (d.success) {
+                const data = cfg.dataKey ? (d.data[cfg.dataKey] || []) : (Array.isArray(d.data) ? d.data : []);
+                setModalState({ type, data, loading: false });
+            } else {
+                setModalState(s => ({ ...s, loading: false }));
+            }
+        } catch {
+            setModalState(s => ({ ...s, loading: false }));
+        }
     };
+    const closeModal = () => setModalState({ type: null, data: [], loading: false });
 
     useEffect(() => { fetchStats(); fetchAnalytics(); }, []);
 
@@ -234,6 +407,34 @@ export default function AdminDashboard() {
         rating: r.rating,
     })) || [];
 
+    // ── New chart derived data ──
+    const paymentTimelineData = (analytics?.payment_timeline || []).map(r => ({
+        date: r.date,
+        "Colleges Verified": r["Colleges Verified"] || 0,
+        Revenue: r.Revenue || 0,
+    }));
+
+    const collegesByAppData = (analytics?.colleges_by_app_count || []).slice(0, 20).map(r => ({
+        name: r.name?.length > 22 ? r.name.substring(0, 22) + "…" : (r.name || ""),
+        full_name: r.full_name || r.name,
+        code: r.code || "",
+        Applications: r.Applications || 0,
+    }));
+
+    const regsEventDay = analytics?.regs_by_event_day || [];
+    const eventTrendData = (() => {
+        if (!regsEventDay.length) return { dates: [], events: [], chartData: [] };
+        const totals = {};
+        regsEventDay.forEach(r => { totals[r.event] = (totals[r.event] || 0) + r.count; });
+        const top5 = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([e]) => e);
+        const byDate = {};
+        regsEventDay.filter(r => top5.includes(r.event)).forEach(r => {
+            if (!byDate[r.day]) byDate[r.day] = { date: r.day };
+            byDate[r.day][fmtEvent(r.event)] = r.count;
+        });
+        return { events: top5.map(fmtEvent), chartData: Object.values(byDate) };
+    })();
+
     const isSuperAdmin = adminRole === "SUPER_ADMIN";
 
     // Role badge
@@ -296,14 +497,20 @@ export default function AdminDashboard() {
                     </div>
                 ) : (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "16px" }}>
-                        {/* Existing cards */}
-                        <StatCard icon="🏫" label="Total Colleges" value={stats?.total_colleges} color={COLORS.blue} sub={cp ? `${cp.locked_colleges} locked` : null} />
-                        <StatCard icon="👔" label="Active Managers" value={stats?.total_managers || 0} color={COLORS.blue} />
-                        <StatCard icon="👨‍🎓" label="Total Students" value={stats?.total_students} color={COLORS.green} />
-                        <StatCard icon="📝" label="Total Applications" value={stats?.total_applications} color={COLORS.purple} />
-                        <StatCard icon="💳" label="Pending Payments" value={stats?.pending_payments} color={COLORS.amber} />
-                        <StatCard icon="✅" label="Approved" value={stats?.approved_applications} color={COLORS.green} />
-                        <StatCard icon="❌" label="Rejected" value={stats?.rejected_applications} color={COLORS.red} />
+                        <StatCard icon="🏫" label="Total Colleges" value={stats?.total_colleges} color={COLORS.blue}
+                            sub="Click to view list" onClick={() => openModal("colleges")} />
+                        <StatCard icon="👔" label="Active Managers" value={stats?.total_managers || 0} color={COLORS.blue}
+                            sub="Click to view list" onClick={() => openModal("managers")} />
+                        <StatCard icon="👨‍🎓" label="Total Students" value={stats?.total_students} color={COLORS.green}
+                            sub="Click to view list" onClick={() => openModal("students")} />
+                        <StatCard icon="📝" label="Total Applications" value={stats?.total_applications} color={COLORS.purple}
+                            sub="Click to view list" onClick={() => openModal("applications")} />
+                        <StatCard icon="💳" label="Pending Payments" value={stats?.pending_payments} color={COLORS.amber}
+                            sub="Click to view list" onClick={() => openModal("pending_payments")} />
+                        <StatCard icon="✅" label="Approved" value={stats?.approved_applications} color={COLORS.green}
+                            sub="Click to view list" onClick={() => openModal("approved_apps")} />
+                        <StatCard icon="❌" label="Rejected" value={stats?.rejected_applications} color={COLORS.red}
+                            sub="Click to view list" onClick={() => openModal("rejected_apps")} />
                         <StatCard icon="🔔" label="Notifications" value={stats?.active_notifications} color={COLORS.blue} />
                         <StatCard icon="📅" label="Calendar Events" value={stats?.active_calendar_events} color={COLORS.gold} />
                         {analytics?.total_verified_amount !== undefined && (
@@ -320,19 +527,16 @@ export default function AdminDashboard() {
                         {analytics?.accompanist_breakdown && (
                             <StatCard icon="🎵" label="Accompanists"
                                 value={analytics.accompanist_breakdown.reduce((s, r) => s + parseInt(r.count), 0)}
-                                color={COLORS.purple} />
+                                color={COLORS.purple} sub="Click to view list" onClick={() => openModal("accompanists")} />
                         )}
-
-                        {/* ── NEW stat cards ── */}
                         <StatCard icon="📧" label="Emails Sent" value={stats?.principal_email_stats?.sent} color={COLORS.green} sub={`of ${stats?.principal_email_stats?.total} principals`} />
                         <StatCard icon="⏳" label="Email Pending" value={stats?.principal_email_stats?.pending} color={COLORS.amber} />
-                        <div onClick={fetchPrincipalDetails} style={{ cursor: "pointer" }}>
-                            <StatCard icon="🔑" label="Principals In" value={stats?.principal_email_stats?.logged_in} color={COLORS.teal} sub="Click to view details" />
-                        </div>
-                        <StatCard icon="💬" label="Total Feedback" value={stats?.total_feedback} color={COLORS.purple} />
-                        <StatCard icon="👥" label="Managers" value={stats?.total_managers} color={COLORS.blue} />
-                        <StatCard icon="🎵" label="Accompanists" value={stats?.total_accompanists} color={COLORS.rose} />
-                        <StatCard icon="🙋" label="Volunteers" value={stats?.total_volunteers} color={COLORS.gold} />
+                        <StatCard icon="🔑" label="Principals In" value={stats?.principal_email_stats?.logged_in} color={COLORS.teal}
+                            sub="Click to view details" onClick={() => openModal("principals")} />
+                        <StatCard icon="💬" label="Total Feedback" value={stats?.total_feedback} color={COLORS.purple}
+                            sub="Click to view list" onClick={() => openModal("feedback")} />
+                        <StatCard icon="🙋" label="Volunteers" value={stats?.total_volunteers} color={COLORS.gold}
+                            sub="Click to view list" onClick={() => openModal("volunteers")} />
                     </div>
                 )}
 
@@ -498,6 +702,73 @@ export default function AdminDashboard() {
                                             <Tooltip {...tooltipStyle} />
                                             <Line type="monotone" dataKey="Registrations" stroke={COLORS.blue} strokeWidth={2}
                                                 dot={{ fill: COLORS.blue, r: 3 }} activeDot={{ r: 5 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </ChartCard>
+                            </>
+                        )}
+
+                        {/* ── Payment Verification Activity ── */}
+                        {paymentTimelineData.length > 0 && (
+                            <>
+                                <SectionTitle>Payment Verification Activity (Last 30 Days)</SectionTitle>
+                                <ChartCard>
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <ComposedChart data={paymentTimelineData} margin={{ left: 0, right: 50, top: 4, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                            <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 10 }} interval="preserveStartEnd" />
+                                            <YAxis yAxisId="left" tick={{ fill: "#64748b", fontSize: 10 }} allowDecimals={false} />
+                                            <YAxis yAxisId="right" orientation="right" tick={{ fill: "#64748b", fontSize: 10 }}
+                                                tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
+                                            <Tooltip {...tooltipStyle} formatter={(val, name) => name === "Revenue" ? fmtINR(val) : val} />
+                                            <Legend wrapperStyle={{ fontSize: "0.78rem", color: "#94a3b8" }} />
+                                            <Bar yAxisId="left" dataKey="Colleges Verified" fill={COLORS.teal} radius={[4, 4, 0, 0]} />
+                                            <Line yAxisId="right" type="monotone" dataKey="Revenue" stroke={COLORS.green}
+                                                strokeWidth={2} dot={{ fill: COLORS.green, r: 3 }} activeDot={{ r: 5 }} />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </ChartCard>
+                            </>
+                        )}
+
+                        {/* ── Top Colleges by Applications ── */}
+                        {collegesByAppData.length > 0 && (
+                            <>
+                                <SectionTitle>Top Colleges by Applications</SectionTitle>
+                                <ChartCard>
+                                    <ResponsiveContainer width="100%" height={320}>
+                                        <BarChart data={collegesByAppData} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                                            <XAxis type="number" tick={{ fill: "#64748b", fontSize: 10 }} allowDecimals={false} />
+                                            <YAxis type="category" dataKey="name" tick={{ fill: "#94a3b8", fontSize: 10 }} width={150} />
+                                            <Tooltip {...tooltipStyle}
+                                                formatter={(val, name, props) => [val, props.payload?.full_name || name]} />
+                                            <Bar dataKey="Applications" radius={[0, 4, 4, 0]}>
+                                                {collegesByAppData.map((_, i) => <Cell key={i} fill={`hsl(${200 + i * 8}, 65%, 55%)`} />)}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </ChartCard>
+                            </>
+                        )}
+
+                        {/* ── Event Registration Trend by Top 5 Events ── */}
+                        {eventTrendData.chartData?.length > 0 && (
+                            <>
+                                <SectionTitle>Registration Trend by Top 5 Events</SectionTitle>
+                                <ChartCard>
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <LineChart data={eventTrendData.chartData} margin={{ left: 0, right: 10, top: 4, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                            <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 10 }} />
+                                            <YAxis tick={{ fill: "#64748b", fontSize: 10 }} allowDecimals={false} />
+                                            <Tooltip {...tooltipStyle} />
+                                            <Legend wrapperStyle={{ fontSize: "0.78rem", color: "#94a3b8" }} />
+                                            {eventTrendData.events.map((ev, i) => (
+                                                <Line key={ev} type="monotone" dataKey={ev}
+                                                    stroke={PIE_PALETTE[i % PIE_PALETTE.length]} strokeWidth={2}
+                                                    dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                            ))}
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </ChartCard>
@@ -720,41 +991,15 @@ export default function AdminDashboard() {
                     ))}
                 </div>
 
-                {showModal && (
-                    <div className="modal-overlay" style={{
-                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                        background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', padding: '20px'
-                    }}>
-                        <div className="glass-card" style={{ width: '100%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto', padding: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                                <h3 style={{ margin: 0 }}>Logged-in Principals</h3>
-                                <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
-                            </div>
-                            {loadingDetails ? <p>Loading...</p> : (
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}>
-                                            <th style={{ textAlign: 'left', padding: '8px' }}>College</th>
-                                            <th style={{ textAlign: 'left', padding: '8px' }}>Principal Name</th>
-                                            <th style={{ textAlign: 'right', padding: '8px' }}>Last Login</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {principalDetails.map((p, i) => (
-                                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <td style={{ padding: '12px 8px' }}>{p.college_name} ({p.college_code})</td>
-                                                <td style={{ padding: '12px 8px' }}>{p.full_name}</td>
-                                                <td style={{ padding: '12px 8px', textAlign: 'right' }}>
-                                                    {new Date(p.last_login_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    </div>
+                {/* ── Generic Detail Modal ── */}
+                {modalState.type && (
+                    <DetailModal
+                        title={MODAL_CONFIGS[modalState.type]?.title || ""}
+                        columns={MODAL_CONFIGS[modalState.type]?.columns || []}
+                        rows={modalState.data}
+                        loading={modalState.loading}
+                        onClose={closeModal}
+                    />
                 )}
 
             </div>
