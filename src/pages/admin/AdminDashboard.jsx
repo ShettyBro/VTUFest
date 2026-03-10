@@ -118,6 +118,57 @@ const MiniBox = ({ value, label, color, bg }) => (
     </div>
 );
 
+// ─── Document Modal Viewer ────────────────────────────────────────────────────
+const DocumentModal = () => {
+    const [url, setUrl] = useState(null);
+    const [isPdf, setIsPdf] = useState(false);
+
+    useEffect(() => {
+        const handleOpen = (e) => {
+            const docUrl = e.detail;
+            setUrl(docUrl);
+            setIsPdf(docUrl ? docUrl.toLowerCase().includes(".pdf") : false);
+        };
+        window.addEventListener("openDocModal", handleOpen);
+        return () => window.removeEventListener("openDocModal", handleOpen);
+    }, []);
+
+    if (!url) return null;
+
+    return (
+        <div
+            onClick={() => setUrl(null)}
+            style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.8)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", backdropFilter: "blur(4px)" }}
+        >
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", width: "100%", maxWidth: "800px", maxHeight: "80vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)", overflow: "hidden" }}
+            >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ fontWeight: 600, color: "#f1f5f9", display: "flex", gap: "12px", alignItems: "center" }}>
+                        <span style={{ fontSize: "1.05rem" }}>📄 Document Viewer</span>
+                        <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", background: "rgba(96,165,250,0.15)", color: "#60a5fa", padding: "4px 12px", borderRadius: "100px", textDecoration: "none", fontWeight: 700, letterSpacing: "0.2px", border: "1px solid rgba(96,165,250,0.3)" }}>Open in new tab ↗</a>
+                    </div>
+                    <button onClick={() => setUrl(null)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#e2e8f0", cursor: "pointer", fontSize: "1.2rem", width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}>×</button>
+                </div>
+                <div style={{ padding: "8px", flex: 1, display: "flex", justifyContent: "center", alignItems: "center", background: "rgba(0,0,0,0.4)", minHeight: "400px", overflow: "hidden" }}>
+                    {isPdf ? (
+                        <div style={{ textAlign: "center", color: "#94a3b8", padding: "40px 20px" }}>
+                            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📎</div>
+                            <p style={{ margin: "0 0 16px 0", fontSize: "0.95rem" }}>PDFs cannot be previewed directly due to browser security constraints.</p>
+                            <a href={url} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#4f46e5", color: "#fff", padding: "10px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem" }}>Open PDF in New Tab</a>
+                        </div>
+                    ) : (
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "auto" }}>
+                            <img src={url} alt="Document" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "6px" }} onError={() => setIsPdf(true)} />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ─── Modal column configs ─────────────────────────────────────────────────────
 const appColCols = [
     { key: "college_name", label: "College" },
@@ -197,9 +248,24 @@ const MODAL_CONFIGS = {
         columns: [
             { key: "college_name", label: "College" },
             { key: "full_name", label: "Name" },
-            { key: "accompanist_type", label: "Type" },
+            { key: "accompanist_type", label: "Type", render: row => row.accompanist_type ? row.accompanist_type.replace(/_/g, " ") : "—" },
             { key: "phone", label: "Phone" },
-            { key: "is_team_manager", label: "Team Mgr", render: row => row.is_team_manager ? "✅" : "—" },
+            { key: "is_team_manager", label: "Team Mgr", render: row => row.is_team_manager ? "✅ Yes" : "❌ No" },
+            {
+                key: "docs", label: "Documents", render: row => {
+                    const openDoc = (e, u) => {
+                        e.preventDefault();
+                        window.dispatchEvent(new CustomEvent("openDocModal", { detail: u }));
+                    };
+                    return (
+                        <div style={{ display: "flex", gap: "8px" }}>
+                            {row.passport_photo_url && <a href={row.passport_photo_url} onClick={e => openDoc(e, row.passport_photo_url)} style={{ color: "#60a5fa", cursor: "pointer", textDecoration: "underline" }}>Photo</a>}
+                            {row.id_proof_url && <a href={row.id_proof_url} onClick={e => openDoc(e, row.id_proof_url)} style={{ color: "#60a5fa", cursor: "pointer", textDecoration: "underline" }}>ID Proof</a>}
+                            {row.college_id_card_url && <a href={row.college_id_card_url} onClick={e => openDoc(e, row.college_id_card_url)} style={{ color: "#60a5fa", cursor: "pointer", textDecoration: "underline" }}>College ID</a>}
+                        </div>
+                    );
+                }
+            },
         ],
     },
     colleges: {
@@ -541,10 +607,11 @@ export default function AdminDashboard() {
                                 sub={`${acc.pending} pending`} />
                         )}
                         {analytics?.accompanist_breakdown && (
-                            <StatCard icon="🎵" label="Accompanists"
+                            <StatCard icon="🎵" label="Accompanists (By Type)"
                                 value={analytics.accompanist_breakdown.reduce((s, r) => s + parseInt(r.count), 0)}
                                 color={COLORS.purple} sub="Click to view list" onClick={() => openModal("accompanists")} />
                         )}
+                        <StatCard icon="🎵" label="Accompanists" value={stats?.total_accompanists || 0} color={COLORS.purple} sub="Click to view list" onClick={() => openModal("accompanists")} />
                         <StatCard icon="📧" label="Emails Sent" value={stats?.principal_email_stats?.sent} color={COLORS.green} sub={`of ${stats?.principal_email_stats?.total} principals`} />
                         <StatCard icon="⏳" label="Email Pending" value={stats?.principal_email_stats?.pending} color={COLORS.amber} />
                         <StatCard icon="🔑" label="Principals In" value={stats?.principal_email_stats?.logged_in} color={COLORS.teal}
@@ -1017,6 +1084,9 @@ export default function AdminDashboard() {
                         onClose={closeModal}
                     />
                 )}
+
+                {/* ── Document Viewer Overlay ── */}
+                <DocumentModal />
 
             </div>
         </AdminLayout>

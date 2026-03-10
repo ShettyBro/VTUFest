@@ -80,10 +80,9 @@ function DocCard({ doc }) {
     const [sasUrl, setSasUrl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState(null);
-    const [imgErr, setImgErr] = useState(false);
 
     const fetchSAS = async () => {
-        setLoading(true); setErr(null); setImgErr(false);
+        setLoading(true); setErr(null);
         const token = localStorage.getItem("vtufest_admin_token");
         try {
             const r = await adminFetch(`${API}/sas`, {
@@ -94,6 +93,7 @@ function DocCard({ doc }) {
             const data = await r.json();
             if (!r.ok || !data.success) throw new Error(data.message || "Failed");
             setSasUrl(data.data.sas_url);
+            window.dispatchEvent(new CustomEvent("openDocModal", { detail: data.data.sas_url }));
         } catch (e) {
             setErr(e.message);
         } finally {
@@ -110,8 +110,7 @@ function DocCard({ doc }) {
                 <span style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>📄 {doc.label}</span>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     {sasUrl && (
-                        <a href={sasUrl} target="_blank" rel="noreferrer"
-                            style={{ fontSize: 11, color: "#818cf8", textDecoration: "underline" }}>Open ↗</a>
+                        <button onClick={() => window.dispatchEvent(new CustomEvent("openDocModal", { detail: sasUrl }))} style={{ fontSize: 11, color: "#818cf8", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0 }}>Open ↗</button>
                     )}
                     <button onClick={fetchSAS} disabled={loading} style={{
                         background: "rgba(99,102,241,0.2)", color: "#a5b4fc",
@@ -124,19 +123,6 @@ function DocCard({ doc }) {
                 </div>
             </div>
             {err && <p style={{ color: "#f87171", fontSize: 11, margin: 0 }}>⚠ {err}</p>}
-            {sasUrl && !imgErr && (
-                <img src={sasUrl} alt={doc.label} onError={() => setImgErr(true)}
-                    style={{ width: "100%", maxHeight: 220, objectFit: "contain", borderRadius: 6 }} />
-            )}
-            {sasUrl && imgErr && (
-                <div style={{
-                    background: "rgba(255,255,255,0.03)", borderRadius: 6, padding: "12px 0",
-                    textAlign: "center", fontSize: 12, color: "#94a3b8",
-                }}>
-                    📎 PDF —{" "}
-                    <a href={sasUrl} target="_blank" rel="noreferrer" style={{ color: "#818cf8" }}>open in new tab</a>
-                </div>
-            )}
             {sasUrl && <p style={{ fontSize: 10, color: "#64748b", margin: 0 }}>⏱ Expires in 15 minutes</p>}
         </div>
     );
@@ -156,7 +142,7 @@ function StudentDocsCell({ documents }) {
             });
             const data = await r.json();
             if (!r.ok || !data.success) throw new Error(data.message || "Failed");
-            window.open(data.data.sas_url, "_blank");
+            window.dispatchEvent(new CustomEvent("openDocModal", { detail: data.data.sas_url }));
         } catch (e) {
             alert("Failed to open document: " + e.message);
         } finally {
@@ -240,6 +226,57 @@ const thStyle = (align = "left") => ({
     top: 0,
     zIndex: 2,
 });
+
+// ─── Document Modal Viewer ────────────────────────────────────────────────────
+const DocumentModal = () => {
+    const [url, setUrl] = useState(null);
+    const [isPdf, setIsPdf] = useState(false);
+
+    useEffect(() => {
+        const handleOpen = (e) => {
+            const docUrl = e.detail;
+            setUrl(docUrl);
+            setIsPdf(docUrl ? docUrl.toLowerCase().includes(".pdf") : false);
+        };
+        window.addEventListener("openDocModal", handleOpen);
+        return () => window.removeEventListener("openDocModal", handleOpen);
+    }, []);
+
+    if (!url) return null;
+
+    return (
+        <div
+            onClick={() => setUrl(null)}
+            style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.8)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", backdropFilter: "blur(4px)" }}
+        >
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", width: "100%", maxWidth: "800px", maxHeight: "80vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)", overflow: "hidden" }}
+            >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ fontWeight: 600, color: "#f1f5f9", display: "flex", gap: "12px", alignItems: "center" }}>
+                        <span style={{ fontSize: "1.05rem" }}>📄 Document Viewer</span>
+                        <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: "0.75rem", background: "rgba(96,165,250,0.15)", color: "#60a5fa", padding: "4px 12px", borderRadius: "100px", textDecoration: "none", fontWeight: 700, letterSpacing: "0.2px", border: "1px solid rgba(96,165,250,0.3)" }}>Open in new tab ↗</a>
+                    </div>
+                    <button onClick={() => setUrl(null)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#e2e8f0", cursor: "pointer", fontSize: "1.2rem", width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}>×</button>
+                </div>
+                <div style={{ padding: "8px", flex: 1, display: "flex", justifyContent: "center", alignItems: "center", background: "rgba(0,0,0,0.4)", minHeight: "400px", overflow: "hidden" }}>
+                    {isPdf ? (
+                        <div style={{ textAlign: "center", color: "#94a3b8", padding: "40px 20px" }}>
+                            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📎</div>
+                            <p style={{ margin: "0 0 16px 0", fontSize: "0.95rem" }}>PDFs cannot be previewed directly due to browser security constraints.</p>
+                            <a href={url} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#4f46e5", color: "#fff", padding: "10px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem" }}>Open PDF in New Tab</a>
+                        </div>
+                    ) : (
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "auto" }}>
+                            <img src={url} alt="Document" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "6px" }} onError={() => setIsPdf(true)} />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
@@ -850,6 +887,8 @@ export default function AdminFindPerson() {
                         )}
                     </>
                 )}
+
+                <DocumentModal />
 
                 <style>{`
                     @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:.8} }
