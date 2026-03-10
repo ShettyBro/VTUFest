@@ -151,17 +151,20 @@ const DocumentModal = () => {
                     </div>
                     <button onClick={() => setUrl(null)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#e2e8f0", cursor: "pointer", fontSize: "1.2rem", width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}>×</button>
                 </div>
-                <div style={{ padding: "8px", flex: 1, display: "flex", justifyContent: "center", alignItems: "center", background: "rgba(0,0,0,0.4)", minHeight: "400px", overflow: "hidden" }}>
+                <div style={{ padding: "8px", flex: 1, display: "flex", justifyContent: "center", alignItems: "center", background: "rgba(0,0,0,0.4)", minHeight: "400px", overflow: "hidden", position: "relative" }}>
                     {isPdf ? (
-                        <div style={{ textAlign: "center", color: "#94a3b8", padding: "40px 20px" }}>
-                            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📎</div>
-                            <p style={{ margin: "0 0 16px 0", fontSize: "0.95rem" }}>PDFs cannot be previewed directly due to browser security constraints.</p>
-                            <a href={url} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#4f46e5", color: "#fff", padding: "10px 24px", borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem" }}>Open PDF in New Tab</a>
-                        </div>
+                        <iframe
+                            src={url}
+                            style={{ width: "100%", height: "100%", border: "none", background: "#fff", borderRadius: "6px" }}
+                            title="Document Preview"
+                        />
                     ) : (
-                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "auto" }}>
-                            <img src={url} alt="Document" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "6px" }} onError={() => setIsPdf(true)} />
-                        </div>
+                        <img
+                            src={url}
+                            alt="Document"
+                            style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "6px" }}
+                            onError={() => setIsPdf(true)}
+                        />
                     )}
                 </div>
             </div>
@@ -606,11 +609,7 @@ export default function AdminDashboard() {
                             <StatCard icon="🛏️" label="Accommodation" value={parseInt(acc.total_requests)} color={COLORS.rose}
                                 sub={`${acc.pending} pending`} />
                         )}
-                        {analytics?.accompanist_breakdown && (
-                            <StatCard icon="🎵" label="Accompanists (By Type)"
-                                value={analytics.accompanist_breakdown.reduce((s, r) => s + parseInt(r.count), 0)}
-                                color={COLORS.purple} sub="Click to view list" onClick={() => openModal("accompanists")} />
-                        )}
+
                         <StatCard icon="🎵" label="Accompanists" value={stats?.total_accompanists || 0} color={COLORS.purple} sub="Click to view list" onClick={() => openModal("accompanists")} />
                         <StatCard icon="📧" label="Emails Sent" value={stats?.principal_email_stats?.sent} color={COLORS.green} sub={`of ${stats?.principal_email_stats?.total} principals`} />
                         <StatCard icon="⏳" label="Email Pending" value={stats?.principal_email_stats?.pending} color={COLORS.amber} />
