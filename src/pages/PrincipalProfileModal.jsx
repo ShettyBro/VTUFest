@@ -36,11 +36,7 @@ export default function PrincipalProfileModal({ onComplete }) {
                     return;
                 }
 
-                const data = await res.json();
-                if (data.success) {
-                    if (data.full_name) setFullName(data.full_name);
-                    if (data.phone) setPhone(data.phone);
-                }
+                // No pre-fill — principal must enter their own details
             } catch (err) {
                 console.error("check_profile_status error:", err);
             } finally {
@@ -180,7 +176,7 @@ export default function PrincipalProfileModal({ onComplete }) {
                         lineHeight: 1.5,
                     }}
                 >
-                    Please verify and confirm your name and mobile number to continue.
+                    Please enter your name and mobile number to continue.
                 </p>
 
                 {/* ── Warning banner ── */}
@@ -317,7 +313,7 @@ export default function PrincipalProfileModal({ onComplete }) {
                         {/* Submit */}
                         <button
                             type="submit"
-                            disabled={submitting}
+                            disabled={submitting || !fullName.trim() || phone.length !== 10}
                             style={{
                                 marginTop: 4,
                                 width: "100%",
