@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LifeBuoy, Copy, Check } from "lucide-react";
+import { LifeBuoy, Copy, Check, FileDown } from "lucide-react";
 import "../styles/auth.css";
 import { useOnboarding } from "../context/OnboardingContext";
 
@@ -56,6 +56,16 @@ export default function HelpButton({ className = "", style = {} }) {
         });
     };
 
+    // Compute brochure button position: sit 42px below wherever the help button is
+    const helpTop = style?.top ?? '16px';
+    const helpRight = style?.right;
+    const helpLeft = style?.left;
+    const brochureStyle = {
+        ...(helpRight !== undefined ? { right: helpRight } : {}),
+        ...(helpLeft !== undefined ? { left: helpLeft } : {}),
+        top: `calc(${helpTop} + 42px)`,
+    };
+
     return (
         <>
             {/* TRIGGER BUTTON */}
@@ -68,6 +78,18 @@ export default function HelpButton({ className = "", style = {} }) {
                 <LifeBuoy size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
                 <span className="help-btn-text">Need Help?</span>
             </button>
+
+            {/* BROCHURE BUTTON */}
+            <a
+                href="/VTU Fest 2026.pdf"
+                download="VTU Fest 2026.pdf"
+                className={`help-btn brochure-btn ${className}`}
+                style={brochureStyle}
+                aria-label="Download Brochure"
+            >
+                <FileDown size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                <span className="help-btn-text">Brochure</span>
+            </a>
 
             {/* MODAL */}
             {showHelp && (
@@ -89,21 +111,6 @@ export default function HelpButton({ className = "", style = {} }) {
                                 <div className="help-modal-icon">🎯</div>
                                 <h3 className="help-modal-title">Need Help?</h3>
                                 <p className="help-modal-subtitle">Watch a tutorial or contact our support team</p>
-
-                                {/* Brochure Download */}
-                                <a
-                                    href="/VTU Fest 2026.pdf"
-                                    download="VTU Fest 2026.pdf"
-                                    className="help-contact-item"
-                                    style={{ textDecoration: 'none', marginBottom: '4px' }}
-                                >
-                                    <span className="help-contact-icon">📄</span>
-                                    <div style={{ flex: 1 }}>
-                                        <div className="help-contact-label">Download Brochure</div>
-                                        <div className="help-contact-value">VTU Fest 2026 — Official PDF</div>
-                                    </div>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)', alignSelf: 'center' }}>↓ 2.5 MB</span>
-                                </a>
 
                                 {/* Tutorial Section */}
                                 <div className="help-tutorials-section">

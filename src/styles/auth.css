@@ -819,7 +819,29 @@ input[type="file"] {
         justify-content: center;
     }
 
+    .brochure-btn {
+        top: 58px !important;
+    }
+
 }
+
+/* ──────────────────────────────────────────
+   Brochure Download Button
+   ────────────────────────────────────────── */
+.brochure-btn {
+    top: 58px;
+    text-decoration: none;
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.45);
+    color: #fde68a;
+}
+
+.brochure-btn:hover {
+    background: rgba(251, 191, 36, 0.28);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(251, 191, 36, 0.2);
+}
+
 
 /* ──────────────────────────────────────────
    Help Button: Video Tutorial Extensions

@@ -12,7 +12,7 @@ import { isPhysicalMobile } from "../utils/deviceDetect";
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
 import MandatoryTour from "../components/onboarding/MandatoryTour";
 import GuideTour from "../components/onboarding/GuideTour";
-import GuideButton from "../components/onboarding/GuideButton";
+import HelpButton from "../components/HelpButton";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student/dashboard";
 
@@ -370,7 +370,7 @@ export default function Dashboard() {
 
         {!loading && <MandatoryTour />}
         {!loading && <GuideTour />}
-        <GuideButton style={{ top: '75px', right: '25px' }} />
+        <HelpButton style={{ top: '75px', right: '25px' }} />
 
         {/* --- HEADER --- */}
         <div className="dashboard-header relative-header" id="student-dashboard-header">
