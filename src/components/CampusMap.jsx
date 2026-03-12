@@ -94,15 +94,15 @@ const locations = [
     left: "30%",
     mapUrl: "https://maps.app.goo.gl/A9pEzM3KWzUwFYdF9",
   },
+ {
+  id: 15,
+  name: <>Two-Wheeler<br />Parking</>,
+  top: "41%",
+  left: "98%",
+  mapUrl: "https://maps.app.goo.gl/F2xDkQBpHrbPtpQq7",
+},
   {
-    id: 15,
-    name: "Two-Wheeler Parking",
-    top: "41%",
-    left: "98%",
-    mapUrl: "https://maps.app.goo.gl/F2xDkQBpHrbPtpQq7",
-  },
-   {
-    id: 16,
+    id: 14,
     name: "Indoor Stadium",
     top: "08%",
     left: "42.1%",
