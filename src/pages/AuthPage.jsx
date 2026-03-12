@@ -777,7 +777,19 @@ export default function AuthPage({ initialView = "login" }) {
                                             </div>
 
                                             {/* Photo Upload */}
-                                            <div className="file-upload-wrapper">
+                                            <div
+                                                className="file-upload-wrapper"
+                                                style={{
+                                                    borderColor: photoFile && uploadStatus !== 'success'
+                                                        ? 'rgba(168,237,234,0.9)'
+                                                        : uploadStatus === 'success'
+                                                            ? 'rgba(74,222,128,0.7)'
+                                                            : undefined,
+                                                    boxShadow: photoFile && uploadStatus !== 'success'
+                                                        ? '0 0 18px rgba(168,237,234,0.35)'
+                                                        : undefined,
+                                                }}
+                                            >
                                                 <div className="preview-container">
                                                     {photoPreview ? (
                                                         <img src={photoPreview} alt="Preview" className="preview-img" />
@@ -808,17 +820,24 @@ export default function AuthPage({ initialView = "login" }) {
                                                 {photoFile && uploadStatus !== "success" && (
                                                     <button
                                                         type="button"
-                                                        className="secondary-btn"
+                                                        className={`secondary-btn upload-now-btn${uploadStatus !== 'uploading' ? ' upload-pulse' : ''}`}
                                                         onClick={handlePhotoUpload}
                                                         disabled={uploadStatus === "uploading"}
                                                         style={{
                                                             marginTop: '20px',
                                                             borderRadius: '50px',
-                                                            padding: '10px 25px',
-                                                            background: 'rgba(255,255,255,0.1)'
+                                                            padding: '11px 32px',
+                                                            background: uploadStatus === 'uploading'
+                                                                ? 'rgba(255,255,255,0.1)'
+                                                                : 'linear-gradient(135deg, #a8edea 0%, #38bdf8 100%)',
+                                                            color: uploadStatus === 'uploading' ? '#fff' : '#0f172a',
+                                                            fontWeight: 700,
+                                                            border: 'none',
+                                                            fontSize: '0.95rem',
+                                                            letterSpacing: '0.3px',
                                                         }}
                                                     >
-                                                        {uploadStatus === "uploading" ? `Uploading ${uploadProgress}%` : "Upload Now"}
+                                                        {uploadStatus === "uploading" ? `⏫ Uploading ${uploadProgress}%` : "⬆ Upload Photo"}
                                                     </button>
                                                 )}
                                             </div>
@@ -859,8 +878,23 @@ export default function AuthPage({ initialView = "login" }) {
                                                 </div>
                                             </div>
 
-                                            <button className="auth-btn" disabled={loading || uploadStatus !== "success"}>
-                                                {loading ? "Finalizing..." : "Complete Registration"}
+                                            <button
+                                                className="auth-btn"
+                                                disabled={loading || uploadStatus !== "success"}
+                                                style={uploadStatus !== 'success' ? {
+                                                    transform: 'scale(0.92)',
+                                                    opacity: 0.38,
+                                                    pointerEvents: 'none',
+                                                    filter: 'grayscale(0.4)',
+                                                    marginTop: 6,
+                                                    transition: 'all 0.4s ease',
+                                                } : {
+                                                    transform: 'scale(1)',
+                                                    opacity: 1,
+                                                    transition: 'all 0.4s ease',
+                                                }}
+                                            >
+                                                {loading ? "Finalizing..." : "✅ Complete Registration"}
                                             </button>
 
                                             <button
