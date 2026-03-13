@@ -600,9 +600,7 @@ input[type="file"] {
    NEED HELP BUTTON
    ========================================= */
 .help-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    position: static;
     z-index: 20;
     display: flex;
     align-items: center;
@@ -619,6 +617,8 @@ input[type="file"] {
     cursor: pointer;
     transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
     letter-spacing: 0.3px;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
 .help-btn:hover {
@@ -626,7 +626,6 @@ input[type="file"] {
     transform: translateY(-1px);
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
 }
-
 
 
 /* =========================================
@@ -818,18 +817,12 @@ input[type="file"] {
         height: 34px;
         justify-content: center;
     }
-
-    .brochure-btn {
-        top: 58px !important;
-    }
-
 }
 
 /* ──────────────────────────────────────────
    Brochure Download Button
    ────────────────────────────────────────── */
 .brochure-btn {
-    top: 58px;
     text-decoration: none;
     background: rgba(251, 191, 36, 0.15);
     border-color: rgba(251, 191, 36, 0.45);

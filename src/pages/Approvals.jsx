@@ -940,9 +940,12 @@ export default function Approvals() {
               padding: "8px 15px",
               background: verifiedDocs[student.application_id] ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.1)",
               borderColor: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)",
-              color: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)"
+              color: verifiedDocs[student.application_id] ? "var(--accent-success)" : "var(--accent-info)",
+              opacity: isReadOnlyMode ? 0.45 : 1,
+              cursor: isReadOnlyMode ? "not-allowed" : "pointer",
             }}
-            onClick={() => { setDocsTarget(student); setShowDocsModal(true); }}
+            onClick={() => { if (!isReadOnlyMode) { setDocsTarget(student); setShowDocsModal(true); } }}
+            disabled={isReadOnlyMode}
           >
             {verifiedDocs[student.application_id] ? "Review Documents" : "📄 Verify Documents"}
           </button>
