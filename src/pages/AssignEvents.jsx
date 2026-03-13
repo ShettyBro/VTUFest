@@ -103,7 +103,7 @@ export default function AssignEvents() {
   const [finalApproving, setFinalApproving] = useState(false);
 
   const [isLocked, setIsLocked] = useState(false);
-  const [registrationLock, setRegistrationLock] = useState(false); // global lock
+  const [managerLock, setManagerLock] = useState(false); // global lock
 
 
 
@@ -169,10 +169,9 @@ export default function AssignEvents() {
 
       const data = await response.json();
 
-      // ✅ FIXED: remove .data
       if (data.success) {
         setIsLocked(!!data.is_locked);
-        setRegistrationLock(!!data.registration_lock);
+        setManagerLock(!!data.manager_lock);
       }
 
     } catch (error) {
@@ -180,7 +179,7 @@ export default function AssignEvents() {
     }
   };
 
-  const isReadOnlyMode = isLocked || registrationLock;
+  const isReadOnlyMode = isLocked || managerLock;
 
 
   const fetchEventData = async (eventSlug, forceRefresh = false) => {
@@ -559,9 +558,9 @@ export default function AssignEvents() {
             🔒 Final approval submitted. All event assignments are now locked and read-only.
           </div>
         )}
-        {registrationLock && (
+        {managerLock && (
           <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 Registration is currently locked. All actions are read-only.
+            🔒 Actions are locked by Admin. All actions are read-only.
           </div>
         )}
 

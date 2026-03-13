@@ -62,7 +62,7 @@ export default function Accommodation() {
 
   // Lock states
   const [isLocked, setIsLocked] = useState(false);
-  const [registrationLock, setRegistrationLock] = useState(false);
+  const [managerLock, setManagerLock] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -70,8 +70,6 @@ export default function Accommodation() {
   const [allotments, setAllotments] = useState([]);
 
   const [formData, setFormData] = useState({
-    total_girls: "",
-    total_boys: "",
     contact_person_name: "",
     contact_person_phone: "",
     special_requirements: "",
@@ -108,14 +106,14 @@ export default function Accommodation() {
       const data = await response.json();
       if (data.success) {
         setIsLocked(data.is_locked);
-        setRegistrationLock(data.registration_lock);
+        setManagerLock(data.manager_lock);
       }
     } catch (error) {
       console.error("Lock check error:", error);
     }
   };
 
-  const isReadOnlyMode = isLocked || registrationLock;
+  const isReadOnlyMode = managerLock;
 
   const fetchAccommodationStatus = async () => {
     try {
@@ -165,21 +163,12 @@ export default function Accommodation() {
     if (isReadOnlyMode) return;
     if (existingRequest) return;
 
-    if (!formData.total_girls || !formData.total_boys || !formData.contact_person_name || !formData.contact_person_phone) {
+    if (!formData.contact_person_name || !formData.contact_person_phone) {
       showPopup("Please fill all required fields", "warning");
       return;
     }
     if (!isValidIndianPhone(formData.contact_person_phone)) {
       showPopup("Contact phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
-      return;
-    }
-    const totalCount = parseInt(formData.total_boys || 0) + parseInt(formData.total_girls || 0);
-    if (totalCount > 45) {
-      showPopup(`Total accommodation cannot exceed 45. Current total: ${totalCount} (Male + Female)`, "warning");
-      return;
-    }
-    if (totalCount === 0) {
-      showPopup("Please enter at least 1 for Male or Female count", "warning");
       return;
     }
 
@@ -279,14 +268,16 @@ export default function Accommodation() {
           </div>
         </div>
 
-        {isLocked && (
-          <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 Final approval submitted. Read-only.
+        {!isLocked && (
+          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 You must submit the **Final Approval** before requesting Accommodation.
+            <br />
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>This ensures the final count of participants is accurate before requesting beds.</span>
           </div>
         )}
-        {registrationLock && (
+        {managerLock && (
           <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 Registration locked. Read-only.
+            🔒 Actions locked by Admin. Read-only.
           </div>
         )}
 
@@ -491,45 +482,19 @@ export default function Accommodation() {
               <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
                 Submit New Request
               </h3>
-              <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '8px' }}>
-                  <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
-                    ⚠️ Maximum total allowed: Male + Female = 45
-                  </small>
+              {!isLocked && (
+                <div style={{ textAlign: "center", padding: "20px 0", color: "var(--text-secondary)" }}>
+                  <p>Accommodation requests are locked until Final Approval is submitted.</p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <div>
-                    <label style={labelStyle}>Total Male *</label>
-                    <input
-                      type="number"
-                      name="total_boys"
-                      value={formData.total_boys}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                      min="0"
-                      max="45"
-                      placeholder="0"
-                      required
-                      disabled={isReadOnlyMode}
-                    />
-                  </div>
+              )}
 
-                  <div>
-                    <label style={labelStyle}>Total Female *</label>
-                    <input
-                      type="number"
-                      name="total_girls"
-                      value={formData.total_girls}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                      min="0"
-                      max="45"
-                      placeholder="0"
-                      required
-                      disabled={isReadOnlyMode}
-                    />
+              {isLocked && (
+                <form onSubmit={handleSubmit}>
+                  <div style={{ marginBottom: '15px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '12px', borderRadius: '8px' }}>
+                    <small style={{ color: '#a5b4fc', fontSize: '0.9rem', display: 'block' }}>
+                      ℹ️ Your total Male & Female participant headcounts will be calculated automatically based on your approved participants list.
+                    </small>
                   </div>
-                </div>
 
                 <div>
                   <label style={labelStyle}>Contact Person Name *</label>
@@ -574,14 +539,15 @@ export default function Accommodation() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="neon-btn"
-                  disabled={submitting || isReadOnlyMode}
-                >
-                  {submitting ? "Submitting..." : "Submit Request"}
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    className="neon-btn"
+                    disabled={submitting || isReadOnlyMode}
+                  >
+                    {submitting ? "Submitting..." : "Submit Request"}
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </div>

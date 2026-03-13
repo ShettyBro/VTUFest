@@ -68,6 +68,7 @@ export default function AdminSettings() {
         const map = {
             allocated_events_visible: "Show Allocated Events to Students",
             registration_lock: "Lock All Registrations",
+            manager_lock: "Lock All Manager/Principal Actions",
         };
         return map[key] || key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
     };
@@ -76,6 +77,7 @@ export default function AdminSettings() {
         const map = {
             allocated_events_visible: "When ON, students can see their allocated event list on the dashboard.",
             registration_lock: "When ON, all new student registrations are blocked across the platform.",
+            manager_lock: "When ON, Managers and Principals cannot make any further changes to event assignments or approvals across all colleges.",
         };
         return map[key] || "";
     };

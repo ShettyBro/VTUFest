@@ -344,7 +344,7 @@ export default function Approvals() {
 
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
-  const [registrationLock, setRegistrationLock] = useState(false); // global lock
+  const [managerLock, setManagerLock] = useState(false); // global lock
 
   // Quota state
   const [quota, setQuota] = useState({
@@ -455,10 +455,9 @@ export default function Approvals() {
         return;
       }
 
-      const data = await response.json();
       if (data.success) {
         setIsLocked(data.is_locked); // college only
-        setRegistrationLock(data.registration_lock); // global only
+        setManagerLock(data.manager_lock); // global only
       }
 
     } catch (error) {
@@ -466,7 +465,7 @@ export default function Approvals() {
     }
   };
 
-  const isReadOnlyMode = isLocked || registrationLock;
+  const isReadOnlyMode = isLocked || managerLock;
 
 
   const fetchPendingStudents = async () => {
@@ -1166,9 +1165,9 @@ export default function Approvals() {
             🔒 Final approval submitted. All lists are now read-only.
           </div>
         )}
-        {registrationLock && (
+        {managerLock && (
           <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 Registration is currently locked. All actions are read-only.
+            🔒 Actions are locked by Admin. All actions are read-only.
           </div>
         )}
 

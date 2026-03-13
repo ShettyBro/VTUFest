@@ -193,7 +193,7 @@ export default function ManagerDashboard() {
 
       if (data.success) {
         setLockStatus(data);
-        const isLocked = data.is_locked || data.registration_lock;
+        const isLocked = data.is_locked || data.manager_lock;
         if (isLocked) {
           setShowFinalApprovalOverlay(true);
         }
@@ -573,7 +573,7 @@ export default function ManagerDashboard() {
         <FinalApprovalOverlay
           paymentStatus={lockStatus.payment_status}
           paymentRemarks={lockStatus.payment_remarks}
-          isRegistrationLock={lockStatus.registration_lock}
+          isManagerLock={lockStatus.manager_lock}
         />
       )} */}
     </Layout>

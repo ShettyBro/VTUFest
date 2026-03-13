@@ -53,7 +53,7 @@ export default function ApprovedStudents() {
 
       const lockData = await lockResponse.json();
       if (lockData.success) {
-        setIsLocked(lockData.is_locked);
+        setIsLocked(lockData.is_locked || lockData.manager_lock);
       }
 
       // Fetch approved students

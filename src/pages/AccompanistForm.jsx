@@ -124,7 +124,7 @@ export default function AccompanistForm() {
   const [loading, setLoading] = useState(true);
   const [quotaUsed, setQuotaUsed] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [registrationLock, setRegistrationLock] = useState(false);
+  const [managerLock, setManagerLock] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState(1);
@@ -229,7 +229,7 @@ export default function AccompanistForm() {
         setAccompanistsLoaded(true);
         if (data.success && data.data) {
           setIsLocked(data.data.is_locked);
-          setRegistrationLock(data.data.registration_lock);
+          setManagerLock(data.data.manager_lock);
         }
       }
     } catch (error) {
@@ -237,7 +237,7 @@ export default function AccompanistForm() {
     }
   };
 
-  const isReadOnlyMode = isLocked || registrationLock;
+  const isReadOnlyMode = isLocked || managerLock;
 
   const handleSessionExpired = () => {
     showPopup("Session expired. Please login again.", "error");
@@ -567,7 +567,7 @@ export default function AccompanistForm() {
         </div>
 
         {isLocked && <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>🔒 Final approval submitted.</div>}
-        {registrationLock && <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>🔒 Registration locked.</div>}
+        {managerLock && <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>🔒 Actions locked by Admin.</div>}
 
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginBottom: '20px' }}>
           <div className="glass-card" style={{ padding: '15px 25px', display: 'inline-block' }}>
