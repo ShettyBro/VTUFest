@@ -40,12 +40,20 @@ const getEmbedUrl = (rawUrl) => {
     return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 };
 
-export default function HelpButton({ className = "", style = {} }) {
+export default function HelpButton({ className = "", style = {}, open = false, onClose }) {
     const [showHelp, setShowHelp] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [copiedKey, setCopiedKey] = useState(null);
     const { startGuide } = useOnboarding();
     const role = localStorage.getItem('vtufest_role') || localStorage.getItem('role');
+
+    // Support both controlled (open/onClose) and uncontrolled mode
+    const isOpen = open || showHelp;
+    const handleClose = () => {
+        setShowHelp(false);
+        setSelectedVideo(null);
+        if (onClose) onClose();
+    };
 
     const handleCopy = (text, key, e) => {
         e.preventDefault();
@@ -72,9 +80,12 @@ export default function HelpButton({ className = "", style = {} }) {
         zIndex: 20,
     };
 
+    // If no top or bottom is set, this is modal-only mode (no floating buttons shown)
+    const hasPosition = style?.top !== undefined || style?.bottom !== undefined;
+
     return (
         <>
-            <div style={wrapperStyle}>
+            {hasPosition && <div style={wrapperStyle}>
                 {/* BROCHURE BUTTON — shown first (left) */}
                 <a
                     href="/VTU Fest 2026.pdf"
@@ -97,18 +108,15 @@ export default function HelpButton({ className = "", style = {} }) {
                     <LifeBuoy size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
                     <span className="help-btn-text">Need Help?</span>
                 </button>
-            </div>
+            </div>}
 
             {/* MODAL */}
-            {showHelp && (
-                <div className="help-modal-overlay" onClick={() => setShowHelp(false)}>
+            {isOpen && (
+                <div className="help-modal-overlay" onClick={handleClose}>
                     <div className={`help-modal ${selectedVideo ? 'video-active' : ''}`} onClick={e => e.stopPropagation()}>
                         <button
                             className="help-modal-close"
-                            onClick={() => {
-                                setShowHelp(false);
-                                setSelectedVideo(null);
-                            }}
+                            onClick={handleClose}
                             aria-label="Close"
                         >
                             &times;

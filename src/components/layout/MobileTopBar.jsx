@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import SessionTimerBadge from "../SessionTimerBadge";
+import HelpButton from "../HelpButton";
 import "../../styles/mobile-layout.css";
 
 // Dashboard paths where we hide the page title and show college name instead
@@ -13,6 +14,7 @@ export default function MobileTopBar({ notificationsData = [] }) {
     const location = useLocation();
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
+    const [showHelpModal, setShowHelpModal] = useState(false);
     const [collegeName, setCollegeName] = useState("");
     const profileRef = useRef(null);
     const notifRef = useRef(null);
@@ -139,6 +141,10 @@ export default function MobileTopBar({ notificationsData = [] }) {
                         </div>
                         <button className="mtb-sheet-close" onClick={() => setProfileOpen(false)}>✕</button>
                     </div>
+                    <div className="mtb-sheet-menu-item" onClick={() => { setShowHelpModal(true); setProfileOpen(false); }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Need Help?
+                    </div>
                     <div className="mtb-sheet-menu-item" onClick={() => { navigate("/forgot-password"); setProfileOpen(false); }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         Change Password
@@ -154,6 +160,9 @@ export default function MobileTopBar({ notificationsData = [] }) {
             {(profileOpen || notifOpen) && (
                 <div className="mtb-backdrop" onClick={() => { setProfileOpen(false); setNotifOpen(false); }} />
             )}
+
+            {/* Help Modal — controlled by profile sheet */}
+            <HelpButton open={showHelpModal} onClose={() => setShowHelpModal(false)} style={{}} />
         </>
     );
 }
