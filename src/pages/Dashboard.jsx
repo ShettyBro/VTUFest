@@ -21,7 +21,6 @@ export default function Dashboard() {
 
   const [notificationsData, setNotificationsData] = useState([]);
   const [eventsCalendarData, setEventsCalendarData] = useState({ calendarEvents: [] });
-  const [settingsData, setSettingsData] = useState({ allocated_events_visible: false });
 
   const [loading, setLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
@@ -271,11 +270,6 @@ export default function Dashboard() {
       .then(r => r.json())
       .then(d => { if (d.success) setEventsCalendarData(d.data); })
       .catch(() => { });
-
-    fetch("https://api.vtufest2026.acharyahabba.com/api/shared/settings")
-      .then(r => r.json())
-      .then(d => { if (d.success) setSettingsData(d.data); })
-      .catch(() => { });
   }, []);
 
   const handleSubmitApplication = () => {
@@ -291,7 +285,7 @@ export default function Dashboard() {
   };
 
   const handleViewAllocatedEvents = () => {
-    if (settingsData.allocated_events_visible) {
+    if (dashboardData?.qr_code) {
       setShowAllocatedEventsModal(true);
     }
   };
@@ -563,12 +557,12 @@ export default function Dashboard() {
               {/* Allocated Events — desktop only; mobile uses My App tab */}
               <div className="desktop-only">
                 <button
-                  className={`neon-btn ${!settingsData.allocated_events_visible ? "disabled" : ""}`}
+                  className="neon-btn"
                   onClick={handleViewAllocatedEvents}
-                  disabled={!settingsData.allocated_events_visible}
-                  style={{ fontSize: '0.9rem', padding: '10px 20px', marginTop: '30px' }}
+                  disabled={!dashboardData?.qr_code}
+                  style={{ fontSize: '0.9rem', padding: '10px 20px', marginTop: '30px', opacity: dashboardData?.qr_code ? 1 : 0.45, cursor: dashboardData?.qr_code ? 'pointer' : 'not-allowed' }}
                 >
-                  {settingsData.allocated_events_visible ? "Allocated Events" : "Allocated Events (Locked)"}
+                  {dashboardData?.qr_code ? "View Allocated Events" : "Allocated Events (Not Yet Allotted)"}
                 </button>
               </div>
             </div>

@@ -51,22 +51,11 @@ export default function AdminSettings() {
     };
 
     const handleToggle = (key, currentValue) => {
-        if (!isSuperAdmin) return;
-
-        // Guard: allocated_events_visible can only be toggled ON when registration is locked
-        if (key === "allocated_events_visible" && currentValue !== "true") {
-            if (!registrationLocked) return; // toggle is visually disabled; ignore click
-            // Show confirmation before enabling
-            setConfirmKey(key);
-            return;
-        }
-
         doToggle(key, currentValue);
     };
 
     const friendlyLabel = (key) => {
         const map = {
-            allocated_events_visible: "Show Allocated Events to Students",
             registration_lock: "Lock All Registrations",
             manager_lock: "Lock All Manager/Principal Actions",
         };
@@ -75,7 +64,6 @@ export default function AdminSettings() {
 
     const friendlyDesc = (key) => {
         const map = {
-            allocated_events_visible: "When ON, students can see their allocated event list on the dashboard.",
             registration_lock: "When ON, all new student registrations are blocked across the platform.",
             manager_lock: "When ON, Managers and Principals cannot make any further changes to event assignments or approvals across all colleges.",
         };
@@ -100,15 +88,10 @@ export default function AdminSettings() {
                     <div className="glass-card" style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>Loading settings...</div>
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        {settings.map(s => {
+                        {settings.filter(s => s.setting_key !== "allocated_events_visible").map(s => {
                             const isOn = s.setting_value === "true";
                             const isSavingThis = saving === s.setting_key;
-
-                            // allocated_events_visible is disabled when registration is still open
-                            const isDisabled = s.setting_key === "allocated_events_visible" && !isOn && !registrationLocked;
-                            const tooltipText = isDisabled ? "Close registration first before enabling event visibility" : null;
-
-                            const canClick = isSuperAdmin && !isSavingThis && !isDisabled;
+                            const canClick = isSuperAdmin && !isSavingThis;
 
                             return (
                                 <div key={s.setting_key} className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -126,12 +109,7 @@ export default function AdminSettings() {
                                             {s.updated_at && ` · Last updated: ${new Date(s.updated_at).toLocaleString("en-IN")}`}
                                             {s.updated_by_name && ` by ${s.updated_by_name}`}
                                         </div>
-                                        {isDisabled && (
-                                            <div style={{ marginTop: "6px", display: "inline-flex", alignItems: "center", gap: "5px", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)", color: "#fbbf24", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem" }}>
-                                                ⚠️ {tooltipText}
-                                            </div>
-                                        )}
-                                    </div>
+                                     </div>
 
                                     {/* Toggle Switch */}
                                     <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, marginLeft: "24px" }}>
@@ -139,25 +117,24 @@ export default function AdminSettings() {
                                             {isOn ? "ON" : "OFF"}
                                         </span>
                                         <div
-                                            title={tooltipText || undefined}
                                             onClick={() => canClick && handleToggle(s.setting_key, s.setting_value)}
                                             style={{
                                                 width: "52px",
                                                 height: "28px",
                                                 borderRadius: "14px",
-                                                background: isOn ? "var(--accent-success)" : isDisabled ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.15)",
-                                                border: `2px solid ${isOn ? "var(--accent-success)" : isDisabled ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)"}`,
+                                                background: isOn ? "var(--accent-success)" : "rgba(255,255,255,0.15)",
+                                                border: `2px solid ${isOn ? "var(--accent-success)" : "rgba(255,255,255,0.2)"}`,
                                                 cursor: canClick ? "pointer" : "not-allowed",
                                                 position: "relative",
                                                 transition: "all 0.3s",
-                                                opacity: isSavingThis ? 0.6 : isDisabled ? 0.45 : 1,
+                                                opacity: isSavingThis ? 0.6 : 1,
                                             }}
                                         >
                                             <div style={{
                                                 width: "20px",
                                                 height: "20px",
                                                 borderRadius: "50%",
-                                                background: isDisabled ? "rgba(255,255,255,0.4)" : "#fff",
+                                                background: "#fff",
                                                 position: "absolute",
                                                 top: "2px",
                                                 left: isOn ? "26px" : "2px",
