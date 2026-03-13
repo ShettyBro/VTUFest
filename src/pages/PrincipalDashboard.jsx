@@ -10,7 +10,7 @@ import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 import MobileBlockScreen from "../components/MobileBlockScreen";
 import { isPhysicalMobile } from "../utils/deviceDetect";
 import HelpButton from "../components/HelpButton";
-import GuideButton from '../components/onboarding/GuideButton';
+
 import MandatoryTour from '../components/onboarding/MandatoryTour';
 import GuideTour from '../components/onboarding/GuideTour';
 import FeedbackPopup from "../components/feedback/FeedbackPopup";
@@ -426,8 +426,8 @@ export default function PrincipalDashboard() {
             <h1>Principal Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Principal Administration Panel</p>
           </div>
-          <HelpButton style={{ top: '75px', right: '25px' }} />
-          <GuideButton style={{ top: '75px', right: '145px' }} />
+          <HelpButton style={{ top: '115px', right: '25px' }} />
+
         </div>
 
         {/* --- TICKER (Priority 1) --- */}

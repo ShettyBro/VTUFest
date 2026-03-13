@@ -370,7 +370,7 @@ export default function Dashboard() {
 
         {!loading && <MandatoryTour />}
         {!loading && <GuideTour />}
-        <HelpButton style={{ top: '75px', right: '25px' }} />
+        <HelpButton style={{ top: '115px', right: '25px' }} />
 
         {/* --- HEADER --- */}
         <div className="dashboard-header relative-header" id="student-dashboard-header">
