@@ -426,7 +426,7 @@ export default function PrincipalDashboard() {
             <h1>Principal Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Principal Administration Panel</p>
           </div>
-          <HelpButton style={{ top: '115px', right: '25px' }} />
+          <HelpButton style={{ bottom: '25px', right: '25px' }} />
 
         </div>
 

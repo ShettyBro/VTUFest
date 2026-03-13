@@ -56,10 +56,12 @@ export default function HelpButton({ className = "", style = {} }) {
         });
     };
 
-    // Wrapper sits at the exact same top/right as the old help button — both buttons side by side
+    // Supports both top and bottom positioning. Pass bottom for bottom-right placement.
     const wrapperStyle = {
         position: 'fixed',
-        top: style?.top ?? '16px',
+        ...(style?.bottom !== undefined
+            ? { bottom: style.bottom }
+            : { top: style?.top ?? '16px' }),
         ...(style?.right !== undefined ? { right: style.right } :
             style?.left !== undefined ? { left: style.left } :
             { right: '16px' }),

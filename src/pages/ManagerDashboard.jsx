@@ -328,7 +328,7 @@ export default function ManagerDashboard() {
             <h1>Manager Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)' }}>VTU HABBA 2026 – Team Manager Panel</p>
           </div>
-          <HelpButton style={{ top: '115px', right: '25px' }} />
+          <HelpButton style={{ bottom: '25px', right: '25px' }} />
 
         </div>
 
