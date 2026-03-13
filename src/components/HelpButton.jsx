@@ -56,26 +56,24 @@ export default function HelpButton({ className = "", style = {} }) {
         });
     };
 
-    // Wrapper container sits at the same position as the help button
-    const containerStyle = {
+    // Wrapper sits at the exact same top/right as the old help button — both buttons side by side
+    const wrapperStyle = {
         position: 'fixed',
         top: style?.top ?? '16px',
-        ...(style?.right !== undefined
-            ? { right: style.right }
-            : style?.left !== undefined
-            ? { left: style.left }
-            : { right: '16px' }), // ← default top-right when no style prop passed
+        ...(style?.right !== undefined ? { right: style.right } :
+            style?.left !== undefined ? { left: style.left } :
+            { right: '16px' }),
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         gap: '8px',
-        zIndex: 1000,
+        zIndex: 20,
     };
 
     return (
         <>
-            <div style={containerStyle} className="help-btn-container">
-                {/* BROCHURE BUTTON */}
+            <div style={wrapperStyle}>
+                {/* BROCHURE BUTTON — shown first (left) */}
                 <a
                     href="/VTU Fest 2026.pdf"
                     download="VTU Fest 2026.pdf"
@@ -87,7 +85,7 @@ export default function HelpButton({ className = "", style = {} }) {
                     <span className="help-btn-text">Brochure</span>
                 </a>
 
-                {/* TRIGGER BUTTON */}
+                {/* NEED HELP BUTTON — shown second (right) */}
                 <button
                     className={`help-btn ${className}`}
                     style={{ position: 'static' }}
