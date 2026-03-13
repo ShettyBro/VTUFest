@@ -60,8 +60,11 @@ export default function HelpButton({ className = "", style = {} }) {
     const containerStyle = {
         position: 'fixed',
         top: style?.top ?? '16px',
-        ...(style?.right !== undefined ? { right: style.right } : {}),
-        ...(style?.left !== undefined ? { left: style.left } : {}),
+        ...(style?.right !== undefined
+            ? { right: style.right }
+            : style?.left !== undefined
+            ? { left: style.left }
+            : { right: '16px' }), // ← default top-right when no style prop passed
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
@@ -71,7 +74,7 @@ export default function HelpButton({ className = "", style = {} }) {
 
     return (
         <>
-            <div style={containerStyle}>
+            <div style={containerStyle} className="help-btn-container">
                 {/* BROCHURE BUTTON */}
                 <a
                     href="/VTU Fest 2026.pdf"

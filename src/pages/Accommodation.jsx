@@ -7,49 +7,30 @@ import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Converts any Google Maps URL variant into a safe, embeddable URL.
-// Handles: full URLs, short links (maps.app.goo.gl / goo.gl/maps),
-//          coordinate-based URLs, and place-name URLs.
 // ─────────────────────────────────────────────────────────────────────────────
 const buildEmbedUrl = (url) => {
   if (!url || typeof url !== "string") return "";
-
   const trimmed = url.trim();
   if (!trimmed) return "";
-
   try {
-    // 1. Already an embed link — return as-is
     if (trimmed.includes("/maps/embed")) return trimmed;
-
-    // 2. Short links — cannot be resolved client-side, use as search query
-    if (
-      trimmed.includes("maps.app.goo.gl") ||
-      trimmed.includes("goo.gl/maps")
-    ) {
+    if (trimmed.includes("maps.app.goo.gl") || trimmed.includes("goo.gl/maps")) {
       return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
     }
-
-    // 3. Extract coordinates from @lat,lng in URL
     const coordMatch = trimmed.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
     if (coordMatch) {
       return `https://www.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&z=16&output=embed`;
     }
-
-    // 4. Extract place name from /place/Name segment
     const placeMatch = trimmed.match(/\/place\/([^/?]+)/);
     if (placeMatch) {
       return `https://www.google.com/maps?q=${encodeURIComponent(
         decodeURIComponent(placeMatch[1].replace(/\+/g, " "))
       )}&output=embed`;
     }
-
-    // 5. If it looks like a Google Maps URL but none matched — use as query
     if (trimmed.includes("google.com/maps")) {
       return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
     }
-
-    // 6. Fallback — treat the whole value as a search query
     return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}&output=embed`;
-
   } catch (e) {
     console.warn("Map embed URL build error:", e);
     return "";
@@ -61,7 +42,6 @@ export default function Accommodation() {
   const token = localStorage.getItem("vtufest_token");
 
   // Lock states
-  const [isLocked, setIsLocked] = useState(false);
   const [managerLock, setManagerLock] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -70,11 +50,12 @@ export default function Accommodation() {
   const [allotments, setAllotments] = useState([]);
 
   const [formData, setFormData] = useState({
+    total_girls: "",
+    total_boys: "",
     contact_person_name: "",
     contact_person_phone: "",
     special_requirements: "",
   });
-
 
   const { showPopup } = usePopup();
 
@@ -105,7 +86,6 @@ export default function Accommodation() {
       );
       const data = await response.json();
       if (data.success) {
-        setIsLocked(data.is_locked);
         setManagerLock(data.manager_lock);
       }
     } catch (error) {
@@ -163,12 +143,21 @@ export default function Accommodation() {
     if (isReadOnlyMode) return;
     if (existingRequest) return;
 
-    if (!formData.contact_person_name || !formData.contact_person_phone) {
+    if (!formData.total_girls || !formData.total_boys || !formData.contact_person_name || !formData.contact_person_phone) {
       showPopup("Please fill all required fields", "warning");
       return;
     }
     if (!isValidIndianPhone(formData.contact_person_phone)) {
       showPopup("Contact phone must be exactly 10 digits and start with 6, 7, 8, or 9", "warning");
+      return;
+    }
+    const totalCount = parseInt(formData.total_boys || 0) + parseInt(formData.total_girls || 0);
+    if (totalCount > 45) {
+      showPopup(`Total accommodation cannot exceed 45. Current total: ${totalCount} (Male + Female)`, "warning");
+      return;
+    }
+    if (totalCount === 0) {
+      showPopup("Please enter at least 1 for Male or Female count", "warning");
       return;
     }
 
@@ -476,10 +465,42 @@ export default function Accommodation() {
                 Submit New Request
               </h3>
               <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '15px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '12px', borderRadius: '8px' }}>
-                  <small style={{ color: '#a5b4fc', fontSize: '0.9rem', display: 'block' }}>
-                    ℹ️ Your total Male &amp; Female participant headcounts will be calculated automatically based on your approved participants list.
+                <div style={{ marginBottom: '8px' }}>
+                  <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
+                    ⚠️ Maximum total allowed: Male + Female = 45
                   </small>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div>
+                    <label style={labelStyle}>Total Male *</label>
+                    <input
+                      type="number"
+                      name="total_boys"
+                      value={formData.total_boys}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      min="0"
+                      max="45"
+                      placeholder="0"
+                      required
+                      disabled={isReadOnlyMode}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Total Female *</label>
+                    <input
+                      type="number"
+                      name="total_girls"
+                      value={formData.total_girls}
+                      onChange={handleInputChange}
+                      style={inputStyle}
+                      min="0"
+                      max="45"
+                      placeholder="0"
+                      required
+                      disabled={isReadOnlyMode}
+                    />
+                  </div>
                 </div>
 
                 <div>
