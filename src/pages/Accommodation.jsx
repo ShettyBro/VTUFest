@@ -268,13 +268,6 @@ export default function Accommodation() {
           </div>
         </div>
 
-        {!isLocked && (
-          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
-            🔒 You must submit the **Final Approval** before requesting Accommodation.
-            <br />
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>This ensures the final count of participants is accurate before requesting beds.</span>
-          </div>
-        )}
         {managerLock && (
           <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
             🔒 Actions locked by Admin. Read-only.
@@ -482,19 +475,12 @@ export default function Accommodation() {
               <h3 style={{ color: "var(--text-primary)", borderBottomColor: "var(--glass-border)", marginBottom: "20px" }}>
                 Submit New Request
               </h3>
-              {!isLocked && (
-                <div style={{ textAlign: "center", padding: "20px 0", color: "var(--text-secondary)" }}>
-                  <p>Accommodation requests are locked until Final Approval is submitted.</p>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '15px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '12px', borderRadius: '8px' }}>
+                  <small style={{ color: '#a5b4fc', fontSize: '0.9rem', display: 'block' }}>
+                    ℹ️ Your total Male &amp; Female participant headcounts will be calculated automatically based on your approved participants list.
+                  </small>
                 </div>
-              )}
-
-              {isLocked && (
-                <form onSubmit={handleSubmit}>
-                  <div style={{ marginBottom: '15px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '12px', borderRadius: '8px' }}>
-                    <small style={{ color: '#a5b4fc', fontSize: '0.9rem', display: 'block' }}>
-                      ℹ️ Your total Male & Female participant headcounts will be calculated automatically based on your approved participants list.
-                    </small>
-                  </div>
 
                 <div>
                   <label style={labelStyle}>Contact Person Name *</label>
@@ -539,15 +525,14 @@ export default function Accommodation() {
                   />
                 </div>
 
-                  <button
-                    type="submit"
-                    className="neon-btn"
-                    disabled={submitting || isReadOnlyMode}
-                  >
-                    {submitting ? "Submitting..." : "Submit Request"}
-                  </button>
-                </form>
-              )}
+                <button
+                  type="submit"
+                  className="neon-btn"
+                  disabled={submitting || isReadOnlyMode}
+                >
+                  {submitting ? "Submitting..." : "Submit Request"}
+                </button>
+              </form>
             </div>
           )}
         </div>

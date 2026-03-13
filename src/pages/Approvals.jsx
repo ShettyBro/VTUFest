@@ -455,6 +455,8 @@ export default function Approvals() {
         return;
       }
 
+      const data = await response.json();
+
       if (data.success) {
         setIsLocked(data.is_locked); // college only
         setManagerLock(data.manager_lock); // global only

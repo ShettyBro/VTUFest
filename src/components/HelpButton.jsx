@@ -56,40 +56,45 @@ export default function HelpButton({ className = "", style = {} }) {
         });
     };
 
-    // Compute brochure button position: sit 42px below wherever the help button is
-    const helpTop = style?.top ?? '16px';
-    const helpRight = style?.right;
-    const helpLeft = style?.left;
-    const brochureStyle = {
-        ...(helpRight !== undefined ? { right: helpRight } : {}),
-        ...(helpLeft !== undefined ? { left: helpLeft } : {}),
-        top: `calc(${helpTop} + 42px)`,
+    // Wrapper container sits at the same position as the help button
+    const containerStyle = {
+        position: 'fixed',
+        top: style?.top ?? '16px',
+        ...(style?.right !== undefined ? { right: style.right } : {}),
+        ...(style?.left !== undefined ? { left: style.left } : {}),
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: '8px',
+        zIndex: 1000,
     };
 
     return (
         <>
-            {/* TRIGGER BUTTON */}
-            <button
-                className={`help-btn ${className}`}
-                style={style}
-                onClick={() => setShowHelp(true)}
-                aria-label="Need Help"
-            >
-                <LifeBuoy size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-                <span className="help-btn-text">Need Help?</span>
-            </button>
+            <div style={containerStyle}>
+                {/* BROCHURE BUTTON */}
+                <a
+                    href="/VTU Fest 2026.pdf"
+                    download="VTU Fest 2026.pdf"
+                    className={`help-btn brochure-btn ${className}`}
+                    style={{ position: 'static' }}
+                    aria-label="Download Brochure"
+                >
+                    <FileDown size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                    <span className="help-btn-text">Brochure</span>
+                </a>
 
-            {/* BROCHURE BUTTON */}
-            <a
-                href="/VTU Fest 2026.pdf"
-                download="VTU Fest 2026.pdf"
-                className={`help-btn brochure-btn ${className}`}
-                style={brochureStyle}
-                aria-label="Download Brochure"
-            >
-                <FileDown size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-                <span className="help-btn-text">Brochure</span>
-            </a>
+                {/* TRIGGER BUTTON */}
+                <button
+                    className={`help-btn ${className}`}
+                    style={{ position: 'static' }}
+                    onClick={() => setShowHelp(true)}
+                    aria-label="Need Help"
+                >
+                    <LifeBuoy size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                    <span className="help-btn-text">Need Help?</span>
+                </button>
+            </div>
 
             {/* MODAL */}
             {showHelp && (
