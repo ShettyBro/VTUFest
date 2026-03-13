@@ -203,8 +203,7 @@ export default function PrincipalDashboard() {
 
       if (data.success) {
         setLockStatus(data);
-        const isLocked = data.is_locked || data.manager_lock;
-        if (isLocked) {
+        if (data.is_locked) {
           setShowFinalApprovalOverlay(true);
         }
       }

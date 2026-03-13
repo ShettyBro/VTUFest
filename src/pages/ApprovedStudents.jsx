@@ -15,6 +15,7 @@ export default function ApprovedStudents() {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [isLocked, setIsLocked] = useState(false);
+  const [managerLock, setManagerLock] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -53,7 +54,8 @@ export default function ApprovedStudents() {
 
       const lockData = await lockResponse.json();
       if (lockData.success) {
-        setIsLocked(lockData.is_locked || lockData.manager_lock);
+        setIsLocked(lockData.is_locked);
+        setManagerLock(lockData.manager_lock);
       }
 
       // Fetch approved students
@@ -99,8 +101,8 @@ export default function ApprovedStudents() {
   };
 
   const handleEdit = (student) => {
-    if (isLocked) {
-      showPopup("Cannot edit after final approval", "warning");
+    if (isLocked || managerLock) {
+      showPopup("Cannot edit after final approval or when actions are locked", "warning");
       return;
     }
     setSelectedStudent({
@@ -112,8 +114,8 @@ export default function ApprovedStudents() {
   };
 
   const handleMoveToRejected = (student) => {
-    if (isLocked) {
-      showPopup("Cannot reject after final approval", "warning");
+    if (isLocked || managerLock) {
+      showPopup("Cannot reject after final approval or when actions are locked", "warning");
       return;
     }
     setSelectedStudent(student);
@@ -262,6 +264,17 @@ export default function ApprovedStudents() {
           </button>
         </div>
 
+        {isLocked && (
+          <div className="glass-card" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: '#3b82f6', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Final approval submitted. All lists are now read-only.
+          </div>
+        )}
+        {managerLock && (
+          <div className="glass-card" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: '#ef4444', marginBottom: '20px', textAlign: 'center' }}>
+            🔒 Actions are locked by Admin. All actions are read-only.
+          </div>
+        )}
+
         {students.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px" }}>
             <p>No approved students yet</p>
@@ -273,7 +286,7 @@ export default function ApprovedStudents() {
               <span>USN</span>
               <span>Email</span>
               <span>Participating Events</span>
-              {!isLocked && <span>Actions</span>}
+              {!(isLocked || managerLock) && <span>Actions</span>}
             </div>
 
             {students.map((s) => (
@@ -284,7 +297,7 @@ export default function ApprovedStudents() {
                 <span className="event-badge">
                   {s.participating_events.map((e) => e.event_name).join(", ")}
                 </span>
-                {!isLocked && (
+                {!(isLocked || managerLock) && (
                   <span>
                     <button className="edit-btn" onClick={() => handleEdit(s)}>
                       Edit
