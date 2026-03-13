@@ -817,11 +817,6 @@ input[type="file"] {
         height: 34px;
         justify-content: center;
     }
-
-    /* Hide floating help/brochure buttons on mobile — the mobile top bar handles these */
-    .help-btn-container {
-        display: none !important;
-    }
 }
 
 /* Tablet tweak — shrink the buttons slightly so they fit cleanly */
