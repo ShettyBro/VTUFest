@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext"; // Imported usePopup
+import paymentQR from "../../public/paymnetqr.png";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student";
 
@@ -60,37 +61,40 @@ function CopyField({ label, value }) {
     });
   };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '7px 0', gap: '8px' }}>
-      <p style={{ margin: 0 }}><strong>{label}:</strong> {value}</p>
-      <button
-        type="button"
-        onClick={handleCopy}
-        title={`Copy ${label}`}
-        style={{
-          flexShrink: 0,
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: '4px 6px',
-          borderRadius: '6px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          color: copied ? '#4ade80' : 'rgba(255,255,255,0.4)',
-          transition: 'color 0.2s, background 0.2s',
-        }}
-        onMouseEnter={e => { if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-        onMouseLeave={e => { if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'none'; }}
-      >
-        {copied ? (
-          <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.3px' }}>Copied!</span>
-        ) : (
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
-        )}
-      </button>
+    <div style={{ display: 'flex', alignItems: 'center', margin: '7px 0', gap: '6px', flexWrap: 'wrap' }}>
+      <p style={{ margin: 0, flexShrink: 0 }}><strong>{label}:</strong></p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span style={{ wordBreak: 'break-all' }}>{value}</span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          title={`Copy ${label}`}
+          style={{
+            flexShrink: 0,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '3px 5px',
+            borderRadius: '5px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px',
+            color: copied ? '#4ade80' : 'rgba(255,255,255,0.4)',
+            transition: 'color 0.2s, background 0.2s',
+          }}
+          onMouseEnter={e => { if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+          onMouseLeave={e => { if (!copied) e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; e.currentTarget.style.background = 'none'; }}
+        >
+          {copied ? (
+            <span style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.3px' }}>Copied!</span>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
@@ -215,6 +219,11 @@ export default function FeePayment() {
 
   // Processing state for main button
   const [initializing, setInitializing] = useState(false);
+
+  // QR modal state
+  const [showGuidelinesModal, setShowGuidelinesModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -600,12 +609,45 @@ export default function FeePayment() {
                 {/* Bank Details — always fully visible */}
                 <div className="glass-card" style={{ borderLeft: "4px solid var(--academic-gold)" }}>
                   <h3 style={{ color: "var(--academic-gold)", margin: '0 0 15px 0' }}>Bank Details</h3>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    <CopyField label="Account Name" value="Acharya Institutes CMS A/c" />
-                    <CopyField label="Account Number" value="002294600002503" />
-                    <CopyField label="IFSC" value="YESB0000022" />
-                    <CopyField label="Bank Name" value="YES BANK Limited" />
-                    <CopyField label="Branch" value="Kasturba Road, Bengaluru – 560001" />
+                  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    {/* Details column */}
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', flex: 1 }}>
+                      <CopyField label="Account Name" value="Acharya Institutes CMS A/c" />
+                      <CopyField label="Account Number" value="002294600002503" />
+                      <CopyField label="IFSC" value="YESB0000022" />
+                      <CopyField label="Bank Name" value="YES BANK Limited" />
+                      <CopyField label="Branch" value="Kasturba Road, Bengaluru – 560001" />
+                    </div>
+
+                    {/* QR thumbnail */}
+                    <div
+                      onClick={() => { setGuidelinesAccepted(false); setShowGuidelinesModal(true); }}
+                      style={{
+                        flexShrink: 0, width: '110px', cursor: 'pointer', position: 'relative',
+                        borderRadius: '10px', overflow: 'hidden',
+                        border: '1px solid rgba(212,175,55,0.35)',
+                      }}
+                      title="Click to view QR code"
+                    >
+                      <img
+                        src={paymentQR}
+                        alt="Payment QR"
+                        style={{ width: '100%', display: 'block', filter: 'blur(5px)', transform: 'scale(1.05)' }}
+                      />
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(0,0,0,0.45)', gap: '5px',
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--academic-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--academic-gold)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>
+                          Click to View
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -614,11 +656,26 @@ export default function FeePayment() {
                   <h3 style={{ margin: '0 0 15px 0' }}>Payment Amount</h3>
                   {!hasAmountFromServer && (
                     <div style={{
-                      fontSize: '0.78rem', color: '#f59e0b', background: 'rgba(245,158,11,0.08)',
-                      border: '1px solid rgba(245,158,11,0.25)', borderRadius: '6px',
-                      padding: '6px 10px', marginBottom: '12px'
+                      fontSize: '0.82rem', color: 'var(--text-secondary)',
+                      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px', padding: '12px 14px', marginBottom: '14px', lineHeight: 1.6
                     }}>
-                      ⚠️ Estimated fee — final amount confirmed after principal approval.
+                      <div style={{ color: '#f59e0b', fontWeight: 600, marginBottom: '6px', fontSize: '0.85rem' }}>
+                        📋 Fee amount will be confirmed after Principal's Final Approval
+                      </div>
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong style={{ color: 'var(--text-primary)', fontSize: '0.82rem' }}>How is the fee calculated?</strong>
+                        <div style={{ marginTop: '4px', paddingLeft: '8px', borderLeft: '2px solid rgba(212,175,55,0.3)' }}>
+                          <div>• Participating in <strong style={{ color: 'var(--academic-gold)' }}>less than 10 events</strong> → ₹4,000</div>
+                          <div>• Participating in <strong style={{ color: 'var(--academic-gold)' }}>10 or more events</strong> → ₹8,000</div>
+                        </div>
+                      </div>
+                      <div style={{
+                        background: 'rgba(33,150,243,0.08)', border: '1px solid rgba(33,150,243,0.2)',
+                        borderRadius: '6px', padding: '8px 10px', color: '#93c5fd', fontSize: '0.8rem'
+                      }}>
+                        💡 You can complete the bank transfer before the Principal's final approval — however, the payment proof can only be submitted after the Principal completes the final approval.
+                      </div>
                     </div>
                   )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -759,6 +816,109 @@ export default function FeePayment() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* GUIDELINES MODAL */}
+      {showGuidelinesModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div className="glass-card" style={{ width: '95%', maxWidth: '520px', background: 'var(--navy-dark)', border: '1px solid var(--academic-gold)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ color: 'var(--academic-gold)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px', marginTop: 0 }}>
+              📱 Payment via QR Code — Guidelines
+            </h3>
+
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px', lineHeight: 1.6 }}>
+              On scanning the QR code, you will be redirected to the <strong style={{ color: 'var(--text-primary)' }}>Acharya ERP Payment Gateway</strong>. Please fill in the following details on the payment page:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              {[
+                { field: 'Name', instruction: 'Enter your full name' },
+                { field: 'Email', instruction: 'Enter your email address' },
+                { field: 'Phone Number', instruction: 'Enter your phone number' },
+                { field: 'AUID / Other Details', instruction: 'Enter your full college name' },
+              ].map(({ field, instruction }) => (
+                <div key={field} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '12px',
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: '8px', padding: '10px 14px'
+                }}>
+                  <div style={{
+                    flexShrink: 0, background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.3)',
+                    borderRadius: '6px', padding: '3px 8px', fontSize: '0.78rem',
+                    color: 'var(--academic-gold)', fontWeight: 600, whiteSpace: 'nowrap'
+                  }}>
+                    {field}
+                  </div>
+                  <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', paddingTop: '2px' }}>
+                    {instruction}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: '10px',
+                background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px',
+                marginBottom: '20px', cursor: 'pointer'
+              }}
+              onClick={() => setGuidelinesAccepted(v => !v)}
+            >
+              <input
+                type="checkbox"
+                checked={guidelinesAccepted}
+                onChange={() => setGuidelinesAccepted(v => !v)}
+                style={{ marginTop: '2px', width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+              />
+              <label style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', cursor: 'pointer', lineHeight: 1.5 }}>
+                I have read and understood the guidelines above.
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                className="neon-btn"
+                disabled={!guidelinesAccepted}
+                onClick={() => { setShowGuidelinesModal(false); setShowQRModal(true); }}
+                style={{ opacity: guidelinesAccepted ? 1 : 0.4, cursor: guidelinesAccepted ? 'pointer' : 'not-allowed' }}
+              >
+                Continue — View QR Code →
+              </button>
+              <button
+                className="neon-btn"
+                onClick={() => setShowGuidelinesModal(false)}
+                style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR CODE MODAL */}
+      {showQRModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div className="glass-card" style={{ width: '95%', maxWidth: '380px', background: 'var(--navy-dark)', border: '1px solid var(--academic-gold)', textAlign: 'center' }}>
+            <h3 style={{ color: 'var(--academic-gold)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '14px', marginTop: 0 }}>
+              Scan to Pay
+            </h3>
+            <div style={{ padding: '10px 0 20px' }}>
+              <img
+                src={paymentQR}
+                alt="Payment QR Code"
+                style={{ width: '100%', maxWidth: '280px', borderRadius: '12px', border: '1px solid rgba(212,175,55,0.3)' }}
+              />
+            </div>
+            <button
+              className="neon-btn"
+              onClick={() => setShowQRModal(false)}
+              style={{ background: 'transparent', borderColor: '#64748b', color: '#cbd5e1', boxShadow: 'none', width: '100%' }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
