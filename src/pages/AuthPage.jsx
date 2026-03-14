@@ -691,7 +691,7 @@ export default function AuthPage({ initialView = "login" }) {
                                                     <strong style={{ display: 'block', marginBottom: '3px', color: '#fca5a5' }}>
                                                         Double-check your USN before submitting.
                                                     </strong>
-                                                    Your USN is printed on your college ID card. Enter it exactly as it appears — all 10 characters.
+                                                    Please enter your USN precisely as it is your unique identifier.
                                                     {' '}<strong>We are not responsible for incorrect USN entries.</strong>
                                                     {' '}Once registered, your USN cannot be changed.
                                                 </span>
