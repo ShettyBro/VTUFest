@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import HelpButton from "../components/HelpButton";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -22,6 +22,11 @@ const API_ENDPOINTS = {
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+// VTU USN: [1-4][2 college letters][2 year digits][2 branch letters][3 roll digits]
+// Example: 1RN22CS001, 4MH20ME045, 2KD21EC120
+const VTU_USN_REGEX = /^[1-4][A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MAGIC_NUMBERS = {
     "image/jpeg": { bytes: [0xFF, 0xD8, 0xFF], length: 3 },
@@ -80,9 +85,12 @@ export default function AuthPage({ initialView = "login" }) {
     const [showRegPassword, setShowRegPassword] = useState(false);
     const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
     const [regForm, setRegForm] = useState({
-        usn: "", fullName: "", email: "", phone: "", gender: "",
+        usn: "", fullName: "", email: "", confirmEmail: "", phone: "", gender: "",
         collegeId: "", password: "", confirmPassword: ""
     });
+
+    // Debounce ref for USN check
+    const usnDebounceRef = useRef(null);
 
     // Registration Progress State
     const [regStep, setRegStep] = useState(1); // 1: Details, 2: Photo & Password
@@ -91,6 +99,7 @@ export default function AuthPage({ initialView = "login" }) {
 
     // Validation State
     const [usnStatus, setUsnStatus] = useState("idle"); // idle, checking, valid, invalid
+    const [emailError, setEmailError] = useState("");
 
     // Photo Upload State
     const [photoFile, setPhotoFile] = useState(null);
@@ -242,42 +251,65 @@ export default function AuthPage({ initialView = "login" }) {
         }
     };
 
-    const checkUSN = async (val) => {
+    const checkUSN = (val) => {
         const usn = val.toUpperCase();
         setRegForm(p => ({ ...p, usn }));
-        if (!usn || usn.length < 5) {
-            setUsnStatus("idle");
+
+        // Clear any pending debounce
+        if (usnDebounceRef.current) clearTimeout(usnDebounceRef.current);
+
+        if (!usn) { setUsnStatus("idle"); setGlobalError(""); return; }
+
+        // Validate VTU USN format before hitting the API
+        // Format: [1-4][2 college letters][2 year digits][2 branch letters][3 roll digits]
+        // Example: 1RN22CS001
+        if (!VTU_USN_REGEX.test(usn)) {
+            setUsnStatus("invalid");
+            setGlobalError("Invalid USN format. Expected format: 1RN22CS001 (Region + CollegeCode + Year + Branch + RollNo)");
             return;
         }
 
+        // Format is valid — debounce the API call by 600ms
         setUsnStatus("checking");
-        try {
-            const res = await fetch(API_ENDPOINTS.checkUsn, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "check_usn", usn })
-            });
-            const data = await res.json();
+        setGlobalError("");
+        usnDebounceRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(API_ENDPOINTS.checkUsn, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "check_usn", usn })
+                });
+                const data = await res.json();
 
-            if (data.data?.exists) {
-                setUsnStatus("invalid");
-                setGlobalError("USN already registered! Please login.");
-            } else {
-                setUsnStatus("valid");
-                setGlobalError("");
-                fetchColleges(); // Pre-fetch colleges if USN is valid
+                if (data.data?.exists) {
+                    setUsnStatus("invalid");
+                    setGlobalError("USN already registered! Please login.");
+                } else {
+                    setUsnStatus("valid");
+                    setGlobalError("");
+                    fetchColleges();
+                }
+            } catch (e) {
+                setUsnStatus("idle");
             }
-        } catch (e) {
-            setUsnStatus("idle");
-        }
+        }, 600);
     };
 
     const handleRegStep1 = async (e) => {
         e.preventDefault();
         if (usnStatus !== "valid") return setGlobalError("Please enter a valid, new USN.");
+        if (!EMAIL_REGEX.test(regForm.email.trim())) {
+            setEmailError("Please enter a valid email address.");
+            return setGlobalError("Please enter a valid email address.");
+        }
+        if (regForm.email.trim().toLowerCase() !== regForm.confirmEmail.trim().toLowerCase()) {
+            setEmailError("Emails do not match. Please re-enter carefully.");
+            return setGlobalError("Emails do not match. Please re-enter carefully.");
+        }
         if (!isValidIndianPhone(regForm.phone)) {
             return setGlobalError("Phone must be exactly 10 digits and start with 6, 7, 8, or 9");
         }
+        setEmailError("");
         setGlobalError("");
         setLoading(true);
 
@@ -458,7 +490,7 @@ export default function AuthPage({ initialView = "login" }) {
                     setView("login");
                     setRegStep(1);
                     setRegForm({
-                        usn: "", fullName: "", email: "", phone: "", gender: "",
+                        usn: "", fullName: "", email: "", confirmEmail: "", phone: "", gender: "",
                         collegeId: "", password: "", confirmPassword: ""
                     });
                     setGlobalSuccess("");
@@ -638,17 +670,60 @@ export default function AuthPage({ initialView = "login" }) {
                                     {/* STEP 1: DETAILS */}
                                     {regStep === 1 && (
                                         <form onSubmit={handleRegStep1}>
+                                            {/* ── USN WARNING BANNER ── */}
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: '10px',
+                                                background: 'rgba(239,68,68,0.08)',
+                                                border: '1px solid rgba(239,68,68,0.35)',
+                                                borderLeft: '3px solid #ef4444',
+                                                borderRadius: '8px',
+                                                padding: '10px 14px',
+                                                marginBottom: '14px',
+                                                lineHeight: 1.55,
+                                            }}>
+                                                <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: '1px' }}>⚠️</span>
+                                                <span style={{
+                                                    color: 'rgba(252,165,165,0.95)',
+                                                    fontSize: 'clamp(0.72rem, 2.4vw, 0.8rem)',
+                                                }}>
+                                                    <strong style={{ display: 'block', marginBottom: '3px', color: '#fca5a5' }}>
+                                                        Double-check your USN before submitting.
+                                                    </strong>
+                                                    Your USN is printed on your college ID card. Enter it exactly as it appears — all 10 characters.
+                                                    {' '}<strong>We are not responsible for incorrect USN entries.</strong>
+                                                    {' '}Once registered, your USN cannot be changed.
+                                                </span>
+                                            </div>
+
                                             <div className="input-group">
                                                 <label>USN *</label>
                                                 <input
                                                     name="usn"
                                                     value={regForm.usn}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, usn: e.target.value.toUpperCase() }))}
-                                                    onBlur={e => checkUSN(e.target.value)}
-                                                    placeholder="VTU2026CS001"
+                                                    onChange={e => checkUSN(e.target.value.toUpperCase())}
+                                                    placeholder="e.g. 1RN22CS001"
+                                                    maxLength={10}
+                                                    autoCapitalize="characters"
+                                                    autoCorrect="off"
+                                                    autoComplete="off"
+                                                    spellCheck={false}
+                                                    inputMode="text"
+                                                    style={{
+                                                        borderColor: usnStatus === "invalid" ? '#ef4444' : usnStatus === "valid" ? '#4ade80' : '',
+                                                        letterSpacing: '0.1em',
+                                                        fontFamily: 'monospace',
+                                                        fontSize: '1rem',
+                                                        textTransform: 'uppercase'
+                                                    }}
                                                 />
-                                                {usnStatus === "checking" && <small>Checking...</small>}
-                                                {usnStatus === "valid" && <small style={{ color: '#a8edea' }}>USN Available</small>}
+                                                <small style={{ color: 'rgba(168,237,234,0.6)', fontSize: 'clamp(0.68rem, 2.2vw, 0.75rem)' }}>
+                                                    Format: Region(1) + College(RN) + Year(22) + Branch(CS) + Roll(001) → <strong style={{ color: 'rgba(168,237,234,0.85)' }}>1RN22CS001</strong>
+                                                </small>
+                                                {usnStatus === "checking" && <small style={{ color: 'rgba(168,237,234,0.8)' }}>⏳ Checking availability...</small>}
+                                                {usnStatus === "valid" && <small style={{ color: '#4ade80' }}>✅ USN is valid and available</small>}
+                                                {usnStatus === "invalid" && <small style={{ color: '#ef4444' }}>⛔ {globalError || "Invalid USN format"}</small>}
                                             </div>
 
                                             <div className="input-group">
@@ -697,11 +772,46 @@ export default function AuthPage({ initialView = "login" }) {
                                                     name="email"
                                                     type="email"
                                                     value={regForm.email}
-                                                    onChange={e => setRegForm(prev => ({ ...prev, email: e.target.value }))}
+                                                    onChange={e => {
+                                                        setRegForm(prev => ({ ...prev, email: e.target.value }));
+                                                        setEmailError("");
+                                                    }}
                                                     disabled={usnStatus !== "valid"}
-                                                    style={{ opacity: usnStatus !== "valid" ? 0.5 : 1 }}
+                                                    style={{
+                                                        opacity: usnStatus !== "valid" ? 0.5 : 1,
+                                                        borderColor: emailError ? '#ef4444' : '',
+                                                    }}
                                                     required
                                                 />
+                                                {emailError && (
+                                                    <small style={{ color: '#ef4444', fontSize: '0.75rem' }}>⛔ {emailError}</small>
+                                                )}
+                                            </div>
+
+                                            <div className="input-group">
+                                                <label>Confirm Email *</label>
+                                                <input
+                                                    name="confirmEmail"
+                                                    type="email"
+                                                    value={regForm.confirmEmail}
+                                                    onChange={e => {
+                                                        setRegForm(prev => ({ ...prev, confirmEmail: e.target.value }));
+                                                        setEmailError("");
+                                                    }}
+                                                    disabled={usnStatus !== "valid"}
+                                                    placeholder="Re-enter your email"
+                                                    style={{
+                                                        opacity: usnStatus !== "valid" ? 0.5 : 1,
+                                                        borderColor: regForm.confirmEmail && regForm.email.trim().toLowerCase() !== regForm.confirmEmail.trim().toLowerCase() ? '#ef4444' : regForm.confirmEmail && regForm.email.trim().toLowerCase() === regForm.confirmEmail.trim().toLowerCase() ? '#4ade80' : '',
+                                                    }}
+                                                    required
+                                                />
+                                                {regForm.confirmEmail && regForm.email.trim().toLowerCase() !== regForm.confirmEmail.trim().toLowerCase() && (
+                                                    <small style={{ color: '#ef4444', fontSize: '0.75rem' }}>⛔ Emails do not match</small>
+                                                )}
+                                                {regForm.confirmEmail && regForm.email.trim().toLowerCase() === regForm.confirmEmail.trim().toLowerCase() && (
+                                                    <small style={{ color: '#4ade80', fontSize: '0.75rem' }}>✅ Emails match</small>
+                                                )}
                                             </div>
 
                                             <div className="input-group">
@@ -909,6 +1019,7 @@ export default function AuthPage({ initialView = "login" }) {
                                                     setUploadStatus("idle");
                                                     setUploadProgress(0);
                                                     setGlobalError("");
+                                                    setEmailError("");
                                                 }}
                                                 disabled={loading}
                                                 style={{ marginTop: '8px' }}
