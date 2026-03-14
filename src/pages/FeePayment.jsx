@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext"; // Imported usePopup
-import paymentQR from "../../public/paymnetqr.png";
+import paymentQR from "../assets/images/paymentQR.png";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student";
 
@@ -609,7 +609,7 @@ export default function FeePayment() {
                 {/* Bank Details — always fully visible */}
                 <div className="glass-card" style={{ borderLeft: "4px solid var(--academic-gold)" }}>
                   <h3 style={{ color: "var(--academic-gold)", margin: '0 0 15px 0' }}>Bank Details</h3>
-                  <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', gap: '24px', alignItems: 'stretch' }}>
                     {/* Details column */}
                     <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', flex: 1 }}>
                       <CopyField label="Account Name" value="Acharya Institutes CMS A/c" />
@@ -619,34 +619,43 @@ export default function FeePayment() {
                       <CopyField label="Branch" value="Kasturba Road, Bengaluru – 560001" />
                     </div>
 
-                    {/* QR thumbnail */}
-                    <div
-                      onClick={() => { setGuidelinesAccepted(false); setShowGuidelinesModal(true); }}
-                      style={{
-                        flexShrink: 0, width: '110px', cursor: 'pointer', position: 'relative',
-                        borderRadius: '10px', overflow: 'hidden',
-                        border: '1px solid rgba(212,175,55,0.35)',
-                      }}
-                      title="Click to view QR code"
-                    >
-                      <img
-                        src={paymentQR}
-                        alt="Payment QR"
-                        style={{ width: '100%', display: 'block', filter: 'blur(5px)', transform: 'scale(1.05)' }}
-                      />
-                      <div style={{
-                        position: 'absolute', inset: 0,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        background: 'rgba(0,0,0,0.45)', gap: '5px',
-                      }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--academic-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--academic-gold)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>
-                          Click to View
-                        </span>
+                    {/* Divider */}
+                    <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
+
+                    {/* QR column — centered in its space */}
+                    <div style={{ flexShrink: 0, width: '140px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <div
+                        onClick={() => { setGuidelinesAccepted(false); setShowGuidelinesModal(true); }}
+                        style={{
+                          width: '130px', height: '130px', cursor: 'pointer', position: 'relative',
+                          borderRadius: '10px', overflow: 'hidden',
+                          border: '1px solid rgba(212,175,55,0.35)',
+                          flexShrink: 0,
+                        }}
+                        title="Click to view QR code"
+                      >
+                        <img
+                          src={paymentQR}
+                          alt="Payment QR"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'blur(5px)', transform: 'scale(1.08)' }}
+                        />
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                          background: 'rgba(0,0,0,0.45)', gap: '6px',
+                        }}>
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--academic-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                          <span style={{ fontSize: '0.68rem', color: 'var(--academic-gold)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>
+                            Click to View
+                          </span>
+                        </div>
                       </div>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, letterSpacing: '0.3px' }}>
+                        Pay Online
+                      </span>
                     </div>
                   </div>
                 </div>
