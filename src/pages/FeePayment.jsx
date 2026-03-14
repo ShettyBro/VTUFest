@@ -524,27 +524,6 @@ export default function FeePayment() {
           </div>
         </div>
 
-        {/* LOCKED STATE */}
-        {isPaymentLocked && !hasStatus && (
-          <div className="glass-card" style={{ maxWidth: '600px', margin: '40px auto', textAlign: 'center', padding: '40px 32px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
-            <h3 style={{ color: 'var(--academic-gold)', marginBottom: '12px', fontSize: '1.3rem' }}>
-              Payment Portal Not Yet Open
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px' }}>
-              {paymentInfo.message || "Your college's final approval is pending. Fee payment will be enabled once the principal completes the final approval process."}
-            </p>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '8px',
-              background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.25)',
-              borderRadius: '8px', padding: '10px 18px',
-              color: 'var(--academic-gold)', fontSize: '0.85rem', fontWeight: '500'
-            }}>
-              <span>📋</span> Please check back after the principal grants final approval.
-            </div>
-          </div>
-        )}
-
         {/* PAYMENT ALREADY SUBMITTED (STATUS VIEW) */}
         {hasStatus && !(isRejectedStatus && can_reapply) && (
           <div className="glass-card" style={{ maxWidth: "800px", margin: "0 auto", textAlign: 'center' }}>
@@ -607,97 +586,130 @@ export default function FeePayment() {
           </div>
         )}
 
-        {/* MAIN FORM - Show if NOT locked and (NO status OR is resubmission path) */}
-        {!isPaymentLocked && (!hasStatus || (isRejectedStatus && can_reapply)) && (
-          <>
-            {/* INFO CARDS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-              <div className="glass-card" style={{ borderLeft: "4px solid var(--academic-gold)" }}>
-                <h3 style={{ color: "var(--academic-gold)", margin: '0 0 15px 0' }}>Bank Details</h3>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  <CopyField label="Account Name" value="Acharya Institutes CMS A/c" />
-                  <CopyField label="Account Number" value="002294600002503" />
-                  <CopyField label="IFSC" value="YESB0000022" />
-                  <CopyField label="Bank Name" value="YES BANK Limited" />
-                  <CopyField label="Branch" value="Kasturba Road, Bengaluru – 560001" />
-                </div>
-              </div>
+        {/* MAIN CONTENT - Always visible */}
+        {(!hasStatus || (isRejectedStatus && can_reapply)) && (() => {
+          // Amount logic: use backend value if available, else fallback by event count
+          const eventCount = paymentInfo.participating_event_keys?.length ?? paymentInfo.total_events ?? 0;
+          const hasAmountFromServer = paymentInfo.amount_to_pay != null;
+          const displayAmount = hasAmountFromServer ? paymentInfo.amount_to_pay : (eventCount > 10 ? 8000 : 4000);
 
-              <div className="glass-card">
-                <h3 style={{ margin: '0 0 15px 0' }}>Payment Amount</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontSize: '2rem', color: 'var(--academic-gold)', fontWeight: 'bold' }}>₹{paymentInfo.amount_to_pay?.toLocaleString()}</div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Total Fee</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{paymentInfo.total_events}</div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Events</div>
+          return (
+            <>
+              {/* INFO CARDS */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+                {/* Bank Details — always fully visible */}
+                <div className="glass-card" style={{ borderLeft: "4px solid var(--academic-gold)" }}>
+                  <h3 style={{ color: "var(--academic-gold)", margin: '0 0 15px 0' }}>Bank Details</h3>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    <CopyField label="Account Name" value="Acharya Institutes CMS A/c" />
+                    <CopyField label="Account Number" value="002294600002503" />
+                    <CopyField label="IFSC" value="YESB0000022" />
+                    <CopyField label="Bank Name" value="YES BANK Limited" />
+                    <CopyField label="Branch" value="Kasturba Road, Bengaluru – 560001" />
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {isPrincipal ? (
-              <div className="glass-card" style={{ textAlign: 'center' }}>
-                <p>Only Managers can upload payment proof.</p>
-              </div>
-            ) : (
-              <div className="glass-card" style={{ maxWidth: '700px', margin: '0 auto' }}>
-                <h3 style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', marginTop: 0 }}>Enter Payment Details</h3>
-
-                <div>
-                  <label style={labelStyle}>UTR / Reference Number *</label>
-                  <input
-                    type="text"
-                    value={utrNumber}
-                    onChange={(e) => setUtrNumber(e.target.value)}
-                    style={inputStyle}
-                    placeholder="Enter UTR Number"
-                  />
-                </div>
-
-                <div style={{ marginTop: "20px", display: "flex", alignItems: "flex-start", gap: "10px", padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                  <input
-                    type="checkbox"
-                    id="declaration"
-                    checked={consentChecked}
-                    onChange={(e) => setConsentChecked(e.target.checked)}
-                    style={{ marginTop: "3px", width: "16px", height: "16px", cursor: "pointer" }}
-                  />
-                  <label htmlFor="declaration" style={{ fontSize: "0.9rem", color: "var(--text-secondary)", cursor: "pointer", lineHeight: "1.4" }}>
-                    I hereby declare that the payment details provided are accurate and the attached proof is authentic. I understand that this payment can only be uploaded once and cannot be modified later.
-                  </label>
-                </div>
-
-                <button
-                  className="neon-btn"
-                  onClick={openUploadModal}
-                  disabled={initializing || !consentChecked || !utrNumber.trim()}
-                  style={{ marginTop: '25px', width: '100%' }}
-                >
-                  {initializing ? "Processing..." : "Upload Payment Proof →"}
-                </button>
-              </div>
-            )}
-
-            {/* Events List */}
-            <div className="glass-card" style={{ marginTop: '30px' }}>
-              <h4 style={{ marginTop: 0 }}>Participating Events</h4>
-              {paymentInfo.participating_event_keys && paymentInfo.participating_event_keys.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '10px' }}>
-                  {paymentInfo.participating_event_keys.map(key => (
-                    <div key={key} style={{ padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', fontSize: '0.9rem' }}>
-                      {EVENT_NAMES[key] || key}
+                {/* Payment Amount — blurred with fallback if no server data */}
+                <div className="glass-card">
+                  <h3 style={{ margin: '0 0 15px 0' }}>Payment Amount</h3>
+                  {!hasAmountFromServer && (
+                    <div style={{
+                      fontSize: '0.78rem', color: '#f59e0b', background: 'rgba(245,158,11,0.08)',
+                      border: '1px solid rgba(245,158,11,0.25)', borderRadius: '6px',
+                      padding: '6px 10px', marginBottom: '12px'
+                    }}>
+                      ⚠️ Estimated fee — final amount confirmed after principal approval.
                     </div>
-                  ))}
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={!hasAmountFromServer ? { filter: 'blur(4px)', userSelect: 'none', pointerEvents: 'none' } : {}}>
+                      <div style={{ fontSize: '2rem', color: 'var(--academic-gold)', fontWeight: 'bold' }}>
+                        ₹{displayAmount.toLocaleString()}
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        {hasAmountFromServer ? 'Total Fee' : `Fee for ${eventCount <= 10 ? '≤10' : '>10'} events`}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', ...(!hasAmountFromServer ? { filter: 'blur(4px)', userSelect: 'none', pointerEvents: 'none' } : {}) }}>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{hasAmountFromServer ? paymentInfo.total_events : '–'}</div>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Events</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* UPLOAD SECTION — locked if can_upload is false, else normal form */}
+              {isPaymentLocked ? (
+                <div className="glass-card" style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'center', padding: '40px 32px' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🔒</div>
+                  <h3 style={{ color: 'var(--academic-gold)', marginBottom: '10px', fontSize: '1.1rem' }}>
+                    Payment Upload Locked
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.6', margin: '0 auto', maxWidth: '420px' }}>
+                    {paymentInfo.message || "You'll be able to upload the payment proof once the Principal completes the final approval process."}
+                  </p>
+                </div>
+              ) : isPrincipal ? (
+                <div className="glass-card" style={{ textAlign: 'center' }}>
+                  <p>Only Managers can upload payment proof.</p>
                 </div>
               ) : (
-                <p style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>No events participation found.</p>
+                <div className="glass-card" style={{ maxWidth: '700px', margin: '0 auto' }}>
+                  <h3 style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '15px', marginTop: 0 }}>Enter Payment Details</h3>
+
+                  <div>
+                    <label style={labelStyle}>UTR / Reference Number *</label>
+                    <input
+                      type="text"
+                      value={utrNumber}
+                      onChange={(e) => setUtrNumber(e.target.value)}
+                      style={inputStyle}
+                      placeholder="Enter UTR Number"
+                    />
+                  </div>
+
+                  <div style={{ marginTop: "20px", display: "flex", alignItems: "flex-start", gap: "10px", padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                    <input
+                      type="checkbox"
+                      id="declaration"
+                      checked={consentChecked}
+                      onChange={(e) => setConsentChecked(e.target.checked)}
+                      style={{ marginTop: "3px", width: "16px", height: "16px", cursor: "pointer" }}
+                    />
+                    <label htmlFor="declaration" style={{ fontSize: "0.9rem", color: "var(--text-secondary)", cursor: "pointer", lineHeight: "1.4" }}>
+                      I hereby declare that the payment details provided are accurate and the attached proof is authentic. I understand that this payment can only be uploaded once and cannot be modified later.
+                    </label>
+                  </div>
+
+                  <button
+                    className="neon-btn"
+                    onClick={openUploadModal}
+                    disabled={initializing || !consentChecked || !utrNumber.trim()}
+                    style={{ marginTop: '25px', width: '100%' }}
+                  >
+                    {initializing ? "Processing..." : "Upload Payment Proof →"}
+                  </button>
+                </div>
               )}
-            </div>
-          </>
-        )}
+
+              {/* Events List */}
+              <div className="glass-card" style={{ marginTop: '30px' }}>
+                <h4 style={{ marginTop: 0 }}>Participating Events</h4>
+                {paymentInfo.participating_event_keys && paymentInfo.participating_event_keys.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '10px' }}>
+                    {paymentInfo.participating_event_keys.map(key => (
+                      <div key={key} style={{ padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', fontSize: '0.9rem' }}>
+                        {EVENT_NAMES[key] || key}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>No events participation found.</p>
+                )}
+              </div>
+            </>
+          );
+        })()}
 
       </div>
 
