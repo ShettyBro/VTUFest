@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/layout/layout";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext"; // Imported usePopup
-import paymentQR from "../assets/images/paymentQR.png";
+import paymentQR from "../../public/paymnetqr.png";
 
 const API_BASE_URL = "https://api.vtufest2026.acharyahabba.com/api/student";
 
