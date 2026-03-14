@@ -467,7 +467,7 @@ export default function Accommodation() {
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: '8px' }}>
                   <small style={{ color: 'var(--accent-warning)', fontSize: '0.85rem' }}>
-                    ⚠️ Maximum total allowed: Male + Female = 45
+                    ⚠️ Maximum total allowed: Male + Female = 45 (Including Accompanying Persons and Faculty)
                   </small>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>

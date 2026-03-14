@@ -224,8 +224,8 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                 {/* Requested totals */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "18px" }}>
                     {[
-                        { label: "Requested Boys", value: reqBoys, color: "#60a5fa" },
-                        { label: "Requested Girls", value: reqGirls, color: "#fb7185" },
+                        { label: "Requested Male", value: reqBoys, color: "#60a5fa" },
+                        { label: "Requested Female", value: reqGirls, color: "#fb7185" },
                         { label: "Total People", value: reqTotal, color: "#a78bfa" },
                     ].map(c => (
                         <div key={c.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "14px", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -242,8 +242,8 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
                         {[
-                            { label: "Boys", sum: sumBoys, total: reqBoys, color: "#60a5fa", ok: boysOk },
-                            { label: "Girls", sum: sumGirls, total: reqGirls, color: "#fb7185", ok: girlsOk },
+                            { label: "Male", sum: sumBoys, total: reqBoys, color: "#60a5fa", ok: boysOk },
+                            { label: "Female", sum: sumGirls, total: reqGirls, color: "#fb7185", ok: girlsOk },
                             { label: "Total", sum: sumBoys + sumGirls, total: reqTotal, color: "#a78bfa", ok: boysOk && girlsOk },
                         ].map(p => {
                             const over = p.sum > p.total;
@@ -269,8 +269,8 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                         </div>
                     ) : (
                         <div style={{ color: "#f59e0b", fontSize: "0.78rem", marginTop: "10px" }}>
-                            {!boysOk && `⚠ Boys: assigned ${sumBoys}, need ${reqBoys}. `}
-                            {!girlsOk && `⚠ Girls: assigned ${sumGirls}, need ${reqGirls}. `}
+                            {!boysOk && `⚠ Male: assigned ${sumBoys}, need ${reqBoys}. `}
+                            {!girlsOk && `⚠ Female: assigned ${sumGirls}, need ${reqGirls}. `}
                             Totals must match exactly to save and approve.
                         </div>
                     )}
@@ -361,7 +361,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
 
                                     {/* Boys */}
                                     <div>
-                                        <label style={{ color: "#60a5fa", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👦 Boys Allotted <span style={{ color: "#f87171" }}>*</span></label>
+                                        <label style={{ color: "#60a5fa", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👦 Male Allotted <span style={{ color: "#f87171" }}>*</span></label>
                                         <input type="number" min="0"
                                             value={a.allotted_boys}
                                             onChange={e => upd(idx, "allotted_boys", e.target.value)}
@@ -371,7 +371,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
 
                                     {/* Girls */}
                                     <div>
-                                        <label style={{ color: "#fb7185", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👧 Girls Allotted <span style={{ color: "#f87171" }}>*</span></label>
+                                        <label style={{ color: "#fb7185", fontSize: "0.78rem", fontWeight: 700, display: "block", marginBottom: "4px" }}>👧 Female Allotted <span style={{ color: "#f87171" }}>*</span></label>
                                         <input type="number" min="0"
                                             value={a.allotted_girls}
                                             onChange={e => upd(idx, "allotted_girls", e.target.value)}
@@ -409,7 +409,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                     <button
                         onClick={handleSave}
                         disabled={!canSave || saving}
-                        title={!canSave ? "Boys and girls totals must match requested amounts exactly" : "Save allotments and approve this request"}
+                        title={!canSave ? "Male and Female totals must match requested amounts exactly" : "Save allotments and approve this request"}
                         style={{
                             flex: 1, padding: "13px", fontWeight: 700, fontSize: "0.92rem",
                             borderRadius: "8px", transition: "all 0.2s",
@@ -548,7 +548,7 @@ export default function EMAccommodation() {
                         style={{ flex: 1, minWidth: "200px", padding: "8px 14px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.88rem", outline: "none" }} />
 
                     <div style={{ color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>
-                        {filtered.length} shown &nbsp;·&nbsp; 👦 {totalBoys} boys &nbsp;·&nbsp; 👧 {totalGirls} girls
+                        {filtered.length} shown &nbsp;·&nbsp; 👦 {totalBoys} Male &nbsp;·&nbsp; 👧 {totalGirls} Female
                     </div>
                 </div>
 
@@ -561,7 +561,7 @@ export default function EMAccommodation() {
                             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1000px" }}>
                                 <thead>
                                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                                        {["College", "Code", "Status", "Boys", "Girls", "Total", "Allotted", "Applied At", "❌ Reject", "🏨 Assign & Approve", ""].map(h => (
+                                        {["College", "Code", "Status", "Male", "Female", "Total", "Allotted", "Applied At", "❌ Reject", "🏨 Assign & Approve", ""].map(h => (
                                             <th key={h} style={{ padding: "13px 14px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.73rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.4px", whiteSpace: "nowrap" }}>{h}</th>
                                         ))}
                                     </tr>

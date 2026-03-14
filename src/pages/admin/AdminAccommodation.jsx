@@ -81,10 +81,10 @@ function DetailsModal({ request, token, onClose }) {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px" }}>
 
                         {/* Requested counts */}
-                        <Field label="Requested Boys">
+                        <Field label="Requested Male">
                             <div style={{ color: "#60a5fa", fontWeight: 800, fontSize: "1.4rem" }}>{request.total_boys}</div>
                         </Field>
-                        <Field label="Requested Girls">
+                        <Field label="Requested Female">
                             <div style={{ color: "#fb7185", fontWeight: 800, fontSize: "1.4rem" }}>{request.total_girls}</div>
                         </Field>
                         <Field label="Total Persons">
@@ -237,10 +237,10 @@ function DetailsModal({ request, token, onClose }) {
                             {/* Allotment total summary */}
                             <div style={{ background: "rgba(167,139,250,0.07)", border: "1px solid rgba(167,139,250,0.25)", borderRadius: "10px", padding: "12px 18px", display: "flex", gap: "24px", alignItems: "center" }}>
                                 <span style={{ color: "var(--text-muted)", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase" }}>Allotment Totals</span>
-                                <span style={{ color: "#60a5fa", fontWeight: 700 }}>👦 {allotments.reduce((s, a) => s + parseInt(a.allotted_boys || 0), 0)} boys</span>
-                                <span style={{ color: "#fb7185", fontWeight: 700 }}>👧 {allotments.reduce((s, a) => s + parseInt(a.allotted_girls || 0), 0)} girls</span>
+                                <span style={{ color: "#60a5fa", fontWeight: 700 }}>👦 {allotments.reduce((s, a) => s + parseInt(a.allotted_boys || 0), 0)} Male </span>
+                                <span style={{ color: "#fb7185", fontWeight: 700 }}>👧 {allotments.reduce((s, a) => s + parseInt(a.allotted_girls || 0), 0)} Female </span>
                                 <span style={{ color: "#a78bfa", fontWeight: 800 }}>
-                                    {allotments.reduce((s, a) => s + parseInt(a.allotted_boys || 0) + parseInt(a.allotted_girls || 0), 0)} total
+                                    {allotments.reduce((s, a) => s + parseInt(a.allotted_boys || 0) + parseInt(a.allotted_girls || 0), 0)} Total
                                 </span>
                                 <span style={{ marginLeft: "auto", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "8px", padding: "3px 12px", fontSize: "0.78rem", fontWeight: 700 }}>
                                     {allotments.length} location{allotments.length !== 1 ? "s" : ""}
@@ -328,11 +328,11 @@ export default function AdminAccommodation() {
                         <SumCard icon="⏳" label="Pending" value={summary.pending} color="#f59e0b" />
                         <SumCard icon="✅" label="Approved" value={summary.approved} color="#10b981" />
                         <SumCard icon="❌" label="Rejected" value={summary.rejected} color="#f87171" />
-                        <SumCard icon="👦" label="Total Boys" value={summary.total_boys} color="#60a5fa" />
-                        <SumCard icon="👧" label="Total Girls" value={summary.total_girls} color="#fb7185" />
+                        <SumCard icon="👦" label="Total Male" value={summary.total_boys} color="#60a5fa" />
+                        <SumCard icon="👧" label="Total Female" value={summary.total_girls} color="#fb7185" />
                         <SumCard icon="👥" label="Total Persons" value={summary.total_persons} color="#a78bfa" />
-                        <SumCard icon="✅👦" label="Approved Boys" value={summary.approved_boys} color="#10b981" />
-                        <SumCard icon="✅👧" label="Approved Girls" value={summary.approved_girls} color="#10b981" />
+                        <SumCard icon="✅👦" label="Approved Male" value={summary.approved_boys} color="#10b981" />
+                        <SumCard icon="✅👧" label="Approved Female" value={summary.approved_girls} color="#10b981" />
                     </div>
                 )}
 
@@ -363,7 +363,7 @@ export default function AdminAccommodation() {
 
                     {filter !== "ALL" && (
                         <div style={{ color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>
-                            Showing {filtered.length} · 👦 {totalBoys} boys · 👧 {totalGirls} girls
+                            Showing {filtered.length} · 👦 {totalBoys} Male · 👧 {totalGirls} Female
                         </div>
                     )}
                 </div>
@@ -377,7 +377,7 @@ export default function AdminAccommodation() {
                             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
                                 <thead>
                                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                                        {["College", "Code", "Status", "Boys", "Girls", "Total", "Applied At", "Details"].map(h => (
+                                        {["College", "Code", "Status", "Male", "Female", "Total", "Applied At", "Details"].map(h => (
                                             <th key={h} style={{ padding: "13px 14px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>{h}</th>
                                         ))}
                                     </tr>
