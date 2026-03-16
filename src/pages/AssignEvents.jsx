@@ -53,7 +53,7 @@ const EVENT_LIMITS = {
 
   group_song_indian: { participants: 6, accompanists: 3 },
   group_song_western: { participants: 6, accompanists: 3 },
-  folk_orchestra: { participants: 9, accompanists: 3 },
+  folk_orchestra: { participants: 12, accompanists: 3 },
   folk_tribal_dance: { participants: 10, accompanists: 5 },
 
   classical_dance_solo: { participants: 1, accompanists: 3 },
