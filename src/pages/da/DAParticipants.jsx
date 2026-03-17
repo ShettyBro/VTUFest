@@ -208,24 +208,54 @@ function EventsEditor({ events, onChange }) {
 }
 
 // ── DocUploader — file upload to Azure via DA backend SAS ────────────────────
+// Matches the project's established FileUploadField pattern from AccompanistForm.jsx
+
+const ALLOWED_DOC_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const MAX_DOC_SIZE = 5 * 1024 * 1024; // 5 MB
 
 function DocUploader({ label, fieldKey, value, onChange, collegeCode, fullName, phone, token }) {
-    const [uploading, setUploading] = useState(false);
+    const [pickedFile, setPickedFile]   = useState(null);
+    const [preview, setPreview]         = useState(null); // data-url | "PDF" | null
+    const [status, setStatus]           = useState("idle"); // idle | uploading | done | failed
     const { showPopup } = usePopup();
-    const handleFile = async (e) => {
+
+    const handlePick = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        setUploading(true);
+        if (!ALLOWED_DOC_TYPES.includes(file.type)) {
+            showPopup("Only JPG, PNG or PDF allowed", "warning");
+            e.target.value = "";
+            return;
+        }
+        if (file.size > MAX_DOC_SIZE) {
+            showPopup("File must be less than 5 MB", "warning");
+            e.target.value = "";
+            return;
+        }
+        setPickedFile(file);
+        setStatus("idle");
+        if (file.type === "application/pdf") {
+            setPreview("PDF");
+        } else {
+            const reader = new FileReader();
+            reader.onload = (ev) => setPreview(ev.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleUpload = async () => {
+        if (!pickedFile) return;
+        setStatus("uploading");
         try {
             const r1 = await daFetch(`${API_BASE}/api/da/master-participants/upload-url`, token, {
                 method: "POST",
                 body: JSON.stringify({
-                    college_code: collegeCode,
-                    full_name: fullName,
+                    college_code: collegeCode || "DA",
+                    full_name: fullName || "participant",
                     phone: phone || "nophone",
                     document_type: fieldKey,
-                    file_name: file.name,
-                    content_type: file.type,
+                    file_name: pickedFile.name,
+                    content_type: pickedFile.type,
                 }),
             });
             const j1 = await r1.json();
@@ -233,38 +263,99 @@ function DocUploader({ label, fieldKey, value, onChange, collegeCode, fullName, 
             const { upload_url, blob_url } = j1.data || j1;
             const r2 = await fetch(upload_url, {
                 method: "PUT",
-                headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": file.type },
-                body: file,
+                headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": pickedFile.type },
+                body: pickedFile,
             });
             if (!r2.ok) throw new Error("Upload to storage failed");
             onChange(fieldKey, blob_url);
-            showPopup(`${label} uploaded successfully`, "success");
+            setStatus("done");
         } catch (err) {
             showPopup(err.message, "error");
-        } finally {
-            setUploading(false);
-            e.target.value = "";
+            setStatus("failed");
         }
     };
+
+    const inputId = `da-doc-${fieldKey}`;
+
     return (
-        <div>
-            <label className="da-label">{label}</label>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                <input
-                    type="file"
-                    accept="image/jpeg,image/png,application/pdf"
-                    onChange={handleFile}
-                    disabled={uploading}
-                    style={{ color: "#94a3b8", fontSize: "0.82rem", flex: 1, minWidth: 0 }}
-                />
-                {uploading && <span className="da-spinner" />}
-                {value && !uploading && (
-                    <a href={value} target="_blank" rel="noopener noreferrer"
-                       style={{ color: "#c084fc", fontSize: "0.75rem", whiteSpace: "nowrap" }}>
-                        ✓ View
-                    </a>
+        <div style={{
+            padding: "14px",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px dashed rgba(255,255,255,0.15)",
+            borderRadius: "12px",
+        }}>
+            {/* Title */}
+            <div style={{ color: "#94a3b8", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", marginBottom: "10px" }}>
+                {label}
+            </div>
+
+            {/* Preview area */}
+            <div style={{
+                height: "90px", display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(0,0,0,0.2)", borderRadius: "8px", marginBottom: "10px", overflow: "hidden",
+            }}>
+                {preview === "PDF" ? (
+                    <div style={{ fontSize: "2.5rem" }}>📄</div>
+                ) : preview ? (
+                    <img src={preview} alt="preview" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                ) : value && status !== "done" ? (
+                    <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", fontSize: "0.8rem" }}>📎 Existing file</a>
+                ) : (
+                    <div style={{ fontSize: "2rem", opacity: 0.25 }}>📁</div>
                 )}
             </div>
+
+            {/* Choose file label-button */}
+            <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                <label htmlFor={inputId} style={{
+                    display: "inline-block", padding: "6px 18px", borderRadius: "8px", cursor: "pointer",
+                    background: "rgba(168,85,247,0.18)", border: "1px solid rgba(168,85,247,0.45)",
+                    color: "#c084fc", fontSize: "0.8rem", fontWeight: 600, lineHeight: "1.5",
+                    opacity: status === "uploading" ? 0.5 : 1,
+                    pointerEvents: status === "uploading" ? "none" : "auto",
+                }}>
+                    {pickedFile ? "Change File" : "Choose File"}
+                </label>
+                <input
+                    id={inputId}
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf"
+                    onChange={handlePick}
+                    disabled={status === "uploading"}
+                    style={{ display: "none" }}
+                />
+            </div>
+
+            {/* Picked filename */}
+            {pickedFile && (
+                <div style={{ color: "#f59e0b", fontSize: "0.75rem", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: "8px" }}>
+                    {pickedFile.name}
+                </div>
+            )}
+
+            {/* Upload Now button — shown only when a file is picked and not yet done */}
+            {pickedFile && status !== "done" && (
+                <button
+                    type="button"
+                    onClick={handleUpload}
+                    disabled={status === "uploading"}
+                    style={{
+                        width: "100%", padding: "7px", borderRadius: "8px", border: "none",
+                        background: status === "failed" ? "rgba(239,68,68,0.7)" : "rgba(34,197,94,0.7)",
+                        color: "white", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer",
+                        opacity: status === "uploading" ? 0.6 : 1,
+                    }}
+                >
+                    {status === "uploading" ? "Uploading…" : status === "failed" ? "Retry Upload" : "Upload Now"}
+                </button>
+            )}
+
+            {/* Done state */}
+            {status === "done" && (
+                <div style={{ textAlign: "center", color: "#4ade80", fontWeight: 600, fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "5px" }}>
+                    <span>✓</span> Upload Complete
+                </div>
+            )}
         </div>
     );
 }
@@ -279,6 +370,7 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
     const [data, setData] = useState(null);
     const [form, setForm] = useState({});
     const [events, setEvents] = useState([]);
+    const [eventsModified, setEventsModified] = useState(false);
     const [reason, setReason] = useState("");
 
     const reasonOk = reason.trim().length >= 10;
@@ -326,7 +418,9 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
         if (!reasonOk) return;
         setSaving(true);
         try {
-            const body = { ...form, events, reason: reason.trim() };
+            const body = { ...form, reason: reason.trim() };
+            // Only include events if user actually modified them
+            if (eventsModified) body.events = events;
             // Convert numeric strings
             if (body.year_of_study !== "") body.year_of_study = Number(body.year_of_study);
             else delete body.year_of_study;
@@ -381,13 +475,25 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                     </div>
                 ) : (
                     <>
+                        {/* Edit mode banner */}
+                        {!readOnly && (
+                            <div style={{
+                                display: "flex", alignItems: "center", gap: "8px",
+                                background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.35)",
+                                borderLeft: "4px solid #c084fc", borderRadius: "8px",
+                                padding: "9px 14px", marginBottom: "18px",
+                                color: "#c084fc", fontSize: "0.84rem", fontWeight: 600,
+                            }}>
+                                ✏️ Edit mode — all fields are editable. Provide a reason at the bottom before saving.
+                            </div>
+                        )}
                         {/* Tab bar */}
                         <div className="da-tab-bar" style={{ marginBottom: "20px" }}>
                             <button className={`da-tab ${tab === "details" ? "active" : ""}`} onClick={() => setTab("details")}>
                                 📋 Details
                             </button>
                             <button className={`da-tab ${tab === "events" ? "active" : ""}`} onClick={() => setTab("events")}>
-                                🎯 Events ({events.length})
+                                🎯 Events ({events.length}){eventsModified && !readOnly ? " ✎" : ""}
                             </button>
                         </div>
 
@@ -515,7 +621,7 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="da-form-grid">
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                         {[
                                             { key: "passport_photo", label: "Passport Photo",  urlKey: "passport_photo_url" },
                                             { key: "id_proof",       label: "ID Proof",         urlKey: "id_proof_url" },
@@ -564,7 +670,7 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                             <span>⚠️</span>
                                             <span>Saving with events included will <strong>fully replace</strong> all event rows. Omit the events tab changes if you only want to update personal details.</span>
                                         </div>
-                                        <EventsEditor events={events} onChange={setEvents} />
+                                        <EventsEditor events={events} onChange={(newEvents) => { setEvents(newEvents); setEventsModified(true); }} />
                                     </>
                                 )}
                             </div>
