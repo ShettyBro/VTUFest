@@ -356,9 +356,9 @@ export default function AssignEvents() {
     }
   };
 
-  const handleRemove = async (eventSlug, personId, personType) => {
+  const handleRemove = async (eventSlug, personId, personType, listType) => {
     // Guard: cannot remove a participant while accompanists still exist
-    if (personType === "student") {
+    if (listType === "participant") {
       const currentAccompanists = eventData[eventSlug]?.accompanists?.length || 0;
       if (currentAccompanists > 0) {
         showPopup(
@@ -666,7 +666,8 @@ export default function AssignEvents() {
                                           handleRemove(
                                             event.slug,
                                             person.person_id,
-                                            person.person_type
+                                            person.person_type,
+                                            "participant"
                                           )
                                         }
                                         disabled={isRemoving}
@@ -754,7 +755,8 @@ export default function AssignEvents() {
                                           handleRemove(
                                             event.slug,
                                             person.person_id,
-                                            person.person_type
+                                            person.person_type,
+                                            "accompanist"
                                           )
                                         }
                                         disabled={isRemoving}
