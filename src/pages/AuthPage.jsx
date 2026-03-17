@@ -522,7 +522,7 @@ export default function AuthPage({ initialView = "login" }) {
             <div className="auth-container">
 
                 {/* NEED HELP BUTTON */}
-                <HelpButton />
+                <HelpButton style={{ top: '20px', right: '20px' }} />
 
                 {/* --- LEFT PANEL: BRANDING & INFO --- */}
                 <div className="auth-info-panel">
