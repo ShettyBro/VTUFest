@@ -547,3 +547,221 @@
     letter-spacing: 0.6px;
     margin: 20px 0 10px 0;
 }
+
+/* ── Wide page (participants list) ── */
+.da-page-wide {
+    padding: 28px 32px;
+    max-width: 1400px;
+    width: 100%;
+}
+
+/* ── Row action icon buttons ── */
+.da-icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.18s;
+    padding: 0;
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.1);
+}
+
+.da-icon-btn-view:hover {
+    background: rgba(96,165,250,0.18);
+    border-color: rgba(96,165,250,0.4);
+}
+
+.da-icon-btn-edit:hover {
+    background: rgba(168,85,247,0.18);
+    border-color: rgba(168,85,247,0.4);
+}
+
+.da-icon-btn-delete:hover {
+    background: rgba(239,68,68,0.18);
+    border-color: rgba(239,68,68,0.4);
+}
+
+/* ── 2-tab bar ── */
+.da-tab-bar {
+    display: flex;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    gap: 0;
+}
+
+.da-tab {
+    padding: 9px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #64748b;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.18s;
+    margin-bottom: -1px;
+}
+
+.da-tab:hover {
+    color: #cbd5e1;
+}
+
+.da-tab.active {
+    color: #c084fc;
+    border-bottom-color: #c084fc;
+}
+
+/* ── Pagination ── */
+.da-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 12px 0;
+}
+
+/* ── Step wizard indicator ── */
+.da-step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    position: relative;
+    gap: 0;
+}
+
+.da-step-indicator::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    z-index: 0;
+}
+
+.da-step-dot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    z-index: 1;
+}
+
+.da-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(15,23,42,0.97);
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.da-step-dot.active .da-step-num {
+    background: rgba(168,85,247,0.25);
+    border-color: #c084fc;
+    color: #c084fc;
+}
+
+.da-step-dot.done .da-step-num {
+    background: rgba(34,197,94,0.2);
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+.da-step-label {
+    font-size: 0.68rem;
+    color: #475569;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.da-step-dot.active .da-step-label { color: #c084fc; }
+.da-step-dot.done .da-step-label { color: #4ade80; }
+
+/* ── 2-column form grid ── */
+.da-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+/* ── Form input + label ── */
+.da-label {
+    display: block;
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+}
+
+.da-input {
+    width: 100%;
+    padding: 9px 14px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 9px;
+    color: #f1f5f9;
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.da-input::placeholder { color: rgba(255,255,255,0.25); }
+
+.da-input:focus {
+    border-color: rgba(168,85,247,0.5);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+}
+
+.da-input:read-only {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* ── Document preview link ── */
+.da-doc-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #60a5fa;
+    font-size: 0.82rem;
+    text-decoration: none;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(96,165,250,0.1);
+    border: 1px solid rgba(96,165,250,0.25);
+    transition: all 0.18s;
+}
+
+.da-doc-link:hover {
+    background: rgba(96,165,250,0.2);
+    color: #93c5fd;
+}
+
+/* ── Wide modal variant ── */
+.da-modal-wide {
+    max-width: 720px;
+    max-height: 90vh;
+    overflow-y: auto;
+}

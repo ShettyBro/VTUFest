@@ -9,6 +9,7 @@ const NAV_ITEMS = [
     { path: "/da-students", label: "Students", icon: "🎓" },
     { path: "/da-managers", label: "Managers", icon: "👤" },
     { path: "/da-principals", label: "Principals", icon: "🏫" },
+    { path: "/da-participants", label: "Participants", icon: "🎫" },
     { path: "/da-college-unlock", label: "College Unlock", icon: "🔓" },
     { path: "/da-audit", label: "Audit Log", icon: "📋" },
     { path: "/da-broadcast", label: "Broadcast Email", icon: "🚀" },

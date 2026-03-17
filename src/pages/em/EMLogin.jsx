@@ -120,14 +120,14 @@ export default function EMLogin() {
                                 className={`role-tab ${selectedRole === "EVENT_MANAGER" ? "active" : ""}`}
                                 onClick={() => { setSelectedRole("EVENT_MANAGER"); setError(""); }}
                             >
-                                Event Manager
+                                Accomodation
                             </button>
                             <button
                                 type="button"
                                 className={`role-tab ${selectedRole === "GR_INCHARGE" ? "active" : ""}`}
                                 onClick={() => { setSelectedRole("GR_INCHARGE"); setError(""); }}
                             >
-                                GR Incharge
+                                Green Room
                             </button>
                             <button
                                 type="button"

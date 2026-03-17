@@ -50,6 +50,7 @@ import DACollegeUnlock from "../pages/da/DACollegeUnlock";
 import DAAuditLog from "../pages/da/DAAuditLog";
 import DAPrincipals from "../pages/da/DAPrincipals";
 import DABroadcastEmail from "../pages/da/DABroadcastEmail";
+import DAParticipants from "../pages/da/DAParticipants";
 
 
 /* GREEN ROOM (MANAGER SIDE) */
@@ -185,6 +186,7 @@ export default function AppRoutes() {
         <Route path="/da-college-unlock" element={<DARoute><DACollegeUnlock /></DARoute>} />
         <Route path="/da-audit" element={<DARoute><DAAuditLog /></DARoute>} />
         <Route path="/da-broadcast" element={<DARoute><DABroadcastEmail /></DARoute>} />
+        <Route path="/da-participants" element={<DARoute><DAParticipants /></DARoute>} />
 
         <Route path="/da" element={<Navigate to="/da-login" replace />} />
 
