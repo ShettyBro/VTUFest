@@ -43,6 +43,7 @@ export default function Accommodation() {
 
   // Lock states
   const [managerLock, setManagerLock] = useState(false);
+  const [showAccommodationDetails, setShowAccommodationDetails] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -87,6 +88,7 @@ export default function Accommodation() {
       const data = await response.json();
       if (data.success) {
         setManagerLock(data.manager_lock);
+        setShowAccommodationDetails(!!data.show_accommodation_details);
       }
     } catch (error) {
       console.error("Lock check error:", error);
@@ -317,7 +319,7 @@ export default function Accommodation() {
               </div>
 
               {/* ALLOTMENTS SECTION */}
-              {allotments.length > 0 && (
+              {showAccommodationDetails && allotments.length > 0 && (
                 <div style={{ marginTop: '30px', textAlign: 'left' }}>
                   <h3 style={{ color: 'var(--academic-gold)', marginBottom: '16px', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     🏨 Allotted Accommodation ({allotments.length} {allotments.length === 1 ? 'place' : 'places'})
@@ -455,6 +457,30 @@ export default function Accommodation() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Show "coming soon" when approved but details not yet released */}
+              {!showAccommodationDetails && existingRequest?.status === 'APPROVED' && (
+                <div style={{
+                  marginTop: '30px',
+                  background: 'rgba(245,158,11,0.08)',
+                  border: '1px solid rgba(245,158,11,0.35)',
+                  borderRadius: '10px',
+                  padding: '18px 20px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                }}>
+                  <span style={{ fontSize: '1.4rem', lineHeight: 1, marginTop: '2px' }}>🏨</span>
+                  <div>
+                    <div style={{ color: '#f59e0b', fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>
+                      Accommodation Approved
+                    </div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.55 }}>
+                      Your accommodation request has been approved. The detailed allotment information (venue, address &amp; map) will be shared by the admin soon.
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

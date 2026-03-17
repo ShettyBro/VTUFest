@@ -58,6 +58,7 @@ export default function AdminSettings() {
         const map = {
             registration_lock: "Lock All Registrations",
             manager_lock: "Lock All Manager/Principal Actions",
+            show_accommodation_details: "Show Accommodation Details to Managers",
         };
         return map[key] || key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
     };
@@ -66,6 +67,7 @@ export default function AdminSettings() {
         const map = {
             registration_lock: "When ON, all new student registrations are blocked across the platform.",
             manager_lock: "When ON, Managers and Principals cannot make any further changes to event assignments or approvals across all colleges.",
+            show_accommodation_details: "When ON, team managers can see their allotted accommodation details (venue, address, map, contacts). Enable this only when accommodation allotments are finalised.",
         };
         return map[key] || "";
     };
@@ -88,7 +90,7 @@ export default function AdminSettings() {
                     <div className="glass-card" style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>Loading settings...</div>
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        {settings.filter(s => s.setting_key !== "allocated_events_visible").map(s => {
+                        {settings.filter(s => s.setting_key !== "allocated_events_visible" && s.setting_key !== "show_accommodation_details").map(s => {
                             const isOn = s.setting_value === "true";
                             const isSavingThis = saving === s.setting_key;
                             const canClick = isSuperAdmin && !isSavingThis;
@@ -150,6 +152,60 @@ export default function AdminSettings() {
                         {settings.length === 0 && (
                             <div className="glass-card" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>No settings found</div>
                         )}
+
+                        {/* ── Accommodation Visibility (confirm-gated) ── */}
+                        {(() => {
+                            const s = settings.find(x => x.setting_key === "show_accommodation_details");
+                            if (!s) return null;
+                            const isOn = s.setting_value === "true";
+                            const isSavingThis = saving === s.setting_key;
+                            const canClick = isSuperAdmin && !isSavingThis;
+                            return (
+                                <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: isOn ? "rgba(16,185,129,0.35)" : undefined }}>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "1rem", marginBottom: "4px" }}>
+                                            🏨 {friendlyLabel(s.setting_key)}
+                                        </div>
+                                        <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "6px" }}>
+                                            {friendlyDesc(s.setting_key)}
+                                        </div>
+                                        <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                                            Key: <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 6px", borderRadius: "4px" }}>{s.setting_key}</code>
+                                            {s.updated_at && ` · Last updated: ${new Date(s.updated_at).toLocaleString("en-IN")}`}
+                                            {s.updated_by_name && ` by ${s.updated_by_name}`}
+                                        </div>
+                                    </div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, marginLeft: "24px" }}>
+                                        <span style={{ color: isOn ? "var(--accent-success)" : "var(--text-muted)", fontSize: "0.85rem", fontWeight: 600 }}>
+                                            {isOn ? "ON" : "OFF"}
+                                        </span>
+                                        <div
+                                            onClick={() => {
+                                                if (!canClick) return;
+                                                if (!isOn) { setConfirmKey(s.setting_key); } // confirm before enabling
+                                                else { handleToggle(s.setting_key, s.setting_value); } // disable freely
+                                            }}
+                                            style={{
+                                                width: "52px", height: "28px", borderRadius: "14px",
+                                                background: isOn ? "var(--accent-success)" : "rgba(255,255,255,0.15)",
+                                                border: `2px solid ${isOn ? "var(--accent-success)" : "rgba(255,255,255,0.2)"}`,
+                                                cursor: canClick ? "pointer" : "not-allowed",
+                                                position: "relative", transition: "all 0.3s",
+                                                opacity: isSavingThis ? 0.6 : 1,
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: "20px", height: "20px", borderRadius: "50%",
+                                                background: "#fff", position: "absolute", top: "2px",
+                                                left: isOn ? "26px" : "2px", transition: "left 0.3s",
+                                                boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                                            }} />
+                                        </div>
+                                        {isSavingThis && <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Saving...</span>}
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
             </div>
@@ -166,10 +222,12 @@ export default function AdminSettings() {
                         <div className="glass-card" style={{ maxWidth: "420px", width: "90%", padding: "28px 28px 24px" }}>
                             <div style={{ fontSize: "1.5rem", marginBottom: "10px" }}>⚠️</div>
                             <h4 style={{ color: "var(--text-primary)", marginBottom: "10px", fontWeight: 700 }}>
-                                Confirm: Enable Event Visibility
+                                {confirmKey === "show_accommodation_details" ? "Confirm: Show Accommodation Details" : "Confirm: Enable Event Visibility"}
                             </h4>
                             <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.55, marginBottom: "22px" }}>
-                                This will <strong>immediately show allocated events and QR codes to all students.</strong> Are you sure you want to proceed?
+                                {confirmKey === "show_accommodation_details"
+                                    ? <><strong>This will immediately reveal allotted accommodation details (venue, address, map, contacts) to all team managers.</strong> Make sure allotments are finalised before enabling this. Are you sure?</>
+                                    : <>This will <strong>immediately show allocated events and QR codes to all students.</strong> Are you sure you want to proceed?</>}
                             </p>
                             <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                                 <button
