@@ -92,10 +92,10 @@ export default function HelpButton({ className = "", style = {}, open = false, o
                     download="VTU Fest 2026.pdf"
                     className={`help-btn brochure-btn ${className}`}
                     style={{ position: 'static' }}
-                    aria-label="Download Brochure"
+                    aria-label="Download Broucher"
                 >
                     <FileDown size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-                    <span className="help-btn-text">Brochure</span>
+                    <span className="help-btn-text">Broucher</span>
                 </a>
 
                 {/* NEED HELP BUTTON — shown second (right) */}
