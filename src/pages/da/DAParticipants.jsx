@@ -191,7 +191,7 @@ function EventsEditor({ events, onChange }) {
                         style={{ minWidth: "140px" }}
                     >
                         <option value="PARTICIPANT">Participant</option>
-                        <option value="TEAM_MEMBER">Team Member</option>
+                        <option value="ACCOMPANIST">Accompanist</option>
                     </select>
                     <button
                         className="da-btn"
@@ -537,8 +537,6 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                         { key: "full_name",   label: "Full Name" },
                                         { key: "phone",       label: "Phone" },
                                         { key: "email",       label: "Email" },
-                                        { key: "gender",      label: "Gender" },
-                                        { key: "blood_group", label: "Blood Group" },
                                         ...(p.person_type === "STUDENT" ? [
                                             { key: "usn",          label: "USN" },
                                             { key: "department",   label: "Department" },
@@ -558,6 +556,41 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                             />
                                         </div>
                                     ))}
+
+                                    {/* Gender dropdown */}
+                                    <div>
+                                        <label className="da-label">Gender</label>
+                                        {readOnly ? (
+                                            <input className="da-input" value={form.gender || "—"} readOnly style={{ opacity: 0.7 }} />
+                                        ) : (
+                                            <select className="da-select" value={form.gender || ""}
+                                                onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}
+                                                style={{ width: "100%" }}>
+                                                <option value="">— Select —</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        )}
+                                    </div>
+
+                                    {/* Blood group dropdown */}
+                                    <div>
+                                        <label className="da-label">Blood Group</label>
+                                        {readOnly ? (
+                                            <input className="da-input" value={form.blood_group || "—"} readOnly style={{ opacity: 0.7 }} />
+                                        ) : (
+                                            <select className="da-select" value={form.blood_group || ""}
+                                                onChange={e => setForm(f => ({ ...f, blood_group: e.target.value }))}
+                                                style={{ width: "100%" }}>
+                                                <option value="">— Select —</option>
+                                                {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(bg => (
+                                                    <option key={bg} value={bg}>{bg}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </div>
+
 
                                     {/* Accompanist-only: type select + is_team_manager checkbox */}
                                     {p.person_type === "ACCOMPANIST" && (
@@ -774,9 +807,10 @@ function AddModal({ onClose, onAdded, token }) {
         setSubmitting(true);
         try {
             const body = {
-                college_id: selectedCollege.id,
-                person_type: personType,
                 ...form,
+                // explicit overrides — MUST come after spread so form can't clobber them
+                college_id: parseInt(selectedCollege.id),
+                person_type: personType,
                 events,
                 reason: reason.trim(),
             };
@@ -789,15 +823,18 @@ function AddModal({ onClose, onAdded, token }) {
             ["passport_photo_url", "id_proof_url", "aadhaar_url", "college_id_card_url", "sslc_url"].forEach(k => {
                 if (!body[k]) body[k] = null;
             });
+            // strip companist_type for students
+            if (personType === "STUDENT") delete body.accompanist_type;
 
             const res = await daFetch(`${API_BASE}/api/da/master-participants`, token, {
                 method: "POST",
                 body: JSON.stringify(body),
             });
             const json = await res.json();
+            const d = json.data || json;
             if (res.status === 503) throw new Error("No QR codes available in the pool. Contact the admin to add more.");
-            if (!res.ok) throw new Error(json.message || "Failed to add participant");
-            showPopup(`Participant added! QR: ${json.qr_code}`, "success");
+            if (!res.ok) throw new Error(json.message || d.message || "Failed to add participant");
+            showPopup(`✅ Participant added! QR: ${d.qr_code || d.id}`, "success");
             onAdded();
             onClose();
         } catch (err) {
@@ -909,8 +946,6 @@ function AddModal({ onClose, onAdded, token }) {
                                     { key: "usn",          label: "USN" },
                                     { key: "phone",        label: "Phone" },
                                     { key: "email",        label: "Email" },
-                                    { key: "gender",       label: "Gender" },
-                                    { key: "blood_group",  label: "Blood Group" },
                                     { key: "department",   label: "Department" },
                                     { key: "year_of_study",label: "Year of Study", type: "number" },
                                     { key: "semester",     label: "Semester",      type: "number" },
@@ -918,8 +953,6 @@ function AddModal({ onClose, onAdded, token }) {
                                     { key: "full_name",    label: "Full Name *" },
                                     { key: "phone",        label: "Phone" },
                                     { key: "email",        label: "Email" },
-                                    { key: "gender",       label: "Gender" },
-                                    { key: "blood_group",  label: "Blood Group" },
                                 ]).map(({ key, label, type }) => (
                                     <div key={key}>
                                         <label className="da-label">{label}</label>
@@ -931,6 +964,32 @@ function AddModal({ onClose, onAdded, token }) {
                                         />
                                     </div>
                                 ))}
+
+                                {/* Gender dropdown — always shown */}
+                                <div>
+                                    <label className="da-label">Gender</label>
+                                    <select className="da-select" value={form.gender || ""}
+                                        onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}
+                                        style={{ width: "100%" }}>
+                                        <option value="">— Select —</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+
+                                {/* Blood group dropdown — always shown */}
+                                <div>
+                                    <label className="da-label">Blood Group</label>
+                                    <select className="da-select" value={form.blood_group || ""}
+                                        onChange={e => setForm(f => ({ ...f, blood_group: e.target.value }))}
+                                        style={{ width: "100%" }}>
+                                        <option value="">— Select —</option>
+                                        {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(bg => (
+                                            <option key={bg} value={bg}>{bg}</option>
+                                        ))}
+                                    </select>
+                                </div>
 
                                 {personType === "ACCOMPANIST" && (
                                     <div key="accompanist_type">
@@ -973,7 +1032,7 @@ function AddModal({ onClose, onAdded, token }) {
                             </div>
 
                             <div className="da-section-label" style={{ marginTop: "18px" }}>Documents (optional)</div>
-                            <div className="da-form-grid">
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                 {[
                                     { key: "passport_photo", label: "Passport Photo",  urlKey: "passport_photo_url" },
                                     { key: "id_proof",       label: "ID Proof",         urlKey: "id_proof_url" },

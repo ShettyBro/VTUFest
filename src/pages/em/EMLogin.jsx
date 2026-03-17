@@ -82,7 +82,7 @@ export default function EMLogin() {
     };
 
     const roleLabels = {
-        EVENT_MANAGER: "Event Manager Portal",
+        EVENT_MANAGER: "Accommodation Manager Portal",
         GR_INCHARGE: "Green Room Incharge Portal",
         ACCOUNTS: "Accounts Department Portal",
     };

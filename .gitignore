@@ -12,3 +12,5 @@ dist
 
 # Vercel
 .vercel
+
+.schema_dump.sql
