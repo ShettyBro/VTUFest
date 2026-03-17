@@ -525,7 +525,8 @@ function AddModal({ onClose, onAdded, token }) {
             try {
                 const res = await daFetch(`${API_BASE}/api/da/colleges`, token);
                 const json = await res.json();
-                setColleges(json.colleges || json || []);
+                const d = json.data || json;
+                setColleges(Array.isArray(d) ? d : (d.colleges || []));
             } catch {
                 setColleges([]);
             } finally {
@@ -837,7 +838,10 @@ export default function DAParticipants() {
     useEffect(() => {
         daFetch(`${API_BASE}/api/da/colleges`, token)
             .then(r => r.json())
-            .then(j => setColleges(j.colleges || j || []))
+            .then(j => {
+                const d = j.data || j;
+                setColleges(Array.isArray(d) ? d : (d.colleges || []));
+            })
             .catch(() => {});
     }, []);
 
