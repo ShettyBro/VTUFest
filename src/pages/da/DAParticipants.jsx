@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DALayout from "./DALayout";
 import { useDA } from "../../context/DAContext";
 import { daFetch } from "../../utils/daFetch";
@@ -207,6 +207,68 @@ function EventsEditor({ events, onChange }) {
     );
 }
 
+// ── DocUploader — file upload to Azure via DA backend SAS ────────────────────
+
+function DocUploader({ label, fieldKey, value, onChange, collegeCode, fullName, phone, token }) {
+    const [uploading, setUploading] = useState(false);
+    const { showPopup } = usePopup();
+    const handleFile = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const r1 = await daFetch(`${API_BASE}/api/da/master-participants/upload-url`, token, {
+                method: "POST",
+                body: JSON.stringify({
+                    college_code: collegeCode,
+                    full_name: fullName,
+                    phone: phone || "nophone",
+                    document_type: fieldKey,
+                    file_name: file.name,
+                    content_type: file.type,
+                }),
+            });
+            const j1 = await r1.json();
+            if (!r1.ok) throw new Error(j1.message || "Failed to get upload URL");
+            const { upload_url, blob_url } = j1.data || j1;
+            const r2 = await fetch(upload_url, {
+                method: "PUT",
+                headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": file.type },
+                body: file,
+            });
+            if (!r2.ok) throw new Error("Upload to storage failed");
+            onChange(fieldKey, blob_url);
+            showPopup(`${label} uploaded successfully`, "success");
+        } catch (err) {
+            showPopup(err.message, "error");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
+    };
+    return (
+        <div>
+            <label className="da-label">{label}</label>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                <input
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf"
+                    onChange={handleFile}
+                    disabled={uploading}
+                    style={{ color: "#94a3b8", fontSize: "0.82rem", flex: 1, minWidth: 0 }}
+                />
+                {uploading && <span className="da-spinner" />}
+                {value && !uploading && (
+                    <a href={value} target="_blank" rel="noopener noreferrer"
+                       style={{ color: "#c084fc", fontSize: "0.75rem", whiteSpace: "nowrap" }}>
+                        ✓ View
+                    </a>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // ── Detail / Edit Modal ────────────────────────────────────────────────────────
 
 function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
@@ -232,20 +294,23 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                 const p = payload.participant;
                 setData(payload);
                 setForm({
-                    full_name: p.full_name || "",
-                    phone: p.phone || "",
-                    email: p.email || "",
-                    gender: p.gender || "",
-                    blood_group: p.blood_group || "",
-                    address: p.address || "",
-                    department: p.department || "",
-                    year_of_study: p.year_of_study ?? "",
-                    semester: p.semester ?? "",
-                    passport_photo_url: p.passport_photo_url || "",
-                    id_proof_url: p.id_proof_url || "",
-                    aadhaar_url: p.aadhaar_url || "",
+                    full_name:           p.full_name || "",
+                    usn:                 p.usn || "",
+                    phone:               p.phone || "",
+                    email:               p.email || "",
+                    gender:              p.gender || "",
+                    blood_group:         p.blood_group || "",
+                    address:             p.address || "",
+                    department:          p.department || "",
+                    year_of_study:       p.year_of_study ?? "",
+                    semester:            p.semester ?? "",
+                    accompanist_type:    p.accompanist_type || "",
+                    is_team_manager:     p.is_team_manager ?? false,
+                    passport_photo_url:  p.passport_photo_url || "",
+                    id_proof_url:        p.id_proof_url || "",
+                    aadhaar_url:         p.aadhaar_url || "",
                     college_id_card_url: p.college_id_card_url || "",
-                    sslc_url: p.sslc_url || "",
+                    sslc_url:            p.sslc_url || "",
                 });
                 setEvents((payload.events || []).map(ev => ({ event_name: ev.event_name, role: ev.role })));
             } catch (err) {
@@ -328,7 +393,7 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
 
                         {tab === "details" && (
                             <div>
-                                {/* Read-only: college + QR */}
+                                {/* Read-only info grid */}
                                 <div className="da-info-grid" style={{ marginBottom: "16px" }}>
                                     <div className="da-info-item">
                                         <label>College</label>
@@ -346,20 +411,34 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                         <label>ID Card</label>
                                         <span><IDCardBadge activated={p.id_card_activated} /></span>
                                     </div>
+                                    {p.is_team_manager && (
+                                        <div className="da-info-item">
+                                            <label>Role</label>
+                                            <span><span className="da-badge da-badge-yellow">🏅 Team Manager</span></span>
+                                        </div>
+                                    )}
+                                    <div className="da-info-item">
+                                        <label>Approved At</label>
+                                        <span style={{ color: "#94a3b8", fontSize: "0.82rem" }}>
+                                            {p.final_approved_at ? new Date(p.final_approved_at).toLocaleString("en-IN") : "—"}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                {/* Editable fields */}
+                                {/* Editable fields — conditional per person_type */}
                                 <div className="da-form-grid">
                                     {[
-                                        { key: "full_name", label: "Full Name" },
-                                        { key: "usn", label: "USN" },
-                                        { key: "phone", label: "Phone" },
-                                        { key: "email", label: "Email" },
-                                        { key: "gender", label: "Gender" },
+                                        { key: "full_name",   label: "Full Name" },
+                                        { key: "phone",       label: "Phone" },
+                                        { key: "email",       label: "Email" },
+                                        { key: "gender",      label: "Gender" },
                                         { key: "blood_group", label: "Blood Group" },
-                                        { key: "department", label: "Department" },
-                                        { key: "year_of_study", label: "Year of Study", type: "number" },
-                                        { key: "semester", label: "Semester", type: "number" },
+                                        ...(p.person_type === "STUDENT" ? [
+                                            { key: "usn",          label: "USN" },
+                                            { key: "department",   label: "Department" },
+                                            { key: "year_of_study",label: "Year of Study", type: "number" },
+                                            { key: "semester",     label: "Semester",      type: "number" },
+                                        ] : []),
                                     ].map(({ key, label, type }) => (
                                         <div key={key}>
                                             <label className="da-label">{label}</label>
@@ -373,6 +452,25 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                             />
                                         </div>
                                     ))}
+
+                                    {/* Accompanist-only: type select + is_team_manager checkbox */}
+                                    {p.person_type === "ACCOMPANIST" && (
+                                        <div key="accompanist_type">
+                                            <label className="da-label">Accompanist Type</label>
+                                            <select
+                                                className="da-select"
+                                                value={form.accompanist_type || ""}
+                                                onChange={e => setForm(f => ({ ...f, accompanist_type: e.target.value }))}
+                                                style={{ opacity: readOnly ? 0.7 : 1, width: "100%" }}
+                                                disabled={readOnly}
+                                            >
+                                                <option value="">— Select —</option>
+                                                <option value="faculty">Faculty</option>
+                                                <option value="professional">Professional</option>
+                                            </select>
+                                        </div>
+                                    )}
+
                                     <div style={{ gridColumn: "1 / -1" }}>
                                         <label className="da-label">Address</label>
                                         <input
@@ -383,10 +481,24 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                             style={{ opacity: readOnly ? 0.7 : 1 }}
                                         />
                                     </div>
+
+                                    {p.person_type === "ACCOMPANIST" && !readOnly && (
+                                        <div style={{ gridColumn: "1/-1", display: "flex", alignItems: "center", gap: "10px" }}>
+                                            <input
+                                                type="checkbox"
+                                                id="is_team_manager"
+                                                checked={form.is_team_manager || false}
+                                                onChange={e => setForm(f => ({ ...f, is_team_manager: e.target.checked }))}
+                                            />
+                                            <label htmlFor="is_team_manager" style={{ color: "#cbd5e1", cursor: "pointer", fontSize: "0.88rem" }}>
+                                                Is Team Manager
+                                            </label>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Document URL fields */}
-                                <div className="da-section-label" style={{ marginTop: "20px" }}>Documents (SAS URLs)</div>
+                                {/* Documents */}
+                                <div className="da-section-label" style={{ marginTop: "20px" }}>Documents</div>
                                 {readOnly ? (
                                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                         {[
@@ -394,10 +506,10 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                             ["ID Proof", form.id_proof_url],
                                             ["Aadhaar", form.aadhaar_url],
                                             ["College ID Card", form.college_id_card_url],
-                                            ["SSLC", form.sslc_url],
-                                        ].map(([label, url]) => (
-                                            <div key={label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                                <span style={{ color: "#64748b", fontSize: "0.82rem", width: "130px", flexShrink: 0 }}>{label}</span>
+                                            ...(p.person_type === "STUDENT" ? [["SSLC", form.sslc_url]] : []),
+                                        ].map(([lbl, url]) => (
+                                            <div key={lbl} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                                <span style={{ color: "#64748b", fontSize: "0.82rem", width: "130px", flexShrink: 0 }}>{lbl}</span>
                                                 <DocLink label="Open" url={url} />
                                             </div>
                                         ))}
@@ -405,21 +517,23 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                                 ) : (
                                     <div className="da-form-grid">
                                         {[
-                                            { key: "passport_photo_url", label: "Passport Photo URL" },
-                                            { key: "id_proof_url", label: "ID Proof URL" },
-                                            { key: "aadhaar_url", label: "Aadhaar URL" },
-                                            { key: "college_id_card_url", label: "College ID Card URL" },
-                                            { key: "sslc_url", label: "SSLC URL" },
-                                        ].map(({ key, label }) => (
-                                            <div key={key}>
-                                                <label className="da-label">{label}</label>
-                                                <input
-                                                    className="da-input"
-                                                    placeholder="https://...blob.core.windows.net/..."
-                                                    value={form[key] ?? ""}
-                                                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                                                />
-                                            </div>
+                                            { key: "passport_photo", label: "Passport Photo",  urlKey: "passport_photo_url" },
+                                            { key: "id_proof",       label: "ID Proof",         urlKey: "id_proof_url" },
+                                            { key: "aadhaar",        label: "Aadhaar",          urlKey: "aadhaar_url" },
+                                            { key: "college_id_card",label: "College ID Card",  urlKey: "college_id_card_url" },
+                                            ...(p.person_type === "STUDENT" ? [{ key: "sslc", label: "SSLC", urlKey: "sslc_url" }] : []),
+                                        ].map(({ key, label: lbl, urlKey }) => (
+                                            <DocUploader
+                                                key={key}
+                                                label={lbl}
+                                                fieldKey={key}
+                                                value={form[urlKey]}
+                                                onChange={(_k, val) => setForm(f => ({ ...f, [urlKey]: val }))}
+                                                collegeCode={p.college_code}
+                                                fullName={form.full_name || p.full_name}
+                                                phone={form.phone || p.phone}
+                                                token={token}
+                                            />
                                         ))}
                                     </div>
                                 )}
@@ -499,6 +613,7 @@ const STEPS = ["College", "Type", "Details", "Events", "Confirm"];
 const BLANK_FORM = {
     full_name: "", usn: "", phone: "", email: "", gender: "", blood_group: "",
     address: "", department: "", year_of_study: "", semester: "",
+    accompanist_type: "", is_team_manager: false,
     passport_photo_url: "", id_proof_url: "", aadhaar_url: "",
     college_id_card_url: "", sslc_url: "",
     student_id: null, accompanist_id: null, application_id: null,
@@ -683,17 +798,23 @@ function AddModal({ onClose, onAdded, token }) {
                         <div>
                             <div className="da-section-label">Personal Details</div>
                             <div className="da-form-grid" style={{ marginTop: "10px" }}>
-                                {[
-                                    { key: "full_name", label: "Full Name *" },
-                                    { key: "usn", label: "USN" },
-                                    { key: "phone", label: "Phone" },
-                                    { key: "email", label: "Email" },
-                                    { key: "gender", label: "Gender" },
-                                    { key: "blood_group", label: "Blood Group" },
-                                    { key: "department", label: "Department" },
-                                    { key: "year_of_study", label: "Year of Study", type: "number" },
-                                    { key: "semester", label: "Semester", type: "number" },
-                                ].map(({ key, label, type }) => (
+                                {(personType === "STUDENT" ? [
+                                    { key: "full_name",    label: "Full Name *" },
+                                    { key: "usn",          label: "USN" },
+                                    { key: "phone",        label: "Phone" },
+                                    { key: "email",        label: "Email" },
+                                    { key: "gender",       label: "Gender" },
+                                    { key: "blood_group",  label: "Blood Group" },
+                                    { key: "department",   label: "Department" },
+                                    { key: "year_of_study",label: "Year of Study", type: "number" },
+                                    { key: "semester",     label: "Semester",      type: "number" },
+                                ] : [
+                                    { key: "full_name",    label: "Full Name *" },
+                                    { key: "phone",        label: "Phone" },
+                                    { key: "email",        label: "Email" },
+                                    { key: "gender",       label: "Gender" },
+                                    { key: "blood_group",  label: "Blood Group" },
+                                ]).map(({ key, label, type }) => (
                                     <div key={key}>
                                         <label className="da-label">{label}</label>
                                         <input
@@ -704,6 +825,23 @@ function AddModal({ onClose, onAdded, token }) {
                                         />
                                     </div>
                                 ))}
+
+                                {personType === "ACCOMPANIST" && (
+                                    <div key="accompanist_type">
+                                        <label className="da-label">Accompanist Type</label>
+                                        <select
+                                            className="da-select"
+                                            value={form.accompanist_type || ""}
+                                            onChange={e => setForm(f => ({ ...f, accompanist_type: e.target.value }))}
+                                            style={{ width: "100%" }}
+                                        >
+                                            <option value="">— Select —</option>
+                                            <option value="faculty">Faculty</option>
+                                            <option value="professional">Professional</option>
+                                        </select>
+                                    </div>
+                                )}
+
                                 <div style={{ gridColumn: "1 / -1" }}>
                                     <label className="da-label">Address</label>
                                     <input
@@ -712,26 +850,42 @@ function AddModal({ onClose, onAdded, token }) {
                                         onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
                                     />
                                 </div>
+
+                                {personType === "ACCOMPANIST" && (
+                                    <div style={{ gridColumn: "1/-1", display: "flex", alignItems: "center", gap: "10px" }}>
+                                        <input
+                                            type="checkbox"
+                                            id="add_is_team_manager"
+                                            checked={form.is_team_manager || false}
+                                            onChange={e => setForm(f => ({ ...f, is_team_manager: e.target.checked }))}
+                                        />
+                                        <label htmlFor="add_is_team_manager" style={{ color: "#cbd5e1", cursor: "pointer", fontSize: "0.88rem" }}>
+                                            Is Team Manager
+                                        </label>
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="da-section-label" style={{ marginTop: "18px" }}>Document URLs (optional)</div>
+                            <div className="da-section-label" style={{ marginTop: "18px" }}>Documents (optional)</div>
                             <div className="da-form-grid">
                                 {[
-                                    { key: "passport_photo_url", label: "Passport Photo URL" },
-                                    { key: "id_proof_url", label: "ID Proof URL" },
-                                    { key: "aadhaar_url", label: "Aadhaar URL" },
-                                    { key: "college_id_card_url", label: "College ID Card URL" },
-                                    { key: "sslc_url", label: "SSLC URL" },
-                                ].map(({ key, label }) => (
-                                    <div key={key}>
-                                        <label className="da-label">{label}</label>
-                                        <input
-                                            className="da-input"
-                                            placeholder="https://…"
-                                            value={form[key] ?? ""}
-                                            onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                                        />
-                                    </div>
+                                    { key: "passport_photo", label: "Passport Photo",  urlKey: "passport_photo_url" },
+                                    { key: "id_proof",       label: "ID Proof",         urlKey: "id_proof_url" },
+                                    { key: "aadhaar",        label: "Aadhaar",          urlKey: "aadhaar_url" },
+                                    { key: "college_id_card",label: "College ID Card",  urlKey: "college_id_card_url" },
+                                    ...(personType === "STUDENT" ? [{ key: "sslc", label: "SSLC", urlKey: "sslc_url" }] : []),
+                                ].map(({ key, label: lbl, urlKey }) => (
+                                    <DocUploader
+                                        key={key}
+                                        label={lbl}
+                                        fieldKey={key}
+                                        value={form[urlKey]}
+                                        onChange={(_k, val) => setForm(f => ({ ...f, [urlKey]: val }))}
+                                        collegeCode={selectedCollege?.college_code}
+                                        fullName={form.full_name || "new"}
+                                        phone={form.phone}
+                                        token={token}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -996,7 +1150,12 @@ export default function DAParticipants() {
                                     <td style={{ color: "#cbd5e1", fontSize: "0.83rem", maxWidth: "160px" }}>
                                         {p.college_name}
                                     </td>
-                                    <td><TypeBadge type={p.person_type} /></td>
+                                    <td>
+                                        <TypeBadge type={p.person_type} />
+                                        {p.is_team_manager && (
+                                            <span className="da-badge da-badge-yellow" style={{ marginLeft: "6px" }}>🏅 TM</span>
+                                        )}
+                                    </td>
                                     <td style={{ fontFamily: "monospace", color: "#c084fc", fontSize: "0.82rem" }}>
                                         {p.qr_code}
                                     </td>
