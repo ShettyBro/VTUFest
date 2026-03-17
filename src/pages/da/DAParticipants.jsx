@@ -773,14 +773,14 @@ function AddModal({ onClose, onAdded, token }) {
 
     const reasonOk = reason.trim().length >= 10;
 
-    // Load colleges
+    // Load colleges — API returns { data: [ { college_id, name, college_code, ... } ] }
     useEffect(() => {
         (async () => {
             try {
                 const res = await daFetch(`${API_BASE}/api/da/colleges`, token);
                 const json = await res.json();
-                const d = json.data || json;
-                setColleges(Array.isArray(d) ? d : (d.colleges || []));
+                // DAManagers confirms: d.data is the array directly
+                setColleges(Array.isArray(json.data) ? json.data : []);
             } catch {
                 setColleges([]);
             } finally {
@@ -790,7 +790,8 @@ function AddModal({ onClose, onAdded, token }) {
     }, []);
 
     const filteredColleges = colleges.filter(c =>
-        (c.college_name || c.name || "").toLowerCase().includes(collegeSearch.toLowerCase())
+        (c.name || "").toLowerCase().includes(collegeSearch.toLowerCase()) ||
+        (c.college_code || "").toLowerCase().includes(collegeSearch.toLowerCase())
     );
 
     const canNext = () => {
@@ -808,8 +809,8 @@ function AddModal({ onClose, onAdded, token }) {
         try {
             const body = {
                 ...form,
-                // explicit overrides — MUST come after spread so form can't clobber them
-                college_id: parseInt(selectedCollege.id),
+                // explicit overrides — college_id field is `college_id` not `id` in the API response
+                college_id: parseInt(selectedCollege.college_id),
                 person_type: personType,
                 events,
                 reason: reason.trim(),
@@ -884,20 +885,21 @@ function AddModal({ onClose, onAdded, token }) {
                                     <div style={{ maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px" }}>
                                         {filteredColleges.map(c => (
                                             <div
-                                                key={c.id}
+                                                key={c.college_id}
                                                 onClick={() => setSelectedCollege(c)}
                                                 style={{
                                                     padding: "10px 14px",
                                                     borderRadius: "8px",
                                                     cursor: "pointer",
                                                     fontSize: "0.88rem",
-                                                    background: selectedCollege?.id === c.id ? "rgba(168,85,247,0.18)" : "rgba(255,255,255,0.04)",
-                                                    border: selectedCollege?.id === c.id ? "1px solid rgba(168,85,247,0.5)" : "1px solid transparent",
-                                                    color: selectedCollege?.id === c.id ? "#c084fc" : "#cbd5e1",
+                                                    background: selectedCollege?.college_id === c.college_id ? "rgba(168,85,247,0.18)" : "rgba(255,255,255,0.04)",
+                                                    border: selectedCollege?.college_id === c.college_id ? "1px solid rgba(168,85,247,0.5)" : "1px solid transparent",
+                                                    color: selectedCollege?.college_id === c.college_id ? "#c084fc" : "#cbd5e1",
                                                     transition: "all 0.15s",
                                                 }}
                                             >
-                                                {c.college_name || c.name}
+                                                <div style={{ fontWeight: 600 }}>{c.name}</div>
+                                                {c.college_code && <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{c.college_code}</div>}
                                             </div>
                                         ))}
                                         {filteredColleges.length === 0 && (
@@ -1077,7 +1079,7 @@ function AddModal({ onClose, onAdded, token }) {
                                 borderRadius: "10px", padding: "14px 16px", marginBottom: "16px",
                                 fontSize: "0.85rem", lineHeight: "1.8",
                             }}>
-                                <div><span style={{ color: "#64748b" }}>College: </span><strong style={{ color: "#f1f5f9" }}>{selectedCollege?.college_name || selectedCollege?.name}</strong></div>
+                                <div><span style={{ color: "#64748b" }}>College: </span><strong style={{ color: "#f1f5f9" }}>{selectedCollege?.name}</strong></div>
                                 <div><span style={{ color: "#64748b" }}>Type: </span><TypeBadge type={personType} /></div>
                                 <div><span style={{ color: "#64748b" }}>Name: </span><span style={{ color: "#e2e8f0" }}>{form.full_name}</span></div>
                                 <div><span style={{ color: "#64748b" }}>USN: </span><span style={{ color: "#e2e8f0" }}>{form.usn || "—"}</span></div>
