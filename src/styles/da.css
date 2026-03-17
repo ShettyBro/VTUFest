@@ -30,6 +30,8 @@
     margin-bottom: 24px;
 }
 
+
+
 .da-search-input {
     flex: 1;
     max-width: 360px;
@@ -568,29 +570,29 @@
     font-size: 0.9rem;
     transition: all 0.18s;
     padding: 0;
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .da-icon-btn-view:hover {
-    background: rgba(96,165,250,0.18);
-    border-color: rgba(96,165,250,0.4);
+    background: rgba(96, 165, 250, 0.18);
+    border-color: rgba(96, 165, 250, 0.4);
 }
 
 .da-icon-btn-edit:hover {
-    background: rgba(168,85,247,0.18);
-    border-color: rgba(168,85,247,0.4);
+    background: rgba(168, 85, 247, 0.18);
+    border-color: rgba(168, 85, 247, 0.4);
 }
 
 .da-icon-btn-delete:hover {
-    background: rgba(239,68,68,0.18);
-    border-color: rgba(239,68,68,0.4);
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.4);
 }
 
 /* ── 2-tab bar ── */
 .da-tab-bar {
     display: flex;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     gap: 0;
 }
 
@@ -644,7 +646,7 @@
     left: 20px;
     right: 20px;
     height: 1px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     z-index: 0;
 }
 
@@ -666,20 +668,20 @@
     justify-content: center;
     font-size: 0.78rem;
     font-weight: 700;
-    border: 2px solid rgba(255,255,255,0.15);
-    background: rgba(15,23,42,0.97);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(15, 23, 42, 0.97);
     color: #475569;
     transition: all 0.2s;
 }
 
 .da-step-dot.active .da-step-num {
-    background: rgba(168,85,247,0.25);
+    background: rgba(168, 85, 247, 0.25);
     border-color: #c084fc;
     color: #c084fc;
 }
 
 .da-step-dot.done .da-step-num {
-    background: rgba(34,197,94,0.2);
+    background: rgba(34, 197, 94, 0.2);
     border-color: #4ade80;
     color: #4ade80;
 }
@@ -692,8 +694,13 @@
     white-space: nowrap;
 }
 
-.da-step-dot.active .da-step-label { color: #c084fc; }
-.da-step-dot.done .da-step-label { color: #4ade80; }
+.da-step-dot.active .da-step-label {
+    color: #c084fc;
+}
+
+.da-step-dot.done .da-step-label {
+    color: #4ade80;
+}
 
 /* ── 2-column form grid ── */
 .da-form-grid {
@@ -716,8 +723,8 @@
 .da-input {
     width: 100%;
     padding: 9px 14px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 9px;
     color: #f1f5f9;
     font-size: 0.88rem;
@@ -727,11 +734,13 @@
     box-sizing: border-box;
 }
 
-.da-input::placeholder { color: rgba(255,255,255,0.25); }
+.da-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
 
 .da-input:focus {
-    border-color: rgba(168,85,247,0.5);
-    box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
 }
 
 .da-input:read-only {
@@ -749,13 +758,13 @@
     text-decoration: none;
     padding: 3px 10px;
     border-radius: 6px;
-    background: rgba(96,165,250,0.1);
-    border: 1px solid rgba(96,165,250,0.25);
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.25);
     transition: all 0.18s;
 }
 
 .da-doc-link:hover {
-    background: rgba(96,165,250,0.2);
+    background: rgba(96, 165, 250, 0.2);
     color: #93c5fd;
 }
 
@@ -764,4 +773,4 @@
     max-width: 720px;
     max-height: 90vh;
     overflow-y: auto;
-}
+}
