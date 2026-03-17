@@ -228,8 +228,9 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                 const res = await daFetch(`${API_BASE}/api/da/master-participants/${participantId}`, token);
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.message || "Failed to load");
-                const p = json.participant;
-                setData(json);
+                const payload = json.data || json; // handle both wrapped and flat
+                const p = payload.participant;
+                setData(payload);
                 setForm({
                     full_name: p.full_name || "",
                     phone: p.phone || "",
@@ -246,7 +247,7 @@ function DetailModal({ participantId, readOnly, onClose, onSaved, token }) {
                     college_id_card_url: p.college_id_card_url || "",
                     sslc_url: p.sslc_url || "",
                 });
-                setEvents((json.events || []).map(ev => ({ event_name: ev.event_name, role: ev.role })));
+                setEvents((payload.events || []).map(ev => ({ event_name: ev.event_name, role: ev.role })));
             } catch (err) {
                 showPopup(err.message, "error");
                 onClose();
@@ -851,8 +852,9 @@ export default function DAParticipants() {
             const res = await daFetch(`${API_BASE}/api/da/master-participants?${params}`, token);
             const json = await res.json();
             if (!res.ok) throw new Error(json.message || "Failed to load");
-            setParticipants(json.participants || []);
-            setTotal(json.total || 0);
+            const payload = json.data || json; // API wraps in { success, message, data: { participants, total } }
+            setParticipants(payload.participants || []);
+            setTotal(payload.total || 0);
             setPage(pg);
         } catch (err) {
             showPopup(err.message, "error");
