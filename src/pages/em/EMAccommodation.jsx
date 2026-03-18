@@ -5,9 +5,9 @@ import { emFetch } from "../../utils/emFetch";
 const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
 const STATUS_CFG = {
-    PENDING: { color: "#f59e0b", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.4)", label: "⏳ Pending" },
-    APPROVED: { color: "#10b981", bg: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.4)", label: "✅ Approved" },
-    REJECTED: { color: "#f87171", bg: "rgba(239,68,68,0.15)", border: "rgba(239,68,68,0.4)", label: "❌ Rejected" },
+    PENDING:  { color: "#f59e0b", bg: "rgba(245,158,11,0.15)",  border: "rgba(245,158,11,0.4)",  label: "⏳ Pending"  },
+    APPROVED: { color: "#10b981", bg: "rgba(16,185,129,0.15)",  border: "rgba(16,185,129,0.4)",  label: "✅ Approved" },
+    REJECTED: { color: "#f87171", bg: "rgba(239,68,68,0.15)",   border: "rgba(239,68,68,0.4)",   label: "❌ Rejected" },
 };
 const cfg = s => STATUS_CFG[s?.toUpperCase()] || STATUS_CFG.PENDING;
 const fmt = d => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
@@ -20,30 +20,37 @@ const EMPTY_SLOT = {
     notes: "", allotted_boys: "0", allotted_girls: "0",
 };
 
-// location_url is MANDATORY and must be a Google Maps link
-const isValidGoogleMapsUrl = (url) => {
-    if (!url || !url.trim()) return false; // mandatory — blank is not allowed
-    const t = url.trim();
-    return (
-        t.includes("maps.app.goo.gl") ||
-        t.includes("goo.gl/maps") ||
-        t.includes("google.com/maps") ||
-        t.includes("maps.google.com")
+// ─── Payment Badge ────────────────────────────────────────────────────────────
+function PaymentBadge({ verified }) {
+    return verified ? (
+        <span style={{
+            display: "inline-flex", alignItems: "center", gap: "4px",
+            background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.4)",
+            color: "#10b981", padding: "3px 9px", borderRadius: "10px",
+            fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap",
+        }}>
+            ✅ Payment Verified
+        </span>
+    ) : (
+        <span style={{
+            display: "inline-flex", alignItems: "center", gap: "4px",
+            background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)",
+            color: "#f87171", padding: "3px 9px", borderRadius: "10px",
+            fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap",
+        }}>
+            ⚠️ Payment Not Verified
+        </span>
     );
-};
+}
 
 // ─── REJECT MODAL ─────────────────────────────────────────────────────────────
-// Rejection requires a mandatory reason. APPROVED option is intentionally removed.
 function RejectModal({ request, token, onClose, onDone }) {
     const [reason, setReason] = useState("");
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState("");
 
     const handleReject = async () => {
-        if (!reason.trim()) {
-            setErr("Rejection reason is required.");
-            return;
-        }
+        if (!reason.trim()) { setErr("Rejection reason is required."); return; }
         setSaving(true); setErr("");
         try {
             const res = await emFetch(`${API_BASE}/api/em/accommodation/${request.id}/status`, {
@@ -65,13 +72,15 @@ function RejectModal({ request, token, onClose, onDone }) {
                 <button onClick={onClose} style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
 
                 <h4 style={{ margin: "0 0 4px", color: "#f87171" }}>❌ Reject Request</h4>
-                <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginBottom: "20px" }}>
+                <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginBottom: "12px" }}>
                     {request.college_name} <span style={{ opacity: 0.6 }}>({request.college_code})</span>
                     &nbsp;·&nbsp; 👦 <strong>{request.total_boys}</strong> boys
                     &nbsp;·&nbsp; 👧 <strong>{request.total_girls}</strong> girls
                 </div>
+                <div style={{ marginBottom: "16px" }}>
+                    <PaymentBadge verified={request.is_payment_verified} />
+                </div>
 
-                {/* Mandatory reason */}
                 <div style={{ marginBottom: "18px" }}>
                     <label style={{ color: "var(--text-secondary)", fontSize: "0.82rem", display: "block", marginBottom: "6px" }}>
                         Rejection Reason <span style={{ color: "#f87171", fontWeight: 700 }}>*</span>
@@ -125,27 +134,31 @@ function RejectModal({ request, token, onClose, onDone }) {
 }
 
 // ─── ALLOTMENT MODAL ──────────────────────────────────────────────────────────
-// Saving allotments automatically sets status to APPROVED if totals match exactly.
 function AllotmentModal({ request, token, onClose, onSaved }) {
     const [slots, setSlots] = useState([{ ...EMPTY_SLOT }]);
     const [loadingA, setLoadingA] = useState(true);
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState("");
-    const [urlErrors, setUrlErrors] = useState([true]); // per-slot URL validity — starts invalid (mandatory field)
 
-    const reqBoys = parseInt(request.total_boys) || 0;
-    const reqGirls = parseInt(request.total_girls) || 0;
-    const reqTotal = reqBoys + reqGirls;
+    const reqBoys   = parseInt(request.total_boys)  || 0;
+    const reqGirls  = parseInt(request.total_girls) || 0;
+    const reqTotal  = reqBoys + reqGirls;
+    const paymentOk = request.is_payment_verified === true;
 
-    const sumBoys = slots.reduce((s, a) => s + (parseInt(a.allotted_boys) || 0), 0);
+    const sumBoys  = slots.reduce((s, a) => s + (parseInt(a.allotted_boys)  || 0), 0);
     const sumGirls = slots.reduce((s, a) => s + (parseInt(a.allotted_girls) || 0), 0);
-    const boysOk = sumBoys === reqBoys;
-    const girlsOk = sumGirls === reqGirls;
-    const canSave = boysOk && girlsOk
-        && slots.every(a => a.accommodation_name.trim() !== "")
-        && !urlErrors.some(Boolean);
+    const boysOk   = sumBoys  === reqBoys;
+    const girlsOk  = sumGirls === reqGirls;
 
-    // Load any existing allotments on open
+    // Per-row validation: must have a name and at least 1 person
+    const rowsOk = slots.every(a =>
+        a.accommodation_name.trim() !== "" &&
+        ((parseInt(a.allotted_boys) || 0) + (parseInt(a.allotted_girls) || 0)) > 0
+    );
+
+    const canSave = paymentOk && boysOk && girlsOk && rowsOk;
+
+    // Load existing allotments on open
     useEffect(() => {
         fetch(`${API_BASE}/api/em/accommodation/${request.id}/allotments`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -156,12 +169,12 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                     setSlots(d.data.allotments.map(a => ({
                         accommodation_name: a.accommodation_name || "",
                         accommodation_type: a.accommodation_type || "hotel",
-                        address: a.address || "",
-                        location_url: a.location_url || "",
-                        contact_name: a.contact_name || "",
+                        address:       a.address       || "",
+                        location_url:  a.location_url  || "",
+                        contact_name:  a.contact_name  || "",
                         contact_phone: a.contact_phone || "",
-                        notes: a.notes || "",
-                        allotted_boys: String(a.allotted_boys ?? ""),
+                        notes:         a.notes         || "",
+                        allotted_boys:  String(a.allotted_boys  ?? ""),
                         allotted_girls: String(a.allotted_girls ?? ""),
                     })));
                 }
@@ -170,14 +183,11 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
             .finally(() => setLoadingA(false));
     }, []);
 
-    const upd = (idx, f, v) => {
+    const upd = (idx, f, v) =>
         setSlots(p => p.map((a, i) => i === idx ? { ...a, [f]: v } : a));
-        if (f === "location_url") {
-            setUrlErrors(p => p.map((e, i) => i === idx ? !isValidGoogleMapsUrl(v) : e));
-        }
-    };
-    const add = () => { setSlots(p => [...p, { ...EMPTY_SLOT }]); setUrlErrors(p => [...p, true]); };
-    const rem = idx => { if (slots.length > 1) { setSlots(p => p.filter((_, i) => i !== idx)); setUrlErrors(p => p.filter((_, i) => i !== idx)); } };
+
+    const add = () => setSlots(p => [...p, { ...EMPTY_SLOT }]);
+    const rem = idx => { if (slots.length > 1) setSlots(p => p.filter((_, i) => i !== idx)); };
 
     const handleSave = async () => {
         if (!canSave) return;
@@ -186,7 +196,13 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
             const res = await emFetch(`${API_BASE}/api/em/accommodation/${request.id}/allotments`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ allotments: slots }),
+                body: JSON.stringify({
+                    allotments: slots.map(s => ({
+                        ...s,
+                        allotted_boys:  parseInt(s.allotted_boys)  || 0,
+                        allotted_girls: parseInt(s.allotted_girls) || 0,
+                    })),
+                }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Save failed");
@@ -207,26 +223,38 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
             <div className="glass-card" style={{ width: "100%", maxWidth: "740px", maxHeight: "92vh", overflowY: "auto", position: "relative" }}>
 
                 {/* Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                     <div>
                         <h4 style={{ margin: "0 0 4px", color: "var(--text-primary)", fontSize: "1.05rem" }}>🏨 Assign Accommodation</h4>
-                        <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>
+                        <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginBottom: "10px" }}>
                             {request.college_name} <span style={{ opacity: 0.6 }}>({request.college_code})</span>
                         </div>
-                        {/* Auto-approve notice */}
-                        <div style={{ marginTop: "8px", padding: "6px 12px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "6px", fontSize: "0.76rem", color: "#10b981" }}>
-                            ✅ Saving with matching totals will automatically approve this request
-                        </div>
+                        <PaymentBadge verified={paymentOk} />
+
+                        {/* Payment block warning */}
+                        {!paymentOk && (
+                            <div style={{ marginTop: "12px", padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: "8px", fontSize: "0.82rem", color: "#f87171" }}>
+                                🚫 <strong>Accommodation assignment is blocked.</strong> College payment must be verified before assigning accommodation.
+                            </div>
+                        )}
+
+                        {/* Auto-approve notice — only if payment is ok */}
+                        {paymentOk && (
+                            <div style={{ marginTop: "10px", padding: "6px 12px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "6px", fontSize: "0.76rem", color: "#10b981" }}>
+                                ✅ Saving with matching totals will automatically approve this request
+                            </div>
+                        )}
                     </div>
-                    <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.3rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
+                    <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.3rem", cursor: "pointer", lineHeight: 1, marginLeft: "12px" }}>✕</button>
                 </div>
 
-                {/* Requested totals */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "18px" }}>
+                {/* Requested vs Actual totals */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", marginBottom: "18px" }}>
                     {[
-                        { label: "Requested Male", value: reqBoys, color: "#60a5fa" },
+                        { label: "Requested Male",   value: reqBoys,  color: "#60a5fa" },
                         { label: "Requested Female", value: reqGirls, color: "#fb7185" },
-                        { label: "Total People", value: reqTotal, color: "#a78bfa" },
+                        { label: "Total Requested",  value: reqTotal, color: "#a78bfa" },
+                        ...(paymentOk ? [{ label: "Actual Team Size", value: request.final_participant_count ?? "—", color: "#34d399" }] : []),
                     ].map(c => (
                         <div key={c.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "14px", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
                             <div style={{ fontSize: "1.7rem", fontWeight: 800, color: c.color, lineHeight: 1 }}>{c.value}</div>
@@ -235,52 +263,71 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                     ))}
                 </div>
 
-                {/* Live allotment progress tracker */}
-                <div style={{ marginBottom: "18px", padding: "14px 16px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", border: `1px solid ${canSave ? "rgba(16,185,129,0.45)" : "rgba(245,158,11,0.3)"}`, transition: "border-color 0.3s" }}>
-                    <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
-                        Allotment Progress
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-                        {[
-                            { label: "Male", sum: sumBoys, total: reqBoys, color: "#60a5fa", ok: boysOk },
-                            { label: "Female", sum: sumGirls, total: reqGirls, color: "#fb7185", ok: girlsOk },
-                            { label: "Total", sum: sumBoys + sumGirls, total: reqTotal, color: "#a78bfa", ok: boysOk && girlsOk },
-                        ].map(p => {
-                            const over = p.sum > p.total;
-                            const barColor = p.ok ? "#10b981" : over ? "#f87171" : p.color;
-                            return (
-                                <div key={p.label}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
-                                        <span style={{ color: "var(--text-secondary)", fontSize: "0.78rem" }}>{p.label}</span>
-                                        <span style={{ color: p.ok ? "#10b981" : over ? "#f87171" : "#f59e0b", fontSize: "0.78rem", fontWeight: 700 }}>
-                                            {p.sum} / {p.total} {p.ok ? "✓" : over ? "!" : ""}
-                                        </span>
-                                    </div>
-                                    <div style={{ height: "5px", background: "rgba(255,255,255,0.08)", borderRadius: "3px", overflow: "hidden" }}>
-                                        <div style={{ height: "100%", width: `${Math.min(100, p.total > 0 ? (p.sum / p.total) * 100 : 0)}%`, background: barColor, borderRadius: "3px", transition: "width 0.25s" }} />
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {canSave ? (
-                        <div style={{ color: "#10b981", fontSize: "0.78rem", marginTop: "10px", fontWeight: 600 }}>
-                            ✅ Totals match — ready to save and approve
+                {/* Live allotment progress */}
+                {paymentOk && (
+                    <div style={{ marginBottom: "18px", padding: "14px 16px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", border: `1px solid ${canSave ? "rgba(16,185,129,0.45)" : "rgba(245,158,11,0.3)"}`, transition: "border-color 0.3s" }}>
+                        <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
+                            Allotment Progress
                         </div>
-                    ) : (
-                        <div style={{ color: "#f59e0b", fontSize: "0.78rem", marginTop: "10px" }}>
-                            {!boysOk && `⚠ Male: assigned ${sumBoys}, need ${reqBoys}. `}
-                            {!girlsOk && `⚠ Female: assigned ${sumGirls}, need ${reqGirls}. `}
-                            Totals must match exactly to save and approve.
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+                            {[
+                                { label: "Male",   sum: sumBoys,            total: reqBoys,  color: "#60a5fa", ok: boysOk  },
+                                { label: "Female", sum: sumGirls,           total: reqGirls, color: "#fb7185", ok: girlsOk },
+                                { label: "Total",  sum: sumBoys + sumGirls, total: reqTotal, color: "#a78bfa", ok: boysOk && girlsOk },
+                            ].map(p => {
+                                const over = p.sum > p.total;
+                                const barColor = p.ok ? "#10b981" : over ? "#f87171" : p.color;
+                                return (
+                                    <div key={p.label}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                                            <span style={{ color: "var(--text-secondary)", fontSize: "0.78rem" }}>{p.label}</span>
+                                            <span style={{ color: p.ok ? "#10b981" : over ? "#f87171" : "#f59e0b", fontSize: "0.78rem", fontWeight: 700 }}>
+                                                {p.sum} / {p.total} {p.ok ? "✓" : over ? "!" : ""}
+                                            </span>
+                                        </div>
+                                        <div style={{ height: "5px", background: "rgba(255,255,255,0.08)", borderRadius: "3px", overflow: "hidden" }}>
+                                            <div style={{ height: "100%", width: `${Math.min(100, p.total > 0 ? (p.sum / p.total) * 100 : 0)}%`, background: barColor, borderRadius: "3px", transition: "width 0.25s" }} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    )}
-                </div>
+                        {canSave ? (
+                            <div style={{ color: "#10b981", fontSize: "0.78rem", marginTop: "10px", fontWeight: 600 }}>
+                                ✅ Totals match — ready to save and approve
+                            </div>
+                        ) : (
+                            <div style={{ color: "#f59e0b", fontSize: "0.78rem", marginTop: "10px" }}>
+                                {!boysOk   && `⚠ Male: assigned ${sumBoys}, need ${reqBoys}. `}
+                                {!girlsOk  && `⚠ Female: assigned ${sumGirls}, need ${reqGirls}. `}
+                                {rowsOk && boysOk && girlsOk ? "" : "Totals must match exactly to save and approve."}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                {/* Allotment slots */}
+                {/* Allotment slots — disabled overlay when payment not verified */}
                 {loadingA ? (
                     <div style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>Loading existing allotments…</div>
                 ) : (
-                    <>
+                    <div style={{ position: "relative" }}>
+                        {/* Blur overlay when payment not verified */}
+                        {!paymentOk && (
+                            <div style={{
+                                position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)",
+                                backdropFilter: "blur(3px)", borderRadius: "10px", zIndex: 10,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                            }}>
+                                <div style={{ textAlign: "center", color: "#f87171", padding: "20px" }}>
+                                    <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔒</div>
+                                    <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>Payment Verification Required</div>
+                                    <div style={{ fontSize: "0.8rem", opacity: 0.8, marginTop: "4px" }}>
+                                        Cannot assign accommodation until college payment is verified
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {slots.map((a, idx) => (
                             <div key={idx} style={{ marginBottom: "14px", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
@@ -336,27 +383,17 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                                     {/* Google Maps Link */}
                                     <div style={{ gridColumn: "1 / -1" }}>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>
-                                            Google Maps Link <span style={{ color: "#f87171" }}>*</span>
+                                            Google Maps Link
                                         </label>
                                         <input
-                                            style={{
-                                                ...inp,
-                                                border: urlErrors[idx]
-                                                    ? "1px solid rgba(239,68,68,0.7)"
-                                                    : "1px solid rgba(16,185,129,0.6)",
-                                            }}
+                                            style={inp}
                                             placeholder="https://maps.app.goo.gl/… or google.com/maps/…"
                                             value={a.location_url}
                                             onChange={e => upd(idx, "location_url", e.target.value)}
                                         />
-                                        {urlErrors[idx] && (
-                                            <div style={{ color: "#f87171", fontSize: "0.72rem", marginTop: "4px" }}>
-                                                ⛔ Required — must be a Google Maps link, e.g. <em>https://maps.app.goo.gl/iz2Sr1d1Kbb…</em>
-                                            </div>
-                                        )}
-                                        {!urlErrors[idx] && a.location_url.trim() && (
-                                            <div style={{ color: "#10b981", fontSize: "0.72rem", marginTop: "4px" }}>✓ Valid Google Maps link</div>
-                                        )}
+                                        <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginTop: "3px" }}>
+                                            goo.gl short links are accepted — backend resolves them automatically
+                                        </div>
                                     </div>
 
                                     {/* Boys */}
@@ -379,6 +416,13 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                                             style={{ ...inp, border: "1px solid rgba(251,113,133,0.5)", color: "#fb7185", fontWeight: 700, fontSize: "1rem" }} />
                                     </div>
 
+                                    {/* Per-row validation hint */}
+                                    {((parseInt(a.allotted_boys) || 0) + (parseInt(a.allotted_girls) || 0)) === 0 && (
+                                        <div style={{ gridColumn: "1 / -1", color: "#f59e0b", fontSize: "0.74rem" }}>
+                                            ⚠ At least 1 person (male or female) must be allotted per location
+                                        </div>
+                                    )}
+
                                     {/* Notes */}
                                     <div style={{ gridColumn: "1 / -1" }}>
                                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Notes / Additional Info</label>
@@ -392,15 +436,17 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                         ))}
 
                         {/* Add another location */}
-                        <button onClick={add} style={{ width: "100%", padding: "11px", marginBottom: "16px", background: "rgba(16,185,129,0.08)", border: "1px dashed rgba(16,185,129,0.5)", color: "#10b981", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem", transition: "all 0.2s" }}>
-                            + Add Another Location
-                        </button>
-                    </>
+                        {paymentOk && (
+                            <button onClick={add} style={{ width: "100%", padding: "11px", marginBottom: "16px", background: "rgba(16,185,129,0.08)", border: "1px dashed rgba(16,185,129,0.5)", color: "#10b981", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.88rem", transition: "all 0.2s" }}>
+                                + Add Another Location
+                            </button>
+                        )}
+                    </div>
                 )}
 
                 {err && (
                     <div style={{ color: "#f87171", fontSize: "0.82rem", marginBottom: "12px", padding: "10px 14px", background: "rgba(239,68,68,0.1)", borderRadius: "8px", border: "1px solid rgba(239,68,68,0.3)" }}>
-                        {err}
+                        ⚠ {err}
                     </div>
                 )}
 
@@ -409,7 +455,13 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                     <button
                         onClick={handleSave}
                         disabled={!canSave || saving}
-                        title={!canSave ? "Male and Female totals must match requested amounts exactly" : "Save allotments and approve this request"}
+                        title={
+                            !paymentOk
+                                ? "Cannot assign accommodation until college payment is verified"
+                                : !canSave
+                                    ? "Male and Female totals must match requested amounts exactly (and each row must have ≥1 person)"
+                                    : "Save allotments and approve this request"
+                        }
                         style={{
                             flex: 1, padding: "13px", fontWeight: 700, fontSize: "0.92rem",
                             borderRadius: "8px", transition: "all 0.2s",
@@ -418,7 +470,7 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
                             border: `1px solid ${canSave ? "#10b981" : "rgba(255,255,255,0.12)"}`,
                             color: canSave ? "#10b981" : "var(--text-muted)",
                         }}>
-                        {saving ? "Saving & Approving…" : canSave ? "✅ Save & Approve Request" : "Fix totals to enable save"}
+                        {saving ? "Saving & Approving…" : !paymentOk ? "🔒 Payment Not Verified — Blocked" : canSave ? "✅ Save & Approve Request" : "Fix totals to enable save"}
                     </button>
                     <button onClick={onClose} style={{ padding: "13px 22px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
                         Cancel
@@ -433,13 +485,25 @@ function AllotmentModal({ request, token, onClose, onSaved }) {
 function RowDetail({ r }) {
     return (
         <tr>
-            <td colSpan={11} style={{ padding: 0 }}>
+            <td colSpan={12} style={{ padding: 0 }}>
                 <div style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "14px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
                     <div>
                         <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Contact Person</div>
                         <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.88rem" }}>{r.contact_person_name}</div>
                         <a href={`tel:${r.contact_person_phone}`} style={{ color: "#60a5fa", fontSize: "0.82rem", textDecoration: "none" }}>{r.contact_person_phone}</a>
                     </div>
+                    {r.college_place && (
+                        <div>
+                            <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>College Place</div>
+                            <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>{r.college_place}</div>
+                        </div>
+                    )}
+                    {r.is_payment_verified && (
+                        <div>
+                            <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Actual Team Size (Verified)</div>
+                            <div style={{ color: "#34d399", fontWeight: 700, fontSize: "1rem" }}>{r.final_participant_count ?? "—"}</div>
+                        </div>
+                    )}
                     {r.special_requirements && (
                         <div>
                             <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Special Requirements</div>
@@ -476,8 +540,8 @@ export default function EMAccommodation() {
     const [filter, setFilter] = useState("ALL");
     const [search, setSearch] = useState("");
     const [expandedId, setExpandedId] = useState(null);
-    const [rejectTarget, setRejectTarget] = useState(null);  // reject modal
-    const [allotTarget, setAllotTarget] = useState(null);  // allotment modal
+    const [rejectTarget, setRejectTarget] = useState(null);
+    const [allotTarget, setAllotTarget] = useState(null);
 
     const token = localStorage.getItem("vtufest_em_token");
     const headers = { Authorization: `Bearer ${token}` };
@@ -503,8 +567,9 @@ export default function EMAccommodation() {
         return matchStatus && matchSearch;
     });
 
-    const totalBoys = filtered.reduce((s, r) => s + (parseInt(r.total_boys) || 0), 0);
+    const totalBoys  = filtered.reduce((s, r) => s + (parseInt(r.total_boys)  || 0), 0);
     const totalGirls = filtered.reduce((s, r) => s + (parseInt(r.total_girls) || 0), 0);
+    const paymentVerifiedCount = filtered.filter(r => r.is_payment_verified).length;
 
     return (
         <EMLayout>
@@ -512,7 +577,12 @@ export default function EMAccommodation() {
 
                 {/* Page header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-                    <h3 style={{ margin: 0, color: "var(--text-primary)" }}>Accommodation Requests</h3>
+                    <div>
+                        <h3 style={{ margin: "0 0 4px", color: "var(--text-primary)" }}>Accommodation Requests</h3>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                            {paymentVerifiedCount} of {filtered.length} shown have payment verified
+                        </div>
+                    </div>
                     <button onClick={fetchAll} style={{ padding: "8px 18px", background: "rgba(96,165,250,0.15)", border: "1px solid #60a5fa", color: "#60a5fa", borderRadius: "8px", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>
                         ⟳ Refresh
                     </button>
@@ -558,10 +628,10 @@ export default function EMAccommodation() {
                 ) : (
                     <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
                         <div style={{ overflowX: "auto" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1000px" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1100px" }}>
                                 <thead>
                                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                                        {["College", "Code", "Status", "Male", "Female", "Total", "Allotted", "Applied At", "❌ Reject", "🏨 Assign & Approve", ""].map(h => (
+                                        {["College", "Code", "Status", "Payment", "Requested 👦/👧", "Actual Team", "Allotted", "Applied At", "❌ Reject", "🏨 Assign & Approve", ""].map(h => (
                                             <th key={h} style={{ padding: "13px 14px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.73rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.4px", whiteSpace: "nowrap" }}>{h}</th>
                                         ))}
                                     </tr>
@@ -569,14 +639,16 @@ export default function EMAccommodation() {
                                 <tbody>
                                     {filtered.map(r => {
                                         const s = cfg(r.status);
-                                        const isExpanded = expandedId === r.id;
+                                        const isExpanded   = expandedId === r.id;
                                         const fullyAllotted = r.is_fully_allotted;
-                                        const isApproved = r.status?.toUpperCase() === "APPROVED";
-                                        const isRejected = r.status?.toUpperCase() === "REJECTED";
+                                        const isApproved   = r.status?.toUpperCase() === "APPROVED";
+                                        const isRejected   = r.status?.toUpperCase() === "REJECTED";
+                                        const paymentOk    = r.is_payment_verified === true;
 
                                         return (
                                             <React.Fragment key={r.id}>
-                                                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                                                <tr
+                                                    style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
                                                     onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"}
                                                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
 
@@ -593,10 +665,31 @@ export default function EMAccommodation() {
                                                         <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, padding: "4px 11px", borderRadius: "12px", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap" }}>{s.label}</span>
                                                     </td>
 
-                                                    {/* Numbers */}
-                                                    <td style={{ padding: "13px 14px", color: "#60a5fa", fontWeight: 700 }}>{r.total_boys}</td>
-                                                    <td style={{ padding: "13px 14px", color: "#fb7185", fontWeight: 700 }}>{r.total_girls}</td>
-                                                    <td style={{ padding: "13px 14px", color: "#a78bfa", fontWeight: 800 }}>{r.total_persons}</td>
+                                                    {/* Payment status */}
+                                                    <td style={{ padding: "13px 14px" }}>
+                                                        <PaymentBadge verified={paymentOk} />
+                                                    </td>
+
+                                                    {/* Requested 👦 / 👧 */}
+                                                    <td style={{ padding: "13px 14px", whiteSpace: "nowrap" }}>
+                                                        <span style={{ color: "#60a5fa", fontWeight: 700 }}>{r.total_boys}</span>
+                                                        <span style={{ color: "var(--text-muted)", margin: "0 4px" }}>/</span>
+                                                        <span style={{ color: "#fb7185", fontWeight: 700 }}>{r.total_girls}</span>
+                                                        <span style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginLeft: "4px" }}>({r.total_persons})</span>
+                                                    </td>
+
+                                                    {/* Actual Team */}
+                                                    <td style={{ padding: "13px 14px" }}>
+                                                        {paymentOk ? (
+                                                            <span style={{ color: "#34d399", fontWeight: 700, fontSize: "0.92rem" }}>
+                                                                {r.final_participant_count ?? "—"}
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)", color: "#f59e0b", padding: "3px 9px", borderRadius: "8px", fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                                                ⚠️ Payment Pending
+                                                            </span>
+                                                        )}
+                                                    </td>
 
                                                     {/* Allotment status */}
                                                     <td style={{ padding: "13px 14px" }}>
@@ -608,17 +701,18 @@ export default function EMAccommodation() {
                                                                 padding: "3px 10px", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 700, whiteSpace: "nowrap",
                                                             }}>
                                                                 {fullyAllotted
-                                                                    ? `✓ Done (${r.allotment_count} loc)`
+                                                                    ? `✓ Fully Allotted (${r.allotment_count} loc)`
                                                                     : parseInt(r.allotment_count) > 0
                                                                         ? `⚠ Partial (${r.allotment_count})`
-                                                                        : "— Not assigned"}
+                                                                        : "— Not Allotted"}
                                                             </span>
                                                         ) : <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>—</span>}
                                                     </td>
 
+                                                    {/* Applied At */}
                                                     <td style={{ padding: "13px 14px", color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>{fmt(r.applied_at)}</td>
 
-                                                    {/* ── Reject button — hidden for already-rejected ── */}
+                                                    {/* Reject button */}
                                                     <td style={{ padding: "13px 14px" }}>
                                                         {!isRejected ? (
                                                             <button
@@ -633,16 +727,36 @@ export default function EMAccommodation() {
                                                         )}
                                                     </td>
 
-                                                    {/* ── Assign & Approve — available for PENDING and re-edit for APPROVED ── */}
+                                                    {/* Assign & Approve — blocked if payment not verified */}
                                                     <td style={{ padding: "13px 14px" }}>
                                                         {!isRejected ? (
-                                                            <button
-                                                                onClick={() => setAllotTarget(r)}
-                                                                style={{ padding: "6px 14px", background: isApproved ? "rgba(16,185,129,0.12)" : "rgba(212,175,55,0.15)", border: `1px solid ${isApproved ? "#10b981" : "#d4af37"}`, color: isApproved ? "#10b981" : "#d4af37", borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", transition: "all 0.2s" }}
-                                                                onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
-                                                                onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-                                                                {isApproved ? `🏨 Edit (${r.allotment_count} loc)` : "🏨 Assign & Approve"}
-                                                            </button>
+                                                            <div title={!paymentOk ? "Cannot assign accommodation until college payment is verified" : ""} style={{ display: "inline-block" }}>
+                                                                <button
+                                                                    onClick={() => { if (paymentOk) setAllotTarget(r); }}
+                                                                    disabled={!paymentOk}
+                                                                    style={{
+                                                                        padding: "6px 14px",
+                                                                        background: !paymentOk
+                                                                            ? "rgba(255,255,255,0.04)"
+                                                                            : isApproved
+                                                                                ? "rgba(16,185,129,0.12)"
+                                                                                : "rgba(212,175,55,0.15)",
+                                                                        border: `1px solid ${!paymentOk ? "rgba(255,255,255,0.1)" : isApproved ? "#10b981" : "#d4af37"}`,
+                                                                        color: !paymentOk ? "var(--text-muted)" : isApproved ? "#10b981" : "#d4af37",
+                                                                        borderRadius: "7px",
+                                                                        cursor: paymentOk ? "pointer" : "not-allowed",
+                                                                        fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", transition: "all 0.2s",
+                                                                        opacity: paymentOk ? 1 : 0.5,
+                                                                    }}
+                                                                    onMouseEnter={e => { if (paymentOk) e.currentTarget.style.opacity = "0.8"; }}
+                                                                    onMouseLeave={e => { if (paymentOk) e.currentTarget.style.opacity = "1"; }}>
+                                                                    {!paymentOk
+                                                                        ? "🔒 Payment Pending"
+                                                                        : isApproved
+                                                                            ? `🏨 Edit (${r.allotment_count} loc)`
+                                                                            : "🏨 Assign & Approve"}
+                                                                </button>
+                                                            </div>
                                                         ) : (
                                                             <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic" }}>N/A</span>
                                                         )}
@@ -676,13 +790,16 @@ export default function EMAccommodation() {
                                 {filtered.length > 0 && (
                                     <tfoot>
                                         <tr style={{ borderTop: "2px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
-                                            <td colSpan={3} style={{ padding: "12px 14px", color: "var(--text-secondary)", fontSize: "0.82rem", fontWeight: 700 }}>
-                                                {filtered.length} requests shown
+                                            <td colSpan={4} style={{ padding: "12px 14px", color: "var(--text-secondary)", fontSize: "0.82rem", fontWeight: 700 }}>
+                                                {filtered.length} requests shown &nbsp;·&nbsp;
+                                                <span style={{ color: "#10b981" }}>{paymentVerifiedCount} verified</span>
                                             </td>
-                                            <td style={{ padding: "12px 14px", color: "#60a5fa", fontWeight: 800 }}>{totalBoys}</td>
-                                            <td style={{ padding: "12px 14px", color: "#fb7185", fontWeight: 800 }}>{totalGirls}</td>
-                                            <td style={{ padding: "12px 14px", color: "#a78bfa", fontWeight: 800 }}>{totalBoys + totalGirls}</td>
-                                            <td colSpan={5} />
+                                            <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                                                <span style={{ color: "#60a5fa", fontWeight: 800 }}>{totalBoys}</span>
+                                                <span style={{ color: "var(--text-muted)", margin: "0 4px" }}>/</span>
+                                                <span style={{ color: "#fb7185", fontWeight: 800 }}>{totalGirls}</span>
+                                            </td>
+                                            <td colSpan={6} />
                                         </tr>
                                     </tfoot>
                                 )}
@@ -691,7 +808,7 @@ export default function EMAccommodation() {
                     </div>
                 )}
 
-                {/* ── Modals ── */}
+                {/* Modals */}
                 {rejectTarget && (
                     <RejectModal
                         request={rejectTarget}
