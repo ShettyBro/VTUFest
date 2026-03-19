@@ -20,7 +20,7 @@ const CONTACT_HOURS = "Mon–Sat, 9 AM – 6 PM";
 
 const VIDEO_URLS = {
     "Student": "https://youtu.be/C7z6AwYm0sI",
-    "Team Manager": "https://youtu.be/URlIvlqJ4GA",
+    "Team Manager": "https://youtu.be/yrjQrsAfaZk",
     "Principal": "https://youtu.be/RwYz3bLncOo",
 };
 
@@ -72,7 +72,7 @@ export default function HelpButton({ className = "", style = {}, open = false, o
             : { top: style?.top ?? '16px' }),
         ...(style?.right !== undefined ? { right: style.right } :
             style?.left !== undefined ? { left: style.left } :
-            { right: '16px' }),
+                { right: '16px' }),
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
