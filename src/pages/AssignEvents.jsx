@@ -62,7 +62,7 @@ const EVENT_LIMITS = {
   elocution: { participants: 1, accompanists: 0 },
   debate: { participants: 2, accompanists: 0 },
 
-  one_act_play: { participants: 9, accompanists: 5 },
+  one_act_play: { participants: 9, accompanists: 3, technical_support: 2 },
   skits: { participants: 6, accompanists: 3 },
   mime: { participants: 6, accompanists: 2 },
   mimicry: { participants: 1, accompanists: 0 },
@@ -215,6 +215,7 @@ export default function AssignEvents() {
           [eventSlug]: {
             participants: data.data.participants || [],
             accompanists: data.data.accompanists || [],
+            technical_support: data.data.technical_support || [],
             available_students: data.data.available_students || [],
             available_accompanists: data.data.available_accompanists || [],
           },
@@ -257,19 +258,16 @@ export default function AssignEvents() {
         showPopup("Please add at least one participant before adding an accompanist", "warning");
         return;
       }
-      // For one_act_play the visual sub-limit is 3 (first section)
-      const accLimit = eventSlug === "one_act_play" ? 3 : eventLimits?.accompanists;
       const currentAccompanists = currentData?.accompanists?.length || 0;
-      if (currentAccompanists >= accLimit) {
-        showPopup(`Maximum accompanists (${accLimit}) reached for this event`, "warning");
+      if (currentAccompanists >= eventLimits?.accompanists) {
+        showPopup(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
         return;
       }
     } else if (mode === "add_technical_support") {
-      // One Act Play only — UI label, still sends as ACCOMPANIST to backend
-      // Total accompanist limit is 5 (3 regular + 2 tech support)
-      const totalAccompanists = currentData?.accompanists?.length || 0;
-      if (totalAccompanists >= (eventLimits?.accompanists || 0)) {
-        showPopup("Maximum technical support members (2) reached for this event", "warning");
+      // One Act Play only — backend now stores as TECHNICAL_SUPPORT event_type
+      const currentTechSupport = currentData?.technical_support?.length || 0;
+      if (currentTechSupport >= (eventLimits?.technical_support || 0)) {
+        showPopup(`Maximum technical support members (${eventLimits.technical_support}) reached for this event`, "warning");
         return;
       }
     }
@@ -324,8 +322,11 @@ export default function AssignEvents() {
     try {
       setIsSubmittingAdd(true);
 
-      // add_technical_support is a UI-only label; backend receives ACCOMPANIST for all
-      const eventType = modalMode === "add_participant" ? "PARTICIPANT" : "ACCOMPANIST";
+      // add_technical_support sends TECHNICAL_SUPPORT to backend; all others follow standard mapping
+      const eventType =
+        modalMode === "add_participant" ? "PARTICIPANT" :
+        modalMode === "add_technical_support" ? "TECHNICAL_SUPPORT" :
+        "ACCOMPANIST";
 
       const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
         method: "POST",
@@ -368,12 +369,16 @@ export default function AssignEvents() {
   };
 
   const handleRemove = async (eventSlug, personId, personType, listType) => {
-    // Guard: cannot remove a participant while accompanists still exist
+    // Guard: cannot remove a participant while accompanists or tech support still exist
     if (listType === "participant") {
       const currentAccompanists = eventData[eventSlug]?.accompanists?.length || 0;
-      if (currentAccompanists > 0) {
+      const currentTechSupport = eventData[eventSlug]?.technical_support?.length || 0;
+      if (currentAccompanists > 0 || currentTechSupport > 0) {
+        const parts = [];
+        if (currentAccompanists > 0) parts.push(`${currentAccompanists} accompanist(s)`);
+        if (currentTechSupport > 0) parts.push(`${currentTechSupport} technical support member(s)`);
         showPopup(
-          `Remove all ${currentAccompanists} accompanist(s) first before removing the participant.`,
+          `Remove all ${parts.join(" and ")} first before removing the participant.`,
           "warning"
         );
         return;
@@ -487,13 +492,11 @@ export default function AssignEvents() {
       const currentParticipants = currentData.participants?.length || 0;
       if (currentParticipants === 0) return true;
       const currentCount = currentData.accompanists?.length || 0;
-      // For one_act_play the visual sub-limit for the Accompanists row is 3
-      const subLimit = eventSlug === "one_act_play" ? 3 : limits.accompanists;
-      return currentCount >= subLimit;
-    } else if (type === "technical_support") {
-      // UI-only; tech support are accompanists; total limit is limits.accompanists (5 for one_act_play)
-      const currentCount = currentData.accompanists?.length || 0;
       return currentCount >= limits.accompanists;
+    } else if (type === "technical_support") {
+      // Reads directly from technical_support array returned by backend
+      const currentCount = currentData.technical_support?.length || 0;
+      return currentCount >= (limits.technical_support || 0);
     }
 
     return false;
@@ -707,11 +710,11 @@ export default function AssignEvents() {
                                 <h4 style={{ margin: 0, color: "var(--text-primary)" }}>
                                   Technical Support Team&nbsp;
                                   <span style={{ color: "var(--text-muted)", fontWeight: 400, fontSize: "0.85rem" }}>
-                                    {Math.max(0, (eventData[event.slug].accompanists.length - 3))}/2
+                                    {(eventData[event.slug].technical_support || []).length}/{EVENT_LIMITS[event.slug]?.technical_support || 0}
                                   </span>
                                 </h4>
                                 <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.78rem" }}>
-                                  Student or accompanist · Max 2 · Included in total accompanist count
+                                  Student or accompanist · Max 2 · Separate from regular accompanists
                                 </p>
                               </div>
                               {!isReadOnlyMode && role === "manager" && (
@@ -730,13 +733,13 @@ export default function AssignEvents() {
                               )}
                             </div>
 
-                            {/* Show accompanists.slice(3) — slots 4 and 5 are tech support */}
-                            {eventData[event.slug].accompanists.slice(3).length === 0 ? (
+                            {/* Reads from technical_support[] array returned by backend (event_type = TECHNICAL_SUPPORT) */}
+                            {(eventData[event.slug].technical_support || []).length === 0 ? (
                               <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No technical support members assigned yet</p>
                             ) : (
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "15px" }}>
-                                {eventData[event.slug].accompanists.slice(3).map((person) => {
-                                  const personKey = `${person.person_type}-${person.person_id}`;
+                                {(eventData[event.slug].technical_support || []).map((person) => {
+                                  const personKey = `ts-${person.person_type}-${person.person_id}`;
                                   const isRemoving = removingPersonId === personKey;
                                   return (
                                     <div key={personKey} style={{
@@ -768,7 +771,7 @@ export default function AssignEvents() {
                                             borderRadius: "4px", cursor: "pointer", width: "100%",
                                             fontSize: "0.85rem", transition: "background 0.2s"
                                           }}
-                                          onClick={() => handleRemove(event.slug, person.person_id, person.person_type, "accompanist")}
+                                          onClick={() => handleRemove(event.slug, person.person_id, person.person_type, "technical_support")}
                                           disabled={isRemoving}
                                         >
                                           {isRemoving ? "Removing..." : "Remove"}
@@ -784,12 +787,8 @@ export default function AssignEvents() {
 
                         <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "20px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-                            {/* For one_act_play show sub-limit 3; for others show total limit */}
                             <h4 style={{ margin: 0, color: "var(--text-primary)" }}>
-                              Accompanists&nbsp;
-                              {event.slug === "one_act_play"
-                                ? <>{Math.min(eventData[event.slug].accompanists.length, 3)}/3</>
-                                : <>{eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</>}
+                              Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}
                             </h4>
                             {!isReadOnlyMode && role === "manager" && (
                               <button
@@ -810,18 +809,11 @@ export default function AssignEvents() {
                             )}
                           </div>
 
-                          {/* For one_act_play: show only first 3 (slots 4-5 are Tech Support) */}
-                          {(event.slug === "one_act_play"
-                            ? eventData[event.slug].accompanists.slice(0, 3)
-                            : eventData[event.slug].accompanists
-                          ).length === 0 ? (
+                          {eventData[event.slug].accompanists.length === 0 ? (
                             <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No accompanists assigned</p>
                           ) : (
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "15px" }}>
-                              {(event.slug === "one_act_play"
-                                ? eventData[event.slug].accompanists.slice(0, 3)
-                                : eventData[event.slug].accompanists
-                              ).map((person) => {
+                              {eventData[event.slug].accompanists.map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
 
