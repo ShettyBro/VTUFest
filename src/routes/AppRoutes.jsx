@@ -63,6 +63,11 @@ import EMAccommodation from "../pages/em/EMAccommodation";
 import GRDashboard from "../pages/em/GRDashboard";
 import AccountsDashboard from "../pages/em/AccountsDashboard";
 
+/* TRANSPORT MANAGER */
+import TransportLogin from "../pages/transport/TransportLogin";
+import TransportDashboard from "../pages/transport/TransportDashboard";
+import TransportForm from "../pages/manager/TransportForm";
+
 /* ── Route Guards ──────────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
   const token = localStorage.getItem("vtufest_admin_token");
@@ -95,6 +100,12 @@ function AccountsRoute({ children }) {
   const token = localStorage.getItem("vtufest_accounts_token");
   const role = localStorage.getItem("vtufest_accounts_role");
   if (!token || role !== "ACCOUNTS") return <Navigate to="/em-login" replace />;
+  return children;
+}
+
+function TransportRoute({ children }) {
+  const token = localStorage.getItem("transport_token");
+  if (!token) return <Navigate to="/travel/login" replace />;
   return children;
 }
 
@@ -201,6 +212,15 @@ export default function AppRoutes() {
         <Route path="/em-accommodation" element={<EMRoute><EMAccommodation /></EMRoute>} />
         <Route path="/gr-dashboard" element={<GRRoute><GRDashboard /></GRRoute>} />
         <Route path="/accounts-dashboard" element={<AccountsRoute><AccountsDashboard /></AccountsRoute>} />
+
+        {/* ── TRANSPORT MANAGER ─────────────────────────────────────────── */}
+        <Route path="/travel/login" element={<TransportLogin />} />
+        <Route path="/travel" element={<TransportRoute><TransportDashboard /></TransportRoute>} />
+
+        {/* ── MANAGER TRANSPORT FORM ────────────────────────────────────── */}
+        <Route path="/manager/transport" element={
+          <ProtectedRoute allowedRoles={["manager"]}><TransportForm /></ProtectedRoute>
+        } />
       </Routes>
     </DAProvider>
   );

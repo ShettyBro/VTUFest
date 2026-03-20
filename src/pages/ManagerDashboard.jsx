@@ -31,6 +31,7 @@ export default function ManagerDashboard() {
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [transportStatus, setTransportStatus] = useState(null); // { enabled, submitted }
 
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [notificationsData, setNotificationsData] = useState([]);
@@ -76,6 +77,25 @@ export default function ManagerDashboard() {
       .then(r => r.json())
       .then(d => { if (d.success) setEventsCalendarData(d.data); })
       .catch(() => { });
+
+    // Fetch Transport Status
+    fetch("https://api.vtufest2026.acharyahabba.com/api/settings/transport-status", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(async d => {
+        if (!d.enabled) { setTransportStatus({ enabled: false, submitted: false }); return; }
+        // Check if already submitted
+        let submitted = false;
+        try {
+          const sub = await fetch("https://api.vtufest2026.acharyahabba.com/api/transport/my-submission", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (sub.ok) { const sd = await sub.json(); submitted = !!(sd.success && sd.data); }
+        } catch { }
+        setTransportStatus({ enabled: true, submitted });
+      })
+      .catch(() => {});
 
   }, []);
 
@@ -461,6 +481,28 @@ export default function ManagerDashboard() {
                 </div>
                 <small style={{ color: 'var(--text-secondary)' }}>Remaining: {dashboardData?.stats?.quota_remaining || 0}</small>
               </div>
+
+              {/* ── TRANSPORT CARD ── */}
+              {transportStatus?.enabled && (
+                <div
+                  className="glass-card clickable"
+                  style={{ cursor: 'pointer', borderLeft: `4px solid ${transportStatus.submitted ? 'var(--accent-success)' : '#d4af37'}` }}
+                  onClick={() => navigate('/manager/transport')}
+                >
+                  <h4 style={{ color: transportStatus.submitted ? 'var(--accent-success)' : '#d4af37', borderColor: transportStatus.submitted ? 'rgba(16,185,129,0.2)' : 'rgba(212,175,55,0.2)' }}>🚌 Transport Details</h4>
+                  {transportStatus.submitted ? (
+                    <>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-success)', margin: '10px 0' }}>✅</div>
+                      <small style={{ color: 'var(--text-secondary)' }}>Submitted — Click to edit details</small>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: '1rem', color: '#d4af37', margin: '14px 0 6px', fontWeight: 700 }}>Action Required</div>
+                      <small style={{ color: 'var(--text-secondary)' }}>Click to submit your team's transport details</small>
+                    </>
+                  )}
+                </div>
+              )}
 
             </div>
 

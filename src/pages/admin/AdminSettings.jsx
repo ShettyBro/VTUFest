@@ -11,6 +11,11 @@ export default function AdminSettings() {
     const [saving, setSaving] = useState(null); // key of setting being saved
     const [confirmKey, setConfirmKey] = useState(null); // key awaiting confirm dialog
 
+    // ── Transport toggle state ──
+    const [transportEnabled, setTransportEnabled] = useState(false);
+    const [transportSaving, setTransportSaving] = useState(false);
+    const [transportSuccess, setTransportSuccess] = useState(false);
+
     const token = localStorage.getItem("vtufest_admin_token");
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
@@ -24,7 +29,35 @@ export default function AdminSettings() {
             .finally(() => setLoading(false));
     };
 
-    useEffect(() => { fetchSettings(); }, []);
+    useEffect(() => {
+        fetchSettings();
+        // Hydrate transport toggle
+        fetch(`${API_BASE}/api/settings/transport-status`, { headers })
+            .then(r => r.json())
+            .then(d => { if (d.enabled !== undefined) setTransportEnabled(!!d.enabled); })
+            .catch(() => {});
+    }, []);
+
+    const handleTransportToggle = async () => {
+        if (!isSuperAdmin || transportSaving) return;
+        setTransportSaving(true); setTransportSuccess(false);
+        try {
+            const res = await adminFetch(`${API_BASE}/api/admin/settings/transport-toggle`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ enabled: !transportEnabled }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to update");
+            setTransportEnabled(prev => !prev);
+            setTransportSuccess(true);
+            setTimeout(() => setTransportSuccess(false), 2500);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setTransportSaving(false);
+        }
+    };
 
     // Derive registration_lock state from settings list
     const registrationLocked = settings.find(s => s.setting_key === "registration_lock")?.setting_value === "true";
@@ -206,6 +239,53 @@ export default function AdminSettings() {
                                 </div>
                             );
                         })()}
+
+                        {/* ── Transport Details Collection toggle ── */}
+                        <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: transportEnabled ? "rgba(212,175,55,0.35)" : undefined }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "1rem", marginBottom: "4px" }}>
+                                    🚌 Collect Transport Details from Team Managers
+                                </div>
+                                <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "6px" }}>
+                                    When ON, team managers will see a transport form to submit their travel details for VTU HABBA 2026.
+                                </div>
+                                <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                                    Key: <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 6px", borderRadius: "4px" }}>transport_collection</code>
+                                    {" · "}
+                                    <span style={{ color: transportEnabled ? "var(--accent-success)" : "var(--text-muted)", fontWeight: 600 }}>
+                                        {transportEnabled ? "Active" : "Inactive"}
+                                    </span>
+                                    {transportSuccess && (
+                                        <span style={{ marginLeft: "10px", color: "var(--accent-success)", fontWeight: 700, fontSize: "0.8rem" }}>✓ Updated</span>
+                                    )}
+                                </div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, marginLeft: "24px" }}>
+                                <span style={{ color: transportEnabled ? "var(--accent-success)" : "var(--text-muted)", fontSize: "0.85rem", fontWeight: 600 }}>
+                                    {transportEnabled ? "ON" : "OFF"}
+                                </span>
+                                <div
+                                    onClick={handleTransportToggle}
+                                    style={{
+                                        width: "52px", height: "28px", borderRadius: "14px",
+                                        background: transportEnabled ? "var(--accent-success)" : "rgba(255,255,255,0.15)",
+                                        border: `2px solid ${transportEnabled ? "var(--accent-success)" : "rgba(255,255,255,0.2)"}`,
+                                        cursor: isSuperAdmin && !transportSaving ? "pointer" : "not-allowed",
+                                        position: "relative", transition: "all 0.3s",
+                                        opacity: transportSaving ? 0.6 : 1,
+                                    }}
+                                >
+                                    <div style={{
+                                        width: "20px", height: "20px", borderRadius: "50%",
+                                        background: "#fff", position: "absolute", top: "2px",
+                                        left: transportEnabled ? "26px" : "2px", transition: "left 0.3s",
+                                        boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                                    }} />
+                                </div>
+                                {transportSaving && <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Saving...</span>}
+                            </div>
+                        </div>
+
                     </div>
                 )}
             </div>
