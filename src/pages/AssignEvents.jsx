@@ -62,7 +62,7 @@ const EVENT_LIMITS = {
   elocution: { participants: 1, accompanists: 0 },
   debate: { participants: 2, accompanists: 0 },
 
-  one_act_play: { participants: 9, accompanists: 3 },
+  one_act_play: { participants: 9, accompanists: 5 },
   skits: { participants: 6, accompanists: 3 },
   mime: { participants: 6, accompanists: 2 },
   mimicry: { participants: 1, accompanists: 0 },
@@ -257,9 +257,19 @@ export default function AssignEvents() {
         showPopup("Please add at least one participant before adding an accompanist", "warning");
         return;
       }
+      // For one_act_play the visual sub-limit is 3 (first section)
+      const accLimit = eventSlug === "one_act_play" ? 3 : eventLimits?.accompanists;
       const currentAccompanists = currentData?.accompanists?.length || 0;
-      if (currentAccompanists >= eventLimits?.accompanists) {
-        showPopup(`Maximum accompanists (${eventLimits.accompanists}) reached for this event`, "warning");
+      if (currentAccompanists >= accLimit) {
+        showPopup(`Maximum accompanists (${accLimit}) reached for this event`, "warning");
+        return;
+      }
+    } else if (mode === "add_technical_support") {
+      // One Act Play only — UI label, still sends as ACCOMPANIST to backend
+      // Total accompanist limit is 5 (3 regular + 2 tech support)
+      const totalAccompanists = currentData?.accompanists?.length || 0;
+      if (totalAccompanists >= (eventLimits?.accompanists || 0)) {
+        showPopup("Maximum technical support members (2) reached for this event", "warning");
         return;
       }
     }
@@ -267,7 +277,7 @@ export default function AssignEvents() {
     setCurrentEventSlug(eventSlug);
     setModalMode(mode);
     setSelectedPersonId("");
-    setSelectedPersonType(mode === "add_participant" ? "student" : "student");
+    setSelectedPersonType("student");
     setShowModal(true);
   };
 
@@ -314,6 +324,7 @@ export default function AssignEvents() {
     try {
       setIsSubmittingAdd(true);
 
+      // add_technical_support is a UI-only label; backend receives ACCOMPANIST for all
       const eventType = modalMode === "add_participant" ? "PARTICIPANT" : "ACCOMPANIST";
 
       const response = await fetch(`${API_BASE_URL}/manager/assign-events`, {
@@ -475,6 +486,12 @@ export default function AssignEvents() {
     } else if (type === "accompanist") {
       const currentParticipants = currentData.participants?.length || 0;
       if (currentParticipants === 0) return true;
+      const currentCount = currentData.accompanists?.length || 0;
+      // For one_act_play the visual sub-limit for the Accompanists row is 3
+      const subLimit = eventSlug === "one_act_play" ? 3 : limits.accompanists;
+      return currentCount >= subLimit;
+    } else if (type === "technical_support") {
+      // UI-only; tech support are accompanists; total limit is limits.accompanists (5 for one_act_play)
       const currentCount = currentData.accompanists?.length || 0;
       return currentCount >= limits.accompanists;
     }
@@ -682,9 +699,98 @@ export default function AssignEvents() {
                           )}
                         </div>
 
+                        {/* ── TECHNICAL SUPPORT (One Act Play only, UI split of accompanists) ── */}
+                        {event.slug === "one_act_play" && (
+                          <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "20px", marginBottom: "20px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+                              <div>
+                                <h4 style={{ margin: 0, color: "var(--text-primary)" }}>
+                                  Technical Support Team&nbsp;
+                                  <span style={{ color: "var(--text-muted)", fontWeight: 400, fontSize: "0.85rem" }}>
+                                    {Math.max(0, (eventData[event.slug].accompanists.length - 3))}/2
+                                  </span>
+                                </h4>
+                                <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                                  Student or accompanist · Max 2 · Included in total accompanist count
+                                </p>
+                              </div>
+                              {!isReadOnlyMode && role === "manager" && (
+                                <button
+                                  className="neon-btn"
+                                  style={{
+                                    width: "auto", fontSize: "0.8rem", padding: "8px 16px", margin: 0,
+                                    opacity: isAddButtonDisabled(event.slug, "technical_support") ? 0.5 : 1,
+                                    cursor: isAddButtonDisabled(event.slug, "technical_support") ? "not-allowed" : "pointer"
+                                  }}
+                                  onClick={() => openAddModal(event.slug, "add_technical_support")}
+                                  disabled={isAddButtonDisabled(event.slug, "technical_support")}
+                                >
+                                  + Add Tech Support
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Show accompanists.slice(3) — slots 4 and 5 are tech support */}
+                            {eventData[event.slug].accompanists.slice(3).length === 0 ? (
+                              <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No technical support members assigned yet</p>
+                            ) : (
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "15px" }}>
+                                {eventData[event.slug].accompanists.slice(3).map((person) => {
+                                  const personKey = `${person.person_type}-${person.person_id}`;
+                                  const isRemoving = removingPersonId === personKey;
+                                  return (
+                                    <div key={personKey} style={{
+                                      background: "rgba(255,255,255,0.05)",
+                                      padding: "15px",
+                                      borderRadius: "8px",
+                                      border: "1px solid rgba(212,175,55,0.25)",
+                                      opacity: isRemoving ? 0.6 : 1,
+                                      transition: "all 0.2s ease"
+                                    }}>
+                                      <div style={{ marginBottom: "10px" }}>
+                                        <strong style={{ display: "block", color: "var(--text-primary)" }}>{person.full_name}</strong>
+                                        <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                                          {person.phone}<br />{person.email || "N/A"}
+                                        </div>
+                                        <span style={{
+                                          display: "inline-block", fontSize: "0.7rem", padding: "2px 8px",
+                                          background: "rgba(212,175,55,0.15)", borderRadius: "4px",
+                                          marginTop: "8px", color: "#d4af37", border: "1px solid rgba(212,175,55,0.3)"
+                                        }}>
+                                          🔧 Tech Support · {person.person_type === "student" ? "Student" : "Accompanist"}
+                                        </span>
+                                      </div>
+                                      {!isReadOnlyMode && role === "manager" && (
+                                        <button
+                                          style={{
+                                            background: "rgba(239,68,68,0.15)", color: "#ef4444",
+                                            border: "1px solid #ef4444", padding: "6px 12px",
+                                            borderRadius: "4px", cursor: "pointer", width: "100%",
+                                            fontSize: "0.85rem", transition: "background 0.2s"
+                                          }}
+                                          onClick={() => handleRemove(event.slug, person.person_id, person.person_type, "accompanist")}
+                                          disabled={isRemoving}
+                                        >
+                                          {isRemoving ? "Removing..." : "Remove"}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "20px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-                            <h4 style={{ margin: 0, color: "var(--text-primary)" }}>Accompanists {eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</h4>
+                            {/* For one_act_play show sub-limit 3; for others show total limit */}
+                            <h4 style={{ margin: 0, color: "var(--text-primary)" }}>
+                              Accompanists&nbsp;
+                              {event.slug === "one_act_play"
+                                ? <>{Math.min(eventData[event.slug].accompanists.length, 3)}/3</>
+                                : <>{eventData[event.slug].accompanists.length}/{EVENT_LIMITS[event.slug]?.accompanists || 0}</>}
+                            </h4>
                             {!isReadOnlyMode && role === "manager" && (
                               <button
                                 className="neon-btn"
@@ -704,11 +810,18 @@ export default function AssignEvents() {
                             )}
                           </div>
 
-                          {eventData[event.slug].accompanists.length === 0 ? (
+                          {/* For one_act_play: show only first 3 (slots 4-5 are Tech Support) */}
+                          {(event.slug === "one_act_play"
+                            ? eventData[event.slug].accompanists.slice(0, 3)
+                            : eventData[event.slug].accompanists
+                          ).length === 0 ? (
                             <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>No accompanists assigned</p>
                           ) : (
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "15px" }}>
-                              {eventData[event.slug].accompanists.map((person) => {
+                              {(event.slug === "one_act_play"
+                                ? eventData[event.slug].accompanists.slice(0, 3)
+                                : eventData[event.slug].accompanists
+                              ).map((person) => {
                                 const personKey = `${person.person_type}-${person.person_id}`;
                                 const isRemoving = removingPersonId === personKey;
 
@@ -781,116 +894,107 @@ export default function AssignEvents() {
           </div>
         ))}
 
-        {showModal && (
-          <div style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.7)",
-            backdropFilter: "blur(5px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000
-          }}>
-            <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
-              <h3 style={{ marginTop: 0, color: "var(--academic-gold)" }}>
-                {modalMode === "add_participant" ? "Add Participant" : "Add Accompanist"}
-              </h3>
+        {showModal && (() => {
+          const isTechSupport = modalMode === "add_technical_support";
+          const availableStudents = eventData[currentEventSlug]?.available_students || [];
+          const availableAccompanists = eventData[currentEventSlug]?.available_accompanists || [];
 
-              {modalMode === "add_accompanist" && (
-                <div style={{ marginBottom: "20px" }}>
-                  <label style={{ display: "block", marginBottom: "8px", color: "var(--text-secondary)" }}>Person Type</label>
+          const modalTitle = modalMode === "add_participant"
+            ? "Add Participant"
+            : isTechSupport
+              ? "Add Technical Support Member"
+              : "Add Accompanist";
+
+          return (
+            <div style={{
+              position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(5px)",
+              display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000
+            }}>
+              <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", background: "rgba(15, 23, 42, 0.95)" }}>
+                <h3 style={{ marginTop: 0, color: "var(--academic-gold)" }}>{modalTitle}</h3>
+
+                {isTechSupport && (
+                  <div style={{ marginBottom: "12px", padding: "10px 14px", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)", borderRadius: "8px", color: "#d4af37", fontSize: "0.82rem" }}>
+                    🔧 This person will be part of the Technical Support Team. They are counted as accompanists in the backend.
+                  </div>
+                )}
+
+                {/* Person type selector — shown for accompanist and tech support modes */}
+                {(modalMode === "add_accompanist" || isTechSupport) && (
+                  <div style={{ marginBottom: "20px" }}>
+                    <label style={{ display: "block", marginBottom: "8px", color: "var(--text-secondary)" }}>Person Type</label>
+                    <select
+                      style={{ width: "100%", padding: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid var(--glass-border)", borderRadius: "8px", color: "white" }}
+                      value={selectedPersonType}
+                      onChange={(e) => { setSelectedPersonType(e.target.value); setSelectedPersonId(""); }}
+                      disabled={isSubmittingAdd}
+                    >
+                      <option value="student">Student</option>
+                      <option value="accompanist">Accompanist</option>
+                    </select>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: "25px" }}>
+                  <label style={{ display: "block", marginBottom: "8px", color: "var(--text-secondary)" }}>
+                    {modalMode === "add_participant"
+                      ? "Select Student"
+                      : selectedPersonType === "student"
+                        ? "Select Student"
+                        : "Select Accompanist"}
+                  </label>
                   <select
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid var(--glass-border)",
-                      borderRadius: "8px",
-                      color: "white"
-                    }}
-                    value={selectedPersonType}
-                    onChange={(e) => {
-                      setSelectedPersonType(e.target.value);
-                      setSelectedPersonId("");
-                    }}
+                    style={{ width: "100%", padding: "10px", background: "rgba(255,255,255,0.05)", border: "1px solid var(--glass-border)", borderRadius: "8px", color: "white" }}
+                    value={selectedPersonId}
+                    onChange={(e) => setSelectedPersonId(e.target.value)}
                     disabled={isSubmittingAdd}
                   >
-                    <option value="student">Student</option>
-                    <option value="accompanist">Accompanist</option>
+                    <option value="">-- Select --</option>
+
+                    {/* Participant: students only */}
+                    {modalMode === "add_participant" &&
+                      availableStudents.map((student) => (
+                        <option key={student.student_id} value={student.student_id}>
+                          {student.full_name} ({student.usn || student.phone})
+                        </option>
+                      ))
+                    }
+
+                    {/* Accompanist or Tech Support: students */}
+                    {(modalMode === "add_accompanist" || isTechSupport) && selectedPersonType === "student" &&
+                      availableStudents.map((student) => (
+                        <option key={student.student_id} value={student.student_id}>
+                          {student.full_name} ({student.usn || student.phone})
+                        </option>
+                      ))
+                    }
+
+                    {/* Accompanist or Tech Support: accompanists */}
+                    {(modalMode === "add_accompanist" || isTechSupport) && selectedPersonType === "accompanist" &&
+                      availableAccompanists.map((acc) => (
+                        <option key={acc.accompanist_id} value={acc.accompanist_id}>
+                          {acc.full_name} ({acc.accompanist_type})
+                        </option>
+                      ))
+                    }
                   </select>
                 </div>
-              )}
 
-              <div style={{ marginBottom: "25px" }}>
-                <label style={{ display: "block", marginBottom: "8px", color: "var(--text-secondary)" }}>
-                  {modalMode === "add_participant"
-                    ? "Select Student"
-                    : selectedPersonType === "student"
-                      ? "Select Student"
-                      : "Select Accompanist"}
-                </label>
-                <select
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid var(--glass-border)",
-                    borderRadius: "8px",
-                    color: "white"
-                  }}
-                  value={selectedPersonId}
-                  onChange={(e) => setSelectedPersonId(e.target.value)}
-                  disabled={isSubmittingAdd}
-                >
-                  <option value="">-- Select --</option>
-                  {modalMode === "add_participant" &&
-                    eventData[currentEventSlug]?.available_students?.map((student) => (
-                      <option key={student.student_id} value={student.student_id}>
-                        {student.full_name} ({student.usn})
-                      </option>
-                    ))
-                  }
-                  {modalMode === "add_accompanist" && selectedPersonType === "student" &&
-                    eventData[currentEventSlug]?.available_students?.map((student) => (
-                      <option key={student.student_id} value={student.student_id}>
-                        {student.full_name} ({student.usn})
-                      </option>
-                    ))
-                  }
-                  {modalMode === "add_accompanist" && selectedPersonType === "accompanist" &&
-                    eventData[currentEventSlug]?.available_accompanists?.map((acc) => (
-                      <option key={acc.accompanist_id} value={acc.accompanist_id}>
-                        {acc.full_name} ({acc.accompanist_type})
-                      </option>
-                    ))
-                  }
-                </select>
-              </div>
-
-              <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-                <button
-                  className="neon-btn"
-                  style={{ margin: 0 }}
-                  onClick={handleAdd}
-                  disabled={isSubmittingAdd}
-                >
-                  {isSubmittingAdd ? "Adding..." : "Add"}
-                </button>
-                <button
-                  className="neon-btn"
-                  style={{ margin: 0, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }}
-                  onClick={closeModal}
-                  disabled={isSubmittingAdd}>
-                  Cancel
-                </button>
+                <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+                  <button className="neon-btn" style={{ margin: 0 }} onClick={handleAdd} disabled={isSubmittingAdd}>
+                    {isSubmittingAdd ? "Adding..." : "Add"}
+                  </button>
+                  <button className="neon-btn" style={{ margin: 0, borderColor: "var(--text-secondary)", color: "var(--text-secondary)" }} onClick={closeModal} disabled={isSubmittingAdd}>
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
+
+
 
         {showFinalApprovalModal && (
           <div style={{
