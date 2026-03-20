@@ -14,7 +14,7 @@ export default function TransportLogin() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (localStorage.getItem("transport_token")) navigate("/travel");
+    if (localStorage.getItem("vtufest_transport_token")) navigate("/travel");
   }, []);
 
   const handleLogin = async (e) => {
@@ -28,9 +28,11 @@ export default function TransportLogin() {
         body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Invalid credentials");
-      localStorage.setItem("transport_token", data.data?.token || data.token);
-      localStorage.setItem("transport_role", data.data?.role || "TRANSPORT_MANAGER");
+      if (!res.ok || !data.success) throw new Error(data.message || "Invalid credentials");
+
+      localStorage.setItem("vtufest_transport_token", data.data.token);
+      localStorage.setItem("vtufest_transport_name", data.data.name);
+      localStorage.setItem("vtufest_transport_role", data.data.role);
       navigate("/travel");
     } catch (err) {
       setError(err.message || "Invalid credentials");
@@ -85,7 +87,7 @@ export default function TransportLogin() {
                 />
                 <button type="button" onClick={() => setShowPassword(v => !v)}
                   style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#000", padding: 0, lineHeight: 1, display: "flex", alignItems: "center" }}
-                  tabIndex={-1} aria-label={showPassword ? "Hide password" : "Show password"}>
+                  tabIndex={-1}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>

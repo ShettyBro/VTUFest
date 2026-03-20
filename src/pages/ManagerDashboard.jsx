@@ -84,7 +84,7 @@ export default function ManagerDashboard() {
     })
       .then(r => r.json())
       .then(async d => {
-        if (!d.enabled) { setTransportStatus({ enabled: false, submitted: false }); return; }
+        if (!d.success || !d.data?.enabled) { setTransportStatus({ enabled: false, submitted: false }); return; }
         // Check if already submitted
         let submitted = false;
         try {

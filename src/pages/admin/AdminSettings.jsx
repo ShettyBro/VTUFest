@@ -31,10 +31,10 @@ export default function AdminSettings() {
 
     useEffect(() => {
         fetchSettings();
-        // Hydrate transport toggle
-        fetch(`${API_BASE}/api/settings/transport-status`, { headers })
+        // Hydrate transport toggle — response: { success: true, data: { enabled: true } }
+        adminFetch(`${API_BASE}/api/settings/transport-status`, { headers })
             .then(r => r.json())
-            .then(d => { if (d.enabled !== undefined) setTransportEnabled(!!d.enabled); })
+            .then(d => { if (d.success && d.data?.enabled !== undefined) setTransportEnabled(!!d.data.enabled); })
             .catch(() => {});
     }, []);
 
@@ -48,8 +48,9 @@ export default function AdminSettings() {
                 body: JSON.stringify({ enabled: !transportEnabled }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to update");
-            setTransportEnabled(prev => !prev);
+            if (!res.ok || !data.success) throw new Error(data.message || "Failed to update");
+            // Response: { success: true, data: { enabled: true } }
+            setTransportEnabled(!!data.data?.enabled);
             setTransportSuccess(true);
             setTimeout(() => setTransportSuccess(false), 2500);
         } catch (err) {

@@ -6,13 +6,14 @@ import { usePopup } from "../../context/PopupContext";
 
 const API = "https://api.vtufest2026.acharyahabba.com";
 
+// ─── Mode options — values match backend ENUM (UPPERCASE) ─────────────────────
 const MODES = [
-  { value: "bus_private", label: "🚌 Bus (Private / Rented)" },
-  { value: "college_vehicle", label: "🚐 College Own Vehicle" },
-  { value: "train", label: "🚆 Train" },
-  { value: "flight", label: "✈️ Flight" },
-  { value: "public_bus", label: "🚍 Public Bus / KSRTC" },
-  { value: "other", label: "🚗 Other" },
+  { value: "BUS_PRIVATE",      label: "🚌 Bus (Private / Rented)" },
+  { value: "COLLEGE_VEHICLE",  label: "🚐 College Own Vehicle" },
+  { value: "TRAIN",            label: "🚆 Train" },
+  { value: "FLIGHT",           label: "✈️ Flight" },
+  { value: "PUBLIC_BUS",       label: "🚍 Public Bus / KSRTC" },
+  { value: "OTHER",            label: "🚗 Other" },
 ];
 
 const ARRIVAL_MIN = "2026-04-10T00:00";
@@ -35,7 +36,7 @@ const inp = {
   outline: "none",
 };
 
-const label = (text, required) => (
+const lbl = (text, required) => (
   <label style={{ display: "block", color: "var(--text-secondary)", fontSize: "0.82rem", marginBottom: "5px", fontWeight: 600 }}>
     {text}{required && <span style={{ color: "#f87171", marginLeft: 3 }}>*</span>}
   </label>
@@ -64,12 +65,11 @@ export default function TransportForm() {
   const role = localStorage.getItem("vtufest_role");
   const { showPopup } = usePopup();
 
-  // page state
   const [pageState, setPageState] = useState("loading"); // loading | disabled | form | submitted
   const [isEditMode, setIsEditMode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // form fields
+  // ── form fields ──────────────────────────────────────────────────────────────
   const [mode, setMode] = useState("");
   const [trainName, setTrainName] = useState("");
   const [pnr, setPnr] = useState("");
@@ -94,66 +94,73 @@ export default function TransportForm() {
     checkStatus();
   }, []);
 
+  const userAuthHeader = () => ({ Authorization: `Bearer ${token}` });
+
   const checkStatus = async () => {
     try {
       const res = await fetch(`${API}/api/settings/transport-status`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: userAuthHeader(),
       });
       const data = await res.json();
-      if (!data.enabled) { setPageState("disabled"); return; }
+      // Backend returns { success: true, data: { enabled: true } }
+      if (!data.success || !data.data?.enabled) { setPageState("disabled"); return; }
 
-      // check existing submission
+      // Check existing submission
       const subRes = await fetch(`${API}/api/transport/my-submission`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: userAuthHeader(),
       });
-      if (subRes.ok) {
-        const subData = await subRes.json();
-        if (subData.success && subData.data) {
-          prefillForm(subData.data);
-          setIsEditMode(true);
-        }
+      const subData = await subRes.json();
+      if (subData.success && subData.data) {
+        prefillForm(subData.data);
+        setIsEditMode(true);
       }
       setPageState("form");
     } catch {
-      setPageState("form"); // fallback gracefully
+      setPageState("form");
     }
   };
 
   const prefillForm = (d) => {
     setMode(d.transport_mode || "");
-    setTrainName(d.vehicle_or_train_number || "");
+    // Map vehicle_or_train_number to the right field based on mode
+    const m = d.transport_mode || "";
+    if (m === "TRAIN")    { setTrainName(d.vehicle_or_train_number || ""); }
+    if (m === "FLIGHT")   { setFlightNumber(d.vehicle_or_train_number || ""); }
+    if (m === "BUS_PRIVATE" || m === "COLLEGE_VEHICLE") { setVehicleReg(d.vehicle_or_train_number || ""); }
+    if (m === "PUBLIC_BUS") { setRouteNumber(d.vehicle_or_train_number || ""); }
+
     setPnr(d.pnr_number || "");
-    setArrivalStation(d.arrival_point || "");
-    setVehicleReg(d.vehicle_or_train_number || "");
-    setBoardingCity(d.boarding_city || "");
-    setRouteNumber(d.route_number || "");
-    setBusStand(d.arrival_point || "");
-    setFlightNumber(d.vehicle_or_train_number || "");
-    setDescription(d.description || "");
+    // arrival_point maps differently per mode
+    if (m === "TRAIN")    { setArrivalStation(d.arrival_point || ""); }
+    if (m === "PUBLIC_BUS") { setBusStand(d.arrival_point || ""); }
+    if (m === "BUS_PRIVATE" || m === "COLLEGE_VEHICLE") { setBoardingCity(d.arrival_point || ""); }
+
     setEta(d.estimated_arrival_datetime ? d.estimated_arrival_datetime.slice(0, 16) : "");
     setHeadcount(String(d.total_headcount || ""));
     setContactName(d.contact_person_name || "");
     setContactPhone(d.contact_person_phone || "");
-    setContactTravelling(d.on_vehicle_contact_name == null);
+    const hasSeparateContact = !!d.on_vehicle_contact_name;
+    setContactTravelling(!hasSeparateContact);
     setOnVehicleName(d.on_vehicle_contact_name || "");
     setOnVehiclePhone(d.on_vehicle_contact_phone || "");
     setNotes(d.additional_notes || "");
+    setDescription(d.additional_notes || ""); // used for OTHER mode
   };
 
   const buildPayload = () => {
     let vehicle_or_train_number = null;
     let arrival_point = null;
 
-    if (mode === "train") {
+    if (mode === "TRAIN") {
       vehicle_or_train_number = trainName.trim() || null;
       arrival_point = arrivalStation.trim() || null;
-    } else if (mode === "bus_private" || mode === "college_vehicle") {
+    } else if (mode === "BUS_PRIVATE" || mode === "COLLEGE_VEHICLE") {
       vehicle_or_train_number = vehicleReg.trim() || null;
       arrival_point = boardingCity.trim() || null;
-    } else if (mode === "public_bus") {
+    } else if (mode === "PUBLIC_BUS") {
       vehicle_or_train_number = routeNumber.trim() || null;
       arrival_point = busStand.trim() || null;
-    } else if (mode === "flight") {
+    } else if (mode === "FLIGHT") {
       vehicle_or_train_number = flightNumber.trim() || null;
       arrival_point = "Kempegowda International Airport";
     }
@@ -161,34 +168,33 @@ export default function TransportForm() {
     return {
       transport_mode: mode,
       vehicle_or_train_number,
-      pnr_number: mode === "train" ? (pnr.trim() || null) : null,
+      pnr_number: mode === "TRAIN" ? (pnr.trim() || null) : null,
       arrival_point,
-      estimated_arrival_datetime: eta ? new Date(eta).toISOString() : null,
+      estimated_arrival_datetime: eta || null,
       total_headcount: parseInt(headcount) || 0,
       contact_person_name: contactName.trim(),
       contact_person_phone: contactPhone.trim(),
-      on_vehicle_contact_name: contactTravelling ? null : onVehicleName.trim() || null,
-      on_vehicle_contact_phone: contactTravelling ? null : onVehiclePhone.trim() || null,
-      additional_notes: notes.trim() || null,
-      ...(mode === "other" ? { description: description.trim() } : {}),
+      on_vehicle_contact_name: contactTravelling ? null : (onVehicleName.trim() || null),
+      on_vehicle_contact_phone: contactTravelling ? null : (onVehiclePhone.trim() || null),
+      additional_notes: mode === "OTHER" ? (description.trim() || null) : (notes.trim() || null),
     };
   };
 
   const validate = () => {
     if (!mode) return "Please select a transport mode.";
-    if (mode === "train" && !trainName.trim()) return "Train Name & Number is required.";
-    if (mode === "train" && !arrivalStation.trim()) return "Arrival Station is required.";
-    if ((mode === "bus_private" || mode === "college_vehicle") && !vehicleReg.trim()) return "Vehicle Registration Number is required.";
-    if ((mode === "bus_private" || mode === "college_vehicle") && !boardingCity.trim()) return "Boarding City is required.";
-    if (mode === "public_bus" && !busStand.trim()) return "Expected Bus Stand is required.";
-    if (mode === "flight" && !flightNumber.trim()) return "Flight Number is required.";
-    if (mode === "other" && !description.trim()) return "Description is required.";
+    if (mode === "TRAIN" && !trainName.trim()) return "Train Name & Number is required.";
+    if (mode === "TRAIN" && !arrivalStation.trim()) return "Arrival Station is required.";
+    if ((mode === "BUS_PRIVATE" || mode === "COLLEGE_VEHICLE") && !vehicleReg.trim()) return "Vehicle Registration Number is required.";
+    if ((mode === "BUS_PRIVATE" || mode === "COLLEGE_VEHICLE") && !boardingCity.trim()) return "Boarding City is required.";
+    if (mode === "PUBLIC_BUS" && !busStand.trim()) return "Expected Bus Stand is required.";
+    if (mode === "FLIGHT" && !flightNumber.trim()) return "Flight Number is required.";
+    if (mode === "OTHER" && !description.trim()) return "Description is required.";
     if (!eta) return "Estimated Arrival Date & Time is required.";
     if (eta < ARRIVAL_MIN || eta > ARRIVAL_MAX) return "Arrival must be between Apr 10, 2026 and Apr 14, 2026.";
     if (!headcount || parseInt(headcount) < 1) return "Total Headcount must be at least 1.";
     if (!contactName.trim()) return "Contact Person Name is required.";
     if (!contactPhone.trim()) return "Contact Person Phone is required.";
-    if (!isValidPhone(contactPhone)) return "Phone must be 10 digits starting with 6–9.";
+    if (!isValidPhone(contactPhone)) return "Phone must be 10 digits starting with 6, 7, 8, or 9.";
     if (!contactTravelling) {
       if (!onVehicleName.trim()) return "On-Vehicle Contact Name is required.";
       if (!onVehiclePhone.trim()) return "On-Vehicle Contact Phone is required.";
@@ -204,14 +210,16 @@ export default function TransportForm() {
 
     setSubmitting(true);
     try {
-      const payload = buildPayload();
       const res = await fetch(`${API}/api/transport/${isEditMode ? "update" : "submit"}`, {
         method: isEditMode ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json", ...userAuthHeader() },
+        body: JSON.stringify(buildPayload()),
       });
       const data = await res.json();
-      if (!res.ok) { showPopup(data.message || "Failed to submit", "error"); return; }
+      if (!res.ok || !data.success) {
+        showPopup(data.message || "Failed to submit", "error");
+        return;
+      }
       setPageState("submitted");
     } catch {
       showPopup("Network error. Please try again.", "error");
@@ -220,13 +228,13 @@ export default function TransportForm() {
     }
   };
 
+  // ── States ───────────────────────────────────────────────────────────────────
   if (pageState === "loading") {
     return (
       <Layout>
         <div className="dashboard-glass-wrapper">
           <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--text-secondary)" }}>
-            <div style={{ fontSize: "2rem", marginBottom: "12px" }}>⏳</div>
-            Loading…
+            <div style={{ fontSize: "2rem", marginBottom: "12px" }}>⏳</div>Loading…
           </div>
         </div>
       </Layout>
@@ -252,7 +260,7 @@ export default function TransportForm() {
     return (
       <Layout>
         <div className="dashboard-glass-wrapper">
-          <div className="dashboard-header"><div className="welcome-text"><h1>Transport Details</h1><p style={{ color: "var(--text-secondary)" }}>VTU HABBA 2026</p></div></div>
+          <div className="dashboard-header"><div className="welcome-text"><h1>Transport Details</h1></div></div>
           <div className="glass-card" style={{ textAlign: "center", padding: "60px 40px" }}>
             <div style={{ fontSize: "3.5rem", marginBottom: "16px" }}>✅</div>
             <h3 style={{ color: "var(--accent-success)", fontWeight: 700, margin: "0 0 8px", fontSize: "1.3rem" }}>
@@ -270,12 +278,11 @@ export default function TransportForm() {
     );
   }
 
-  const isTrain = mode === "train";
-  const isBusOrVehicle = mode === "bus_private" || mode === "college_vehicle";
-  const isPublicBus = mode === "public_bus";
-  const isFlight = mode === "flight";
-  const isOther = mode === "other";
-  const needsEta = !!mode;
+  const isTrain     = mode === "TRAIN";
+  const isBusOrVehicle = mode === "BUS_PRIVATE" || mode === "COLLEGE_VEHICLE";
+  const isPublicBus = mode === "PUBLIC_BUS";
+  const isFlight    = mode === "FLIGHT";
+  const isOther     = mode === "OTHER";
 
   return (
     <Layout>
@@ -316,7 +323,7 @@ export default function TransportForm() {
             </div>
           </div>
 
-          {/* ── SECTION 2: Conditional fields ── */}
+          {/* ── SECTION 2: Conditional Fields ── */}
           {mode && (
             <div className="glass-card" style={{ marginBottom: "20px" }}>
               <h3 style={{ margin: "0 0 16px" }}>2. Travel Details</h3>
@@ -325,15 +332,15 @@ export default function TransportForm() {
                 {isTrain && (
                   <>
                     <Field style={{ gridColumn: "1 / -1" }}>
-                      {label("Train Name & Number", true)}
+                      {lbl("Train Name & Number", true)}
                       <input style={inp} placeholder="e.g. Rajdhani Express 12434" value={trainName} onChange={e => setTrainName(e.target.value)} />
                     </Field>
                     <Field>
-                      {label("PNR Number")}
+                      {lbl("PNR Number")}
                       <input style={inp} placeholder="Optional" value={pnr} onChange={e => setPnr(e.target.value)} />
                     </Field>
                     <Field>
-                      {label("Arrival Station", true)}
+                      {lbl("Arrival Station", true)}
                       <input style={inp} placeholder="e.g. KSR City" value={arrivalStation} onChange={e => setArrivalStation(e.target.value)} />
                       <SuggestionRow suggestions={STATION_SUGGESTIONS} onPick={v => setArrivalStation(v)} />
                     </Field>
@@ -343,11 +350,11 @@ export default function TransportForm() {
                 {isBusOrVehicle && (
                   <>
                     <Field>
-                      {label("Vehicle Registration Number", true)}
+                      {lbl("Vehicle Registration Number", true)}
                       <input style={inp} placeholder="e.g. KA 01 AB 1234" value={vehicleReg} onChange={e => setVehicleReg(e.target.value)} />
                     </Field>
                     <Field>
-                      {label("Boarding City / Starting Point", true)}
+                      {lbl("Boarding City / Starting Point", true)}
                       <input style={inp} placeholder="e.g. Mysuru" value={boardingCity} onChange={e => setBoardingCity(e.target.value)} />
                     </Field>
                   </>
@@ -356,11 +363,11 @@ export default function TransportForm() {
                 {isPublicBus && (
                   <>
                     <Field>
-                      {label("Route or Bus Number")}
+                      {lbl("Route or Bus Number")}
                       <input style={inp} placeholder="Optional" value={routeNumber} onChange={e => setRouteNumber(e.target.value)} />
                     </Field>
                     <Field>
-                      {label("Expected Bus Stand", true)}
+                      {lbl("Expected Bus Stand", true)}
                       <input style={inp} placeholder="e.g. Majestic" value={busStand} onChange={e => setBusStand(e.target.value)} />
                       <SuggestionRow suggestions={BUS_STAND_SUGGESTIONS} onPick={v => setBusStand(v)} />
                     </Field>
@@ -370,11 +377,11 @@ export default function TransportForm() {
                 {isFlight && (
                   <>
                     <Field>
-                      {label("Flight Number", true)}
+                      {lbl("Flight Number", true)}
                       <input style={inp} placeholder="e.g. 6E 204" value={flightNumber} onChange={e => setFlightNumber(e.target.value)} />
                     </Field>
                     <Field>
-                      {label("Arrival Terminal")}
+                      {lbl("Arrival Terminal")}
                       <input style={{ ...inp, opacity: 0.7, cursor: "not-allowed" }} value="Kempegowda International Airport" readOnly />
                     </Field>
                   </>
@@ -382,21 +389,21 @@ export default function TransportForm() {
 
                 {isOther && (
                   <Field style={{ gridColumn: "1 / -1" }}>
-                    {label("Description", true)}
+                    {lbl("Description", true)}
                     <textarea style={{ ...inp, resize: "vertical", minHeight: "80px" }} rows={3}
                       placeholder="Describe your mode of transport…" value={description} onChange={e => setDescription(e.target.value)} />
                   </Field>
                 )}
 
-                {needsEta && (
-                  <Field style={{ gridColumn: "1 / -1" }}>
-                    {label("Estimated Arrival Date & Time", true)}
-                    <input type="datetime-local" style={inp}
-                      min={ARRIVAL_MIN} max={ARRIVAL_MAX}
-                      value={eta} onChange={e => setEta(e.target.value)} />
-                    <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginTop: "4px" }}>Must be between Apr 10 and Apr 14, 2026</div>
-                  </Field>
-                )}
+                <Field style={{ gridColumn: "1 / -1" }}>
+                  {lbl("Estimated Arrival Date & Time", true)}
+                  <input type="datetime-local" style={inp}
+                    min={ARRIVAL_MIN} max={ARRIVAL_MAX}
+                    value={eta} onChange={e => setEta(e.target.value)} />
+                  <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", marginTop: "4px" }}>
+                    Must be between Apr 10 and Apr 14, 2026
+                  </div>
+                </Field>
               </div>
             </div>
           )}
@@ -407,16 +414,16 @@ export default function TransportForm() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
 
               <Field style={{ gridColumn: "1 / -1" }}>
-                {label("Total Headcount (students + accompanists + manager)", true)}
+                {lbl("Total Headcount (students + accompanists + manager)", true)}
                 <input type="number" min={1} style={inp} placeholder="e.g. 35" value={headcount} onChange={e => setHeadcount(e.target.value)} />
               </Field>
 
               <Field>
-                {label("Contact Person Name", true)}
+                {lbl("Contact Person Name", true)}
                 <input style={inp} placeholder="Full name" value={contactName} onChange={e => setContactName(e.target.value)} />
               </Field>
               <Field>
-                {label("Contact Person Phone", true)}
+                {lbl("Contact Person Phone", true)}
                 <input type="tel" inputMode="numeric" maxLength={10} style={inp}
                   placeholder="10-digit number starting with 6–9" value={contactPhone}
                   onChange={e => setContactPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} />
@@ -426,7 +433,7 @@ export default function TransportForm() {
               </Field>
 
               <Field style={{ gridColumn: "1 / -1" }}>
-                {label("Is the contact person travelling with the group?", true)}
+                {lbl("Is the contact person travelling with the group?", true)}
                 <div style={{ display: "flex", gap: "12px", marginTop: "4px" }}>
                   {[true, false].map(v => (
                     <button key={String(v)} type="button" onClick={() => setContactTravelling(v)}
@@ -446,14 +453,14 @@ export default function TransportForm() {
               {!contactTravelling && (
                 <>
                   <div style={{ gridColumn: "1 / -1", padding: "10px 14px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "8px", color: "#fbbf24", fontSize: "0.82rem" }}>
-                    ⚠️ Since the contact person won't be on the vehicle, please provide the on-vehicle contact details.
+                    ⚠️ Since the contact person won't be on the vehicle, please provide on-vehicle contact details.
                   </div>
                   <Field>
-                    {label("On-Vehicle Contact Name", true)}
+                    {lbl("On-Vehicle Contact Name", true)}
                     <input style={inp} placeholder="Name of person on vehicle" value={onVehicleName} onChange={e => setOnVehicleName(e.target.value)} />
                   </Field>
                   <Field>
-                    {label("On-Vehicle Contact Phone", true)}
+                    {lbl("On-Vehicle Contact Phone", true)}
                     <input type="tel" inputMode="numeric" maxLength={10} style={inp}
                       placeholder="10-digit number starting with 6–9" value={onVehiclePhone}
                       onChange={e => setOnVehiclePhone(e.target.value.replace(/\D/g, "").slice(0, 10))} />
@@ -464,12 +471,14 @@ export default function TransportForm() {
                 </>
               )}
 
-              <Field style={{ gridColumn: "1 / -1" }}>
-                {label("Additional Notes")}
-                <textarea style={{ ...inp, resize: "vertical", minHeight: "80px" }} rows={3}
-                  placeholder="Any special requirements, delays expected, or other relevant info…"
-                  value={notes} onChange={e => setNotes(e.target.value)} />
-              </Field>
+              {!isOther && (
+                <Field style={{ gridColumn: "1 / -1" }}>
+                  {lbl("Additional Notes")}
+                  <textarea style={{ ...inp, resize: "vertical", minHeight: "80px" }} rows={3}
+                    placeholder="Any special requirements, delays expected, or other relevant info…"
+                    value={notes} onChange={e => setNotes(e.target.value)} />
+                </Field>
+              )}
             </div>
           </div>
 

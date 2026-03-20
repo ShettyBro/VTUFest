@@ -1,17 +1,18 @@
 import { useState, useEffect, useMemo, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import TransportLayout from "./TransportLayout";
+import { transportFetch, transportAuthHeader } from "../../utils/transportFetch";
 
 const API = "https://api.vtufest2026.acharyahabba.com";
 
 const fmt = (d) => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
 const fmtMode = (m) => ({
-  bus_private: "🚌 Bus (Private)",
-  college_vehicle: "🚐 College Vehicle",
-  train: "🚆 Train",
-  flight: "✈️ Flight",
-  public_bus: "🚍 Public Bus",
-  other: "🚗 Other",
+  BUS_PRIVATE: "🚌 Bus (Private)",
+  COLLEGE_VEHICLE: "🚐 College Vehicle",
+  TRAIN: "🚆 Train",
+  FLIGHT: "✈️ Flight",
+  PUBLIC_BUS: "🚍 Public Bus",
+  OTHER: "🚗 Other",
 })[m] || m || "—";
 
 // ─── Summary Stat Pill ────────────────────────────────────────────────────────
@@ -24,7 +25,7 @@ const Stat = ({ label, value, color }) => (
     minWidth: "140px",
     textAlign: "center",
   }}>
-    <div style={{ fontSize: "1.7rem", fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
+    <div style={{ fontSize: "1.7rem", fontWeight: 800, color, lineHeight: 1 }}>{value ?? "—"}</div>
     <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
   </div>
 );
@@ -51,25 +52,26 @@ const StatusBadge = ({ status }) => {
 
 // ─── Column Definitions ───────────────────────────────────────────────────────
 const COLS = [
-  { key: "college_name",              label: "College Name",    align: "left"   },
-  { key: "transport_mode",            label: "Mode",            align: "left"   },
-  { key: "arrival_point",             label: "Arrival Point",   align: "left"   },
-  { key: "estimated_arrival_datetime",label: "ETA",             align: "left"   },
-  { key: "total_headcount",           label: "Headcount",       align: "center" },
-  { key: "contact_person_name",       label: "Contact Person",  align: "left"   },
-  { key: "contact_person_phone",      label: "Phone",           align: "left"   },
-  { key: "status",                    label: "Status",          align: "center" },
-  { key: "internal_note",             label: "Notes",           align: "left"   },
-  { key: "actions",                   label: "Actions",         align: "center" },
+  { key: "college_name",               label: "College Name",   align: "left"   },
+  { key: "transport_mode",             label: "Mode",           align: "left"   },
+  { key: "arrival_point",              label: "Arrival Point",  align: "left"   },
+  { key: "estimated_arrival_datetime", label: "ETA",            align: "left"   },
+  { key: "total_headcount",            label: "Headcount",      align: "center" },
+  { key: "contact_person_name",        label: "Contact Person", align: "left"   },
+  { key: "contact_person_phone",       label: "Phone",          align: "left"   },
+  { key: "coordination_status",        label: "Status",         align: "center" },
+  { key: "internal_note",              label: "Notes",          align: "left"   },
+  { key: "actions",                    label: "Actions",        align: "center" },
 ];
 
-const NON_SORTABLE = new Set(["status", "internal_note", "actions"]);
+const NON_SORTABLE = new Set(["coordination_status", "internal_note", "actions"]);
 
-// ─── CSV Export Helper ────────────────────────────────────────────────────────
+// ─── CSV Export ───────────────────────────────────────────────────────────────
 function exportCSV(rows) {
   const headers = [
-    "College Name", "Mode", "Vehicle/Train No", "PNR", "Arrival Point",
-    "ETA", "Headcount", "Contact Name", "Contact Phone",
+    "College Name", "College Code", "Mode", "Vehicle/Train No", "PNR",
+    "Arrival Point", "ETA", "Headcount",
+    "Contact Name", "Contact Phone",
     "On-Vehicle Contact Name", "On-Vehicle Contact Phone",
     "Additional Notes", "Status", "Internal Note", "Submitted At",
   ];
@@ -77,12 +79,12 @@ function exportCSV(rows) {
   const lines = [
     headers.map(escape).join(","),
     ...rows.map(r => [
-      r.college_name, fmtMode(r.transport_mode), r.vehicle_or_train_number,
-      r.pnr_number, r.arrival_point,
+      r.college_name, r.college_code, fmtMode(r.transport_mode),
+      r.vehicle_or_train_number, r.pnr_number, r.arrival_point,
       r.estimated_arrival_datetime ? new Date(r.estimated_arrival_datetime).toLocaleString("en-IN") : "",
       r.total_headcount, r.contact_person_name, r.contact_person_phone,
       r.on_vehicle_contact_name, r.on_vehicle_contact_phone,
-      r.additional_notes, r.status, r.internal_note,
+      r.additional_notes, r.coordination_status, r.internal_note,
       r.submitted_at ? new Date(r.submitted_at).toLocaleString("en-IN") : "",
     ].map(escape).join(",")),
   ];
@@ -94,21 +96,23 @@ function exportCSV(rows) {
 }
 
 // ─── Inline Note Editor ───────────────────────────────────────────────────────
-function NoteEditor({ row, token, onSaved, onClose }) {
+function NoteEditor({ row, onSaved, onClose }) {
   const [note, setNote] = useState(row.internal_note || "");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
   const handleSave = async () => {
+    if (!note.trim()) { setErr("Note cannot be empty."); return; }
+    if (note.length > 500) { setErr("Max 500 characters."); return; }
     setSaving(true); setErr("");
     try {
-      const res = await fetch(`${API}/api/transport-manager/note/${row.id}`, {
+      const res = await transportFetch(`${API}/api/transport-manager/note/${row.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...transportAuthHeader(), "Content-Type": "application/json" },
         body: JSON.stringify({ internal_note: note.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save note");
+      if (!res.ok || !data.success) throw new Error(data.message || "Failed to save note");
       onSaved(row.id, note.trim());
     } catch (e) { setErr(e.message); }
     finally { setSaving(false); }
@@ -118,17 +122,10 @@ function NoteEditor({ row, token, onSaved, onClose }) {
     <tr>
       <td colSpan={COLS.length} style={{ padding: 0 }}>
         <div style={{ background: "rgba(212,175,55,0.05)", borderBottom: "1px solid rgba(212,175,55,0.2)", padding: "12px 22px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-          <textarea
-            autoFocus
-            rows={2}
-            value={note}
+          <textarea autoFocus rows={2} value={note}
             onChange={e => setNote(e.target.value)}
-            placeholder="Type an internal note for this submission…"
-            style={{
-              flex: 1, padding: "8px 12px", background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(212,175,55,0.35)", borderRadius: "8px",
-              color: "#f1f5f9", fontSize: "0.85rem", resize: "vertical", outline: "none",
-            }}
+            placeholder="Type an internal note (max 500 chars)…"
+            style={{ flex: 1, padding: "8px 12px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(212,175,55,0.35)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.85rem", resize: "vertical", outline: "none" }}
           />
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <button onClick={handleSave} disabled={saving}
@@ -150,31 +147,42 @@ function NoteEditor({ row, token, onSaved, onClose }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function TransportDashboard() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("transport_token");
 
   const [rows, setRows] = useState([]);
+  const [summary, setSummary] = useState({ total_colleges: 0, submitted_count: 0, pending_count: 0, coordinated_count: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("college_name");
   const [sortDir, setSortDir] = useState("asc");
-  const [coordinating, setCoordinating] = useState(null); // id being toggled
-  const [noteOpen, setNoteOpen] = useState(null); // id with open note editor
+  const [coordinating, setCoordinating] = useState(null);
+  const [noteOpen, setNoteOpen] = useState(null);
 
   useEffect(() => {
-    if (!token) { navigate("/travel/login"); return; }
+    if (!localStorage.getItem("vtufest_transport_token")) { navigate("/travel/login"); return; }
     fetchData();
   }, []);
 
   const fetchData = () => {
     setLoading(true); setError("");
-    fetch(`${API}/api/transport-manager/dashboard`, {
-      headers: { Authorization: `Bearer ${token}` },
+    transportFetch(`${API}/api/transport-manager/dashboard`, {
+      headers: transportAuthHeader(),
     })
       .then(r => r.json())
       .then(d => {
-        if (d.success) setRows(d.data || []);
-        else setError(d.message || "Failed to load");
+        if (d.success) {
+          const payload = d.data;
+          // Backend returns { total_colleges, submitted_count, pending_count, coordinated_count, data: [...] }
+          setRows(payload.data || []);
+          setSummary({
+            total_colleges:   payload.total_colleges   ?? 0,
+            submitted_count:  payload.submitted_count  ?? (payload.data?.length ?? 0),
+            pending_count:    payload.pending_count    ?? 0,
+            coordinated_count: payload.coordinated_count ?? 0,
+          });
+        } else {
+          setError(d.message || "Failed to load");
+        }
       })
       .catch(() => setError("Network error — could not load submissions"))
       .finally(() => setLoading(false));
@@ -208,26 +216,25 @@ export default function TransportDashboard() {
     });
   }, [filtered, sortKey, sortDir]);
 
-  // ── Summary Stats ─────────────────────────────────────────────────────────────
-  const totalExpected = rows.length;
-  const submittedCount = rows.length; // all rows in dashboard = submitted
-  const pendingCount = rows.filter(r => r.status !== "coordinated").length;
-  const coordinatedCount = rows.filter(r => r.status === "coordinated").length;
-
   // ── Actions ──────────────────────────────────────────────────────────────────
   const handleCoordinate = async (row) => {
     setCoordinating(row.id);
     try {
-      const res = await fetch(`${API}/api/transport-manager/coordinate/${row.id}`, {
+      const res = await transportFetch(`${API}/api/transport-manager/coordinate/${row.id}`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: transportAuthHeader(),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed");
-      setRows(prev => prev.map(r => r.id === row.id
-        ? { ...r, status: r.status === "coordinated" ? "pending_review" : "coordinated" }
-        : r
-      ));
+      if (!res.ok || !data.success) throw new Error(data.message || "Failed");
+      // Backend returns the new coordination_status in data.data.coordination_status
+      const newStatus = data.data?.coordination_status;
+      setRows(prev => prev.map(r => r.id === row.id ? { ...r, coordination_status: newStatus } : r));
+      // Update summary counts
+      setSummary(prev => ({
+        ...prev,
+        coordinated_count: newStatus === "coordinated" ? prev.coordinated_count + 1 : prev.coordinated_count - 1,
+        pending_count: newStatus === "coordinated" ? prev.pending_count - 1 : prev.pending_count + 1,
+      }));
     } catch (e) { setError(e.message); }
     finally { setCoordinating(null); }
   };
@@ -237,7 +244,7 @@ export default function TransportDashboard() {
     setNoteOpen(null);
   };
 
-  // ── Styles (mirroring AdminColleges) ─────────────────────────────────────────
+  // ── Styles (mirrors AdminColleges exactly) ────────────────────────────────────
   const sortIcon = (key) => {
     if (sortKey !== key) return <span style={{ opacity: 0.3 }}>↕</span>;
     return <span style={{ color: "#d4af37" }}>{sortDir === "asc" ? "↑" : "↓"}</span>;
@@ -298,15 +305,15 @@ export default function TransportDashboard() {
           </div>
         </div>
 
-        {/* ── Summary Stats (mirroring AdminColleges Stat pills) ── */}
+        {/* ── Summary Stats (mirrors AdminColleges Stat pills) ── */}
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
-          <Stat label="Total Colleges" value={totalExpected} color="#818cf8" />
-          <Stat label="Submitted" value={submittedCount} color="#60a5fa" />
-          <Stat label="Pending Review" value={pendingCount} color="#f59e0b" />
-          <Stat label="Coordinated" value={coordinatedCount} color="#10b981" />
+          <Stat label="Total Colleges" value={summary.total_colleges} color="#818cf8" />
+          <Stat label="Submitted" value={summary.submitted_count} color="#60a5fa" />
+          <Stat label="Pending Review" value={summary.pending_count} color="#f59e0b" />
+          <Stat label="Coordinated" value={summary.coordinated_count} color="#10b981" />
         </div>
 
-        {/* ── Search Bar (mirroring AdminColleges exactly) ── */}
+        {/* ── Search Bar (mirrors AdminColleges exactly) ── */}
         <div style={{ marginBottom: "16px", position: "relative" }}>
           <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "1rem", pointerEvents: "none" }}>🔍</span>
           <input
@@ -314,15 +321,12 @@ export default function TransportDashboard() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              width: "100%",
-              boxSizing: "border-box",
+              width: "100%", boxSizing: "border-box",
               padding: "11px 16px 11px 40px",
               background: "rgba(255,255,255,0.07)",
               border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: "10px",
-              color: "#f1f5f9",
-              fontSize: "0.92rem",
-              outline: "none",
+              borderRadius: "10px", color: "#f1f5f9",
+              fontSize: "0.92rem", outline: "none",
             }}
           />
           {search && (
@@ -346,12 +350,9 @@ export default function TransportDashboard() {
           </div>
         ) : (
           <div style={{
-            flex: 1,
-            overflowY: "auto",
-            overflowX: "auto",
+            flex: 1, overflowY: "auto", overflowX: "auto",
             border: "1px solid rgba(255,255,255,0.09)",
-            borderRadius: "14px",
-            background: "rgba(255,255,255,0.03)",
+            borderRadius: "14px", background: "rgba(255,255,255,0.03)",
             scrollbarWidth: "thin",
             scrollbarColor: "rgba(212,175,55,0.4) transparent",
           }}>
@@ -359,9 +360,7 @@ export default function TransportDashboard() {
               <thead>
                 <tr>
                   {COLS.map(col => (
-                    <th key={col.key}
-                      style={thStyle(col.align)}
-                      onClick={() => handleSort(col.key)}>
+                    <th key={col.key} style={thStyle(col.align)} onClick={() => handleSort(col.key)}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
                         {col.label}
                         {!NON_SORTABLE.has(col.key) && sortIcon(col.key)}
@@ -378,7 +377,7 @@ export default function TransportDashboard() {
                     </td>
                   </tr>
                 ) : sorted.map(r => {
-                  const isCoordinated = r.status === "coordinated";
+                  const isCoordinated = r.coordination_status === "coordinated";
                   const isCoordinating = coordinating === r.id;
                   const isNoteOpen = noteOpen === r.id;
 
@@ -441,9 +440,9 @@ export default function TransportDashboard() {
                           )}
                         </td>
 
-                        {/* Status */}
+                        {/* Coordination Status */}
                         <td style={tdStyle("center")}>
-                          <StatusBadge status={r.status} />
+                          <StatusBadge status={r.coordination_status} />
                         </td>
 
                         {/* Notes */}
@@ -460,31 +459,23 @@ export default function TransportDashboard() {
                         {/* Actions */}
                         <td style={tdStyle("center")}>
                           <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
-                            {/* Mark Coordinated toggle */}
-                            <button
-                              onClick={() => handleCoordinate(r)}
-                              disabled={isCoordinating}
+                            <button onClick={() => handleCoordinate(r)} disabled={isCoordinating}
                               style={{
                                 padding: "5px 12px", borderRadius: "6px", cursor: "pointer",
                                 fontWeight: 700, fontSize: "0.75rem", whiteSpace: "nowrap",
                                 background: isCoordinated ? "rgba(245,158,11,0.12)" : "rgba(16,185,129,0.12)",
                                 border: `1px solid ${isCoordinated ? "#f59e0b" : "#10b981"}`,
                                 color: isCoordinated ? "#f59e0b" : "#10b981",
-                                opacity: isCoordinating ? 0.6 : 1,
-                                transition: "all 0.2s",
+                                opacity: isCoordinating ? 0.6 : 1, transition: "all 0.2s",
                               }}>
                               {isCoordinating ? "…" : isCoordinated ? "↩ Uncoordinate" : "✓ Mark Coordinated"}
                             </button>
-
-                            {/* Add / Edit Note */}
-                            <button
-                              onClick={() => setNoteOpen(isNoteOpen ? null : r.id)}
+                            <button onClick={() => setNoteOpen(isNoteOpen ? null : r.id)}
                               style={{
                                 padding: "5px 12px", borderRadius: "6px", cursor: "pointer",
                                 fontWeight: 700, fontSize: "0.75rem", whiteSpace: "nowrap",
                                 background: isNoteOpen ? "rgba(212,175,55,0.18)" : "rgba(212,175,55,0.08)",
-                                border: "1px solid rgba(212,175,55,0.5)",
-                                color: "#d4af37",
+                                border: "1px solid rgba(212,175,55,0.5)", color: "#d4af37",
                                 transition: "all 0.2s",
                               }}>
                               {r.internal_note ? "✏ Edit Note" : "+ Add Note"}
@@ -493,12 +484,10 @@ export default function TransportDashboard() {
                         </td>
                       </tr>
 
-                      {/* Inline note editor row */}
                       {isNoteOpen && (
                         <NoteEditor
                           key={`note-${r.id}`}
                           row={r}
-                          token={token}
                           onSaved={handleNoteSaved}
                           onClose={() => setNoteOpen(null)}
                         />

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../../styles/dashboard-glass.css";
+import { isTransportTokenExpired } from "../../utils/transportFetch";
 
 const NAV_ITEMS = [
   { path: "/travel", label: "Dashboard", icon: "🚌" },
@@ -9,15 +10,27 @@ const NAV_ITEMS = [
 export default function TransportLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const name = localStorage.getItem("transport_role") || "Transport Manager";
+  const name = localStorage.getItem("vtufest_transport_name") || "Transport Manager";
+
+  const doSessionExpiry = () => {
+    localStorage.removeItem("vtufest_transport_token");
+    localStorage.removeItem("vtufest_transport_name");
+    localStorage.removeItem("vtufest_transport_role");
+    navigate("/travel/login", { replace: true });
+  };
 
   useEffect(() => {
-    if (!localStorage.getItem("transport_token")) navigate("/travel/login", { replace: true });
+    const token = localStorage.getItem("vtufest_transport_token");
+    if (!token || isTransportTokenExpired()) { doSessionExpiry(); return; }
+    const handler = () => doSessionExpiry();
+    window.addEventListener("transport:session-expired", handler);
+    return () => window.removeEventListener("transport:session-expired", handler);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("transport_token");
-    localStorage.removeItem("transport_role");
+    localStorage.removeItem("vtufest_transport_token");
+    localStorage.removeItem("vtufest_transport_name");
+    localStorage.removeItem("vtufest_transport_role");
     navigate("/travel/login");
   };
 
@@ -42,10 +55,10 @@ export default function TransportLayout({ children }) {
           </div>
         </div>
 
-        {/* Role badge */}
+        {/* Name badge */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ color: "#cbd5e1", fontSize: "0.8rem", marginBottom: "4px" }}>Logged in as</div>
-          <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.9rem" }}>Transport Manager</div>
+          <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.9rem" }}>{name}</div>
           <div style={{
             display: "inline-block", marginTop: "6px", padding: "3px 10px",
             borderRadius: "20px", fontSize: "0.7rem", fontWeight: 700,
@@ -100,6 +113,7 @@ export default function TransportLayout({ children }) {
           <h2 style={{ margin: 0, color: "#f1f5f9", fontSize: "1.1rem", fontWeight: 600 }}>
             🚌 Transport Coordination Dashboard
           </h2>
+          <div style={{ color: "#d4af37", fontSize: "0.8rem", fontWeight: 600 }}>{name}</div>
         </div>
         <div className="dashboard-glass-wrapper" style={{ flex: 1 }}>
           {children}

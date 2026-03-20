@@ -104,7 +104,7 @@ function AccountsRoute({ children }) {
 }
 
 function TransportRoute({ children }) {
-  const token = localStorage.getItem("transport_token");
+  const token = localStorage.getItem("vtufest_transport_token");
   if (!token) return <Navigate to="/travel/login" replace />;
   return children;
 }
