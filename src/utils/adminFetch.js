@@ -27,7 +27,7 @@ export function isAdminTokenExpired() {
     const token = localStorage.getItem("vtufest_admin_token");
     if (!token) return true;
     try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
         return Date.now() / 1000 > payload.exp;
     } catch {
         return true;
