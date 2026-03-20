@@ -32,7 +32,7 @@ export default function AdminSettings() {
     useEffect(() => {
         fetchSettings();
         // Hydrate transport toggle — response: { success: true, data: { enabled: true } }
-        adminFetch(`${API_BASE}/api/settings/transport-status`, { headers })
+        fetch(`${API_BASE}/api/settings/transport-status`, { headers })
             .then(r => r.json())
             .then(d => { if (d.success && d.data?.enabled !== undefined) setTransportEnabled(!!d.data.enabled); })
             .catch(() => {});
