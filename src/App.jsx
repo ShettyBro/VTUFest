@@ -20,7 +20,7 @@ export default function App() {
             userSelect: 'none',
             padding: '8px',
           }}>
-            Dev by ShettyBro
+            ShettyBro
           </a>
         </BrowserRouter>
       </OnboardingProvider>
