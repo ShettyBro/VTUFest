@@ -137,7 +137,8 @@ export default function ManagerDashboard() {
           localStorage.setItem("student_id", `AVH${data.data.user_id}2026`);
         }
         // Show feedback popup if payment receipt uploaded
-        const hasPayment = data.data?.payment_receipts?.length > 0 || !!data.data?.payment_receipt_url;
+        // dashboard API returns payment_status object when a receipt has been submitted
+        const hasPayment = !!data.data?.payment_status || data.data?.payment_receipts?.length > 0 || !!data.data?.payment_receipt_url;
         if (hasPayment) {
           checkFeedbackStatus(token);
         }
