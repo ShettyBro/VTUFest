@@ -40,6 +40,7 @@ import AdminFindPerson from "../pages/admin/Adminfindperson";
 import AdminAccommodation from "../pages/admin/AdminAccommodation";
 import AdminVolunteers from "../pages/admin/AdminVolunteers";
 import AdminFeedback from "../pages/admin/AdminFeedback";
+import AdminEventMetrics from "../pages/admin/AdminEventMetrics";
 
 
 /* DATA_ADMIN */
@@ -67,6 +68,11 @@ import AccountsDashboard from "../pages/em/AccountsDashboard";
 import TransportLogin from "../pages/transport/TransportLogin";
 import TransportDashboard from "../pages/transport/TransportDashboard";
 import TransportForm from "../pages/manager/TransportForm";
+
+/* ID CARD PORTALS */
+import IDCardLogin from "../pages/idcard/IDCardLogin";
+import PhotoEditorPortal from "../pages/idcard/PhotoEditorPortal";
+import IDCardTeamPortal from "../pages/idcard/IDCardTeamPortal";
 
 /* ── Route Guards ──────────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
@@ -106,6 +112,20 @@ function AccountsRoute({ children }) {
 function TransportRoute({ children }) {
   const token = localStorage.getItem("vtufest_transport_token");
   if (!token) return <Navigate to="/travel/login" replace />;
+  return children;
+}
+
+function IDCardEditorRoute({ children }) {
+  const token = localStorage.getItem("vtufest_idcard_token");
+  const role  = localStorage.getItem("vtufest_idcard_role");
+  if (!token || role !== "id_card_editor") return <Navigate to="/media-login" replace />;
+  return children;
+}
+
+function IDCardTeamRouteGuard({ children }) {
+  const token = localStorage.getItem("vtufest_idcard_token");
+  const role  = localStorage.getItem("vtufest_idcard_role");
+  if (!token || role !== "id_card_team") return <Navigate to="/media-login" replace />;
   return children;
 }
 
@@ -186,6 +206,7 @@ export default function AppRoutes() {
         <Route path="/ad-accommodation" element={<AdminRoute><AdminAccommodation /></AdminRoute>} />
         <Route path="/ad-volunteers" element={<AdminRoute><AdminVolunteers /></AdminRoute>} />
         <Route path="/ad-feedback" element={<AdminRoute><AdminFeedback /></AdminRoute>} />
+        <Route path="/ad-event-metrics" element={<AdminRoute><AdminEventMetrics /></AdminRoute>} />
 
         <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 
@@ -221,6 +242,12 @@ export default function AppRoutes() {
         <Route path="/manager/transport" element={
           <ProtectedRoute allowedRoles={["manager"]}><TransportForm /></ProtectedRoute>
         } />
+
+        {/* ── ID CARD PORTALS ────────────────────────────────────────────── */}
+        <Route path="/media-login" element={<IDCardLogin />} />
+        <Route path="/media" element={<Navigate to="/media-login" replace />} />
+        <Route path="/media/editor" element={<IDCardEditorRoute><PhotoEditorPortal /></IDCardEditorRoute>} />
+        <Route path="/media/team" element={<IDCardTeamRouteGuard><IDCardTeamPortal /></IDCardTeamRouteGuard>} />
       </Routes>
     </DAProvider>
   );

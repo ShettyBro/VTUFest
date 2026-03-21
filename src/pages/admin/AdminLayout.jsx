@@ -8,6 +8,7 @@ import SessionTimerBadge from "../../components/SessionTimerBadge";
 const NAV_ITEMS = [
     { path: "/ad-dashboard", label: "Dashboard", icon: "📊" },
     { path: "/ad-colleges", label: "Colleges", icon: "🏫" },
+    { path: "/ad-event-metrics", label: "Event Metrics", icon: "🎭" },
     { path: "/ad-payments", label: "Payments", icon: "💳" },
     { path: "/ad-volunteers", label: "Volunteers", icon: "🙋" },
     { path: "/ad-accommodation", label: "Accommodation", icon: "🛏️" },
