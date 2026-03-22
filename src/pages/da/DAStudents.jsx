@@ -9,13 +9,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "https://api.vtufest2026.achary
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function parseHabbaId(raw) {
-    // "AVH232026" → student_id = 23
-    const cleaned = raw.trim().toUpperCase();
-    const m = cleaned.match(/^AVH(\d+)2026$/);
-    if (!m) return null;
-    return parseInt(m[1], 10);
-}
+
 
 function StatusBadge({ status }) {
     if (!status) return <span className="da-badge da-badge-gray">No Application</span>;
@@ -96,17 +90,14 @@ export default function DAStudents() {
 
     const handleSearch = async (e) => {
         e?.preventDefault();
-        const id = parseHabbaId(query);
-        if (!id) {
-            setSearchError("Invalid Habba ID. Format: AVH232026 (where 23 is the student number)");
-            return;
-        }
+        const param = query.trim().toUpperCase();
+        if (!param) return;
         setSearchError("");
         setStudent(null);
         setExpanded(false);
         setSearching(true);
         try {
-            const res = await daFetch(`${API_BASE}/api/da/student/${id}`, token);
+            const res = await daFetch(`${API_BASE}/api/da/student/${encodeURIComponent(param)}`, token);
             const data = await res.json();
             if (!res.ok || !data.data) throw new Error(data.message || "Student not found");
 
@@ -180,13 +171,13 @@ export default function DAStudents() {
         <DALayout>
             <div className="da-page">
                 <h1 className="da-page-title">Student Management</h1>
-                <p className="da-page-subtitle">Search by Habba ID to view and correct student data.</p>
+                <p className="da-page-subtitle">Search by USN, 10-digit mobile number, or numeric Student ID to view and correct student data.</p>
 
                 {/* Search */}
                 <form className="da-search-bar" onSubmit={handleSearch}>
                     <input
                         className="da-search-input"
-                        placeholder="Enter Habba ID (e.g. AVH232026)"
+                        placeholder="USN, Mobile Number, or Student ID"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         style={{ maxWidth: "320px" }}
@@ -328,7 +319,7 @@ export default function DAStudents() {
                 {/* Empty state when nothing searched yet */}
                 {!student && !searching && !searchError && (
                     <div className="da-empty">
-                        Enter a Habba ID above to look up a student record.
+                        Enter a USN, mobile number, or Student ID above to look up a student record.
                     </div>
                 )}
             </div>
