@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 import Layout from "../components/layout/layout";
 import "../styles/approvedStudents.css";
 import { usePopup } from "../context/PopupContext";
@@ -216,29 +214,6 @@ export default function ApprovedStudents() {
     }
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-
-    doc.setFontSize(14);
-    doc.text("VTU HABBA 2026", 14, 15);
-    doc.setFontSize(12);
-    doc.text("Approved Participants List", 14, 25);
-
-    doc.autoTable({
-      startY: 32,
-      head: [["Name", "USN", "Email", "Participating Events"]],
-      body: students.map((s) => [
-        s.full_name,
-        s.usn,
-        s.email,
-        s.participating_events.map((e) => e.event_name).join(", "),
-      ]),
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [37, 99, 235] },
-    });
-
-    doc.save("approved_students_vtu_habba_2026.pdf");
-  };
 
   if (loading) {
     return (
@@ -258,10 +233,6 @@ export default function ApprovedStudents() {
             <h2>Approved Participants</h2>
             <p className="subtitle">VTU HABBA 2026 – Final Approved Student List</p>
           </div>
-
-          <button className="pdf-btn" onClick={downloadPDF}>
-            Download PDF
-          </button>
         </div>
 
         {isLocked && (
