@@ -23,9 +23,9 @@ const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-// VTU USN: [1-4][2 college letters][2 year digits][2 branch letters][3 roll digits]
-// Example: 1RN22CS001, 4MH20ME045, 2KD21EC120
-const VTU_USN_REGEX = /^[1-4][A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{3}$/;
+// VTU UG USN: [1-4][2 college letters][2 year digits][2 branch letters][3 roll digits] → e.g. 1RN22CS001
+// VTU PG USN: [1-4][2 college letters][2 year digits][3 branch letters][2 roll digits] → e.g. 2VX25CWE06
+const VTU_USN_REGEX = /^[1-4][A-Z]{2}[0-9]{2}(?:[A-Z]{2}[0-9]{3}|[A-Z]{3}[0-9]{2})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MAGIC_NUMBERS = {
@@ -265,7 +265,7 @@ export default function AuthPage({ initialView = "login" }) {
         // Example: 1RN22CS001
         if (!VTU_USN_REGEX.test(usn)) {
             setUsnStatus("invalid");
-            setGlobalError("Invalid USN format. Expected format: 1RN22CS001 (Region + CollegeCode + Year + Branch + RollNo)");
+            setGlobalError("Invalid USN format. UG: 1RN22CS001 (2-letter branch + 3-digit roll) | PG: 2VX25CWE06 (3-letter branch + 2-digit roll)");
             return;
         }
 
@@ -719,7 +719,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                     }}
                                                 />
                                                 <small style={{ color: 'rgba(168,237,234,0.6)', fontSize: 'clamp(0.68rem, 2.2vw, 0.75rem)' }}>
-                                                    Format: Region(1) + College(RN) + Year(22) + Branch(CS) + Roll(001) → <strong style={{ color: 'rgba(168,237,234,0.85)' }}>1RN22CS001</strong>
+                                                    UG: Region(1) + College(RN) + Year(22) + Branch(CS) + Roll(001) → <strong style={{ color: 'rgba(168,237,234,0.85)' }}>1RN22CS001</strong><br />
+                                                    PG: Region(2) + College(VX) + Year(25) + Branch(CWE) + Roll(06) → <strong style={{ color: 'rgba(168,237,234,0.85)' }}>2VX25CWE06</strong>
                                                 </small>
                                                 {usnStatus === "checking" && <small style={{ color: 'rgba(168,237,234,0.8)' }}>⏳ Checking availability...</small>}
                                                 {usnStatus === "valid" && <small style={{ color: '#4ade80' }}>✅ USN is valid and available</small>}
