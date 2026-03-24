@@ -265,7 +265,7 @@ export default function AuthPage({ initialView = "login" }) {
         // Example: 1RN22CS001
         if (!VTU_USN_REGEX.test(usn)) {
             setUsnStatus("invalid");
-            setGlobalError("Invalid USN format. UG: 1RN22CS001 (2-letter branch + 3-digit roll) | PG: 2VX25CWE06 (3-letter branch + 2-digit roll)");
+            setGlobalError("Invalid USN format. UG: Region + College(2L) + Year + Branch(2L) + Roll(3D) | PG: Region + College(2L) + Year + Branch(3L) + Roll(2D)");
             return;
         }
 
@@ -719,8 +719,8 @@ export default function AuthPage({ initialView = "login" }) {
                                                     }}
                                                 />
                                                 <small style={{ color: 'rgba(168,237,234,0.6)', fontSize: 'clamp(0.68rem, 2.2vw, 0.75rem)' }}>
-                                                    UG: Region(1) + College(RN) + Year(22) + Branch(CS) + Roll(001) → <strong style={{ color: 'rgba(168,237,234,0.85)' }}>1RN22CS001</strong><br />
-                                                    PG: Region(2) + College(VX) + Year(25) + Branch(CWE) + Roll(06) → <strong style={{ color: 'rgba(168,237,234,0.85)' }}>2VX25CWE06</strong>
+                                                    UG: Region(1) + College(2L) + Year(2D) + Branch(2L) + Roll(3D)<br />
+                                                    PG: Region(1) + College(2L) + Year(2D) + Branch(3L) + Roll(2D)
                                                 </small>
                                                 {usnStatus === "checking" && <small style={{ color: 'rgba(168,237,234,0.8)' }}>⏳ Checking availability...</small>}
                                                 {usnStatus === "valid" && <small style={{ color: '#4ade80' }}>✅ USN is valid and available</small>}
