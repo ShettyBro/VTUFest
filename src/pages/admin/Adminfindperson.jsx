@@ -835,7 +835,7 @@ export default function AdminFindPerson() {
                                     <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "780px" }}>
                                         <thead>
                                             <tr>
-                                                {["Internal ID", "Full Name", "USN", "Department", "Documents", "Account", "Registered On"].map((h, i) => (
+                                                {["Internal ID", "Full Name", "USN", "Phone", "Documents", "Account", "Registered On"].map((h, i) => (
                                                     <th key={i} style={thStyle(i === 0 ? "center" : "left")}>{h}</th>
                                                 ))}
                                             </tr>
@@ -866,7 +866,7 @@ export default function AdminFindPerson() {
                                                             </code>
                                                         </td>
                                                         <td style={tdStyle("left", { color: "var(--text-secondary)", fontSize: "0.83rem" })}>
-                                                            {s.department || "—"}
+                                                            {s.phone || "—"}
                                                         </td>
                                                         <td style={tdStyle("left")}>
                                                             <StudentDocsCell documents={s.documents} />
