@@ -31,7 +31,7 @@ export default function ManagerDashboard() {
   const [showFinalApprovalOverlay, setShowFinalApprovalOverlay] = useState(false);
   const [lockStatus, setLockStatus] = useState(null);
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
-  const [transportStatus, setTransportStatus] = useState(null); // { enabled, submitted }
+  const [transportStatus, setTransportStatus] = useState(null); // { enabled, submitted, showDetails }
 
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [notificationsData, setNotificationsData] = useState([]);
@@ -79,12 +79,13 @@ export default function ManagerDashboard() {
       .catch(() => { });
 
     // Fetch Transport Status
-    fetch("https://api.vtufest2026.acharyahabba.com/api/settings/transport-status", {
+    fetch(`https://api.vtufest2026.acharyahabba.com/api/settings/transport-status?t=${Date.now()}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
       .then(async d => {
-        if (!d.success || !d.data?.enabled) { setTransportStatus({ enabled: false, submitted: false }); return; }
+        if (!d.success || !d.data?.enabled) { setTransportStatus({ enabled: false, submitted: false, showDetails: false }); return; }
+        const showDetails = !!d.data?.show_details;
         // Check if already submitted
         let submitted = false;
         try {
@@ -93,9 +94,9 @@ export default function ManagerDashboard() {
           });
           if (sub.ok) { const sd = await sub.json(); submitted = !!(sd.success && sd.data); }
         } catch { }
-        setTransportStatus({ enabled: true, submitted });
+        setTransportStatus({ enabled: true, submitted, showDetails });
       })
-      .catch(() => {});
+      .catch(() => { });
 
   }, []);
 
@@ -484,26 +485,96 @@ export default function ManagerDashboard() {
               </div>
 
               {/* ── TRANSPORT CARD ── */}
-              {transportStatus?.enabled && (
-                <div
-                  className="glass-card clickable"
-                  style={{ cursor: 'pointer', borderLeft: `4px solid ${transportStatus.submitted ? 'var(--accent-success)' : '#d4af37'}` }}
-                  onClick={() => navigate('/manager/transport')}
-                >
-                  <h4 style={{ color: transportStatus.submitted ? 'var(--accent-success)' : '#d4af37', borderColor: transportStatus.submitted ? 'rgba(16,185,129,0.2)' : 'rgba(212,175,55,0.2)' }}>🚌 Transport Details</h4>
-                  {transportStatus.submitted ? (
-                    <>
+              {transportStatus?.enabled && (() => {
+                const { submitted, showDetails } = transportStatus;
+
+                // State 3: Submitted + show_details ON → glowing purple/teal allocated card
+                if (submitted && showDetails) {
+                  return (
+                    <div
+                      className="glass-card clickable"
+                      onClick={() => navigate('/manager/transport')}
+                      style={{
+                        cursor: 'pointer',
+                        position: 'relative', overflow: 'hidden',
+                        borderLeft: '4px solid #7c3aed',
+                        background: 'linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(16,185,129,0.12) 100%)',
+                        boxShadow: '0 0 28px rgba(124,58,237,0.35), 0 0 60px rgba(16,185,129,0.12)',
+                        animation: 'glow-pulse-purple 2.2s ease-in-out infinite',
+                      }}
+                    >
+                      <style>{`
+                        @keyframes glow-pulse-purple {
+                          0%,100% { box-shadow: 0 0 20px rgba(124,58,237,0.35), 0 0 40px rgba(16,185,129,0.1); }
+                          50% { box-shadow: 0 0 40px rgba(124,58,237,0.6), 0 0 80px rgba(16,185,129,0.25); }
+                        }
+                        @keyframes blink-gold {
+                          0%,100% { opacity: 1; box-shadow: 0 0 16px rgba(212,175,55,0.5); border-color: rgba(212,175,55,0.8); }
+                          50% { opacity: 0.65; box-shadow: 0 0 32px rgba(212,175,55,0.9); border-color: rgba(212,175,55,0.3); }
+                        }
+                        @keyframes shimmer-text {
+                          0%,100% { color: #a78bfa; } 50% { color: #10b981; }
+                        }
+                      `}</style>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '1.1rem' }}>🚗</span>
+                        <h4 style={{ margin: 0, color: '#a78bfa', fontSize: '0.95rem', fontWeight: 700, animation: 'shimmer-text 3s ease-in-out infinite' }}>Transport Details</h4>
+                      </div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#10b981', margin: '8px 0 4px', letterSpacing: '0.02em' }}>
+                        ✅ Vehicle Alloted!
+                      </div>
+                      <div style={{
+                        display: 'inline-block', marginTop: '8px',
+                        padding: '7px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700,
+                        background: 'linear-gradient(90deg,#7c3aed,#10b981)',
+                        color: '#fff', letterSpacing: '0.03em',
+                        boxShadow: '0 2px 12px rgba(124,58,237,0.4)',
+                      }}>👁 View Allocated Details →</div>
+                    </div>
+                  );
+                }
+
+                // State 2: Submitted, details not shared yet → calm green
+                if (submitted) {
+                  return (
+                    <div
+                      className="glass-card clickable"
+                      onClick={() => navigate('/manager/transport')}
+                      style={{ cursor: 'pointer', borderLeft: '4px solid var(--accent-success)' }}
+                    >
+                      <h4 style={{ color: 'var(--accent-success)' }}>🚌 Transport Details</h4>
                       <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent-success)', margin: '10px 0' }}>✅</div>
-                      <small style={{ color: 'var(--text-secondary)' }}>Submitted — Click to edit details</small>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ fontSize: '1rem', color: '#d4af37', margin: '14px 0 6px', fontWeight: 700 }}>Action Required</div>
-                      <small style={{ color: 'var(--text-secondary)' }}>Click to submit your team's transport details</small>
-                    </>
-                  )}
-                </div>
-              )}
+                      <small style={{ color: 'var(--text-secondary)' }}>Submitted — we'll notify you when details are shared</small>
+                    </div>
+                  );
+                }
+
+                // State 1: Not submitted → urgent gold blinking CTA
+                return (
+                  <div
+                    className="glass-card clickable"
+                    onClick={() => navigate('/manager/transport')}
+                    style={{
+                      cursor: 'pointer',
+                      borderLeft: '4px solid #d4af37',
+                      animation: 'blink-gold 1.6s ease-in-out infinite',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '1.1rem' }}>🚌</span>
+                      <h4 style={{ margin: 0, color: '#d4af37', fontSize: '0.95rem', fontWeight: 700 }}>Transport Details</h4>
+                    </div>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#fbbf24', margin: '8px 0 4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>⚠ Action Required</div>
+                    <div style={{
+                      display: 'inline-block', marginTop: '8px',
+                      padding: '7px 18px', borderRadius: '20px', fontSize: '0.83rem', fontWeight: 800,
+                      background: 'linear-gradient(90deg, #d4af37, #f59e0b)',
+                      color: '#0f172a', letterSpacing: '0.04em',
+                      boxShadow: '0 2px 14px rgba(212,175,55,0.55)',
+                    }}>🚌 Submit Transport Details →</div>
+                  </div>
+                );
+              })()}
 
             </div>
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import TransportLayout from "./TransportLayout";
 import { transportFetch, transportAuthHeader } from "../../utils/transportFetch";
+import DriverAssignModal from "../../components/DriverAssignModal";
 
 const API = "https://api.vtufest2026.acharyahabba.com";
 
@@ -157,6 +158,7 @@ export default function TransportDashboard() {
   const [sortDir, setSortDir] = useState("asc");
   const [coordinating, setCoordinating] = useState(null);
   const [noteOpen, setNoteOpen] = useState(null);
+  const [driverModal, setDriverModal] = useState({ open: false, rowId: null, initialData: null });
 
   useEffect(() => {
     if (!localStorage.getItem("vtufest_transport_token")) { navigate("/travel/login"); return; }
@@ -242,6 +244,31 @@ export default function TransportDashboard() {
   const handleNoteSaved = (id, note) => {
     setRows(prev => prev.map(r => r.id === id ? { ...r, internal_note: note } : r));
     setNoteOpen(null);
+  };
+
+  // Called after driver details saved — then coordinate the row
+  const handleDriverSavedAndCoordinate = async (savedData) => {
+    const rowId = driverModal.rowId;
+    // Optimistically update driver info in the row
+    setRows(prev => prev.map(r => r.id === rowId ? { ...r, ...savedData } : r));
+    // Now fire the coordinate PATCH
+    setCoordinating(rowId);
+    try {
+      const res = await transportFetch(`${API}/api/transport-manager/coordinate/${rowId}`, {
+        method: "PATCH",
+        headers: transportAuthHeader(),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Coordination failed");
+      const newStatus = data.data?.coordination_status;
+      setRows(prev => prev.map(r => r.id === rowId ? { ...r, coordination_status: newStatus } : r));
+      setSummary(prev => ({
+        ...prev,
+        coordinated_count: prev.coordinated_count + 1,
+        pending_count: prev.pending_count - 1,
+      }));
+    } catch (e) { setError(e.message); }
+    finally { setCoordinating(null); }
   };
 
   // ── Styles (mirrors AdminColleges exactly) ────────────────────────────────────
@@ -459,9 +486,28 @@ export default function TransportDashboard() {
                         {/* Actions */}
                         <td style={tdStyle("center")}>
                           <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
-                            <button onClick={() => handleCoordinate(r)} disabled={isCoordinating}
+                            <button
+                              disabled={isCoordinating}
+                              onClick={() => {
+                                if (isCoordinated) {
+                                  // Uncoordinate — no modal needed
+                                  handleCoordinate(r);
+                                } else {
+                                  // Open driver modal first, coordinate on success
+                                  setDriverModal({
+                                    open: true,
+                                    rowId: r.id,
+                                    initialData: {
+                                      driver_name:    r.driver_name,
+                                      driver_phone:   r.driver_phone,
+                                      vehicle_number: r.vehicle_number,
+                                      driver_remarks: r.driver_remarks,
+                                    },
+                                  });
+                                }
+                              }}
                               style={{
-                                padding: "5px 12px", borderRadius: "6px", cursor: "pointer",
+                                padding: "5px 12px", borderRadius: "6px", cursor: isCoordinating ? "not-allowed" : "pointer",
                                 fontWeight: 700, fontSize: "0.75rem", whiteSpace: "nowrap",
                                 background: isCoordinated ? "rgba(245,158,11,0.12)" : "rgba(16,185,129,0.12)",
                                 border: `1px solid ${isCoordinated ? "#f59e0b" : "#10b981"}`,
@@ -484,6 +530,21 @@ export default function TransportDashboard() {
                         </td>
                       </tr>
 
+                      {/* Driver info display (shown when assigned) */}
+                      {r.driver_name && !isNoteOpen && (
+                        <tr>
+                          <td colSpan={COLS.length} style={{ padding: 0 }}>
+                            <div style={{ background: "rgba(16,185,129,0.04)", borderBottom: "1px solid rgba(16,185,129,0.12)", padding: "8px 22px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap" }}>
+                              <span style={{ color: "var(--text-muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>Assigned Driver</span>
+                              <span style={{ color: "#10b981", fontWeight: 600, fontSize: "0.82rem" }}>🚗 {r.driver_name}</span>
+                              <span style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>📞 {r.driver_phone}</span>
+                              <span style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>🚌 {r.vehicle_number}</span>
+                              {r.driver_remarks && <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic" }}>{r.driver_remarks}</span>}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+
                       {isNoteOpen && (
                         <NoteEditor
                           key={`note-${r.id}`}
@@ -499,6 +560,18 @@ export default function TransportDashboard() {
             </table>
           </div>
         )}
+
+        {/* ── Driver Assign Modal ── */}
+        <DriverAssignModal
+          isOpen={driverModal.open}
+          onClose={() => setDriverModal(m => ({ ...m, open: false }))}
+          rowId={driverModal.rowId}
+          initialData={driverModal.initialData}
+          onSuccess={handleDriverSavedAndCoordinate}
+          apiUrl={`${API}/api/transport-manager/driver`}
+          fetchFn={transportFetch}
+          authHeader={transportAuthHeader()}
+        />
 
         {/* ── Footer count ── */}
         {!loading && sorted.length > 0 && (

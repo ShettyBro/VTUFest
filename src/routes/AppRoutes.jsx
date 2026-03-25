@@ -41,6 +41,8 @@ import AdminAccommodation from "../pages/admin/AdminAccommodation";
 import AdminVolunteers from "../pages/admin/AdminVolunteers";
 import AdminFeedback from "../pages/admin/AdminFeedback";
 import AdminEventMetrics from "../pages/admin/AdminEventMetrics";
+import AdminTransport from "../pages/admin/AdminTransport";
+import AdminGreenRoom from "../pages/admin/AdminGreenRoom";
 
 
 /* DATA_ADMIN */
@@ -207,6 +209,8 @@ export default function AppRoutes() {
         <Route path="/ad-volunteers" element={<AdminRoute><AdminVolunteers /></AdminRoute>} />
         <Route path="/ad-feedback" element={<AdminRoute><AdminFeedback /></AdminRoute>} />
         <Route path="/ad-event-metrics" element={<AdminRoute><AdminEventMetrics /></AdminRoute>} />
+        <Route path="/ad-transport" element={<AdminRoute><AdminTransport /></AdminRoute>} />
+        <Route path="/ad-green-room" element={<AdminRoute><AdminGreenRoom /></AdminRoute>} />
 
         <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 

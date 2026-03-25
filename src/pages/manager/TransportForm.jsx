@@ -65,9 +65,11 @@ export default function TransportForm() {
   const role = localStorage.getItem("vtufest_role");
   const { showPopup } = usePopup();
 
-  const [pageState, setPageState] = useState("loading"); // loading | disabled | form | submitted
+  const [pageState, setPageState] = useState("loading"); // loading | disabled | form | status | submitted
   const [isEditMode, setIsEditMode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showTransportDetails, setShowTransportDetails] = useState(false);
+  const [submission, setSubmission] = useState(null); // hold the existing submission for the status view
 
   // ── form fields ──────────────────────────────────────────────────────────────
   const [mode, setMode] = useState("");
@@ -92,28 +94,37 @@ export default function TransportForm() {
   useEffect(() => {
     if (!token || role !== "manager") { navigate("/"); return; }
     checkStatus();
+    // Re-check whenever manager tabs back (admin may have changed settings)
+    const onVisible = () => { if (document.visibilityState === "visible") checkStatus(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
   const userAuthHeader = () => ({ Authorization: `Bearer ${token}` });
 
   const checkStatus = async () => {
     try {
-      const res = await fetch(`${API}/api/settings/transport-status`, {
+      // ?t= cache-buster forces fresh response (bypasses browser ETag 304 cache)
+      const res = await fetch(`${API}/api/settings/transport-status?t=${Date.now()}`, {
         headers: userAuthHeader(),
       });
       const data = await res.json();
-      // Backend returns { success: true, data: { enabled: true } }
       if (!data.success || !data.data?.enabled) { setPageState("disabled"); return; }
 
-      // Check existing submission
+      const showDetails = !!data.data?.show_details;
+      setShowTransportDetails(showDetails);
+
+      // Check existing submission — if found, ALWAYS go to status (no editing)
       const subRes = await fetch(`${API}/api/transport/my-submission`, {
         headers: userAuthHeader(),
       });
       const subData = await subRes.json();
       if (subData.success && subData.data) {
-        prefillForm(subData.data);
-        setIsEditMode(true);
+        setSubmission(subData.data);
+        setPageState("status");
+        return;
       }
+      // No submission yet — show the form
       setPageState("form");
     } catch {
       setPageState("form");
@@ -210,8 +221,9 @@ export default function TransportForm() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${API}/api/transport/${isEditMode ? "update" : "submit"}`, {
-        method: isEditMode ? "PUT" : "POST",
+      // Always POST — one-time submission, no editing allowed
+      const res = await fetch(`${API}/api/transport/submit`, {
+        method: "POST",
         headers: { "Content-Type": "application/json", ...userAuthHeader() },
         body: JSON.stringify(buildPayload()),
       });
@@ -220,7 +232,11 @@ export default function TransportForm() {
         showPopup(data.message || "Failed to submit", "error");
         return;
       }
-      setPageState("submitted");
+      // After submit, fetch updated submission then go to status view
+      const subRes = await fetch(`${API}/api/transport/my-submission`, { headers: userAuthHeader() });
+      const subData = await subRes.json();
+      if (subData.success && subData.data) setSubmission(subData.data);
+      setPageState("status");
     } catch {
       showPopup("Network error. Please try again.", "error");
     } finally {
@@ -229,6 +245,91 @@ export default function TransportForm() {
   };
 
   // ── States ───────────────────────────────────────────────────────────────────
+  const fmtMode = (m) => ({
+    BUS_PRIVATE: "🚌 Bus (Private)", COLLEGE_VEHICLE: "🚐 College Vehicle",
+    TRAIN: "🚆 Train", FLIGHT: "✈️ Flight", PUBLIC_BUS: "🚍 Public Bus", OTHER: "🚗 Other",
+  })[m] || m || "—";
+  const fmtDt = (d) => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+  if (pageState === "status" && submission) {
+    const isCoordinated = submission.coordination_status === "coordinated";
+    const hasDriver     = !!submission.driver_name;
+    const fmtMode = (m) => ({ BUS_PRIVATE: "🚌 Bus (Private)", COLLEGE_VEHICLE: "🚐 College Vehicle", TRAIN: "🚆 Train", FLIGHT: "✈️ Flight", PUBLIC_BUS: "🚍 Public Bus", OTHER: "🚗 Other" })[m] || m || "—";
+    const fmtDt  = (d) => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
+    return (
+      <Layout>
+        <div className="dashboard-glass-wrapper">
+          <div className="dashboard-header">
+            <div className="welcome-text">
+              <h1>Transport Details</h1>
+              <p style={{ color: "var(--text-secondary)" }}>Your submitted transport information</p>
+            </div>
+          </div>
+
+          {/* Status badge */}
+          <div style={{ display: "flex", gap: "12px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{
+              padding: "8px 20px", borderRadius: "30px", fontWeight: 700, fontSize: "0.9rem",
+              background: isCoordinated ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.12)",
+              color: isCoordinated ? "#10b981" : "#f59e0b",
+              border: `1px solid ${isCoordinated ? "rgba(16,185,129,0.4)" : "rgba(245,158,11,0.4)"}`
+            }}>
+              {isCoordinated ? "✅ Coordinated" : "⏳ Pending Coordination"}
+            </span>
+          </div>
+
+          {/* Submission summary */}
+          <div className="glass-card" style={{ marginBottom: "20px" }}>
+            <h3 style={{ margin: "0 0 16px", color: "var(--text-primary)" }}>📋 Submission Summary</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
+              {[
+                { label: "Mode",          value: fmtMode(submission.transport_mode) },
+                { label: "Arrival Point", value: submission.arrival_point || "—" },
+                { label: "ETA",           value: fmtDt(submission.estimated_arrival_datetime) },
+                { label: "Headcount",     value: submission.total_headcount ?? "—" },
+                { label: "Contact",       value: submission.contact_person_name || "—" },
+                { label: "Phone",         value: submission.contact_person_phone || "—" },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "3px" }}>{label}</div>
+                  <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.88rem" }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Driver / contact section — only shown when show_transport_details is ON */}
+          {showTransportDetails && (
+            hasDriver ? (
+              <div className="glass-card" style={{ borderColor: "rgba(16,185,129,0.35)", marginBottom: "20px" }}>
+                <h3 style={{ margin: "0 0 14px", color: "#10b981" }}>🚗 Assigned Driver</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px" }}>
+                  {[
+                    { label: "Driver Name",    value: submission.driver_name },
+                    { label: "Driver Phone",   value: submission.driver_phone, isPhone: true },
+                    { label: "Vehicle Number", value: submission.vehicle_number },
+                    ...(submission.driver_remarks ? [{ label: "Remarks", value: submission.driver_remarks }] : []),
+                  ].map(({ label, value, isPhone }) => (
+                    <div key={label}>
+                      <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "3px" }}>{label}</div>
+                      <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.88rem" }}>
+                        {isPhone ? <a href={`tel:${value}`} style={{ color: "#60a5fa", textDecoration: "none" }}>{value}</a> : value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", padding: "16px 20px", color: "#fbbf24", fontSize: "0.88rem", marginBottom: "20px" }}>
+                📞 The transport team will contact you shortly with your driver and vehicle details.
+              </div>
+            )
+          )}
+        </div>
+      </Layout>
+    );
+  }
+
   if (pageState === "loading") {
     return (
       <Layout>
@@ -278,11 +379,16 @@ export default function TransportForm() {
     );
   }
 
-  const isTrain     = mode === "TRAIN";
+  // Guard: if show_transport_details is ON and there's an existing submission, always show status view
+  if (showTransportDetails && submission) {
+    return null; // checkStatus already sets pageState="status"; this is just a safety fallback
+  }
+
+  const isTrain        = mode === "TRAIN";
   const isBusOrVehicle = mode === "BUS_PRIVATE" || mode === "COLLEGE_VEHICLE";
-  const isPublicBus = mode === "PUBLIC_BUS";
-  const isFlight    = mode === "FLIGHT";
-  const isOther     = mode === "OTHER";
+  const isPublicBus    = mode === "PUBLIC_BUS";
+  const isFlight       = mode === "FLIGHT";
+  const isOther        = mode === "OTHER";
 
   return (
     <Layout>
@@ -483,9 +589,9 @@ export default function TransportForm() {
           </div>
 
           {/* ── SUBMIT ── */}
-          <button className="neon-btn" type="submit" disabled={submitting || !mode}
+        <button className="neon-btn" type="submit" disabled={submitting || !mode}
             style={{ maxWidth: "320px", opacity: (!mode || submitting) ? 0.6 : 1 }}>
-            {submitting ? "Submitting…" : isEditMode ? "✏️ Update Transport Details" : "🚌 Submit Transport Details"}
+            {submitting ? "Submitting…" : "🚌 Submit Transport Details"}
           </button>
         </form>
       </div>

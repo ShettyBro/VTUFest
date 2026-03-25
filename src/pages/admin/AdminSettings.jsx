@@ -16,6 +16,11 @@ export default function AdminSettings() {
     const [transportSaving, setTransportSaving] = useState(false);
     const [transportSuccess, setTransportSuccess] = useState(false);
 
+    // ── Show transport details toggle state ──
+    const [showTransportDetails, setShowTransportDetails] = useState(false);
+    const [showTransportSaving, setShowTransportSaving] = useState(false);
+    const [showTransportSuccess, setShowTransportSuccess] = useState(false);
+
     const token = localStorage.getItem("vtufest_admin_token");
     const isSuperAdmin = localStorage.getItem("vtufest_admin_role") === "SUPER_ADMIN";
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
@@ -31,12 +36,22 @@ export default function AdminSettings() {
 
     useEffect(() => {
         fetchSettings();
-        // Hydrate transport toggle — response: { success: true, data: { enabled: true } }
+        // Hydrate transport enabled toggle from transport-status endpoint
         fetch(`${API_BASE}/api/settings/transport-status`, { headers })
             .then(r => r.json())
-            .then(d => { if (d.success && d.data?.enabled !== undefined) setTransportEnabled(!!d.data.enabled); })
+            .then(d => {
+                if (d.success && d.data?.enabled !== undefined) setTransportEnabled(!!d.data.enabled);
+            })
             .catch(() => {});
     }, []);
+
+    // Derive show_transport_details from the settings list (set after fetchSettings resolves)
+    // We handle it in the JSX via settings array, but also keep local state for optimistic updates
+    // Load it when settings load:
+    useEffect(() => {
+        const row = settings.find(s => s.setting_key === 'show_transport_details');
+        if (row) setShowTransportDetails(row.setting_value === 'true');
+    }, [settings]);
 
     const handleTransportToggle = async () => {
         if (!isSuperAdmin || transportSaving) return;
@@ -49,7 +64,6 @@ export default function AdminSettings() {
             });
             const data = await res.json();
             if (!res.ok || !data.success) throw new Error(data.message || "Failed to update");
-            // Response: { success: true, data: { enabled: true } }
             setTransportEnabled(!!data.data?.enabled);
             setTransportSuccess(true);
             setTimeout(() => setTransportSuccess(false), 2500);
@@ -57,6 +71,27 @@ export default function AdminSettings() {
             setError(err.message);
         } finally {
             setTransportSaving(false);
+        }
+    };
+
+    const handleShowTransportToggle = async () => {
+        if (!isSuperAdmin || showTransportSaving || !transportEnabled) return;
+        setShowTransportSaving(true); setShowTransportSuccess(false);
+        try {
+            const res = await adminFetch(`${API_BASE}/api/admin/settings/show_transport_details`, {
+                method: "PATCH",
+                headers,
+                body: JSON.stringify({ value: !showTransportDetails }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "Failed to update");
+            setShowTransportDetails(!showTransportDetails);
+            setShowTransportSuccess(true);
+            setTimeout(() => setShowTransportSuccess(false), 2500);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setShowTransportSaving(false);
         }
     };
 
@@ -90,18 +125,22 @@ export default function AdminSettings() {
 
     const friendlyLabel = (key) => {
         const map = {
-            registration_lock: "Lock All Registrations",
-            manager_lock: "Lock All Manager/Principal Actions",
-            show_accommodation_details: "Show Accommodation Details to Managers",
+            registration_lock:         "Lock All Registrations",
+            manager_lock:              "Lock All Manager/Principal Actions",
+            show_accommodation_details:"Show Accommodation Details to Managers",
+            transport_collection:      "Collect Transport Details from Managers",
+            show_transport_details:    "Show Transport Details to Managers",
         };
         return map[key] || key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
     };
 
     const friendlyDesc = (key) => {
         const map = {
-            registration_lock: "When ON, all new student registrations are blocked across the platform.",
-            manager_lock: "When ON, Managers and Principals cannot make any further changes to event assignments or approvals across all colleges.",
-            show_accommodation_details: "When ON, team managers can see their allotted accommodation details (venue, address, map, contacts). Enable this only when accommodation allotments are finalised.",
+            registration_lock:         "When ON, all new student registrations are blocked across the platform.",
+            manager_lock:              "When ON, Managers and Principals cannot make any further changes to event assignments or approvals across all colleges.",
+            show_accommodation_details:"When ON, team managers can see their allotted accommodation details (venue, address, map, contacts). Enable this only when accommodation allotments are finalised.",
+            transport_collection:      "When ON, team managers see a transport form to submit their travel details. Once submitted, they cannot edit.",
+            show_transport_details:    "When ON, managers can view their submitted status, coordination badge, and assigned driver info. Requires Collection to be ON.",
         };
         return map[key] || "";
     };
@@ -124,7 +163,12 @@ export default function AdminSettings() {
                     <div className="glass-card" style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>Loading settings...</div>
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        {settings.filter(s => s.setting_key !== "allocated_events_visible" && s.setting_key !== "show_accommodation_details").map(s => {
+                        {settings.filter(s =>
+                            s.setting_key !== "allocated_events_visible" &&
+                            s.setting_key !== "show_accommodation_details" &&
+                            s.setting_key !== "transport_collection_enabled" &&
+                            s.setting_key !== "show_transport_details"
+                        ).map(s => {
                             const isOn = s.setting_value === "true";
                             const isSavingThis = saving === s.setting_key;
                             const canClick = isSuperAdmin && !isSavingThis;
@@ -241,53 +285,81 @@ export default function AdminSettings() {
                             );
                         })()}
 
-                        {/* ── Transport Details Collection toggle ── */}
-                        <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: transportEnabled ? "rgba(212,175,55,0.35)" : undefined }}>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "1rem", marginBottom: "4px" }}>
-                                    🚌 Collect Transport Details from Team Managers
-                                </div>
-                                <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "6px" }}>
-                                    When ON, team managers will see a transport form to submit their travel details for VTU HABBA 2026.
-                                </div>
-                                <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                                    Key: <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 6px", borderRadius: "4px" }}>transport_collection</code>
-                                    {" · "}
-                                    <span style={{ color: transportEnabled ? "var(--accent-success)" : "var(--text-muted)", fontWeight: 600 }}>
-                                        {transportEnabled ? "Active" : "Inactive"}
+                        {/* ── Transport Collection + Show Details (dependent) ── */}
+                        {(() => {
+                            const tcRow  = settings.find(x => x.setting_key === "transport_collection_enabled");
+                            const stdRow = settings.find(x => x.setting_key === "show_transport_details");
+                            if (!tcRow) return null;
+                            const tcOn      = tcRow.setting_value   === "true";
+                            const stdOn     = stdRow?.setting_value === "true";
+                            const tcSaving  = saving === "transport_collection_enabled";
+                            const stdSaving = saving === "show_transport_details";
+
+                            const ToggleSwitch = ({ isOn, disabled, onClick, sv }) => (
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, marginLeft: "20px" }}>
+                                    <span style={{ color: isOn ? "#10b981" : "var(--text-muted)", fontSize: "0.82rem", fontWeight: 700, minWidth: "28px" }}>
+                                        {isOn ? "ON" : "OFF"}
                                     </span>
-                                    {transportSuccess && (
-                                        <span style={{ marginLeft: "10px", color: "var(--accent-success)", fontWeight: 700, fontSize: "0.8rem" }}>✓ Updated</span>
-                                    )}
+                                    <div onClick={disabled ? undefined : onClick}
+                                        style={{
+                                            width: "52px", height: "28px", borderRadius: "14px",
+                                            background: isOn ? "#10b981" : "rgba(255,255,255,0.12)",
+                                            border: `2px solid ${isOn ? "#10b981" : "rgba(255,255,255,0.2)"}`,
+                                            cursor: disabled ? "not-allowed" : "pointer",
+                                            position: "relative", transition: "all 0.3s",
+                                            opacity: (sv || disabled) ? 0.5 : 1, flexShrink: 0,
+                                        }}>
+                                        <div style={{
+                                            width: "20px", height: "20px", borderRadius: "50%",
+                                            background: "#fff", position: "absolute", top: "2px",
+                                            left: isOn ? "26px" : "2px", transition: "left 0.3s",
+                                            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+                                        }} />
+                                    </div>
+                                    {sv && <span style={{ color: "var(--text-muted)", fontSize: "0.7rem" }}>Saving…</span>}
                                 </div>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, marginLeft: "24px" }}>
-                                <span style={{ color: transportEnabled ? "var(--accent-success)" : "var(--text-muted)", fontSize: "0.85rem", fontWeight: 600 }}>
-                                    {transportEnabled ? "ON" : "OFF"}
-                                </span>
-                                <div
-                                    onClick={handleTransportToggle}
-                                    style={{
-                                        width: "52px", height: "28px", borderRadius: "14px",
-                                        background: transportEnabled ? "var(--accent-success)" : "rgba(255,255,255,0.15)",
-                                        border: `2px solid ${transportEnabled ? "var(--accent-success)" : "rgba(255,255,255,0.2)"}`,
-                                        cursor: isSuperAdmin && !transportSaving ? "pointer" : "not-allowed",
-                                        position: "relative", transition: "all 0.3s",
-                                        opacity: transportSaving ? 0.6 : 1,
-                                    }}
-                                >
-                                    <div style={{
-                                        width: "20px", height: "20px", borderRadius: "50%",
-                                        background: "#fff", position: "absolute", top: "2px",
-                                        left: transportEnabled ? "26px" : "2px", transition: "left 0.3s",
-                                        boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                                    }} />
+                            );
+
+                            return (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                    {/* Card 1: Collect Transport */}
+                                    <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: tcOn ? "rgba(212,175,55,0.4)" : undefined }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.98rem", marginBottom: "3px" }}>🚌 Collect Transport Details from Managers</div>
+                                            <div style={{ color: "var(--text-secondary)", fontSize: "0.83rem", marginBottom: "5px" }}>When ON, managers see a one-time form to submit travel details. No editing after submit.</div>
+                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                                                Key: <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 5px", borderRadius: "3px" }}>transport_collection_enabled</code>
+                                                {tcRow.updated_at && ` · ${new Date(tcRow.updated_at).toLocaleString("en-IN")}`}
+                                                {tcRow.updated_by_name && ` by ${tcRow.updated_by_name}`}
+                                                <span style={{ marginLeft: "8px", color: tcOn ? "#10b981" : "var(--text-muted)", fontWeight: 600 }}>{tcOn ? "Active" : "Inactive"}</span>
+                                            </div>
+                                        </div>
+                                        <ToggleSwitch isOn={tcOn} disabled={!isSuperAdmin || tcSaving} onClick={() => handleToggle("transport_collection_enabled", tcRow.setting_value)} sv={tcSaving} />
+                                    </div>
+
+                                    {/* Card 2: Show Transport Details — locked unless tcOn */}
+                                    <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderColor: stdOn ? "rgba(167,139,250,0.4)" : undefined, opacity: !tcOn ? 0.5 : 1, transition: "opacity 0.3s" }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "0.98rem", marginBottom: "3px" }}>👁 Show Transport Details to Managers</div>
+                                            <div style={{ color: "var(--text-secondary)", fontSize: "0.83rem", marginBottom: "5px" }}>
+                                                When ON, managers see coordination status and assigned driver info on their submitted form.
+                                                {!tcOn && <span style={{ color: "#f59e0b", marginLeft: "6px", fontWeight: 600 }}>⚠ Enable Collection first.</span>}
+                                            </div>
+                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                                                Key: <code style={{ background: "rgba(255,255,255,0.08)", padding: "2px 5px", borderRadius: "3px" }}>show_transport_details</code>
+                                                {stdRow?.updated_at && ` · ${new Date(stdRow.updated_at).toLocaleString("en-IN")}`}
+                                                {stdRow?.updated_by_name && ` by ${stdRow.updated_by_name}`}
+                                                <span style={{ marginLeft: "8px", color: stdOn ? "#10b981" : "var(--text-muted)", fontWeight: 600 }}>{stdOn ? "Active" : "Inactive"}</span>
+                                            </div>
+                                        </div>
+                                        <ToggleSwitch isOn={stdOn} disabled={!isSuperAdmin || stdSaving || !tcOn} onClick={() => handleToggle("show_transport_details", stdRow?.setting_value ?? "false")} sv={stdSaving} />
+                                    </div>
                                 </div>
-                                {transportSaving && <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Saving...</span>}
-                            </div>
-                        </div>
+                            );
+                        })()}
 
                     </div>
+
                 )}
             </div>
 

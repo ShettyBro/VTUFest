@@ -12,6 +12,8 @@ const NAV_ITEMS = [
     { path: "/ad-payments", label: "Payments", icon: "💳" },
     { path: "/ad-volunteers", label: "Volunteers", icon: "🙋" },
     { path: "/ad-accommodation", label: "Accommodation", icon: "🛏️" },
+    { path: "/ad-transport", label: "Transport", icon: "🚌" },
+    { path: "/ad-green-room", label: "Green Room", icon: "🏢" },
     { path: "/ad-find-person", label: "Find Person", icon: "🔍" },
     { path: "/ad-feedback", label: "Feedback", icon: "💬" },
     { path: "/ad-calendar", label: "Calendar", icon: "📅" },
