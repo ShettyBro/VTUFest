@@ -516,7 +516,7 @@ export default function AssignEvents() {
   const showFinalApprovalButton =
     role === "principal" &&
     participatingCount >= 1 &&
-    dashboardData?.college?.is_final_approved === false &&
+    !dashboardData?.college?.is_final_approved &&
     !isReadOnlyMode;
 
 
