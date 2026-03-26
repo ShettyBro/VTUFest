@@ -516,7 +516,7 @@ export default function AssignEvents() {
   const showFinalApprovalButton =
     role === "principal" &&
     participatingCount >= 1 &&
-    dashboardData?.is_final_approved === false &&
+    dashboardData?.college?.is_final_approved === false &&
     !isReadOnlyMode;
 
 
@@ -550,7 +550,7 @@ export default function AssignEvents() {
               </button>
             )}
 
-            {dashboardData?.is_final_approved && (
+            {dashboardData?.college?.is_final_approved && (
               <div
                 style={{
                   background: "rgba(16, 185, 129, 0.2)",
@@ -563,9 +563,9 @@ export default function AssignEvents() {
                 }}
               >
                 ✓ Final Approved
-                {dashboardData?.final_approved_at && (
+                {dashboardData?.college?.final_approved_at && (
                   <div style={{ fontSize: "12px", marginTop: "4px", opacity: 0.8 }}>
-                    {new Date(dashboardData.final_approved_at).toLocaleString()}
+                    {new Date(dashboardData.college.final_approved_at).toLocaleString()}
                   </div>
                 )}
               </div>
