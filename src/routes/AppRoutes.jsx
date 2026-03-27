@@ -44,6 +44,15 @@ import AdminEventMetrics from "../pages/admin/AdminEventMetrics";
 import AdminTransport from "../pages/admin/AdminTransport";
 import AdminGreenRoom from "../pages/admin/AdminGreenRoom";
 
+/* VM SYSTEM */
+import VMRegister from "../pages/VMRegister";
+import VMStatus from "../pages/VMStatus";
+import VMDashboard from "../pages/vm/VMDashboard";
+import VMAdminVolunteers from "../pages/admin/VMAdminVolunteers";
+import VMCoordinator from "../pages/admin/VMCoordinator";
+import VMAdminFaculty from "../pages/admin/VMAdminFaculty";
+import VMFacultyAssign from "../pages/vm/VMFacultyAssign";
+
 
 /* DATA_ADMIN */
 import DALogin from "../pages/da/DALogin";
@@ -142,6 +151,12 @@ export default function AppRoutes() {
         <Route path="/assign-events" element={<AssignEvents />} />
         <Route path="/force-reset-password" element={<ForceResetPassword />} />
 
+        {/* ── VM PUBLIC ────────────────────────────────────────────────── */}
+        <Route path="/vm/register" element={<VMRegister />} />
+        <Route path="/vm/register/volunteer" element={<VMRegister />} />
+        <Route path="/vm/register/faculty" element={<VMRegister />} />
+        <Route path="/vm/status" element={<VMStatus />} />
+
         {/* ── RESET PASSWORD ──────────────────────────────────────────── */}
         <Route path="/changepassword" element={
           <ProtectedRoute isResetPage={true}><ResetPassword /></ProtectedRoute>
@@ -211,6 +226,13 @@ export default function AppRoutes() {
         <Route path="/ad-event-metrics" element={<AdminRoute><AdminEventMetrics /></AdminRoute>} />
         <Route path="/ad-transport" element={<AdminRoute><AdminTransport /></AdminRoute>} />
         <Route path="/ad-green-room" element={<AdminRoute><AdminGreenRoom /></AdminRoute>} />
+
+        {/* ── VM PORTAL ────────────────────────────────────────────────── */}
+        <Route path="/vm" element={<AdminRoute><VMDashboard /></AdminRoute>} />
+        <Route path="/vm/volunteers" element={<AdminRoute><VMAdminVolunteers /></AdminRoute>} />
+        <Route path="/vm/coordinator" element={<AdminRoute><VMCoordinator /></AdminRoute>} />
+        <Route path="/vm/faculty" element={<AdminRoute><VMAdminFaculty /></AdminRoute>} />
+        <Route path="/vm/faculty/assign" element={<AdminRoute><VMFacultyAssign /></AdminRoute>} />
 
         <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
 

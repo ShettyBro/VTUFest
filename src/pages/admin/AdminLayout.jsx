@@ -10,7 +10,6 @@ const NAV_ITEMS = [
     { path: "/ad-colleges", label: "Colleges", icon: "🏫" },
     { path: "/ad-event-metrics", label: "Event Metrics", icon: "🎭" },
     { path: "/ad-payments", label: "Payments", icon: "💳" },
-    { path: "/ad-volunteers", label: "Volunteers", icon: "🙋" },
     { path: "/ad-accommodation", label: "Accommodation", icon: "🛏️" },
     { path: "/ad-transport", label: "Transport", icon: "🚌" },
     { path: "/ad-green-room", label: "Green Room", icon: "🏢" },
@@ -177,6 +176,27 @@ export default function AdminLayout({ children }) {
                         {NAV_ITEMS.find(n => n.path === location.pathname)?.label || "Admin Panel"}
                     </h2>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <Link to="/vm" style={{
+                            display: "flex", alignItems: "center", gap: "6px",
+                            padding: "6px 14px", background: "linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%)",
+                            border: "1px solid rgba(212,175,55,0.5)", borderRadius: "8px", 
+                            color: "#d4af37", fontWeight: 700, fontSize: "0.8rem", textDecoration: "none",
+                            boxShadow: "0 0 12px rgba(212,175,55,0.25)", transition: "all 0.3s ease",
+                            textTransform: "uppercase", letterSpacing: "0.5px", marginRight: "8px"
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.boxShadow = "0 0 20px rgba(212,175,55,0.5)";
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,175,55,0.3) 0%, rgba(212,175,55,0.1) 100%)";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.boxShadow = "0 0 12px rgba(212,175,55,0.25)";
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%)";
+                            e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                        >
+                            🥷 VM Portal
+                        </Link>
                         <SessionTimerBadge
                             tokenKey="vtufest_admin_token"
                             accentColor="#d4af37"
