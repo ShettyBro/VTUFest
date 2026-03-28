@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import IDCardLayout from "./IDCardLayout";
 import { volunteerFetch } from "../../utils/volunteerFetch";
+import CollegeWiseZip from "./CollegeWiseZip";
 
 const API = "https://api.vtufest2026.acharyahabba.com";
 
@@ -419,6 +420,7 @@ export default function IDCardTeamPortal() {
   const token = localStorage.getItem("vtufest_idcard_token");
   const [showZipPopup, setShowZipPopup] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState("participants"); // participants | college-wise
 
   return (
     <IDCardLayout>
@@ -457,13 +459,41 @@ export default function IDCardTeamPortal() {
           {/* Status Bar */}
           <ExcelStatusBar token={token} onRefreshDone={() => setRefreshKey((k) => k + 1)} />
 
-          {/* Participants Table */}
+          {/* Tab switcher */}
+          <div style={{ display: "flex", gap: "4px", marginBottom: "18px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
+            {[
+              { id: "participants", label: "👥 All Participants" },
+              { id: "college-wise", label: "🏫 College Wise ZIP" },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                style={{ padding: "7px 16px", background: activeTab === t.id ? "rgba(255,255,255,0.11)" : "transparent", border: "none", color: activeTab === t.id ? "#f1f5f9" : "#64748b", borderRadius: "7px", cursor: "pointer", fontWeight: activeTab === t.id ? 700 : 400, fontSize: "0.85rem", whiteSpace: "nowrap" }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Participants Tab */}
+          {activeTab === "participants" && (
           <div style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "12px", padding: "20px", background: "rgba(255,255,255,0.02)" }}>
             <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "16px" }}>
               👥 Participants
             </div>
             <ParticipantsTable key={refreshKey} token={token} />
           </div>
+          )}
+
+          {/* College Wise ZIP Tab */}
+          {activeTab === "college-wise" && (
+          <div style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "12px", padding: "20px", background: "rgba(255,255,255,0.02)" }}>
+            <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "16px" }}>
+              🏫 College Wise ZIP Download
+            </div>
+            <CollegeWiseZip token={token} />
+          </div>
+          )}
 
         </div>
       </div>
