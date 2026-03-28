@@ -181,13 +181,13 @@ function CollegeBreakdownModal({ eventName, eventLabel, token, onClose }) {
 // ─── Column Definitions ───────────────────────────────────────────────────────
 
 const COLS = [
-    { key: "idx",               label: "#",            align: "center", sortable: false },
-    { key: "event_label",       label: "Event Name",   align: "left",   sortable: true  },
-    { key: "college_count",     label: "Colleges",     align: "center", sortable: true  },
-    { key: "student_count",     label: "Students",     align: "center", sortable: true  },
-    { key: "accompanist_count", label: "Accompanists", align: "center", sortable: true  },
-    { key: "total_participants","label": "Total",      align: "center", sortable: true  },
-    { key: "actions",           label: "Action",       align: "center", sortable: false },
+    { key: "idx", label: "#", align: "center", sortable: false },
+    { key: "event_label", label: "Event Name", align: "left", sortable: true },
+    { key: "college_count", label: "Colleges", align: "center", sortable: true },
+    { key: "student_count", label: "Students", align: "center", sortable: true },
+    { key: "accompanist_count", label: "Accompanists", align: "center", sortable: true },
+    { key: "total_participants", "label": "Total", align: "center", sortable: true },
+    { key: "actions", label: "Action", align: "center", sortable: false },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
