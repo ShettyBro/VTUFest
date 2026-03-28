@@ -190,6 +190,66 @@ function ImageLightbox({ src, onClose }) {
   );
 }
 
+// ─── Edit Person Modal ────────────────────────────────────────────────────────
+
+function EditPersonModal({ phone, token, onClose }) {
+  const [person, setPerson] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!phone) return;
+    setLoading(true); setError("");
+    volunteerFetch(`${API}/api/volunteer/id-card/person-lookup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ phone }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d.success) setPerson(d.person); else setError(d.message || "Person not found"); })
+      .catch(() => setError("Network error — could not load person"))
+      .finally(() => setLoading(false));
+  }, [phone, token]);
+
+  return (
+    <div
+      onClick={e => e.target === e.currentTarget && onClose()}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1500,
+        background: "rgba(0,0,0,0.75)", backdropFilter: "blur(5px)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
+      }}
+    >
+      <div style={{
+        background: "#0f172a", border: "1px solid rgba(255,255,255,0.12)",
+        borderRadius: "16px", width: "100%", maxWidth: "620px",
+        maxHeight: "90vh", overflowY: "auto", padding: "24px",
+        scrollbarWidth: "thin", scrollbarColor: "rgba(129,140,248,0.4) transparent",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+          <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.6px" }}>✏️ Edit Photo</div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "#94a3b8", borderRadius: "6px", padding: "5px 14px", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>✕ Close</button>
+        </div>
+
+        {loading && (
+          <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+            <div style={{ fontSize: "1.8rem", marginBottom: "8px" }}>⏳</div>Loading person…
+          </div>
+        )}
+        {error && (
+          <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "12px 14px", borderRadius: "8px", fontSize: "0.84rem" }}>
+            ⚠️ {error}
+          </div>
+        )}
+        {person && !loading && (
+          <PersonCard person={person} token={token} onPhotoReplaced={() => {}} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Participants Table ───────────────────────────────────────────────────────
 
 const PERSON_TYPE_COLORS = {
@@ -272,9 +332,7 @@ function ParticipantsTable({ token, onEditPhoto }) {
 
   return (
     <div>
-      {/* Controls row */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "14px", alignItems: "center" }}>
-        {/* Search */}
         <div style={{ position: "relative", flex: "1 1 200px", minWidth: "180px" }}>
           <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#64748b", pointerEvents: "none", fontSize: "0.85rem" }}>🔍</span>
           <input
@@ -288,13 +346,23 @@ function ParticipantsTable({ token, onEditPhoto }) {
           )}
         </div>
 
-        {/* College code */}
-        <input
-          placeholder="College code…"
-          value={collegeCode}
-          onChange={(e) => { setCollegeCode(e.target.value.toUpperCase()); setPage(1); }}
-          style={{ ...inputStyle, width: "140px" }}
-        />
+        {/* College code filter with clear button */}
+        <div style={{ position: "relative" }}>
+          <input
+            placeholder="College code…"
+            value={collegeCode}
+            onChange={(e) => { setCollegeCode(e.target.value.toUpperCase()); setPage(1); }}
+            style={{ ...inputStyle, width: "130px", paddingRight: collegeCode ? "28px" : "12px", borderColor: collegeCode ? "rgba(129,140,248,0.6)" : "rgba(255,255,255,0.15)" }}
+          />
+          {collegeCode && (
+            <button onClick={() => { setCollegeCode(""); setPage(1); }} style={{ position: "absolute", right: "6px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#818cf8", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700 }}>✕</button>
+          )}
+        </div>
+        {collegeCode && (
+          <span style={{ background: "rgba(129,140,248,0.15)", border: "1px solid rgba(129,140,248,0.4)", color: "#818cf8", padding: "3px 10px", borderRadius: "20px", fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+            🏫 {collegeCode}
+          </span>
+        )}
 
         {/* Person type */}
         <select
@@ -693,12 +761,11 @@ function PersonLookupTab({ token, initialPhone }) {
 export default function PhotoEditorPortal() {
   const token = localStorage.getItem("vtufest_idcard_token");
   const [activeTab, setActiveTab] = useState("participants"); // "participants" | "lookup"
-  const [editPhone, setEditPhone] = useState(null);
+  const [editModal, setEditModal] = useState(null); // phone string
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleEditPhoto = (phone) => {
-    setEditPhone(phone);
-    setActiveTab("lookup");
+    setEditModal(phone);
   };
 
   const tabs = [
@@ -745,12 +812,21 @@ export default function PhotoEditorPortal() {
               <ParticipantsTable key={refreshKey} token={token} onEditPhoto={handleEditPhoto} />
             )}
             {activeTab === "lookup" && (
-              <PersonLookupTab token={token} initialPhone={editPhone} />
+              <PersonLookupTab token={token} initialPhone={null} />
             )}
           </div>
 
         </div>
       </div>
+
+      {/* Edit popup modal — opens over the table without switching tabs */}
+      {editModal && (
+        <EditPersonModal
+          phone={editModal}
+          token={token}
+          onClose={() => setEditModal(null)}
+        />
+      )}
     </IDCardLayout>
   );
 }
