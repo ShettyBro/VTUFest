@@ -176,6 +176,41 @@ export default function AdminLayout({ children }) {
                         {NAV_ITEMS.find(n => n.path === location.pathname)?.label || "Admin Panel"}
                     </h2>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <button
+                        onClick={() => {
+                            // Bridge admin token → food token so no second login is needed.
+                            // foodAuth.js accepts SUPER_ADMIN / SUB_ADMIN tokens directly.
+                            const adminToken = localStorage.getItem("vtufest_admin_token");
+                            const adminName  = localStorage.getItem("vtufest_admin_name") || name;
+                            const adminRole  = localStorage.getItem("vtufest_admin_role") || role;
+                            if (adminToken) {
+                                localStorage.setItem("vtufest_food_token", adminToken);
+                                localStorage.setItem("vtufest_food_name",  adminName);
+                                localStorage.setItem("vtufest_food_role",  adminRole);
+                            }
+                            navigate("/food/dashboard");
+                        }}
+                        style={{
+                            display: "flex", alignItems: "center", gap: "6px",
+                            padding: "6px 14px", background: "linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 100%)",
+                            border: "1px solid rgba(16,185,129,0.5)", borderRadius: "8px",
+                            color: "#10b981", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer",
+                            boxShadow: "0 0 12px rgba(16,185,129,0.2)", transition: "all 0.3s ease",
+                            textTransform: "uppercase", letterSpacing: "0.5px", marginRight: "4px"
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.boxShadow = "0 0 20px rgba(16,185,129,0.4)";
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(16,185,129,0.3) 0%, rgba(16,185,129,0.1) 100%)";
+                            e.currentTarget.style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.boxShadow = "0 0 12px rgba(16,185,129,0.2)";
+                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 100%)";
+                            e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                        >
+                            🍽️ Food Panel
+                        </button>
                         <Link to="/vm" style={{
                             display: "flex", alignItems: "center", gap: "6px",
                             padding: "6px 14px", background: "linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%)",

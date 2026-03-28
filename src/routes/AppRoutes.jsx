@@ -44,6 +44,14 @@ import AdminEventMetrics from "../pages/admin/AdminEventMetrics";
 import AdminTransport from "../pages/admin/AdminTransport";
 import AdminGreenRoom from "../pages/admin/AdminGreenRoom";
 
+/* FOOD PORTAL */
+import FoodLogin from "../pages/food/FoodLogin";
+import FoodDashboard from "../pages/food/FoodDashboard";
+import FoodMeals from "../pages/food/FoodMeals";
+import FoodStalls from "../pages/food/FoodStalls";
+import FoodRedemptions from "../pages/food/FoodRedemptions";
+import FoodLogs from "../pages/food/FoodLogs";
+
 /* VM SYSTEM */
 import VMRegister from "../pages/VMRegister";
 import VMStatus from "../pages/VMStatus";
@@ -52,7 +60,6 @@ import VMAdminVolunteers from "../pages/admin/VMAdminVolunteers";
 import VMCoordinator from "../pages/admin/VMCoordinator";
 import VMAdminFaculty from "../pages/admin/VMAdminFaculty";
 import VMFacultyAssign from "../pages/vm/VMFacultyAssign";
-
 
 /* DATA_ADMIN */
 import DALogin from "../pages/da/DALogin";
@@ -63,7 +70,6 @@ import DAAuditLog from "../pages/da/DAAuditLog";
 import DAPrincipals from "../pages/da/DAPrincipals";
 import DABroadcastEmail from "../pages/da/DABroadcastEmail";
 import DAParticipants from "../pages/da/DAParticipants";
-
 
 /* GREEN ROOM (MANAGER SIDE) */
 import GreenRoom from "../pages/GreenRoom";
@@ -128,15 +134,56 @@ function TransportRoute({ children }) {
 
 function IDCardEditorRoute({ children }) {
   const token = localStorage.getItem("vtufest_idcard_token");
-  const role  = localStorage.getItem("vtufest_idcard_role");
+  const role = localStorage.getItem("vtufest_idcard_role");
   if (!token || role !== "id_card_editor") return <Navigate to="/media-login" replace />;
   return children;
 }
 
 function IDCardTeamRouteGuard({ children }) {
   const token = localStorage.getItem("vtufest_idcard_token");
-  const role  = localStorage.getItem("vtufest_idcard_role");
+  const role = localStorage.getItem("vtufest_idcard_role");
   if (!token || role !== "id_card_team") return <Navigate to="/media-login" replace />;
+  return children;
+}
+
+/**
+ * FoodRoute — guards all /food/* pages.
+ *
+ * FIXED: The previous version permanently wrote vtufest_admin_token into
+ * vtufest_food_token via localStorage.setItem, which caused the food portal
+ * to silently use the admin JWT. When the admin JWT expired or had a different
+ * shape the backend returned 500. Now we use session-only bridging: admins
+ * pass through directly with their admin token used in-memory by foodFetch,
+ * and we set a session flag so FoodLayout knows to show "← Admin Panel".
+ *
+ * Two valid auth paths:
+ *   1. vtufest_food_token   → Food Manager / FOOD_MANAGER login
+ *   2. vtufest_admin_token with SUPER_ADMIN or SUB_ADMIN → Admin bridging
+ */
+function FoodRoute({ children }) {
+  const foodToken = localStorage.getItem("vtufest_food_token");
+  const adminToken = localStorage.getItem("vtufest_admin_token");
+  const adminRole = localStorage.getItem("vtufest_admin_role");
+
+  const isAdmin = adminToken && ["SUPER_ADMIN", "SUB_ADMIN"].includes(adminRole);
+
+  // Admin bridging: write a session flag but DO NOT copy the token.
+  // foodFetch reads vtufest_food_token first, then falls back to vtufest_admin_token.
+  if (!foodToken && isAdmin) {
+    sessionStorage.setItem("food_is_admin_bridge", "true");
+    sessionStorage.setItem("food_bridge_name", localStorage.getItem("vtufest_admin_name") || "Admin");
+    sessionStorage.setItem("food_bridge_role", adminRole);
+    return children;
+  }
+
+  // Clear any stale bridge flag when a real food token is present
+  if (foodToken) {
+    sessionStorage.removeItem("food_is_admin_bridge");
+    sessionStorage.removeItem("food_bridge_name");
+    sessionStorage.removeItem("food_bridge_role");
+  }
+
+  if (!foodToken) return <Navigate to="/food/login" replace />;
   return children;
 }
 
@@ -235,6 +282,15 @@ export default function AppRoutes() {
         <Route path="/vm/faculty/assign" element={<AdminRoute><VMFacultyAssign /></AdminRoute>} />
 
         <Route path="/admin" element={<Navigate to="/ad-login" replace />} />
+
+        {/* ── FOOD PORTAL ───────────────────────────────────────────────── */}
+        <Route path="/food/login" element={<FoodLogin />} />
+        <Route path="/food" element={<Navigate to="/food/login" replace />} />
+        <Route path="/food/dashboard" element={<FoodRoute><FoodDashboard /></FoodRoute>} />
+        <Route path="/food/meals" element={<FoodRoute><FoodMeals /></FoodRoute>} />
+        <Route path="/food/stalls" element={<FoodRoute><FoodStalls /></FoodRoute>} />
+        <Route path="/food/redemptions" element={<FoodRoute><FoodRedemptions /></FoodRoute>} />
+        <Route path="/food/logs" element={<FoodRoute><FoodLogs /></FoodRoute>} />
 
         {/* ── DATA_ADMIN ───────────────────────────────────────────── */}
         <Route path="/da-login" element={<DALogin />} />
