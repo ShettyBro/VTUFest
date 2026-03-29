@@ -130,6 +130,7 @@ export default function AdminSettings() {
             show_accommodation_details:"Show Accommodation Details to Managers",
             transport_collection:      "Collect Transport Details from Managers",
             show_transport_details:    "Show Transport Details to Managers",
+            show_manager_downloads:    "Show Manager Downloads",
         };
         return map[key] || key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
     };
@@ -141,6 +142,7 @@ export default function AdminSettings() {
             show_accommodation_details:"When ON, team managers can see their allotted accommodation details (venue, address, map, contacts). Enable this only when accommodation allotments are finalised.",
             transport_collection:      "When ON, team managers see a transport form to submit their travel details. Once submitted, they cannot edit.",
             show_transport_details:    "When ON, managers can view their submitted status, coordination badge, and assigned driver info. Requires Collection to be ON.",
+            show_manager_downloads:    "When ON, team managers can see the 'Download Files' card to download their Annexure and Acknowledgement PDFs.",
         };
         return map[key] || "";
     };

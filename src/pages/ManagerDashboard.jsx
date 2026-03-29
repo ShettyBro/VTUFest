@@ -32,6 +32,8 @@ export default function ManagerDashboard() {
   const [lockStatus, setLockStatus] = useState(null);
   const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
   const [transportStatus, setTransportStatus] = useState(null); // { enabled, submitted, showDetails }
+  const [showDownloadsModal, setShowDownloadsModal] = useState(false);
+  const [downloadStates, setDownloadStates] = useState({});
 
   const [currentPriority1Index, setCurrentPriority1Index] = useState(0);
   const [notificationsData, setNotificationsData] = useState([]);
@@ -222,6 +224,26 @@ export default function ManagerDashboard() {
     } catch (error) {
       console.error("Lock status check error:", error);
     }
+  };
+
+  const handleDownload = (type, url) => {
+    if (!url) {
+      showPopup("File not available yet.", "error");
+      return;
+    }
+    setDownloadStates(prev => ({ ...prev, [type]: 'loading' }));
+    setTimeout(() => {
+      setDownloadStates(prev => ({ ...prev, [type]: 'success' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = type === 'annexure' ? 'Annexure.pdf' : '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => {
+        setDownloadStates(prev => ({ ...prev, [type]: null }));
+      }, 2000);
+    }, 1500);
   };
 
   const blockEvents = {
@@ -576,6 +598,46 @@ export default function ManagerDashboard() {
                 );
               })()}
 
+              {/* ── MANAGER DOWNLOADS CARD ── */}
+              {dashboardData?.show_manager_downloads && (
+                <div
+                  className="glass-card clickable"
+                  onClick={() => setShowDownloadsModal(true)}
+                  style={{
+                    cursor: 'pointer',
+                    position: 'relative', overflow: 'hidden',
+                    borderLeft: '4px solid #f59e0b',
+                    background: 'linear-gradient(135deg, rgba(245,158,11,0.18) 0%, rgba(212,175,55,0.05) 100%)',
+                    boxShadow: '0 0 28px rgba(245,158,11,0.25), 0 0 60px rgba(212,175,55,0.1)',
+                    animation: 'glow-pulse-ambient 2.5s ease-in-out infinite',
+                  }}
+                >
+                  <style>{`
+                    @keyframes glow-pulse-ambient {
+                      0%,100% { box-shadow: 0 0 20px rgba(245,158,11,0.2), 0 0 40px rgba(212,175,55,0.05); }
+                      50% { box-shadow: 0 0 35px rgba(245,158,11,0.4), 0 0 70px rgba(212,175,55,0.15); }
+                    }
+                    @keyframes shimmer-gold-text {
+                      0%,100% { color: #f59e0b; } 50% { color: #fbbf24; }
+                    }
+                  `}</style>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '1.2rem' }}>📥</span>
+                    <h4 style={{ margin: 0, color: '#f59e0b', fontSize: '0.98rem', fontWeight: 700, animation: 'shimmer-gold-text 3s ease-in-out infinite' }}>Download Files</h4>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fbbf24', margin: '8px 0 4px', letterSpacing: '0.01em' }}>
+                    Official documents available
+                  </div>
+                  <div style={{
+                    display: 'inline-block', marginTop: '10px',
+                    padding: '8px 18px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 800,
+                    background: 'linear-gradient(90deg,#f59e0b,#d4af37)',
+                    color: '#000', letterSpacing: '0.03em',
+                    boxShadow: '0 2px 14px rgba(245,158,11,0.4)',
+                  }}>View & Download ⬇</div>
+                </div>
+              )}
+
             </div>
 
             {/* --- CALENDAR SECTION --- */}
@@ -680,6 +742,75 @@ export default function ManagerDashboard() {
           triggerEvent="payment_proof_uploaded"
           onClose={() => setShowFeedbackPopup(false)}
         />
+      )}
+
+      {showDownloadsModal && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+        }}>
+          <div className="glass-card" style={{ maxWidth: "500px", width: "100%", padding: "30px", position: "relative" }}>
+            <button onClick={() => setShowDownloadsModal(false)} style={{
+              position: "absolute", top: "15px", right: "20px", background: "none", border: "none",
+              color: "var(--text-muted)", fontSize: "1.5rem", cursor: "pointer"
+            }}>✕</button>
+
+            <div style={{ textAlign: "center", marginBottom: "25px" }}>
+              <span style={{ fontSize: "2.5rem" }}>📥</span>
+              <h3 style={{ color: "var(--text-primary)", marginTop: "10px", fontSize: "1.4rem" }}>Manager Downloads</h3>
+              <p style={{ color: "var(--accent-warning)", fontSize: "0.95rem", marginTop: "10px", background: "rgba(245, 158, 11, 0.1)", padding: "10px", borderRadius: "8px", border: "1px solid rgba(245,158,11,0.2)" }}>
+                Instructions related to these PDFs are sent on your email.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              {[
+                { id: 'annexure', title: '1. Final Annexure', icon: '📄', url: dashboardData?.annexure_url },
+                { id: 'cloakroom', title: '2. Cloak Room Acknowledgement', icon: '🎒', url: 'public/cloak-room-ack.docx' },
+                { id: 'accommodation', title: '3. Accommodation Acknowledgement', icon: '🏨', url: 'public/accommodation-ack.docx' }
+              ].map(file => (
+                <div key={file.id} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  background: "rgba(255,255,255,0.05)", padding: "14px 18px", borderRadius: "10px",
+                  border: "1px solid rgba(255,255,255,0.1)"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span style={{ fontSize: "1.3rem" }}>{file.icon}</span>
+                    <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{file.title}</span>
+                  </div>
+
+                  <button
+                    onClick={() => handleDownload(file.id, file.url)}
+                    style={{
+                      background: downloadStates[file.id] === 'success' ? 'var(--accent-success)' : 'linear-gradient(90deg, #d4af37, #f59e0b)',
+                      border: "none", padding: "8px 20px", borderRadius: "20px",
+                      color: downloadStates[file.id] === 'success' ? '#fff' : '#000',
+                      fontWeight: 700, cursor: "pointer", minWidth: "130px",
+                      transition: "all 0.3s ease",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "6px"
+                    }}
+                  >
+                    {downloadStates[file.id] === 'loading' ? (
+                      <>
+                        <div style={{
+                          width: "14px", height: "14px", borderRadius: "50%",
+                          border: "2px solid rgba(0,0,0,0.3)", borderTopColor: "#000",
+                          animation: "spin 1s linear infinite"
+                        }} /> Fetching
+                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                      </>
+                    ) : downloadStates[file.id] === 'success' ? (
+                      "✅ Downloaded"
+                    ) : (
+                      "Download ⬇"
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* {showFinalApprovalOverlay && lockStatus && (
