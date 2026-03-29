@@ -6,27 +6,33 @@ import "../styles/auth.css";
 /* ─────────────────── CONFIG ─────────────────── */
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
-const VOLUNTEER_DOMAINS = [
-    { value: "", label: "— Select preferred domain  —" },
-    { value: "registration_desk", label: "Registration Desk" },
-    { value: "help_desk", label: "Help Desk" },
-    { value: "in_event", label: "In-Event" },
-    { value: "college_buddy", label: "College Buddy" },
-    { value: "food", label: "Food" },
-    { value: "general", label: "General" },
-];
+const VOLUNTEER_CATEGORIES = {
+    "Events": [
+        { value: "in_event", label: "In-Event" },
+        { value: "college_buddy", label: "College Buddy" },
+    ],
+    "Operations": [
+        { value: "registration_desk", label: "Registration Desk" },
+        { value: "help_desk", label: "Help Desk" },
+        { value: "food", label: "Food" },
+        { value: "general", label: "General" },
+    ]
+};
 
-const FACULTY_DOMAINS = [
-    { value: "", label: "— Select preferred panel —" },
-    { value: "transport", label: "Transport" },
-    { value: "event_manager", label: "Accomodation" },
-    { value: "accounts", label: "Accounts" },
-    { value: "gr_incharge", label: "Green Room Incharge" },
-    { value: "food", label: "Food Department" },
-    { value: "core_team", label: "Core Team" },
-    { value: "admin", label: "Admin" },
-    { value: "developer", label: "Developer" },
-];
+const FACULTY_CATEGORIES = {
+    "Events & Operations": [
+        { value: "transport", label: "Transport" },
+        { value: "event_manager", label: "Accommodation" },
+        { value: "accounts", label: "Accounts" },
+        { value: "gr_incharge", label: "Green Room Incharge" },
+        { value: "food", label: "Food Department" },
+    ],
+    "Core & Tech": [
+        { value: "core_team", label: "Core Team" },
+        { value: "admin", label: "Admin" },
+        { value: "developer", label: "Developer" },
+    ]
+};
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -103,12 +109,12 @@ export default function VMRegister() {
 
     // Volunteer form
     const [volForm, setVolForm] = useState({
-        full_name: "", email: "", phone: "", auid: "", requested_domain: ""
+        full_name: "", email: "", phone: "", auid: "", requested_domain: "", requested_category: ""
     });
 
     // Faculty form
     const [facForm, setFacForm] = useState({
-        full_name: "", email: "", phone: "", requested_domain: ""
+        full_name: "", email: "", phone: "", requested_domain: "", requested_category: ""
     });
 
     // Registration result
@@ -473,19 +479,42 @@ export default function VMRegister() {
                                     )}
 
                                     <div className="input-group">
-                                        <label>Preferred {tab === "volunteer" ? "Domain" : "Panel"} <span style={{ opacity: 0.6, fontWeight: 400 }}></span></label>
+                                        <label>Preferred Category</label>
                                         <select
-                                            value={tab === "volunteer" ? volForm.requested_domain : facForm.requested_domain}
-                                            onChange={e => tab === "volunteer"
-                                                ? setVolForm(p => ({ ...p, requested_domain: e.target.value }))
-                                                : setFacForm(p => ({ ...p, requested_domain: e.target.value }))
-                                            }
+                                            value={tab === "volunteer" ? volForm.requested_category : facForm.requested_category}
+                                            onChange={e => {
+                                                const val = e.target.value;
+                                                if (tab === "volunteer") {
+                                                    setVolForm(p => ({ ...p, requested_category: val, requested_domain: "" }));
+                                                } else {
+                                                    setFacForm(p => ({ ...p, requested_category: val, requested_domain: "" }));
+                                                }
+                                            }}
                                         >
-                                            {(tab === "volunteer" ? VOLUNTEER_DOMAINS : FACULTY_DOMAINS).map(d => (
-                                                <option key={d.value} value={d.value}>{d.label}</option>
+                                            <option value="">— Select preferred category —</option>
+                                            {Object.keys(tab === "volunteer" ? VOLUNTEER_CATEGORIES : FACULTY_CATEGORIES).map(c => (
+                                                <option key={c} value={c}>{c}</option>
                                             ))}
                                         </select>
                                     </div>
+
+                                    {((tab === "volunteer" && volForm.requested_category) || (tab === "faculty" && facForm.requested_category)) && (
+                                        <div className="input-group">
+                                            <label>Preferred {tab === "volunteer" ? "Domain" : "Panel"} <span style={{ opacity: 0.6, fontWeight: 400 }}></span></label>
+                                            <select
+                                                value={tab === "volunteer" ? volForm.requested_domain : facForm.requested_domain}
+                                                onChange={e => tab === "volunteer"
+                                                    ? setVolForm(p => ({ ...p, requested_domain: e.target.value }))
+                                                    : setFacForm(p => ({ ...p, requested_domain: e.target.value }))
+                                                }
+                                            >
+                                                <option value="">— Select preferred {tab === "volunteer" ? "domain" : "panel"} —</option>
+                                                {(tab === "volunteer" ? VOLUNTEER_CATEGORIES[volForm.requested_category] : FACULTY_CATEGORIES[facForm.requested_category]).map(d => (
+                                                    <option key={d.value} value={d.value}>{d.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
 
                                     {tab === "faculty" && (
                                         <div style={{
@@ -586,14 +615,14 @@ export default function VMRegister() {
                                         </div>
 
                                         {tab === "volunteer" ? (
-                                            [["Full Name", volForm.full_name], ["Email", volForm.email], ["Phone", volForm.phone], ["AUID", volForm.auid], ["Domain", volForm.requested_domain || "Not specified"]].map(([k, v]) => (
+                                            [["Full Name", volForm.full_name], ["Email", volForm.email], ["Phone", volForm.phone], ["AUID", volForm.auid], ["Category", volForm.requested_category || "Not specified"], ["Domain", volForm.requested_domain || "Not specified"]].map(([k, v]) => (
                                                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.83rem" }}>
                                                     <span style={{ color: "rgba(255,255,255,0.5)" }}>{k}</span>
                                                     <span style={{ color: "#f1f5f9", fontWeight: 600 }}>{v}</span>
                                                 </div>
                                             ))
                                         ) : (
-                                            [["Full Name", facForm.full_name], ["Email", facForm.email], ["Phone", facForm.phone], ["Panel", facForm.requested_domain || "Not specified"]].map(([k, v]) => (
+                                            [["Full Name", facForm.full_name], ["Email", facForm.email], ["Phone", facForm.phone], ["Category", facForm.requested_category || "Not specified"], ["Panel", facForm.requested_domain || "Not specified"]].map(([k, v]) => (
                                                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.83rem" }}>
                                                     <span style={{ color: "rgba(255,255,255,0.5)" }}>{k}</span>
                                                     <span style={{ color: "#f1f5f9", fontWeight: 600 }}>{v}</span>
