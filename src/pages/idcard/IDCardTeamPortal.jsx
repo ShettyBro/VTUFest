@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import IDCardLayout from "./IDCardLayout";
 import { volunteerFetch } from "../../utils/volunteerFetch";
 import CollegeWiseZip from "./CollegeWiseZip";
+import ExcelStatusBar from "./ExcelStatusBar";
 
 const API = "https://api.vtufest2026.acharyahabba.com";
 
@@ -60,88 +61,6 @@ function Toast({ toast, onClose }) {
   );
 }
 
-// ─── Excel Status Bar ─────────────────────────────────────────────────────────
-
-function ExcelStatusBar({ token, onRefreshDone }) {
-  const [lastSynced, setLastSynced] = useState(null);
-  const [sizeMb, setSizeMb] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 5000);
-  };
-
-  useEffect(() => {
-    volunteerFetch(`${API}/api/volunteer/id-card/excel-status`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((d) => { if (d.success) { setLastSynced(d.last_synced_at || null); setSizeMb(d.size_mb || null); } })
-      .catch(() => {});
-  }, [token]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      const res = await volunteerFetch(`${API}/api/volunteer/id-card/refresh-excel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (res.status === 409) { showToast("Refresh already in progress — please wait", "warn"); return; }
-      if (data.success) {
-        setLastSynced(data.synced_at || new Date().toISOString());
-        setSizeMb(data.size_mb || sizeMb);
-        showToast(`Refreshed — ${data.total_people} people`, "success");
-        onRefreshDone?.();
-      } else { showToast(data.message || "Refresh failed", "error"); }
-    } catch { showToast("Network error — refresh failed", "error"); }
-    finally { setRefreshing(false); }
-  };
-
-  const handleDownload = async () => {
-    try {
-      const res = await volunteerFetch(`${API}/api/volunteer/id-card/download-excel`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) window.open(data.download_url, "_blank");
-      else showToast(data.message || "Download failed", "error");
-    } catch { showToast("Network error", "error"); }
-  };
-
-  return (
-    <div style={{ marginBottom: "20px" }}>
-      <Toast toast={toast} onClose={() => setToast(null)} />
-      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: "12px", padding: "14px 18px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-        <span style={{ fontSize: "1.1rem" }}>📊</span>
-        <div>
-          <span style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.88rem" }}>Master Data</span>
-          <span style={{ color: "#64748b", fontSize: "0.75rem", marginLeft: "10px" }}>
-            Last refreshed: <span style={{ color: "#94a3b8", fontWeight: 600 }}>{timeAgo(lastSynced)}</span>
-            {sizeMb && <span style={{ marginLeft: "8px", color: "#475569" }}>· {sizeMb} MB</span>}
-          </span>
-        </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-          <button onClick={handleDownload} style={btnStyle("#60a5fa")}>📥 Download Excel</button>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            style={{ ...btnStyle("#818cf8"), opacity: refreshing ? 0.6 : 1, cursor: refreshing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            {refreshing
-              ? <><span style={{ display: "inline-block", width: "11px", height: "11px", border: "2px solid rgba(129,140,248,0.3)", borderTop: "2px solid #818cf8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Refreshing…</>
-              : "🔄 Refresh Data"}
-          </button>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    </div>
-  );
-}
 
 // ─── Image Lightbox ──────────────────────────────────────────────────────────
 
@@ -414,6 +333,89 @@ function ZipGeneratorPopup({ token, onClose }) {
   );
 }
 
+// ─── Core Team ZIP Generator ────────────────────────────────────────────────────────
+
+function CoreTeamZipTab({ token }) {
+  const [status, setStatus] = useState("idle");
+  const [result, setResult] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleGenerate = async () => {
+    setStatus("generating"); setErrorMsg(""); setResult(null);
+    try {
+      const res = await volunteerFetch(`${API}/api/volunteer/id-card/generate-zip-core`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (data.success) { setResult(data); setStatus("done"); }
+      else { setErrorMsg(data.message || "Core ZIP generation failed"); setStatus("error"); }
+    } catch { setErrorMsg("Network error — could not generate Core ZIP"); setStatus("error"); }
+  };
+
+  return (
+    <div>
+      <p style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "20px", lineHeight: 1.6 }}>
+        Generate a ZIP exclusively containing the <strong style={{ color: "#f1f5f9" }}>Core Team</strong> (Volunteers & Faculty) 
+        for Illustrator Data Merge. Includes photos, QR codes, and a <code style={{ background: "rgba(255,255,255,0.08)", padding: "1px 5px", borderRadius: "4px", color: "#a78bfa" }}>core_team_data.csv</code>.
+      </p>
+
+      {status === "idle" && (
+        <button
+          onClick={handleGenerate}
+          style={{ padding: "14px 22px", background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.25))", border: "1.5px solid #10b981", color: "#34d399", borderRadius: "10px", cursor: "pointer", fontSize: "0.95rem", fontWeight: 700 }}
+        >
+          👑 Generate Core Team ZIP
+        </button>
+      )}
+
+      {status === "generating" && (
+        <div style={{ display: "flex", gap: "12px", alignItems: "center", color: "#f1f5f9", fontWeight: 600 }}>
+          <div style={{ width: "24px", height: "24px", borderRadius: "50%", border: "3px solid rgba(16,185,129,0.2)", borderTop: "3px solid #10b981", animation: "spin 1s linear infinite" }} />
+          Generating Core Team ZIP… (may take a minute)
+        </div>
+      )}
+
+      {status === "error" && (
+        <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "14px 18px", borderRadius: "8px", display: "inline-block" }}>
+          ❌ {errorMsg}
+          <button onClick={() => setStatus("idle")} style={{ marginLeft: "14px", background: "transparent", border: "1px solid #f87171", color: "#f87171", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>Retry</button>
+        </div>
+      )}
+
+      {status === "done" && result && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "400px" }}>
+          <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "8px", padding: "12px 16px", color: "#34d399", fontSize: "0.85rem" }}>
+            ✅ {result.message}
+          </div>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#818cf8" }}>{result.total_people}</div>
+              <div style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", marginTop: "4px" }}>People</div>
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#34d399" }}>{result.size_mb} MB</div>
+              <div style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", marginTop: "4px" }}>Size</div>
+            </div>
+          </div>
+          <a
+            href={result.download_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "14px", background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.25))", border: "1.5px solid #10b981", color: "#34d399", borderRadius: "10px", textDecoration: "none", fontWeight: 700 }}
+          >
+            <span style={{ fontSize: "1.2rem" }}>⬇️</span> Download Core ZIP
+          </a>
+          <button onClick={() => { setStatus("idle"); setResult(null); }} style={{ padding: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#cbd5e1", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", alignSelf: "center" }}>
+            🔄 Regenerate
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function IDCardTeamPortal() {
@@ -456,14 +458,18 @@ export default function IDCardTeamPortal() {
             </button>
           </div>
 
-          {/* Status Bar */}
-          <ExcelStatusBar token={token} onRefreshDone={() => setRefreshKey((k) => k + 1)} />
+          {/* Status Bars */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "16px", marginBottom: "8px" }}>
+            <ExcelStatusBar token={token} type="master" title="Master Data" onRefreshDone={() => setRefreshKey((k) => k + 1)} />
+            <ExcelStatusBar token={token} type="core" title="Core Team Data" onRefreshDone={() => setRefreshKey((k) => k + 1)} />
+          </div>
 
           {/* Tab switcher */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "18px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "4px", width: "fit-content" }}>
             {[
               { id: "participants", label: "👥 All Participants" },
               { id: "college-wise", label: "🏫 College Wise ZIP" },
+              { id: "core-team",    label: "👑 Core Team ZIP" },
             ].map((t) => (
               <button
                 key={t.id}
@@ -492,6 +498,16 @@ export default function IDCardTeamPortal() {
               🏫 College Wise ZIP Download
             </div>
             <CollegeWiseZip token={token} />
+          </div>
+          )}
+
+          {/* Core Team ZIP Tab */}
+          {activeTab === "core-team" && (
+          <div style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "12px", padding: "20px", background: "rgba(255,255,255,0.02)" }}>
+            <div style={{ color: "#818cf8", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "16px" }}>
+              👑 Core Team ZIP Download
+            </div>
+            <CoreTeamZipTab token={token} />
           </div>
           )}
 

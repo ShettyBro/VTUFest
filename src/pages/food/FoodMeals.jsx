@@ -335,25 +335,24 @@ function DayCard({ date, windows, onEdit, onDelete, deletingId }) {
                                     </div>
                                     <div style={{ display: "flex", gap: "4px" }}>
                                         <button
-                                            onClick={() => !live && onEdit(w)}
-                                            disabled={live}
-                                            title={live ? "Cannot edit active window" : "Edit"}
+                                            onClick={() => onEdit(w)}
+                                            title="Edit"
                                             style={{
                                                 background: "rgba(255,255,255,0.08)", border: "none",
-                                                color: live ? "#334155" : "#94a3b8", borderRadius: "4px",
-                                                cursor: live ? "not-allowed" : "pointer", padding: "2px 6px",
+                                                color: "#94a3b8", borderRadius: "4px",
+                                                cursor: "pointer", padding: "2px 6px",
                                                 fontSize: "0.7rem",
                                             }}
                                         >✏️</button>
                                         <button
-                                            onClick={() => !live && onDelete(w)}
-                                            disabled={deletingId === w.id || live}
-                                            title={live ? "Cannot delete active window" : "Delete"}
+                                            onClick={() => onDelete(w)}
+                                            disabled={deletingId === w.id}
+                                            title="Delete"
                                             style={{
                                                 background: "rgba(239,68,68,0.1)", border: "none",
-                                                color: (deletingId === w.id || live) ? "#334155" : "#f87171",
+                                                color: deletingId === w.id ? "#334155" : "#f87171",
                                                 borderRadius: "4px",
-                                                cursor: (deletingId === w.id || live) ? "not-allowed" : "pointer",
+                                                cursor: deletingId === w.id ? "not-allowed" : "pointer",
                                                 padding: "2px 6px", fontSize: "0.7rem",
                                             }}
                                         >{deletingId === w.id ? "…" : "🗑️"}</button>
@@ -412,7 +411,6 @@ export default function FoodMeals() {
     };
 
     const handleDelete = async (w) => {
-        if (isLive(w)) { showPopup("Cannot delete an active meal window.", "error"); return; }
         const ok = await showConfirm({
             title: "Delete Meal Window",
             message: `Delete ${w.meal_type} on ${w.date?.split("T")[0] ?? w.date}?`,
@@ -608,23 +606,22 @@ export default function FoodMeals() {
                                             <td style={tdS}>
                                                 <div style={{ display: "flex", gap: "6px" }}>
                                                     <button
-                                                        onClick={() => !live && setModal({ mode: "edit", item: w })}
-                                                        disabled={live}
+                                                        onClick={() => setModal({ mode: "edit", item: w })}
                                                         style={{
                                                             padding: "5px 11px", background: "rgba(251,191,36,0.1)",
                                                             border: "1px solid #fbbf24", color: "#fbbf24",
-                                                            borderRadius: "6px", cursor: live ? "not-allowed" : "pointer",
-                                                            fontSize: "0.76rem", fontWeight: 700, opacity: live ? 0.35 : 1,
+                                                            borderRadius: "6px", cursor: "pointer",
+                                                            fontSize: "0.76rem", fontWeight: 700,
                                                         }}
                                                     >✏️ Edit</button>
                                                     <button
-                                                        onClick={() => !live && handleDelete(w)}
-                                                        disabled={deletingId === w.id || live}
+                                                        onClick={() => handleDelete(w)}
+                                                        disabled={deletingId === w.id}
                                                         style={{
                                                             padding: "5px 11px", background: "rgba(239,68,68,0.1)",
                                                             border: "1px solid #ef4444", color: "#f87171",
-                                                            borderRadius: "6px", cursor: (deletingId === w.id || live) ? "not-allowed" : "pointer",
-                                                            fontSize: "0.76rem", fontWeight: 700, opacity: (deletingId === w.id || live) ? 0.35 : 1,
+                                                            borderRadius: "6px", cursor: deletingId === w.id ? "not-allowed" : "pointer",
+                                                            fontSize: "0.76rem", fontWeight: 700, opacity: deletingId === w.id ? 0.35 : 1,
                                                         }}
                                                     >{deletingId === w.id ? "…" : "🗑️"}</button>
                                                 </div>

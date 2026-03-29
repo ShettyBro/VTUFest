@@ -270,6 +270,7 @@ export default function VMAdminFaculty() {
                                     <th style={thS}>Photo</th>
                                     <th style={thS}>Name</th>
                                     <th style={thS}>Email</th>
+                                    <th style={thS}>Phone</th>
                                     <th style={thS}>Requested Panel</th>
                                     <th style={thS}>Assigned Panel</th>
                                     <th style={thS}>Status</th>
@@ -288,6 +289,7 @@ export default function VMAdminFaculty() {
                                         </td>
                                         <td style={tdS}><span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.87rem" }}>{f.full_name}</span></td>
                                         <td style={tdS}><span style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>{f.email}</span></td>
+                                        <td style={tdS}><span style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>{f.phone || "—"}</span></td>
                                         <td style={tdS}>
                                             {f.requested_domain ? (
                                                 <span style={{ background: "rgba(129,140,248,0.12)", color: "#818cf8", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600 }}>

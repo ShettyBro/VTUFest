@@ -7,7 +7,7 @@ import "../styles/auth.css";
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 const VOLUNTEER_DOMAINS = [
-    { value: "", label: "— Select preferred domain (optional) —" },
+    { value: "", label: "— Select preferred domain  —" },
     { value: "registration_desk", label: "Registration Desk" },
     { value: "help_desk", label: "Help Desk" },
     { value: "in_event", label: "In-Event" },
@@ -17,12 +17,12 @@ const VOLUNTEER_DOMAINS = [
 ];
 
 const FACULTY_DOMAINS = [
-    { value: "", label: "— Select preferred panel (optional) —" },
+    { value: "", label: "— Select preferred panel —" },
     { value: "transport", label: "Transport" },
-    { value: "event_manager", label: "Event Manager" },
+    { value: "event_manager", label: "Accomodation" },
     { value: "accounts", label: "Accounts" },
     { value: "gr_incharge", label: "Green Room Incharge" },
-    { value: "food", label: "Food" },
+    { value: "food", label: "Food Department" },
     { value: "core_team", label: "Core Team" },
     { value: "admin", label: "Admin" },
     { value: "developer", label: "Developer" },
@@ -108,7 +108,7 @@ export default function VMRegister() {
 
     // Faculty form
     const [facForm, setFacForm] = useState({
-        full_name: "", email: "", requested_domain: ""
+        full_name: "", email: "", phone: "", requested_domain: ""
     });
 
     // Registration result
@@ -196,10 +196,12 @@ export default function VMRegister() {
                 };
             } else {
                 if (!EMAIL_REGEX.test(facForm.email.trim())) throw new Error("Invalid email address.");
+                if (!/^\d{10}$/.test(facForm.phone)) throw new Error("Phone must be exactly 10 digits.");
                 url = `${API}/api/vm/register/faculty/init`;
                 body = {
                     full_name: facForm.full_name.trim(),
                     email: facForm.email.trim().toLowerCase(),
+                    phone: facForm.phone.trim(),
                     ...(facForm.requested_domain ? { requested_domain: facForm.requested_domain } : {}),
                 };
             }
@@ -439,20 +441,23 @@ export default function VMRegister() {
                                         />
                                     </div>
 
+                                    <div className="input-group">
+                                        <label>Phone Number *</label>
+                                        <input
+                                            type="tel"
+                                            placeholder="10-digit mobile number"
+                                            value={tab === "volunteer" ? volForm.phone : facForm.phone}
+                                            onChange={e => tab === "volunteer"
+                                                ? setVolForm(p => ({ ...p, phone: e.target.value.replace(/\D/, "") }))
+                                                : setFacForm(p => ({ ...p, phone: e.target.value.replace(/\D/, "") }))
+                                            }
+                                            maxLength={10}
+                                            required
+                                        />
+                                    </div>
+
                                     {tab === "volunteer" && (
                                         <>
-                                            <div className="input-group">
-                                                <label>Phone Number *</label>
-                                                <input
-                                                    type="tel"
-                                                    placeholder="10-digit mobile number"
-                                                    value={volForm.phone}
-                                                    onChange={e => setVolForm(p => ({ ...p, phone: e.target.value.replace(/\D/, "") }))}
-                                                    maxLength={10}
-                                                    required
-                                                />
-                                            </div>
-
                                             <div className="input-group">
                                                 <label>AUID *</label>
                                                 <input
@@ -468,7 +473,7 @@ export default function VMRegister() {
                                     )}
 
                                     <div className="input-group">
-                                        <label>Preferred {tab === "volunteer" ? "Domain" : "Panel"} <span style={{ opacity: 0.6, fontWeight: 400 }}>(optional)</span></label>
+                                        <label>Preferred {tab === "volunteer" ? "Domain" : "Panel"} <span style={{ opacity: 0.6, fontWeight: 400 }}></span></label>
                                         <select
                                             value={tab === "volunteer" ? volForm.requested_domain : facForm.requested_domain}
                                             onChange={e => tab === "volunteer"
@@ -588,7 +593,7 @@ export default function VMRegister() {
                                                 </div>
                                             ))
                                         ) : (
-                                            [["Full Name", facForm.full_name], ["Email", facForm.email], ["Panel", facForm.requested_domain || "Not specified"]].map(([k, v]) => (
+                                            [["Full Name", facForm.full_name], ["Email", facForm.email], ["Phone", facForm.phone], ["Panel", facForm.requested_domain || "Not specified"]].map(([k, v]) => (
                                                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.83rem" }}>
                                                     <span style={{ color: "rgba(255,255,255,0.5)" }}>{k}</span>
                                                     <span style={{ color: "#f1f5f9", fontWeight: 600 }}>{v}</span>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import IDCardLayout from "./IDCardLayout";
 import { volunteerFetch } from "../../utils/volunteerFetch";
+import ExcelStatusBar from "./ExcelStatusBar";
 
 const API = "https://api.vtufest2026.acharyahabba.com";
 
@@ -64,101 +65,7 @@ function Toast({ toast, onClose }) {
   );
 }
 
-// ─── Excel Status Bar ─────────────────────────────────────────────────────────
 
-function ExcelStatusBar({ token, onRefreshDone }) {
-  const [lastSynced, setLastSynced] = useState(null);
-  const [sizeMb, setSizeMb] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 5000);
-  };
-
-  useEffect(() => {
-    volunteerFetch(`${API}/api/volunteer/id-card/excel-status`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) {
-          setLastSynced(d.last_synced_at || null);
-          setSizeMb(d.size_mb || null);
-        }
-      })
-      .catch(() => {});
-  }, [token]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      const res = await volunteerFetch(`${API}/api/volunteer/id-card/refresh-excel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (res.status === 409) { showToast("Refresh already in progress — please wait", "warn"); return; }
-      if (data.success) {
-        setLastSynced(data.synced_at || new Date().toISOString());
-        setSizeMb(data.size_mb || sizeMb);
-        showToast(`Refreshed — ${data.total_people} people`, "success");
-        onRefreshDone?.();
-      } else {
-        showToast(data.message || "Refresh failed", "error");
-      }
-    } catch { showToast("Network error — refresh failed", "error"); }
-    finally { setRefreshing(false); }
-  };
-
-  const handleDownload = async () => {
-    try {
-      const res = await volunteerFetch(`${API}/api/volunteer/id-card/download-excel`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) window.open(data.download_url, "_blank");
-      else showToast(data.message || "Download failed", "error");
-    } catch { showToast("Network error", "error"); }
-  };
-
-  return (
-    <div style={{ marginBottom: "20px" }}>
-      <Toast toast={toast} onClose={() => setToast(null)} />
-      <div style={{
-        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)",
-        borderRadius: "12px", padding: "14px 18px",
-        display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap",
-      }}>
-        <span style={{ fontSize: "1.1rem" }}>📊</span>
-        <div>
-          <span style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.88rem" }}>Master Data</span>
-          <span style={{ color: "#64748b", fontSize: "0.75rem", marginLeft: "10px" }}>
-            Last refreshed: <span style={{ color: "#94a3b8", fontWeight: 600 }}>{timeAgo(lastSynced)}</span>
-            {sizeMb && <span style={{ marginLeft: "8px", color: "#475569" }}>· {sizeMb} MB</span>}
-          </span>
-        </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-          <button onClick={handleDownload} style={btnStyle("#60a5fa")}>
-            📥 Download Excel
-          </button>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            style={{ ...btnStyle("#818cf8"), opacity: refreshing ? 0.6 : 1, cursor: refreshing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            {refreshing
-              ? <><span style={{ display: "inline-block", width: "11px", height: "11px", border: "2px solid rgba(129,140,248,0.3)", borderTop: "2px solid #818cf8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Refreshing…</>
-              : "🔄 Refresh Data"}
-          </button>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    </div>
-  );
-}
 
 // ─── Image Lightbox ──────────────────────────────────────────────────────────
 
@@ -756,6 +663,95 @@ function PersonLookupTab({ token, initialPhone }) {
   );
 }
 
+// ─── Core Team Table ──────────────────────────────────────────────────────────
+
+function CoreTeamTable({ token, onEditPhoto }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [lightbox, setLightbox] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const fetchRows = useCallback(() => {
+    setLoading(true); setError("");
+    volunteerFetch(`${API}/api/volunteer/id-card/core-team`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) setRows(d.participants || []);
+        else setError(d.message || "Failed to load core team");
+      })
+      .catch(() => setError("Network error"))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  useEffect(() => { fetchRows(); }, [fetchRows]);
+
+  const filteredRows = rows.filter(r => {
+    const s = search.toLowerCase();
+    return (r.full_name?.toLowerCase().includes(s) || r.phone?.includes(s) || r.qr_code?.toLowerCase().includes(s));
+  });
+
+  const thStyle = { padding: "11px 12px", textAlign: "left", color: "#64748b", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.6px", whiteSpace: "nowrap", background: "rgba(15,23,42,0.97)", borderBottom: "1px solid rgba(255,255,255,0.08)", position: "sticky", top: 0, zIndex: 2 };
+  const tdStyle = { padding: "10px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)", verticalAlign: "middle" };
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "14px", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: "1 1 200px", minWidth: "180px" }}>
+          <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#64748b", pointerEvents: "none", fontSize: "0.85rem" }}>🔍</span>
+          <input placeholder="Search name, phone, QR…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inputStyle, width: "100%", boxSizing: "border-box", paddingLeft: "32px" }} />
+          {search && <button onClick={() => setSearch("")} style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#64748b", cursor: "pointer" }}>✕</button>}
+        </div>
+        <span style={{ color: "#64748b", fontSize: "0.78rem", whiteSpace: "nowrap" }}>{filteredRows.length} total</span>
+        <button onClick={fetchRows} style={{ ...btnStyle("#818cf8"), marginLeft: "auto" }}>🔄 Reload</button>
+      </div>
+
+      {error && <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 14px", borderRadius: "8px", marginBottom: "12px", fontSize: "0.84rem" }}>⚠️ {error}</div>}
+
+      <div style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "12px", background: "rgba(255,255,255,0.02)", overflowX: "auto" }}>
+        {loading ? <div style={{ padding: "50px", textAlign: "center", color: "#64748b" }}><div style={{ fontSize: "1.8rem", marginBottom: "8px" }}>⏳</div>Loading…</div> : 
+         filteredRows.length === 0 ? <div style={{ padding: "50px", textAlign: "center", color: "#64748b" }}>No core team found</div> : 
+         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
+            <thead>
+              <tr>
+                {["#", "Photo", "QR", "Name", "Role", "Phone", "QR Code", "Action"].map(h => <th key={h} style={thStyle}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((p, i) => {
+                const photoSrc = p.photo_url ? `${API}${p.photo_url}?token=${token}` : null;
+                const qrSrc = p.qr_url ? `${API}${p.qr_url}?token=${token}` : null;
+                const roleColor = p.person_type === "Faculty" ? { color: "#f59e0b", bg: "rgba(245,158,11,0.15)" } : { color: "#10b981", bg: "rgba(16,185,129,0.15)" };
+                return (
+                  <tr key={p.id} style={{ transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <td style={{ ...tdStyle, color: "#475569", fontSize: "0.78rem", minWidth: "40px" }}>{i + 1}</td>
+                    <td style={{ ...tdStyle, minWidth: "60px" }}>
+                      {photoSrc ? <img src={photoSrc} alt="P" onClick={() => setLightbox(photoSrc)} style={{ width: "40px", height: "50px", objectFit: "cover", borderRadius: "6px", cursor: "zoom-in" }} onError={(e) => { e.target.style.display = "none"; }} /> : <div style={{ width: "40px", height: "50px", background: "rgba(255,255,255,0.06)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>{p.has_photo ? "⏳" : "📷"}</div>}
+                    </td>
+                    <td style={{ ...tdStyle, minWidth: "60px" }}>
+                      {qrSrc ? <img src={qrSrc} alt="QR" onClick={() => setLightbox(qrSrc)} style={{ width: "44px", height: "44px", objectFit: "contain", borderRadius: "4px", background: "#fff", padding: "2px", cursor: "zoom-in" }} onError={(e) => { e.target.style.display = "none"; }} /> : <div style={{ width: "44px", height: "44px", background: "rgba(255,255,255,0.05)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", color: "#475569", fontSize: "0.65rem" }}>No QR</div>}
+                    </td>
+                    <td style={{ ...tdStyle, minWidth: "160px" }}><span style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.87rem" }}>{p.full_name}</span></td>
+                    <td style={{ ...tdStyle, minWidth: "100px" }}><span style={{ background: roleColor.bg, color: roleColor.color, padding: "3px 9px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: 700 }}>{p.person_type}</span></td>
+                    <td style={{ ...tdStyle, color: "#cbd5e1", fontSize: "0.83rem", minWidth: "110px" }}>{p.phone || "—"}</td>
+                    <td style={{ ...tdStyle, minWidth: "100px" }}><code style={{ background: "rgba(129,140,248,0.1)", border: "1px solid rgba(129,140,248,0.2)", color: "#818cf8", padding: "2px 7px", borderRadius: "5px", fontSize: "0.75rem", fontWeight: 700 }}>{p.qr_code || "—"}</code></td>
+                    <td style={{ ...tdStyle, minWidth: "80px" }}>
+                      <button onClick={() => onEditPhoto(p.phone)} style={{ ...btnStyle("#818cf8"), padding: "5px 10px", fontSize: "0.75rem" }}>✏️ Edit</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        }
+      </div>
+      <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PhotoEditorPortal() {
@@ -770,6 +766,7 @@ export default function PhotoEditorPortal() {
 
   const tabs = [
     { key: "participants", label: "👥 Participants" },
+    { key: "core_team",    label: "👑 Core Team" },
     { key: "lookup",       label: "🔍 Person Lookup" },
   ];
 
@@ -798,8 +795,11 @@ export default function PhotoEditorPortal() {
             <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "0.82rem" }}>View participants, search by phone, and manage photos</p>
           </div>
 
-          {/* Status Bar */}
-          <ExcelStatusBar token={token} onRefreshDone={() => setRefreshKey((k) => k + 1)} />
+          {/* Status Bars */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "16px", marginBottom: "8px" }}>
+            <ExcelStatusBar token={token} type="master" title="Master Data" onRefreshDone={() => setRefreshKey((k) => k + 1)} />
+            <ExcelStatusBar token={token} type="core" title="Core Team Data" onRefreshDone={() => setRefreshKey((k) => k + 1)} />
+          </div>
 
           {/* Tabs */}
           <div style={{ display: "flex", gap: "4px", marginBottom: "-1px" }}>
@@ -810,6 +810,9 @@ export default function PhotoEditorPortal() {
           <div style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "0 12px 12px 12px", padding: "20px", background: "rgba(255,255,255,0.02)" }}>
             {activeTab === "participants" && (
               <ParticipantsTable key={refreshKey} token={token} onEditPhoto={handleEditPhoto} />
+            )}
+            {activeTab === "core_team" && (
+              <CoreTeamTable key={`core-${refreshKey}`} token={token} onEditPhoto={handleEditPhoto} />
             )}
             {activeTab === "lookup" && (
               <PersonLookupTab token={token} initialPhone={null} />
