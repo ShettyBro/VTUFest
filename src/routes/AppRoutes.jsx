@@ -71,7 +71,7 @@ import DAPrincipals from "../pages/da/DAPrincipals";
 import DABroadcastEmail from "../pages/da/DABroadcastEmail";
 import DAParticipants from "../pages/da/DAParticipants";
 
-/* GREEN ROOM (MANAGER SIDE) */
+/* CLOAKROOM (MANAGER SIDE) */
 import GreenRoom from "../pages/GreenRoom";
 
 /* EVENT MANAGER */
@@ -304,7 +304,7 @@ export default function AppRoutes() {
 
         <Route path="/da" element={<Navigate to="/da-login" replace />} />
 
-        {/* ── GREEN ROOM (MANAGER SIDE) ────────────────────────────────── */}
+        {/* ── CLOAKROOM (MANAGER SIDE) ────────────────────────────────── */}
         <Route path="/green-room" element={
           <ProtectedRoute allowedRoles={["manager"]}><GreenRoom /></ProtectedRoute>
         } />

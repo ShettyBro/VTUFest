@@ -24,7 +24,7 @@ const FACULTY_CATEGORIES = {
         { value: "transport", label: "Transport" },
         { value: "event_manager", label: "Accommodation" },
         { value: "accounts", label: "Accounts" },
-        { value: "gr_incharge", label: "Green Room Incharge" },
+        { value: "gr_incharge", label: "Cloakroom Incharge" },
         { value: "food", label: "Food Department" },
     ],
     "Core & Tech": [

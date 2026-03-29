@@ -274,7 +274,7 @@ export default function Sidebar({ role, hasApplication = false, collegeLocked = 
                 <path d="M12 15v2" />
               </svg>
             </Icon>
-            <span className="label">Green Room</span>
+            <span className="label">Cloakroom</span>
           </div>
 
           <div

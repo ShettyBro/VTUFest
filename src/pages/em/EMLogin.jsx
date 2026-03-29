@@ -79,7 +79,7 @@ export default function EMLogin() {
 
     const roleLabels = {
         EVENT_MANAGER: "Accommodation Manager Portal",
-        GR_INCHARGE: "Green Room Incharge Portal",
+        GR_INCHARGE: "Cloakroom Incharge Portal",
         ACCOUNTS: "Accounts Department Portal",
     };
 
@@ -147,7 +147,7 @@ export default function EMLogin() {
                             <button type="button" className={`role-tab ${selectedRole === "EVENT_MANAGER" ? "active" : ""}`}
                                 onClick={() => { setSelectedRole("EVENT_MANAGER"); setError(""); }}>Accomodation</button>
                             <button type="button" className={`role-tab ${selectedRole === "GR_INCHARGE" ? "active" : ""}`}
-                                onClick={() => { setSelectedRole("GR_INCHARGE"); setError(""); }}>Green Room</button>
+                                onClick={() => { setSelectedRole("GR_INCHARGE"); setError(""); }}>Cloakroom</button>
                             <button type="button" className={`role-tab ${selectedRole === "ACCOUNTS" ? "active" : ""}`}
                                 onClick={() => { setSelectedRole("ACCOUNTS"); setError(""); }}>Accounts</button>
                         </div>

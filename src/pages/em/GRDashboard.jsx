@@ -79,7 +79,7 @@ function GRLayout({ children }) {
 
                 {/* Nav */}
                 <nav style={{ flex: 1, padding: "12px 0" }}>
-                    {[{ path: "/gr-dashboard", label: "Green Room", icon: "🏢" }].map(item => {
+                    {[{ path: "/gr-dashboard", label: "Cloakroom", icon: "🏢" }].map(item => {
                         const isActive = location.pathname === item.path;
                         return (
                             <Link key={item.path} to={item.path} style={{
@@ -119,7 +119,7 @@ function GRLayout({ children }) {
                     display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0,
                 }}>
                     <h2 style={{ margin: 0, color: "#f1f5f9", fontSize: "1.1rem", fontWeight: 600 }}>
-                        🏢 Green Room Management
+                        🏢 Cloakroom Management
                     </h2>
                 </div>
                 <div className="dashboard-glass-wrapper" style={{ flex: 1 }}>
@@ -399,7 +399,7 @@ export default function GRDashboard() {
 
                 {/* Page header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-                    <h3 style={{ margin: 0, color: "var(--text-primary)" }}>Green Room Requests</h3>
+                    <h3 style={{ margin: 0, color: "var(--text-primary)" }}>Cloakroom Requests</h3>
                     <button onClick={fetchAll} style={{ padding: "8px 18px", background: "rgba(167,139,250,0.15)", border: "1px solid #a78bfa", color: "#a78bfa", borderRadius: "8px", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>
                         ⟳ Refresh
                     </button>
@@ -441,7 +441,7 @@ export default function GRDashboard() {
 
                 {/* Table */}
                 {loading ? (
-                    <div className="glass-card" style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>Loading green room requests…</div>
+                    <div className="glass-card" style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>Loading cloakroom requests…</div>
                 ) : (
                     <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
                         <div style={{ overflowX: "auto" }}>
@@ -556,7 +556,7 @@ export default function GRDashboard() {
                                     {filtered.length === 0 && (
                                         <tr>
                                             <td colSpan={9} style={{ padding: "48px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                                                {requests.length === 0 ? "No green room requests submitted yet." : "No requests match the current filter."}
+                                                {requests.length === 0 ? "No cloakroom requests submitted yet." : "No requests match the current filter."}
                                             </td>
                                         </tr>
                                     )}

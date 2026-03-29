@@ -259,7 +259,7 @@ export default function AdminGreenRoom() {
 
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-                    <h3 style={{ margin: 0, color: "var(--text-primary)" }}>🏢 Green Room Requests</h3>
+                    <h3 style={{ margin: 0, color: "var(--text-primary)" }}>🏢 Cloakroom Requests</h3>
                     <button onClick={fetchAll} style={{ padding: "8px 18px", background: "rgba(16,185,129,0.15)", border: "1px solid #10b981", color: "#10b981", borderRadius: "8px", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}>
                         ⟳ Refresh
                     </button>
@@ -298,7 +298,7 @@ export default function AdminGreenRoom() {
                 {/* Table */}
                 {loading ? (
                     <div className="glass-card" style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}>
-                        <div style={{ fontSize: "2rem", marginBottom: "10px" }}>⏳</div>Loading green room requests…
+                        <div style={{ fontSize: "2rem", marginBottom: "10px" }}>⏳</div>Loading cloakroom requests…
                     </div>
                 ) : (
                     <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
@@ -406,7 +406,7 @@ export default function AdminGreenRoom() {
                                     {filtered.length === 0 && (
                                         <tr>
                                             <td colSpan={9} style={{ padding: "48px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                                                {requests.length === 0 ? "No green room requests submitted yet." : "No requests match the current filter."}
+                                                {requests.length === 0 ? "No cloakroom requests submitted yet." : "No requests match the current filter."}
                                             </td>
                                         </tr>
                                     )}

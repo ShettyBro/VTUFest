@@ -94,7 +94,7 @@ function getNavItems(role, hasApplication, collegeLocked) {
             { label: "Accompanist", path: "/accompanist-form", icon: icons.accompanist },
             { label: "Events", path: "/assign-events", icon: icons.events },
             { label: "Stay", path: "/accommodation", icon: icons.accommodation },
-            { label: "Green Room", path: "/green-room", icon: icons.greenRoom },
+            { label: "Cloakroom", path: "/green-room", icon: icons.greenRoom },
             { label: "Fee", path: "/fee-payment", icon: icons.fee },
             { label: "Rules", path: "/rules", icon: icons.rules },
         ];

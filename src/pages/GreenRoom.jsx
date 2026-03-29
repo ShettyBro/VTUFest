@@ -49,7 +49,7 @@ export default function GreenRoom() {
             }
             const json = await res.json();
             if (json.success) setData(json.data);
-            else showPopup(json.message || "Failed to load green room status", "error");
+            else showPopup(json.message || "Failed to load cloakroom status", "error");
         } catch {
             showPopup("Network error", "error");
         } finally {
@@ -87,7 +87,7 @@ export default function GreenRoom() {
             });
             const json = await res.json();
             if (json.success) {
-                showPopup("Green room request submitted successfully!", "success");
+                showPopup("Cloakroom request submitted successfully!", "success");
                 fetchStatus();
             } else {
                 showPopup(json.message || "Submission failed", "error");
@@ -129,15 +129,14 @@ export default function GreenRoom() {
             <div className="dashboard-glass-wrapper">
                 <div className="dashboard-header">
                     <div className="welcome-text">
-                        <h1>Green Room</h1>
-                        <p>Request Green Room for Your Team</p>
+                        <h1>Cloakroom</h1>
+                        <p>Request Cloakroom for Your Team</p>
                     </div>
                 </div>
 
-                {/* Not final-approved gate */}
                 {!isFinalApproved && (
                     <div className="glass-card" style={{ background: "rgba(239,68,68,0.1)", borderColor: "#ef4444", marginBottom: "20px", textAlign: "center" }}>
-                        🔒 Green room requests are available only after the Principal submits the Final Approval. Please complete the final approval process first.
+                        🔒 Cloakroom requests are available only after the Principal submits the Final Approval. Please complete the final approval process first.
                     </div>
                 )}
 
@@ -155,7 +154,7 @@ export default function GreenRoom() {
                             </strong>
                             <p style={{ margin: "2px 0 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
                                 Your college has <strong style={{ color: "#34d399" }}>{participantCount}</strong> participant{participantCount !== 1 ? "s" : ""} registered.
-                                The green room will be allocated based on this count.
+                                The cloakroom will be allocated based on this count.
                             </p>
                         </div>
                     </div>
@@ -247,7 +246,7 @@ export default function GreenRoom() {
                     ) : isFinalApproved ? (
                         // ── NEW REQUEST FORM ──
                         <div>
-                            <h3 style={{ color: "var(--text-primary)", marginBottom: "20px" }}>Submit Green Room Request</h3>
+                            <h3 style={{ color: "var(--text-primary)", marginBottom: "20px" }}>Submit Cloakroom Request</h3>
 
                             {participantCount === 0 && (
                                 <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", color: "#fca5a5", fontSize: "0.88rem" }}>
@@ -312,7 +311,7 @@ export default function GreenRoom() {
                     ) : (
                         <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
                             <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🔒</div>
-                            <p>Green room requests are only available after the Principal submits the Final Approval.</p>
+                            <p>Cloakroom requests are only available after the Principal submits the Final Approval.</p>
                         </div>
                     )}
                 </div>
