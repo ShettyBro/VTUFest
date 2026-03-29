@@ -7,9 +7,11 @@ const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.achary
 const PANEL_OPTIONS = [
     { value: "transport",     label: "Transport",       role: "TRANSPORT_MANAGER", login: "/api/transport-manager/login" },
     { value: "event_manager", label: "Event Manager",   role: "EVENT_MANAGER",     login: "/api/em/auth/login" },
-    { value: "accounts",      label: "Accounts",        role: "ACCOUNTS",          login: "/api/em/auth/login" },
-    { value: "gr_incharge",   label: "GR Incharge",     role: "GR_INCHARGE",       login: "/api/em/auth/login" },
-    { value: "food",          label: "Food Manager",    role: "FOOD_MANAGER",      login: "/api/em/auth/login (future)" },
+    { value: "accounts",      label: "Accounts",        role: "ACCOUNTS",          login: "/api/em/auth/login",            qrOnly: false },
+    { value: "gr_incharge",   label: "GR Incharge",     role: "GR_INCHARGE",       login: "/api/em/auth/login",            qrOnly: false },
+    { value: "food",          label: "Food Manager",    role: "FOOD_MANAGER",      login: "/api/em/auth/login (future)",   qrOnly: false },
+    { value: "core_team",     label: "👥 Core Team (Faculty)", role: "QR Pass Only", login: "No portal — QR code issued",   qrOnly: true  },
+    { value: "special_access",label: "🔑 Admin / Developer",role: "Special Access QR",login: "No portal — QR code issued", qrOnly: true  },
 ];
 
 function PhotoModal({ url, name, onClose }) {
@@ -76,8 +78,8 @@ function AssignModal({ faculty, token, onClose, onDone }) {
                 ) : (
                     <>
                         {/* Panel picker */}
-                        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", overflow: "hidden", marginBottom: "18px" }}>
-                            <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--text-muted)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>Select Panel</div>
+                        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", overflowY: "auto", maxHeight: "280px", marginBottom: "18px" }}>
+                            <div style={{ position: "sticky", top: 0, background: "#111827", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--text-muted)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", zIndex: 10 }}>Select Panel</div>
                             {PANEL_OPTIONS.map(p => (
                                 <div key={p.value} onClick={() => setPanel(p.value)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", cursor: "pointer", background: panel === p.value ? "rgba(167,139,250,0.1)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.15s" }}>
                                     <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: panel === p.value ? "none" : "2px solid rgba(255,255,255,0.2)", background: panel === p.value ? "#a78bfa" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.55rem", color: "white", fontWeight: 900, flexShrink: 0 }}>
@@ -91,16 +93,21 @@ function AssignModal({ faculty, token, onClose, onDone }) {
                             ))}
                         </div>
 
-                        {selPanel && (
+                        {selPanel && !selPanel.qrOnly && (
                             <div style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.3)", borderRadius: "8px", padding: "10px 14px", marginBottom: "14px", fontSize: "0.82rem", color: "#a78bfa" }}>
                                 📧 An email with login credentials (password: <code>AVH@2026</code>) and portal URL will be sent to <strong>{faculty.email}</strong>.
+                            </div>
+                        )}
+                        {selPanel?.qrOnly && (
+                            <div style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: "8px", padding: "10px 14px", marginBottom: "14px", fontSize: "0.82rem", color: "#fbbf24" }}>
+                                🔑 A unique <strong>QR Access Pass</strong> will be generated and emailed to <strong>{faculty.email}</strong>. No portal account is created.
                             </div>
                         )}
 
                         {err && <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 14px", borderRadius: "8px", marginBottom: "12px", fontSize: "0.85rem" }}>{err}</div>}
 
-                        <button onClick={handleAssign} disabled={saving || !panel} style={{ width: "100%", padding: "11px", background: saving || !panel ? "rgba(167,139,250,0.1)" : "rgba(167,139,250,0.2)", border: "1px solid #a78bfa", color: "#a78bfa", borderRadius: "10px", cursor: saving || !panel ? "not-allowed" : "pointer", fontWeight: 700, fontSize: "0.9rem" }}>
-                            {saving ? "Assigning…" : `🎓 Assign as ${selPanel?.label || "Panel"}`}
+                        <button onClick={handleAssign} disabled={saving || !panel} style={{ width: "100%", padding: "11px", background: selPanel?.qrOnly ? (saving || !panel ? "rgba(212,175,55,0.08)" : "rgba(212,175,55,0.15)") : (saving || !panel ? "rgba(167,139,250,0.1)" : "rgba(167,139,250,0.2)"), border: `1px solid ${selPanel?.qrOnly ? "#d4af37" : "#a78bfa"}`, color: selPanel?.qrOnly ? "#fbbf24" : "#a78bfa", borderRadius: "10px", cursor: saving || !panel ? "not-allowed" : "pointer", fontWeight: 700, fontSize: "0.9rem" }}>
+                            {saving ? "Assigning…" : selPanel?.qrOnly ? `🔑 Grant Special Access` : `🎓 Assign as ${selPanel?.label || "Panel"}`}
                         </button>
                     </>
                 )}

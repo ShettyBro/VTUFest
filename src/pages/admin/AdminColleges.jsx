@@ -631,26 +631,28 @@ export default function AdminColleges() {
                                                         </button>
                                                     )}
 
-                                                    {/* Lock / Unlock button — SUPER_ADMIN only */}
+                                                    {/* Lock button — SUPER_ADMIN only */}
                                                     {isSuperAdmin ? (
-                                                        <button
-                                                            onClick={() => handleToggleLock(c.id)}
-                                                            disabled={togglingId === c.id}
-                                                            style={{
-                                                                padding: "5px 14px",
-                                                                background: isLocked ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
-                                                                border: `1px solid ${isLocked ? "#10b981" : "#ef4444"}`,
-                                                                color: isLocked ? "#10b981" : "#f87171",
-                                                                borderRadius: "6px",
-                                                                cursor: "pointer",
-                                                                fontSize: "0.78rem",
-                                                                fontWeight: 700,
-                                                                whiteSpace: "nowrap",
-                                                                opacity: togglingId === c.id ? 0.6 : 1,
-                                                            }}
-                                                        >
-                                                            {togglingId === c.id ? "…" : isLocked ? "🔓 Unlock" : "🔒 Lock"}
-                                                        </button>
+                                                        !isLocked && (
+                                                            <button
+                                                                onClick={() => handleToggleLock(c.id)}
+                                                                disabled={togglingId === c.id}
+                                                                style={{
+                                                                    padding: "5px 14px",
+                                                                    background: "rgba(239,68,68,0.12)",
+                                                                    border: "1px solid #ef4444",
+                                                                    color: "#f87171",
+                                                                    borderRadius: "6px",
+                                                                    cursor: "pointer",
+                                                                    fontSize: "0.78rem",
+                                                                    fontWeight: 700,
+                                                                    whiteSpace: "nowrap",
+                                                                    opacity: togglingId === c.id ? 0.6 : 1,
+                                                                }}
+                                                            >
+                                                                {togglingId === c.id ? "…" : "🔒 Lock"}
+                                                            </button>
+                                                        )
                                                     ) : (
                                                         !isLocked && (
                                                             <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>View only</span>

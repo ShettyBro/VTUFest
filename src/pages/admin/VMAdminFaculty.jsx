@@ -7,17 +7,17 @@ const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.achary
 const fmt = (d) => d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
 
 const PANEL_OPTIONS = [
-    { value: "transport",       label: "Transport",        role: "TRANSPORT_MANAGER",  login: "/api/transport-manager/login", qrOnly: false },
-    { value: "event_manager",   label: "Event Manager",    role: "EVENT_MANAGER",       login: "/api/em/auth/login",            qrOnly: false },
-    { value: "accounts",        label: "Accounts",         role: "ACCOUNTS",            login: "/api/em/auth/login",            qrOnly: false },
-    { value: "gr_incharge",     label: "GR Incharge",      role: "GR_INCHARGE",         login: "/api/em/auth/login",            qrOnly: false },
-    { value: "food",            label: "Food Manager",     role: "FOOD_MANAGER",        login: "/api/em/auth/login (future)",   qrOnly: false },
-    { value: "core_team",       label: "👥 Core Team",      role: "QR Pass Only",        login: "No portal — QR code issued",   qrOnly: true  },
-    { value: "special_access",  label: "🔑 Special Access", role: "QR Pass Only",        login: "No portal — QR code issued",   qrOnly: true  },
+    { value: "transport", label: "Transport", role: "TRANSPORT_MANAGER", login: "/api/transport-manager/login", qrOnly: false },
+    { value: "event_manager", label: "Event Manager", role: "EVENT_MANAGER", login: "/api/em/auth/login", qrOnly: false },
+    { value: "accounts", label: "Accounts", role: "ACCOUNTS", login: "/api/em/auth/login", qrOnly: false },
+    { value: "gr_incharge", label: "GR Incharge", role: "GR_INCHARGE", login: "/api/em/auth/login", qrOnly: false },
+    { value: "food", label: "Food Manager", role: "FOOD_MANAGER", login: "/api/em/auth/login (future)", qrOnly: false },
+    { value: "core_team", label: "👥 Core Team (Faculty)", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "special_access", label: "🔑 Admin / Developer", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
 ];
 
 const STATUS_COLORS = {
-    pending:  { color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
+    pending: { color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
     approved: { color: "#60a5fa", bg: "rgba(96,165,250,0.15)" },
     assigned: { color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
 };
@@ -90,8 +90,8 @@ function AssignPanelModal({ faculty, token, onClose, onDone }) {
                 ) : (
                     <>
                         {/* Panel → Portal info table */}
-                        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", overflow: "hidden", marginBottom: "18px" }}>
-                            <div style={{ padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--text-muted)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>Panel → Portal Mapping</div>
+                        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", overflowY: "auto", maxHeight: "280px", marginBottom: "18px" }}>
+                            <div style={{ position: "sticky", top: 0, background: "#111827", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--text-muted)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", zIndex: 10 }}>Panel → Portal Mapping</div>
                             {PANEL_OPTIONS.map(p => (
                                 <div key={p.value} onClick={() => setPanel(p.value)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "9px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", background: panel === p.value ? "rgba(99,102,241,0.1)" : "transparent", transition: "background 0.15s" }}>
                                     <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: panel === p.value ? "none" : "2px solid rgba(255,255,255,0.2)", background: panel === p.value ? "#6366f1" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.55rem", color: "white", fontWeight: 900, flexShrink: 0 }}>
