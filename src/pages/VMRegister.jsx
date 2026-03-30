@@ -159,7 +159,7 @@ function DomainSelect({ category, value, onChange, isVolunteer }) {
     return (
         <div className="input-group">
             <label style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px" }}>
-                Preferred {label}
+                Preferred {label} *
                 {isVolunteer && category === "Events" && (
                     <span style={{ color: "#a8edea", fontSize: "0.7rem", fontWeight: 400, opacity: 0.85 }}>
                         — pick the event you'd like to volunteer for
@@ -167,7 +167,7 @@ function DomainSelect({ category, value, onChange, isVolunteer }) {
                 )}
             </label>
 
-            <select value={value} onChange={onChange} style={selectBase}>
+            <select value={value} onChange={onChange} style={selectBase} required>
                 <option value="" style={optStyle}>— Select preferred {label.toLowerCase()} —</option>
                 {hasGroups
                     ? Object.entries(grouped).map(([grpName, opts]) => (
@@ -280,6 +280,8 @@ export default function VMRegister() {
                 if (!volForm.auid.trim()) throw new Error("AUID is required.");
                 if (!volForm.gender) throw new Error("Gender is required.");
                 if (!volForm.tshirt_size) throw new Error("T-shirt size is required.");
+                if (!volForm.requested_category) throw new Error("Preferred Category is required.");
+                if (!volForm.requested_domain) throw new Error("Preferred Domain is required.");
                 url = `${API}/api/vm/register/volunteer/init`;
                 body = {
                     full_name: volForm.full_name.trim(), email: volForm.email.trim().toLowerCase(),
@@ -291,6 +293,8 @@ export default function VMRegister() {
                 if (!EMAIL_REGEX.test(facForm.email.trim())) throw new Error("Invalid email address.");
                 if (!/^\d{10}$/.test(facForm.phone)) throw new Error("Phone must be exactly 10 digits.");
                 if (!facForm.auid.trim()) throw new Error("AUID is required.");
+                if (!facForm.requested_category) throw new Error("Preferred Category is required.");
+                if (!facForm.requested_domain) throw new Error("Preferred Panel is required.");
                 url = `${API}/api/vm/register/faculty/init`;
                 body = {
                     full_name: facForm.full_name.trim(), email: facForm.email.trim().toLowerCase(),
@@ -522,9 +526,10 @@ export default function VMRegister() {
 
                                     {/* ── Preferred Category ── */}
                                     <div className="input-group">
-                                        <label>Preferred Category</label>
+                                        <label>Preferred Category *</label>
                                         <select
                                             value={isVol ? volForm.requested_category : facForm.requested_category}
+                                            required
                                             onChange={e => {
                                                 const val = e.target.value;
                                                 isVol
