@@ -5,9 +5,9 @@ import "../styles/auth.css";
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 const STATUS_COLORS = {
-    pending:  { color: "#fbbf24", bg: "rgba(251,191,36,0.12)",  icon: "⏳" },
-    approved: { color: "#60a5fa", bg: "rgba(96,165,250,0.12)",  icon: "✅" },
-    assigned: { color: "#4ade80", bg: "rgba(74,222,128,0.12)",  icon: "🎉" },
+    pending: { color: "#fbbf24", bg: "rgba(251,191,36,0.12)", icon: "⏳" },
+    approved: { color: "#60a5fa", bg: "rgba(96,165,250,0.12)", icon: "✅" },
+    assigned: { color: "#4ade80", bg: "rgba(74,222,128,0.12)", icon: "🎉" },
 };
 
 export default function VMStatus() {
@@ -53,7 +53,7 @@ export default function VMStatus() {
                         <span>Registration Status Check</span>
                     </div>
                     <div style={{ marginTop: "20px" }}>
-                        <Link to="/vm/register" style={{ color: "rgba(168,237,234,0.8)", fontSize: "0.82rem", textDecoration: "underline", display: "block", marginBottom: "8px" }}>
+                        <Link to="/v" style={{ color: "rgba(168,237,234,0.8)", fontSize: "0.82rem", textDecoration: "underline", display: "block", marginBottom: "8px" }}>
                             📝 Register as Volunteer / Faculty
                         </Link>
                     </div>

@@ -31,6 +31,111 @@ function QuickLink({ to, icon, label, desc, color }) {
     );
 }
 
+function Stat({ label, value, color }) {
+    return (
+        <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "16px 22px", minWidth: "140px", textAlign: "center" }}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 800, color }}>{value}</div>
+            <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+        </div>
+    );
+}
+
+const btnStyle = (color = "#818cf8", active = true) => ({
+  padding: "8px 14px",
+  background: active ? `rgba(${color === "#818cf8" ? "129,140,248" : color === "#60a5fa" ? "96,165,250" : color === "#10b981" ? "16,185,129" : "239,68,68"},0.15)` : "rgba(255,255,255,0.05)",
+  border: `1px solid ${active ? color : "rgba(255,255,255,0.12)"}`,
+  color: active ? color : "#64748b",
+  borderRadius: "8px",
+  cursor: active ? "pointer" : "not-allowed",
+  fontSize: "0.82rem",
+  fontWeight: 700,
+  whiteSpace: "nowrap",
+  transition: "opacity 0.2s",
+  opacity: active ? 1 : 0.6,
+});
+
+function timeAgo(isoString) {
+  if (!isoString) return "Never";
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min${mins !== 1 ? "s" : ""} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hr${hrs !== 1 ? "s" : ""} ago`;
+  return `${Math.floor(hrs / 24)} day(s) ago`;
+}
+
+function TeamExcelExportBar({ token }) {
+    const [lastSynced, setLastSynced] = useState(null);
+    const [downloadUrl, setDownloadUrl] = useState(null);
+    const [sizeMb, setSizeMb] = useState(null);
+    const [generating, setGenerating] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const handleGenerate = async () => {
+        setGenerating(true);
+        setErrorMsg("");
+        try {
+            const res = await adminFetch(`${API}/api/vm/admin/export/team`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                setLastSynced(new Date().toISOString());
+                setSizeMb(data.size_mb);
+                setDownloadUrl(data.download_url);
+            } else {
+                setErrorMsg(data.message || "Failed");
+            }
+        } catch { setErrorMsg("Network error"); }
+        finally { setGenerating(false); }
+    };
+
+    const isExpired = !lastSynced;
+
+    return (
+        <div style={{ marginBottom: "20px" }}>
+            {errorMsg && <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 18px", borderRadius: "8px", marginBottom: "14px", fontSize: "0.82rem" }}>❌ {errorMsg}</div>}
+            <div style={{
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)",
+                borderRadius: "12px", padding: "14px 18px",
+                display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap",
+            }}>
+                <span style={{ fontSize: "1.2rem" }}>📊</span>
+                <div>
+                    <span style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.88rem" }}>Core Team Data</span>
+                    <span style={{ color: "#64748b", fontSize: "0.75rem", marginLeft: "10px" }}>
+                        Last generated: <span style={{ color: isExpired ? "#ef4444" : "#94a3b8", fontWeight: 600 }}>{timeAgo(lastSynced)}</span>
+                        {sizeMb && <span style={{ marginLeft: "8px", color: "#475569" }}>· {sizeMb} MB</span>}
+                    </span>
+                    {isExpired && <div style={{ color: "#f87171", fontSize: "0.7rem", marginTop: "2px", fontWeight: 600 }}>Generate required to download. This will embed all photos.</div>}
+                </div>
+                <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+                    <button 
+                        onClick={() => window.open(downloadUrl, "_blank")} 
+                        disabled={isExpired}
+                        style={btnStyle("#60a5fa", !isExpired)}
+                        title={isExpired ? "Generate data first to download" : "Download Excel"}
+                    >
+                        {isExpired ? "📥 Download Excel" : "⬇️ Download Excel"}
+                    </button>
+                    <button
+                        onClick={handleGenerate}
+                        disabled={generating}
+                        style={{ ...btnStyle("#818cf8", !generating), display: "flex", alignItems: "center", gap: "6px" }}
+                    >
+                        {generating
+                            ? <><span style={{ display: "inline-block", width: "11px", height: "11px", border: "2px solid rgba(129,140,248,0.3)", borderTop: "2px solid #818cf8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Generating…</>
+                            : "🔄 Generate Data"}
+                    </button>
+                </div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        </div>
+    );
+}
+
 export default function VMDashboard() {
     const [stats, setStats] = useState(null);
 
@@ -61,10 +166,14 @@ export default function VMDashboard() {
     return (
         <VMLayout>
             <div style={{ padding: "24px 28px", maxWidth: "1000px" }}>
-                <h2 style={{ margin: "0 0 4px", color: "var(--text-primary)", fontSize: "1.3rem" }}>VM Event Portal</h2>
-                <p style={{ margin: "0 0 28px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-                    Manage volunteer & faculty registrations, assignments, and panels for Acharya VTU Habba 2026.
-                </p>
+                <div style={{ marginBottom: "28px" }}>
+                    <h2 style={{ margin: "0 0 4px", color: "var(--text-primary)", fontSize: "1.3rem" }}>VM Event Portal</h2>
+                    <p style={{ margin: "0", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                        Manage volunteer & faculty registrations for Acharya VTU Habba 2026.
+                    </p>
+                </div>
+
+                <TeamExcelExportBar token={localStorage.getItem("vtufest_admin_token")} />
 
                 {/* Stats */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px", marginBottom: "32px" }}>
@@ -99,6 +208,7 @@ export default function VMDashboard() {
                     </div>
                 </div>
             </div>
+
         </VMLayout>
     );
 }

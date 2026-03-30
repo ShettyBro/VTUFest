@@ -109,12 +109,12 @@ export default function VMRegister() {
 
     // Volunteer form
     const [volForm, setVolForm] = useState({
-        full_name: "", email: "", phone: "", auid: "", requested_domain: "", requested_category: ""
+        full_name: "", email: "", phone: "", auid: "", requested_domain: "", requested_category: "", gender: "", tshirt_size: ""
     });
 
     // Faculty form
     const [facForm, setFacForm] = useState({
-        full_name: "", email: "", phone: "", requested_domain: "", requested_category: ""
+        full_name: "", email: "", phone: "", auid: "", requested_domain: "", requested_category: ""
     });
 
     // Registration result
@@ -192,22 +192,28 @@ export default function VMRegister() {
                 if (!EMAIL_REGEX.test(volForm.email.trim())) throw new Error("Invalid email address.");
                 if (!/^\d{10}$/.test(volForm.phone)) throw new Error("Phone must be exactly 10 digits.");
                 if (!volForm.auid.trim()) throw new Error("AUID is required.");
+                if (!volForm.gender) throw new Error("Gender is required.");
+                if (!volForm.tshirt_size) throw new Error("T-shirt size is required.");
                 url = `${API}/api/vm/register/volunteer/init`;
                 body = {
                     full_name: volForm.full_name.trim(),
                     email: volForm.email.trim().toLowerCase(),
                     phone: volForm.phone.trim(),
                     auid: volForm.auid.trim().toUpperCase(),
+                    gender: volForm.gender,
+                    tshirt_size: volForm.tshirt_size,
                     ...(volForm.requested_domain ? { requested_domain: volForm.requested_domain } : {}),
                 };
             } else {
                 if (!EMAIL_REGEX.test(facForm.email.trim())) throw new Error("Invalid email address.");
                 if (!/^\d{10}$/.test(facForm.phone)) throw new Error("Phone must be exactly 10 digits.");
+                if (!facForm.auid.trim()) throw new Error("AUID is required.");
                 url = `${API}/api/vm/register/faculty/init`;
                 body = {
                     full_name: facForm.full_name.trim(),
                     email: facForm.email.trim().toLowerCase(),
                     phone: facForm.phone.trim(),
+                    auid: facForm.auid.trim().toUpperCase(),
                     ...(facForm.requested_domain ? { requested_domain: facForm.requested_domain } : {}),
                 };
             }
@@ -343,7 +349,7 @@ export default function VMRegister() {
                     </div>
 
                     <div style={{ marginTop: "20px" }}>
-                        <Link to="/vm/status" style={{ color: "rgba(168,237,234,0.8)", fontSize: "0.82rem", textDecoration: "underline" }}>
+                        <Link to="/vs" style={{ color: "rgba(168,237,234,0.8)", fontSize: "0.82rem", textDecoration: "underline" }}>
                             🔍 Check your registration status
                         </Link>
                     </div>
@@ -475,6 +481,49 @@ export default function VMRegister() {
                                                     required
                                                 />
                                             </div>
+                                            <div className="input-group">
+                                                <label>Gender *</label>
+                                                <select
+                                                    value={volForm.gender}
+                                                    onChange={e => setVolForm(p => ({ ...p, gender: e.target.value }))}
+                                                    required
+                                                >
+                                                    <option value="">— Select Gender —</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                </select>
+                                            </div>
+                                            <div className="input-group">
+                                                <label>T-Shirt Size *</label>
+                                                <select
+                                                    value={volForm.tshirt_size}
+                                                    onChange={e => setVolForm(p => ({ ...p, tshirt_size: e.target.value }))}
+                                                    required
+                                                >
+                                                    <option value="">— Select Size —</option>
+                                                    <option value="S">S</option>
+                                                    <option value="M">M</option>
+                                                    <option value="L">L</option>
+                                                    <option value="XL">XL</option>
+                                                    <option value="XXL">XXL</option>
+                                                </select>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {tab === "faculty" && (
+                                        <>
+                                            <div className="input-group">
+                                                <label>AUID *</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. 1AY22CS001"
+                                                    value={facForm.auid}
+                                                    onChange={e => setFacForm(p => ({ ...p, auid: e.target.value.toUpperCase() }))}
+                                                    autoCapitalize="characters"
+                                                    required
+                                                />
+                                            </div>
                                         </>
                                     )}
 
@@ -516,7 +565,7 @@ export default function VMRegister() {
                                         </div>
                                     )}
 
-                                    {tab === "faculty" && (
+                                    {/* {tab === "faculty" && (
                                         <div style={{
                                             display: "flex", alignItems: "flex-start", gap: "10px",
                                             background: "rgba(168,237,234,0.08)", border: "1px solid rgba(168,237,234,0.25)",
@@ -526,7 +575,7 @@ export default function VMRegister() {
                                             <span style={{ fontSize: "1rem", flexShrink: 0 }}>ℹ️</span>
                                             <span>Faculty will be reviewed and assigned to a panel. Portal panels (Transport, Event Manager, Accounts, GR Incharge, Food) receive login credentials. <strong style={{ color: "#fbbf24" }}>Core Team, Admin &amp; Developer</strong> roles receive a Special Access QR pass instead.</span>
                                         </div>
-                                    )}
+                                    )} */}
 
                                     <button className="auth-btn" type="submit" disabled={loading}>
                                         {loading ? "Processing…" : "Next — Upload Photo →"}
@@ -615,14 +664,14 @@ export default function VMRegister() {
                                         </div>
 
                                         {tab === "volunteer" ? (
-                                            [["Full Name", volForm.full_name], ["Email", volForm.email], ["Phone", volForm.phone], ["AUID", volForm.auid], ["Category", volForm.requested_category || "Not specified"], ["Domain", volForm.requested_domain || "Not specified"]].map(([k, v]) => (
+                                            [["Full Name", volForm.full_name], ["Email", volForm.email], ["Phone", volForm.phone], ["AUID", volForm.auid], ["Gender", volForm.gender], ["T-Shirt Size", volForm.tshirt_size], ["Category", volForm.requested_category || "Not specified"], ["Domain", volForm.requested_domain || "Not specified"]].map(([k, v]) => (
                                                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.83rem" }}>
                                                     <span style={{ color: "rgba(255,255,255,0.5)" }}>{k}</span>
                                                     <span style={{ color: "#f1f5f9", fontWeight: 600 }}>{v}</span>
                                                 </div>
                                             ))
                                         ) : (
-                                            [["Full Name", facForm.full_name], ["Email", facForm.email], ["Phone", facForm.phone], ["Category", facForm.requested_category || "Not specified"], ["Panel", facForm.requested_domain || "Not specified"]].map(([k, v]) => (
+                                            [["Full Name", facForm.full_name], ["Email", facForm.email], ["Phone", facForm.phone], ["AUID", facForm.auid], ["Category", facForm.requested_category || "Not specified"], ["Panel", facForm.requested_domain || "Not specified"]].map(([k, v]) => (
                                                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.83rem" }}>
                                                     <span style={{ color: "rgba(255,255,255,0.5)" }}>{k}</span>
                                                     <span style={{ color: "#f1f5f9", fontWeight: 600 }}>{v}</span>

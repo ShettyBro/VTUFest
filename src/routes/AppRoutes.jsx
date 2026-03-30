@@ -199,10 +199,10 @@ export default function AppRoutes() {
         <Route path="/force-reset-password" element={<ForceResetPassword />} />
 
         {/* ── VM PUBLIC ────────────────────────────────────────────────── */}
-        <Route path="/vm/register" element={<VMRegister />} />
-        <Route path="/vm/register/volunteer" element={<VMRegister />} />
-        <Route path="/vm/register/faculty" element={<VMRegister />} />
-        <Route path="/vm/status" element={<VMStatus />} />
+        <Route path="/v" element={<VMRegister />} />
+        <Route path="/v/volunteer" element={<VMRegister />} />
+        <Route path="/v/faculty" element={<VMRegister />} />
+        <Route path="/vs" element={<VMStatus />} />
 
         {/* ── RESET PASSWORD ──────────────────────────────────────────── */}
         <Route path="/changepassword" element={
