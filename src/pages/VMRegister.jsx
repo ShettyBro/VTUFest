@@ -45,6 +45,20 @@ const VOLUNTEER_CATEGORIES = {
         { value: "food", label: "Food" },
         { value: "college_buddy", label: "College Buddy" },
         { value: "general", label: "General" },
+        { value: "logistics", label: "Logistics", group: "📋 Event Operations" },
+        { value: "guest_hospitality", label: "Guest Hospitality", group: "📋 Event Operations" },
+        { value: "technical", label: "Technical", group: "📋 Event Operations" },
+        { value: "accommodation", label: "Accommodation", group: "📋 Event Operations" },
+        { value: "disciplinary", label: "Disciplinary", group: "📋 Event Operations" },
+        { value: "stage_programme", label: "Stage & Programme", group: "📋 Event Operations" },
+        { value: "documentation_result", label: "Documentation & Result", group: "📋 Event Operations" },
+        { value: "gr_incharge", label: "Green Room / Cloakroom", group: "📋 Event Operations" },
+        { value: "transport", label: "Transport", group: "📋 Event Operations" },
+        { value: "literature", label: "Literature", group: "🎭 Cultural" },
+        { value: "fine_arts", label: "Fine Arts", group: "🎭 Cultural" },
+        { value: "music", label: "Music", group: "🎭 Cultural" },
+        { value: "theatre", label: "Theatre", group: "🎭 Cultural" },
+        { value: "dance", label: "Dance", group: "🎭 Cultural" },
     ],
 };
 
@@ -94,7 +108,7 @@ const validateMagicNumber = async (file) => {
 
 function groupByKey(options) {
     return options.reduce((acc, opt) => {
-        const key = opt.group || "__flat__";
+        const key = opt.group || "Main";
         if (!acc[key]) acc[key] = [];
         acc[key].push(opt);
         return acc;
