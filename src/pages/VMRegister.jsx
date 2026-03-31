@@ -50,11 +50,27 @@ const VOLUNTEER_CATEGORIES = {
 
 const FACULTY_CATEGORIES = {
     "Events & Operations": [
-        { value: "transport", label: "Transport" },
-        { value: "event_manager", label: "Accommodation" },
-        { value: "accounts", label: "Accounts" },
-        { value: "gr_incharge", label: "Cloakroom Incharge" },
-        { value: "food", label: "Food Department" },
+        // ── Portal domains (existing — DO NOT change values) ──
+        { value: "transport", label: "Transportation", group: "🏛️ Portal Access Roles" },
+        { value: "event_manager", label: "Accommodation", group: "🏛️ Portal Access Roles" },
+        { value: "accounts", label: "Accounts", group: "🏛️ Portal Access Roles" },
+        { value: "gr_incharge", label: "Green Room / Cloakroom", group: "🏛️ Portal Access Roles" },
+        { value: "food", label: "Food Department", group: "🏛️ Portal Access Roles" },
+        // ── New QR-only domains ──
+        { value: "registration_desk", label: "Registration Desk", group: "📋 Event & Operations Roles" },
+        { value: "logistics", label: "Logistics", group: "📋 Event & Operations Roles" },
+        { value: "guest_hospitality", label: "Guest Hospitality", group: "📋 Event & Operations Roles" },
+        { value: "technical", label: "Technical", group: "📋 Event & Operations Roles" },
+        { value: "accommodation", label: "Accommodation Coordinator", group: "📋 Event & Operations Roles" },
+        { value: "disciplinary", label: "Disciplinary", group: "📋 Event & Operations Roles" },
+        { value: "stage_programme", label: "Stage & Programme Committee", group: "📋 Event & Operations Roles" },
+        { value: "documentation_result", label: "Documentation & Result", group: "📋 Event & Operations Roles" },
+        { value: "queries_desk", label: "Queries Desk", group: "📋 Event & Operations Roles" },
+        { value: "literature", label: "Literature", group: "🎭 Cultural Roles" },
+        { value: "fine_arts", label: "Fine Arts", group: "🎭 Cultural Roles" },
+        { value: "music", label: "Music", group: "🎭 Cultural Roles" },
+        { value: "theatre", label: "Theatre", group: "🎭 Cultural Roles" },
+        { value: "dance", label: "Dance", group: "🎭 Cultural Roles" },
     ],
     "Core & Tech": [
         { value: "core_team", label: "Core Team" },

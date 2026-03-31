@@ -5,13 +5,30 @@ import { adminFetch } from "../../utils/adminFetch";
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 const PANEL_OPTIONS = [
-    { value: "transport",     label: "Transport",       role: "TRANSPORT_MANAGER", login: "/api/transport-manager/login" },
-    { value: "event_manager", label: "Event Manager",   role: "EVENT_MANAGER",     login: "/api/em/auth/login" },
-    { value: "accounts",      label: "Accounts",        role: "ACCOUNTS",          login: "/api/em/auth/login",            qrOnly: false },
-    { value: "gr_incharge",   label: "GR Incharge",     role: "GR_INCHARGE",       login: "/api/em/auth/login",            qrOnly: false },
-    { value: "food",          label: "Food Manager",    role: "FOOD_MANAGER",      login: "/api/em/auth/login (future)",   qrOnly: false },
-    { value: "core_team",     label: "👥 Core Team (Faculty)", role: "QR Pass Only", login: "No portal — QR code issued",   qrOnly: true  },
-    { value: "special_access",label: "🔑 Admin / Developer",role: "Special Access QR",login: "No portal — QR code issued", qrOnly: true  },
+    // ── Portal domains (create admin account + send credentials) ──
+    { value: "transport", label: "Transportation", role: "TRANSPORT_MANAGER", login: "/api/transport-manager/login", qrOnly: false },
+    { value: "event_manager", label: "Accommodation", role: "EVENT_MANAGER", login: "/api/em/auth/login", qrOnly: false },
+    { value: "accounts", label: "Accounts", role: "ACCOUNTS", login: "/api/em/auth/login", qrOnly: false },
+    { value: "gr_incharge", label: "Green Room / Cloakroom", role: "GR_INCHARGE", login: "/api/em/auth/login", qrOnly: false },
+    { value: "food", label: "Food Department", role: "FOOD_MANAGER", login: "/api/em/auth/login", qrOnly: false },
+    // ── QR-only domains (no portal — QR email only) ──
+    { value: "registration_desk", label: "Registration Desk", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "logistics", label: "Logistics", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "guest_hospitality", label: "Guest Hospitality", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "technical", label: "Technical", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "accommodation", label: "Accommodation Coordinator", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "disciplinary", label: "Disciplinary", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "stage_programme", label: "Stage & Programme Committee", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "documentation_result", label: "Documentation & Result", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "queries_desk", label: "Queries Desk", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "literature", label: "Literature", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "fine_arts", label: "Fine Arts", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "music", label: "Music", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "theatre", label: "Theatre", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "dance", label: "Dance", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    // ── Special access ──
+    { value: "core_team", label: "👥 Core Team (Faculty)", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
+    { value: "special_access", label: "🔑 Admin / Developer", role: "Special Access QR", login: "No portal — QR code issued", qrOnly: true },
 ];
 
 function PhotoModal({ url, name, onClose }) {
@@ -77,6 +94,24 @@ function AssignModal({ faculty, token, onClose, onDone }) {
                     </div>
                 ) : (
                     <>
+                        {/* Assign Requested shortcut */}
+                        {faculty.requested_domain && PANEL_OPTIONS.find(p => p.value === faculty.requested_domain) && (
+                            <div style={{ background: "rgba(168,237,234,0.06)", border: "1px solid rgba(168,237,234,0.25)", borderRadius: "10px", padding: "10px 14px", marginBottom: "14px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ color: "#a8edea", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "3px" }}>⚡ Assign Requested</div>
+                                    <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>
+                                        They requested: <strong style={{ color: "#f1f5f9" }}>{PANEL_OPTIONS.find(p => p.value === faculty.requested_domain)?.label}</strong>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setPanel(faculty.requested_domain)}
+                                    style={{ padding: "6px 14px", background: "rgba(168,237,234,0.12)", border: "1px solid #a8edea", color: "#a8edea", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                                >
+                                    ✓ Select Requested
+                                </button>
+                            </div>
+                        )}
+
                         {/* Panel picker */}
                         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", overflowY: "auto", maxHeight: "280px", marginBottom: "18px" }}>
                             <div style={{ position: "sticky", top: 0, background: "#111827", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "var(--text-muted)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", zIndex: 10 }}>Select Panel</div>
