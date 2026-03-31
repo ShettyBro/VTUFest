@@ -33,8 +33,8 @@ function Toast({ toast, onClose }) {
   if (!toast) return null;
   const colors = {
     success: { bg: "rgba(16,185,129,0.15)", border: "#10b981", text: "#34d399" },
-    error:   { bg: "rgba(239,68,68,0.15)",  border: "#ef4444", text: "#f87171" },
-    warn:    { bg: "rgba(245,158,11,0.15)", border: "#f59e0b", text: "#fbbf24" },
+    error: { bg: "rgba(239,68,68,0.15)", border: "#ef4444", text: "#f87171" },
+    warn: { bg: "rgba(245,158,11,0.15)", border: "#f59e0b", text: "#fbbf24" },
   }[toast.type] || {};
   return (
     <div style={{ padding: "10px 18px", background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: "8px", color: colors.text, fontSize: "0.82rem", marginBottom: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -66,7 +66,7 @@ export default function ExcelStatusBar({ token, type = "master", title = "Master
           setSizeMb(d.size_mb || null);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [token, type]);
 
   const handleRefresh = async () => {
@@ -104,44 +104,5 @@ export default function ExcelStatusBar({ token, type = "master", title = "Master
 
   const isExpired = lastSynced ? (Date.now() - new Date(lastSynced).getTime() > 12 * 60 * 60 * 1000) : true;
 
-  return (
-    <div style={{ marginBottom: "20px" }}>
-      <Toast toast={toast} onClose={() => setToast(null)} />
-      <div style={{
-        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)",
-        borderRadius: "12px", padding: "14px 18px",
-        display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap",
-      }}>
-        <span style={{ fontSize: "1.2rem" }}>{type === "core" ? "👑" : "📊"}</span>
-        <div>
-          <span style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.88rem" }}>{title}</span>
-          <span style={{ color: "#64748b", fontSize: "0.75rem", marginLeft: "10px" }}>
-            Last refreshed: <span style={{ color: isExpired ? "#ef4444" : "#94a3b8", fontWeight: 600 }}>{timeAgo(lastSynced)}</span>
-            {sizeMb && <span style={{ marginLeft: "8px", color: "#475569" }}>· {sizeMb} MB</span>}
-          </span>
-          {isExpired && <div style={{ color: "#f87171", fontSize: "0.7rem", marginTop: "2px", fontWeight: 600 }}>Data is older than 12 hours. Refresh required to download.</div>}
-        </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-          <button 
-            onClick={handleDownload} 
-            disabled={isExpired}
-            style={btnStyle("#60a5fa", !isExpired)}
-            title={isExpired ? "Refresh data first to download" : "Download Excel"}
-          >
-            📥 Download Excel
-          </button>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            style={{ ...btnStyle("#818cf8", !refreshing), display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            {refreshing
-              ? <><span style={{ display: "inline-block", width: "11px", height: "11px", border: "2px solid rgba(129,140,248,0.3)", borderTop: "2px solid #818cf8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Refreshing…</>
-              : "🔄 Refresh Data"}
-          </button>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    </div>
-  );
+
 }
