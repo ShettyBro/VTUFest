@@ -236,7 +236,7 @@ export default function ManagerDashboard() {
       setDownloadStates(prev => ({ ...prev, [type]: 'success' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = type === 'annexure' ? 'Annexure.pdf' : '';
+      a.download = type === 'annexure' ? 'Annexure.pdf' : type === 'cloakroom' ? 'Cloak-Room-Acknowledgement.docx' : type === 'accommodation' ? 'Accommodation-Acknowledgement.docx' : '';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -767,8 +767,8 @@ export default function ManagerDashboard() {
             <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
               {[
                 { id: 'annexure', title: '1. Final Annexure', icon: '📄', url: dashboardData?.annexure_url },
-                { id: 'cloakroom', title: '2. Cloak Room Acknowledgement', icon: '🎒', url: 'public/cloak-room-ack.docx' },
-                { id: 'accommodation', title: '3. Accommodation Acknowledgement', icon: '🏨', url: 'public/accommodation-ack.docx' }
+                { id: 'cloakroom', title: '2. Cloak Room Acknowledgement', icon: '🎒', url: '/cloak-room-ack.docx' },
+                { id: 'accommodation', title: '3. Accommodation Acknowledgement', icon: '🏨', url: '/accommodation-ack.docx' }
               ].map(file => (
                 <div key={file.id} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
