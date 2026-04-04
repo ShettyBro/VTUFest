@@ -769,7 +769,7 @@ export default function ManagerDashboard() {
                 { id: 'annexure', title: '1. Final Annexure', icon: '📄', url: dashboardData?.annexure_url },
                 { id: 'cloakroom', title: '2. Cloak Room Acknowledgement', icon: '🎒', url: '/cloak-room-ack.docx' },
                 { id: 'accommodation', title: '3. Accommodation Acknowledgement', icon: '🏨', url: '/accommodation-ack.docx' },
-                // { id: 'schedule', title: '4. Event Schedule', icon: '📅', url: dashboardData?.schedule_url }
+                { id: 'schedule', title: '4. Event Schedule', icon: '📅', url: dashboardData?.schedule_url }
               ].map(file => (
                 <div key={file.id} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
