@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LifeBuoy, Copy, Check, FileDown, Phone, BookOpen } from "lucide-react";
+import { LifeBuoy, Copy, Check, FileDown, Phone, BookOpen, CalendarDays } from "lucide-react";
 import "../styles/auth.css";
 import { useOnboarding } from "../context/OnboardingContext";
 
@@ -118,6 +118,18 @@ export default function HelpButton({ className = "", style = {}, open = false, o
     return (
         <>
             {hasPosition && <div style={wrapperStyle}>
+                {/* EVENT SCHEDULE BUTTON */}
+                <a
+                    href="/Acharya VTU Habba 2026 Schedule Final.pdf"
+                    download="Acharya VTU Habba 2026 Schedule Final.pdf"
+                    className={`help-btn brochure-btn ${className}`}
+                    style={{ position: 'static' }}
+                    aria-label="Download Event Schedule"
+                >
+                    <CalendarDays size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                    <span className="help-btn-text">Event Schedule</span>
+                </a>
+
                 {/* BROCHURE BUTTON */}
                 <a
                     href="/VTU Fest 2026.pdf"
