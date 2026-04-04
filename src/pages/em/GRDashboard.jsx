@@ -130,23 +130,25 @@ function GRLayout({ children }) {
     );
 }
 
-// ─── ALLOCATE MODAL ───────────────────────────────────────────────────────────
-function AllocateModal({ request, token, onClose, onDone }) {
-    const [form, setForm] = useState({
-        building_name: request.building_name || "",
-        floor_number: request.floor_number || "",
-        room_number: request.room_number || "",
-        capacity: request.capacity ? String(request.capacity) : "",
-        notes: request.allocation_notes || "",
-    });
+// ─── ADD ROOM MODAL ───────────────────────────────────────────────────────────
+// Opens to add a SINGLE new room. Submitted rooms are listed in the parent and
+// pushed to the server one at a time via POST /:id/allocate.
+function AddRoomModal({ request, token, onClose, onDone }) {
+    const [form, setForm] = useState({ building_name: "", floor_number: "", room_number: "", notes: "" });
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState("");
+    const [removingId, setRemovingId] = useState(null);
+    const { showPopup } = usePopup();
 
-    const isReassign = !!request.allocation_id;
+    const inp = {
+        width: "100%", padding: "9px 11px", boxSizing: "border-box",
+        background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)",
+        borderRadius: "7px", color: "#f1f5f9", fontSize: "0.88rem", outline: "none",
+    };
 
-    const handleSave = async () => {
-        if (!form.building_name.trim() || !form.floor_number.trim() || !form.room_number.trim() || !form.capacity) {
-            setErr("Building name, floor, room number, and capacity are required."); return;
+    const handleAdd = async () => {
+        if (!form.building_name.trim() || !form.floor_number.trim() || !form.room_number.trim()) {
+            setErr("Building name, floor, and room number are required."); return;
         }
         setSaving(true); setErr("");
         try {
@@ -157,38 +159,90 @@ function AllocateModal({ request, token, onClose, onDone }) {
                     building_name: form.building_name.trim(),
                     floor_number: form.floor_number.trim(),
                     room_number: form.room_number.trim(),
-                    capacity: parseInt(form.capacity),
                     notes: form.notes.trim() || undefined,
                 }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Allocation failed");
-            onDone();
+            if (!res.ok) throw new Error(data.message || "Failed to add room");
+            showPopup("Room added successfully!", "success");
+            setForm({ building_name: "", floor_number: "", room_number: "", notes: "" });
+            onDone(); // refresh parent list
         } catch (e) { setErr(e.message); }
         finally { setSaving(false); }
     };
 
-    const inp = {
-        width: "100%", padding: "9px 11px", boxSizing: "border-box",
-        background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)",
-        borderRadius: "7px", color: "#f1f5f9", fontSize: "0.88rem", outline: "none",
+    const handleRemove = async (allocId) => {
+        setRemovingId(allocId);
+        try {
+            const res = await emFetch(`${API_BASE}/api/em/green-room/${request.id}/allocations/${allocId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to remove room");
+            showPopup("Room removed.", "success");
+            onDone();
+        } catch (e) { setErr(e.message); }
+        finally { setRemovingId(null); }
     };
+
+    const allocations = request.allocations || [];
 
     return (
         <div onClick={e => { if (e.target === e.currentTarget) onClose(); }}
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(6px)", zIndex: 9000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-            <div className="glass-card" style={{ width: "100%", maxWidth: "520px", position: "relative" }}>
+            <div className="glass-card" style={{ width: "100%", maxWidth: "560px", position: "relative", maxHeight: "90vh", overflowY: "auto" }}>
                 <button onClick={onClose} style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
 
-                <h4 style={{ margin: "0 0 4px", color: "var(--text-primary)" }}>
-                    {isReassign ? "🏢 Reassign Room" : "🏢 Allocate Room"}
-                </h4>
+                <h4 style={{ margin: "0 0 4px", color: "var(--text-primary)" }}>🏢 Manage Rooms</h4>
                 <div style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginBottom: "20px" }}>
                     {request.college_name} <span style={{ opacity: 0.6 }}>({request.college_code})</span>
                     &nbsp;·&nbsp; 👥 <strong>{request.final_participant_count ?? request.requested_participants}</strong> participants
                 </div>
 
-                {/* Form fields */}
+                {/* ── Existing allocated rooms ── */}
+                {allocations.length > 0 && (
+                    <div style={{ marginBottom: "20px" }}>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
+                            Allocated Rooms ({allocations.length})
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            {allocations.map((a, i) => (
+                                <div key={a.id} style={{
+                                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                                    background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)",
+                                    borderRadius: "8px", padding: "10px 14px",
+                                }}>
+                                    <div>
+                                        <span style={{ color: "#d4af37", fontSize: "0.7rem", fontWeight: 700, marginRight: "8px" }}>Room {i + 1}</span>
+                                        <span style={{ color: "#10b981", fontWeight: 600, fontSize: "0.88rem" }}>
+                                            {a.building_name} · {a.floor_number} · <span style={{ fontFamily: "monospace", color: "#fbbf24" }}>{a.room_number}</span>
+                                        </span>
+                                        {a.notes && <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic", marginTop: "2px" }}>{a.notes}</div>}
+                                    </div>
+                                    <button
+                                        disabled={removingId === a.id}
+                                        onClick={() => handleRemove(a.id)}
+                                        style={{
+                                            padding: "4px 12px", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)",
+                                            color: "#f87171", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700,
+                                            opacity: removingId === a.id ? 0.5 : 1, whiteSpace: "nowrap",
+                                        }}>
+                                        {removingId === a.id ? "…" : "✕ Remove"}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Divider ── */}
+                <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", margin: "4px 0 20px" }} />
+
+                {/* ── Add new room ── */}
+                <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "12px" }}>
+                    ➕ Add New Room
+                </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                     <div style={{ gridColumn: "1 / -1" }}>
                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Building Name <span style={{ color: "#f87171" }}>*</span></label>
@@ -202,13 +256,9 @@ function AllocateModal({ request, token, onClose, onDone }) {
                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Room Number <span style={{ color: "#f87171" }}>*</span></label>
                         <input style={inp} placeholder="e.g. GR-101" value={form.room_number} onChange={e => setForm(p => ({ ...p, room_number: e.target.value }))} />
                     </div>
-                    <div>
-                        <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Capacity <span style={{ color: "#f87171" }}>*</span></label>
-                        <input type="number" min="1" style={inp} placeholder="e.g. 30" value={form.capacity} onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))} />
-                    </div>
                     <div style={{ gridColumn: "1 / -1" }}>
                         <label style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>Notes (Optional)</label>
-                        <textarea rows={3} style={{ ...inp, resize: "vertical" }} placeholder="Any special instructions..." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+                        <textarea rows={2} style={{ ...inp, resize: "vertical" }} placeholder="Any special instructions..." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
                     </div>
                 </div>
 
@@ -216,15 +266,15 @@ function AllocateModal({ request, token, onClose, onDone }) {
                     <div style={{ color: "#f87171", fontSize: "0.82rem", marginBottom: "14px", padding: "9px 12px", background: "rgba(239,68,68,0.1)", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.3)" }}>{err}</div>
                 )}
                 <div style={{ display: "flex", gap: "10px" }}>
-                    <button onClick={handleSave} disabled={saving} style={{
+                    <button onClick={handleAdd} disabled={saving} style={{
                         flex: 1, padding: "12px", fontWeight: 700, borderRadius: "8px",
                         background: "rgba(167,139,250,0.2)", border: "1px solid #a78bfa", color: "#a78bfa",
                         cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1,
                     }}>
-                        {saving ? "Saving…" : isReassign ? "✅ Reassign Room" : "✅ Allocate Room"}
+                        {saving ? "Adding…" : "➕ Add Room"}
                     </button>
                     <button onClick={onClose} style={{ padding: "12px 20px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
-                        Cancel
+                        Close
                     </button>
                 </div>
             </div>
@@ -319,10 +369,11 @@ function ActionModal({ request, action, token, onClose, onDone }) {
 
 // ─── EXPANDED ROW DETAIL ──────────────────────────────────────────────────────
 function RowDetail({ r }) {
+    const allocations = r.allocations || [];
     return (
         <tr>
-            <td colSpan={9} style={{ padding: 0 }}>
-                <div style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "14px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px" }}>
+            <td colSpan={8} style={{ padding: 0 }}>
+                <div style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "14px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
                     <div>
                         <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Contact Person</div>
                         <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.88rem" }}>{r.contact_person_name}</div>
@@ -340,12 +391,24 @@ function RowDetail({ r }) {
                             <div style={{ color: "#f87171", fontSize: "0.85rem", background: "rgba(239,68,68,0.08)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(239,68,68,0.2)" }}>{r.rejection_reason}</div>
                         </div>
                     )}
-                    {r.allocation_id && (
-                        <div>
-                            <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Room</div>
-                            <div style={{ color: "#10b981", fontWeight: 600, fontSize: "0.88rem" }}>{r.building_name} · Floor {r.floor_number} · Room {r.room_number}</div>
-                            <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>Cap: {r.capacity} · {fmt(r.allocated_at)}</div>
-                            {r.allocation_notes && <div style={{ color: "var(--text-secondary)", fontSize: "0.8rem", fontStyle: "italic", marginTop: "4px" }}>{r.allocation_notes}</div>}
+                    {allocations.length > 0 && (
+                        <div style={{ gridColumn: "1 / -1" }}>
+                            <div style={{ color: "var(--text-muted)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                                Allocated Rooms ({allocations.length})
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                {allocations.map((a, i) => (
+                                    <div key={a.id} style={{
+                                        background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)",
+                                        borderRadius: "8px", padding: "8px 12px", fontSize: "0.82rem",
+                                    }}>
+                                        <span style={{ color: "#d4af37", fontWeight: 700, marginRight: "6px", fontSize: "0.7rem" }}>#{i + 1}</span>
+                                        <span style={{ color: "#10b981", fontWeight: 600 }}>{a.building_name} · {a.floor_number}</span>
+                                        <span style={{ color: "#fbbf24", fontFamily: "monospace", fontWeight: 700, marginLeft: "6px" }}>Rm {a.room_number}</span>
+                                        {a.notes && <div style={{ color: "var(--text-muted)", fontSize: "0.73rem", fontStyle: "italic", marginTop: "2px" }}>{a.notes}</div>}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                     <div>
@@ -366,7 +429,7 @@ export default function GRDashboard() {
     const [filter, setFilter] = useState("ALL");
     const [search, setSearch] = useState("");
     const [expandedId, setExpandedId] = useState(null);
-    const [allocateTarget, setAllocateTarget] = useState(null);
+    const [roomTarget, setRoomTarget] = useState(null);     // request for Add/Manage Rooms modal
     const [actionTarget, setActionTarget] = useState(null); // { request, action }
 
     const token = localStorage.getItem("vtufest_em_token");
@@ -392,6 +455,23 @@ export default function GRDashboard() {
             || r.contact_person_name?.toLowerCase().includes(q);
         return matchStatus && matchSearch;
     });
+
+    // When room modal does something, refresh data but keep it open (so user can add more)
+    const handleRoomDone = useCallback(() => {
+        // Re-fetch and update roomTarget with fresh data
+        fetch(`${API_BASE}/api/em/green-room`, { headers })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    setRequests(d.data);
+                    // Update the roomTarget with fresh allocations
+                    if (roomTarget) {
+                        const fresh = d.data.find(r => r.id === roomTarget.id);
+                        if (fresh) setRoomTarget(fresh);
+                    }
+                }
+            });
+    }, [token, roomTarget]);
 
     return (
         <GRLayout>
@@ -445,10 +525,10 @@ export default function GRDashboard() {
                 ) : (
                     <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
                         <div style={{ overflowX: "auto" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "880px" }}>
                                 <thead>
                                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                                        {["College", "Code", "Status", "Req. Participants", "Final Count", "Applied At", "🏢 Allocate", "Actions", ""].map(h => (
+                                        {["College", "Code", "Status", "Req. Participants", "Final Count", "Applied At", "🏢 Rooms", "Actions", ""].map(h => (
                                             <th key={h} style={{ padding: "13px 14px", textAlign: "left", color: "var(--text-secondary)", fontSize: "0.73rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.4px", whiteSpace: "nowrap" }}>{h}</th>
                                         ))}
                                     </tr>
@@ -457,9 +537,9 @@ export default function GRDashboard() {
                                     {filtered.map(r => {
                                         const s = scfg(r.status);
                                         const isExpanded = expandedId === r.id;
-                                        const isPending = r.status?.toUpperCase() === "PENDING";
-                                        const isAllocated = r.status?.toUpperCase() === "ALLOCATED";
                                         const isDoneOrCancel = r.status?.toUpperCase() === "REJECTED" || r.status?.toUpperCase() === "CANCELLED";
+                                        const allocations = r.allocations || [];
+                                        const roomCount = allocations.length;
 
                                         return (
                                             <React.Fragment key={r.id}>
@@ -494,21 +574,21 @@ export default function GRDashboard() {
                                                     {/* Applied at */}
                                                     <td style={{ padding: "13px 14px", color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>{fmt(r.applied_at)}</td>
 
-                                                    {/* Allocate */}
+                                                    {/* Rooms button */}
                                                     <td style={{ padding: "13px 14px" }}>
                                                         {!isDoneOrCancel ? (
                                                             <button
-                                                                onClick={() => setAllocateTarget(r)}
+                                                                onClick={() => setRoomTarget(r)}
                                                                 style={{
                                                                     padding: "6px 14px",
-                                                                    background: isAllocated ? "rgba(16,185,129,0.12)" : "rgba(167,139,250,0.15)",
-                                                                    border: `1px solid ${isAllocated ? "#10b981" : "#a78bfa"}`,
-                                                                    color: isAllocated ? "#10b981" : "#a78bfa",
+                                                                    background: roomCount > 0 ? "rgba(16,185,129,0.12)" : "rgba(167,139,250,0.15)",
+                                                                    border: `1px solid ${roomCount > 0 ? "#10b981" : "#a78bfa"}`,
+                                                                    color: roomCount > 0 ? "#10b981" : "#a78bfa",
                                                                     borderRadius: "7px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, whiteSpace: "nowrap", transition: "all 0.2s",
                                                                 }}
                                                                 onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
                                                                 onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-                                                                {isAllocated ? "🏢 Reassign" : "🏢 Allocate"}
+                                                                {roomCount > 0 ? `🏢 ${roomCount} Room${roomCount > 1 ? "s" : ""}` : "🏢 Allocate"}
                                                             </button>
                                                         ) : (
                                                             <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontStyle: "italic" }}>—</span>
@@ -567,12 +647,12 @@ export default function GRDashboard() {
                 )}
 
                 {/* ── Modals ── */}
-                {allocateTarget && (
-                    <AllocateModal
-                        request={allocateTarget}
+                {roomTarget && (
+                    <AddRoomModal
+                        request={roomTarget}
                         token={token}
-                        onClose={() => setAllocateTarget(null)}
-                        onDone={() => { setAllocateTarget(null); fetchAll(); }}
+                        onClose={() => { setRoomTarget(null); fetchAll(); }}
+                        onDone={handleRoomDone}
                     />
                 )}
                 {actionTarget && (

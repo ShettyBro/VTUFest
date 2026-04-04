@@ -123,6 +123,7 @@ export default function GreenRoom() {
     const college = data?.college;
     const participantCount = data?.participant_count ?? 0;
     const isFinalApproved = college?.is_final_approved;
+    const allocations = existing?.allocations || [];
 
     return (
         <Layout>
@@ -142,22 +143,41 @@ export default function GreenRoom() {
 
                 {/* Participant count info */}
                 {isFinalApproved && (
-                    <div style={{
-                        display: "flex", alignItems: "center", gap: "12px",
-                        background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.4)",
-                        borderLeft: "4px solid #10b981", borderRadius: "10px", padding: "14px 18px", marginBottom: "20px",
-                    }}>
-                        <span style={{ fontSize: "1.3rem" }}>👥</span>
-                        <div>
-                            <strong style={{ color: "#10b981", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                Registered Participants
-                            </strong>
-                            <p style={{ margin: "2px 0 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-                                Your college has <strong style={{ color: "#34d399" }}>{participantCount}</strong> participant{participantCount !== 1 ? "s" : ""} registered.
-                                The cloakroom will be allocated based on this count.
-                            </p>
+                    <>
+                        <div style={{
+                            display: "flex", alignItems: "center", gap: "12px",
+                            background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.4)",
+                            borderLeft: "4px solid #10b981", borderRadius: "10px", padding: "14px 18px", marginBottom: "15px",
+                        }}>
+                            <span style={{ fontSize: "1.3rem" }}>👥</span>
+                            <div>
+                                <strong style={{ color: "#10b981", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                    Registered Participants
+                                </strong>
+                                <p style={{ margin: "2px 0 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+                                    Your college has <strong style={{ color: "#34d399" }}>{participantCount}</strong> participant{participantCount !== 1 ? "s" : ""} registered.
+                                    The cloakroom will be allocated based on this count.
+                                </p>
+                            </div>
                         </div>
-                    </div>
+
+                        <div style={{
+                            display: "flex", alignItems: "center", gap: "12px",
+                            background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.4)",
+                            borderLeft: "4px solid #f59e0b", borderRadius: "10px", padding: "14px 18px", marginBottom: "20px",
+                        }}>
+                            <span style={{ fontSize: "1.5rem" }}>🔐</span>
+                            <div>
+                                <strong style={{ color: "#f59e0b", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                    Important Note
+                                </strong>
+                                <p style={{ margin: "4px 0 0", fontSize: "0.95rem", color: "#fef3c7" }}>
+                                    Colleges using the Cloak Room / Green Room <strong>must bring their own locks</strong>. 
+                                    The Host college will not provide any locks. Please ensure you carry them while coming.
+                                </p>
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 <div className="glass-card" style={{ maxWidth: "600px", margin: "0 auto" }}>
@@ -207,38 +227,46 @@ export default function GreenRoom() {
                                 )}
                             </div>
 
-                            {/* ALLOCATION DETAILS */}
-                            {existing.status === "ALLOCATED" && existing.allocation_id && (
+                            {/* ALLOCATION DETAILS — multiple rooms */}
+                            {existing.status === "ALLOCATED" && allocations.length > 0 && (
                                 <div style={{ marginTop: "28px", textAlign: "left" }}>
                                     <h3 style={{ color: "var(--academic-gold)", marginBottom: "14px", fontSize: "1rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                        🏢 Allocated Room
+                                        🏢 Allocated Room{allocations.length > 1 ? "s" : ""}
                                     </h3>
-                                    <div style={{
-                                        background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.3)",
-                                        borderRadius: "12px", padding: "20px",
-                                    }}>
-                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                                            {[
-                                                { label: "Building", value: existing.building_name },
-                                                { label: "Floor", value: existing.floor_number },
-                                                { label: "Room Number", value: existing.room_number },
-                                                { label: "Capacity", value: existing.capacity },
-                                            ].map(({ label, value }) => (
-                                                <div key={label}>
-                                                    <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
-                                                    <div style={{ color: "#f1f5f9", fontWeight: 600, marginTop: "2px", fontSize: "1rem" }}>{value ?? "—"}</div>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                        {allocations.map((room, i) => (
+                                            <div key={room.id} style={{
+                                                background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.3)",
+                                                borderRadius: "12px", padding: "18px",
+                                            }}>
+                                                {allocations.length > 1 && (
+                                                    <div style={{ color: "#d4af37", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "10px" }}>
+                                                        Room {i + 1}
+                                                    </div>
+                                                )}
+                                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                                                    {[
+                                                        { label: "Building", value: room.building_name },
+                                                        { label: "Floor", value: room.floor_number },
+                                                        { label: "Room Number", value: room.room_number },
+                                                    ].map(({ label, value }) => (
+                                                        <div key={label}>
+                                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+                                                            <div style={{ color: label === "Room Number" ? "#fbbf24" : "#f1f5f9", fontWeight: 600, marginTop: "2px", fontSize: "1rem", fontFamily: label === "Room Number" ? "monospace" : "inherit" }}>{value ?? "—"}</div>
+                                                        </div>
+                                                    ))}
+                                                    {room.notes && (
+                                                        <div style={{ gridColumn: "1 / -1" }}>
+                                                            <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Notes</div>
+                                                            <div style={{ color: "var(--text-secondary)", marginTop: "2px", fontStyle: "italic" }}>{room.notes}</div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            ))}
-                                            {existing.allocation_notes && (
-                                                <div style={{ gridColumn: "1 / -1" }}>
-                                                    <div style={{ color: "var(--text-muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Notes</div>
-                                                    <div style={{ color: "var(--text-secondary)", marginTop: "2px", fontStyle: "italic" }}>{existing.allocation_notes}</div>
+                                                <div style={{ marginTop: "12px", color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                                                    Allocated at: {fmt(room.allocated_at)}
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div style={{ marginTop: "14px", color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                                            Allocated at: {fmt(existing.allocated_at)}
-                                        </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}

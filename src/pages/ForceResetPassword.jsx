@@ -9,7 +9,7 @@ const API_BASE = "https://api.vtufest2026.acharyahabba.com";
 
 // Routes to the correct reset endpoint based on portal
 const buildResetUrl = (portal, role) => {
-    if (portal === "admin" || portal === "em" || portal === "transport" || portal === "food") {
+    if (portal === "admin" || portal === "em" || portal === "transport" || portal === "food" || portal === "reg") {
         return `${API_BASE}/api/admin/auth/reset-password`;
     }
     return `${API_BASE}/api/auth/reset-password/${role}`;
@@ -22,6 +22,7 @@ const getReturnPath = (portal) => {
     if (portal === "transport") return "/travel/login";
     if (portal === "da") return "/da-login";
     if (portal === "food") return "/food/login";
+    if (portal === "reg") return "/reg";
     return "/";
 };
 
@@ -32,6 +33,7 @@ const getPortalLabel = (portal) => {
     if (portal === "transport") return "Transport Manager Portal";
     if (portal === "da") return "Data Admin Portal";
     if (portal === "food") return "Food Management Portal";
+    if (portal === "reg") return "Registration Desk Portal";
     return "VTU HABBA 2026";
 };
 

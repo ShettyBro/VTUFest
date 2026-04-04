@@ -47,7 +47,7 @@ const ALL_EVENTS = [
 /* ─── Assign Modal ─── */
 function AssignModal({ selected, token, onClose, onDone }) {
     const [domain, setDomain] = useState("");
-    const [collegeId, setCollegeId] = useState("");
+    const [selectedCollegeIds, setSelectedCollegeIds] = useState([]);
     const [colleges, setColleges] = useState([]);
     const [collegeSearch, setCollegeSearch] = useState("");
     const [eventNames, setEventNames] = useState([]);
@@ -71,15 +71,15 @@ function AssignModal({ selected, token, onClose, onDone }) {
     const handleAssign = async () => {
         setErr("");
         if (!domain) return setErr("Please select a domain.");
-        if (domain === "college_buddy" && !collegeId) return setErr("College is required for College Buddy domain.");
+        if (domain === "college_buddy" && selectedCollegeIds.length === 0) return setErr("At least one college is required for College Buddy domain.");
         if (domain === "in_event" && eventNames.length === 0) return setErr("Please select at least one event for In-Event volunteers.");
         setSaving(true);
         try {
             const isBulk = selected.length > 1;
             const url = isBulk ? `${API}/api/vm/coordinator/bulk-assign` : `${API}/api/vm/coordinator/assign`;
             const body = isBulk
-                ? { volunteer_ids: selected, domain, ...(domain === "college_buddy" ? { college_id: Number(collegeId) } : {}), ...(domain === "in_event" ? { event_names: eventNames } : {}) }
-                : { volunteer_id: selected[0], domain, ...(domain === "college_buddy" ? { college_id: Number(collegeId) } : {}), ...(domain === "in_event" ? { event_names: eventNames } : {}) };
+                ? { volunteer_ids: selected, domain, ...(domain === "college_buddy" ? { college_ids: selectedCollegeIds.map(Number) } : {}), ...(domain === "in_event" ? { event_names: eventNames } : {}) }
+                : { volunteer_id: selected[0], domain, ...(domain === "college_buddy" ? { college_ids: selectedCollegeIds.map(Number) } : {}), ...(domain === "in_event" ? { event_names: eventNames } : {}) };
 
             const res = await adminFetch(url, { method: "POST", headers, body: JSON.stringify(body) });
             const data = await res.json();
@@ -90,6 +90,7 @@ function AssignModal({ selected, token, onClose, onDone }) {
     };
 
     const toggleEvent = (val) => setEventNames(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
+    const toggleCollege = (id) => setSelectedCollegeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
     const is = { padding: "9px 12px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.88rem", outline: "none", width: "100%", boxSizing: "border-box" };
 
@@ -124,7 +125,7 @@ function AssignModal({ selected, token, onClose, onDone }) {
 
                         <div style={{ marginBottom: "14px" }}>
                             <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.78rem", fontWeight: 600, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Domain *</label>
-                            <select value={domain} onChange={e => { setDomain(e.target.value); setCollegeId(""); setEventNames([]); }} style={{ ...is, cursor: "pointer" }}>
+                            <select value={domain} onChange={e => { setDomain(e.target.value); setSelectedCollegeIds([]); setEventNames([]); }} style={{ ...is, cursor: "pointer" }}>
                                 <option value="">— Select domain —</option>
                                 {ASSIGN_DOMAINS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                             </select>
@@ -149,16 +150,25 @@ function AssignModal({ selected, token, onClose, onDone }) {
 
                         {domain === "college_buddy" && (
                             <div style={{ marginBottom: "14px" }}>
-                                <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.78rem", fontWeight: 600, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>College * <span style={{ color: "#f87171" }}>required for College Buddy</span></label>
+                                <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.78rem", fontWeight: 600, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Colleges * <span style={{ color: "#f87171" }}>select one or more colleges</span></label>
                                 <input placeholder="Search college…" value={collegeSearch} onChange={e => setCollegeSearch(e.target.value)} style={{ ...is, marginBottom: "6px" }} />
-                                <div style={{ border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", maxHeight: "180px", overflowY: "auto", background: "rgba(255,255,255,0.04)" }}>
-                                    {filtered.slice(0, 30).map(c => (
-                                        <div key={c.id} onClick={() => setCollegeId(c.id)} style={{ padding: "8px 12px", cursor: "pointer", background: String(collegeId) === String(c.id) ? "rgba(129,140,248,0.15)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "0.83rem", color: String(collegeId) === String(c.id) ? "#f1f5f9" : "var(--text-secondary)" }}>
-                                            {String(collegeId) === String(c.id) ? "✓ " : ""}{c.college_name}
-                                            {c.college_code && <span style={{ marginLeft: "8px", color: "var(--text-muted)", fontSize: "0.75rem" }}>({c.college_code})</span>}
-                                        </div>
-                                    ))}
+                                <div style={{ border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", maxHeight: "220px", overflowY: "auto", background: "rgba(255,255,255,0.04)" }}>
+                                    {filtered.slice(0, 50).map(c => {
+                                        const isSel = selectedCollegeIds.includes(c.id);
+                                        return (
+                                            <label key={c.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", background: isSel ? "rgba(129,140,248,0.12)" : "transparent" }}>
+                                                <input type="checkbox" checked={isSel} onChange={() => toggleCollege(c.id)} style={{ accentColor: "#818cf8", width: "14px", height: "14px" }} />
+                                                <span style={{ fontSize: "0.83rem", color: isSel ? "#f1f5f9" : "var(--text-secondary)" }}>
+                                                    {c.college_name}
+                                                    {c.college_code && <span style={{ marginLeft: "8px", color: "var(--text-muted)", fontSize: "0.75rem" }}>({c.college_code})</span>}
+                                                </span>
+                                            </label>
+                                        );
+                                    })}
                                 </div>
+                                {selectedCollegeIds.length > 0 && (
+                                    <div style={{ marginTop: "6px", fontSize: "0.75rem", color: "#818cf8" }}>✓ {selectedCollegeIds.length} college(s) selected</div>
+                                )}
                             </div>
                         )}
 
@@ -172,6 +182,142 @@ function AssignModal({ selected, token, onClose, onDone }) {
 
                         <button onClick={handleAssign} disabled={saving || !domain} style={{ width: "100%", padding: "11px", background: saving || !domain ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.2)", border: "1px solid #6366f1", color: "#818cf8", borderRadius: "10px", cursor: saving || !domain ? "not-allowed" : "pointer", fontWeight: 700, fontSize: "0.9rem" }}>
                             {saving ? "Assigning…" : "✅ Confirm Assignment"}
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+/* ─── Edit Colleges Modal (for already-assigned college_buddy volunteers) ─── */
+function EditCollegesModal({ volunteer, token, onClose, onSaved }) {
+    const [allColleges, setAllColleges] = useState([]);
+    const [selected, setSelected] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [err, setErr] = useState("");
+    const [search, setSearch] = useState("");
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+
+    useEffect(() => {
+        setLoading(true);
+        adminFetch(`${API}/api/vm/coordinator/${volunteer.id}/colleges`, { headers })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    setAllColleges(d.data.all_colleges || []);
+                    setSelected((d.data.assigned_colleges || []).map(c => c.college_id));
+                } else {
+                    setErr(d.message || "Failed to load colleges");
+                }
+            })
+            .catch(() => setErr("Network error — could not load colleges"))
+            .finally(() => setLoading(false));
+    }, [volunteer.id]);
+
+    const toggle = (id) =>
+        setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+    // Sort: selected colleges first, then alphabetical
+    const filtered = useMemo(() => {
+        const q = search.toLowerCase();
+        const list = allColleges.filter(c =>
+            (c.college_name || "").toLowerCase().includes(q) ||
+            (c.college_code || "").toLowerCase().includes(q)
+        );
+        // Put selected colleges on top
+        return list.sort((a, b) => {
+            const aSel = selected.includes(a.id) ? 0 : 1;
+            const bSel = selected.includes(b.id) ? 0 : 1;
+            if (aSel !== bSel) return aSel - bSel;
+            return (a.college_name || "").localeCompare(b.college_name || "");
+        });
+    }, [allColleges, search, selected]);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setErr("");
+        try {
+            const res = await adminFetch(`${API}/api/vm/coordinator/${volunteer.id}/colleges`, {
+                method: "POST", headers,
+                body: JSON.stringify({ college_ids: selected }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
+            onSaved();
+        } catch (ex) { setErr(ex.message); }
+        finally { setSaving(false); }
+    };
+
+    const is = { padding: "9px 12px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.88rem", outline: "none", width: "100%", boxSizing: "border-box" };
+
+    return (
+        <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+            <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "16px", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+                    <div>
+                        <h2 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.05rem" }}>🏫 Edit College Assignments</h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px" }}>{volunteer.full_name}</div>
+                    </div>
+                    <button onClick={onClose} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", fontSize: "0.85rem" }}>✕ Close</button>
+                </div>
+
+                {loading ? (
+                    <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+                        <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>⏳</div>Loading colleges…
+                    </div>
+                ) : (
+                    <>
+                        {/* Selected count + chips */}
+                        <div style={{ marginBottom: "12px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                                <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Select colleges to assign</span>
+                                <span style={{ color: "#818cf8", fontSize: "0.78rem", fontWeight: 700 }}>{selected.length} selected</span>
+                            </div>
+                            {selected.length > 0 && (
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "8px" }}>
+                                    {selected.map(cid => {
+                                        const c = allColleges.find(x => x.id === cid);
+                                        return c ? (
+                                            <span key={cid} style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8", padding: "3px 10px", borderRadius: "20px", fontSize: "0.73rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                                ✓ {c.college_name}
+                                                <button type="button" onClick={() => toggle(cid)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.72rem", padding: 0, lineHeight: 1 }}>✕</button>
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Search */}
+                        <div style={{ position: "relative", marginBottom: "8px" }}>
+                            <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }}>🔍</span>
+                            <input placeholder="Search colleges…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...is, paddingLeft: "32px" }} />
+                        </div>
+
+                        {/* College list */}
+                        <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", maxHeight: "300px", overflowY: "auto", background: "rgba(255,255,255,0.03)" }}>
+                            {filtered.map(c => {
+                                const isSel = selected.includes(c.id);
+                                return (
+                                    <label key={c.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", background: isSel ? "rgba(129,140,248,0.1)" : "transparent", color: isSel ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "0.85rem" }}>
+                                        <input type="checkbox" checked={isSel} onChange={() => toggle(c.id)} style={{ accentColor: "#818cf8", width: "15px", height: "15px", flexShrink: 0 }} />
+                                        <code style={{ color: "var(--text-muted)", fontSize: "0.72rem", background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: "4px", flexShrink: 0 }}>{c.college_code}</code>
+                                        <span style={{ fontWeight: isSel ? 600 : 400 }}>{c.college_name}</span>
+                                        {c.place && <span style={{ marginLeft: "auto", color: "var(--text-muted)", fontSize: "0.7rem", flexShrink: 0 }}>{c.place}</span>}
+                                    </label>
+                                );
+                            })}
+                            {filtered.length === 0 && (
+                                <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.83rem" }}>No colleges found</div>
+                            )}
+                        </div>
+
+                        {err && <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 14px", borderRadius: "8px", margin: "14px 0", fontSize: "0.85rem" }}>{err}</div>}
+
+                        <button onClick={handleSave} disabled={saving} style={{ marginTop: "16px", width: "100%", padding: "11px", borderRadius: "10px", background: saving ? "rgba(129,140,248,0.3)" : "rgba(99,102,241,0.2)", border: "1px solid #6366f1", color: "#818cf8", fontWeight: 700, fontSize: "0.9rem", cursor: saving ? "not-allowed" : "pointer" }}>
+                            {saving ? "Saving…" : "✅ Save College Assignments"}
                         </button>
                     </>
                 )}
@@ -202,6 +348,7 @@ export default function VMCoordinator() {
     const [teamLoading, setTeamLoading] = useState(false);
     const [teamTotal, setTeamTotal] = useState(0);
     const [removingId, setRemovingId] = useState(null);
+    const [editCollegesVol, setEditCollegesVol] = useState(null);
 
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
@@ -397,17 +544,35 @@ export default function VMCoordinator() {
                                                 <td style={tdS}>
                                                     <code style={{ background: "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem", color: "#a8edea" }}>{v.qr_code || "—"}</code>
                                                 </td>
-                                                <td style={tdS}>{v.college_name || "—"}</td>
+                                                <td style={tdS}>
+                                                    {v.allocated_colleges && v.allocated_colleges.length > 0
+                                                        ? v.allocated_colleges.map((c, idx) => (
+                                                            <span key={c.college_id || idx} style={{ display: "inline-block", background: "rgba(248,113,113,0.1)", color: "#f87171", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600, margin: "1px 3px 1px 0" }}>
+                                                                {c.college_name}
+                                                            </span>
+                                                          ))
+                                                        : (v.college_name || "—")}
+                                                </td>
                                                 <td style={tdS}><span style={{ color: v.is_active ? "#4ade80" : "#f87171", fontWeight: 700 }}>{v.is_active ? "✅" : "❌"}</span></td>
                                                 <td style={{ ...tdS, fontSize: "0.75rem", color: "var(--text-muted)" }}>{v.last_login_at ? new Date(v.last_login_at).toLocaleDateString("en-IN") : "Never"}</td>
                                                 <td style={{ ...tdS, textAlign: "right" }}>
-                                                    <button
-                                                        onClick={() => handleUnassign(v)}
-                                                        disabled={removingId === v.id}
-                                                        style={{ padding: "4px 10px", background: "rgba(239,68,68,0.1)", border: "1px solid #ef4444", color: "#f87171", borderRadius: "6px", cursor: removingId === v.id ? "not-allowed" : "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
-                                                    >
-                                                        {removingId === v.id ? "…" : "🗑 Remove"}
-                                                    </button>
+                                                    <div style={{ display: "flex", gap: "5px", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                                                        {v.volunteer_type === "college_buddy" && (
+                                                            <button
+                                                                onClick={() => setEditCollegesVol(v)}
+                                                                style={{ padding: "4px 10px", background: "rgba(129,140,248,0.1)", border: "1px solid #818cf8", color: "#818cf8", borderRadius: "6px", cursor: "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
+                                                            >
+                                                                ✏️ Colleges
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleUnassign(v)}
+                                                            disabled={removingId === v.id}
+                                                            style={{ padding: "4px 10px", background: "rgba(239,68,68,0.1)", border: "1px solid #ef4444", color: "#f87171", borderRadius: "6px", cursor: removingId === v.id ? "not-allowed" : "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
+                                                        >
+                                                            {removingId === v.id ? "…" : "🗑 Remove"}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -424,6 +589,15 @@ export default function VMCoordinator() {
                         token={token}
                         onClose={() => setAssignModal(false)}
                         onDone={() => { setAssignModal(false); setSelected([]); fetchPool(); }}
+                    />
+                )}
+
+                {editCollegesVol && (
+                    <EditCollegesModal
+                        volunteer={editCollegesVol}
+                        token={token}
+                        onClose={() => setEditCollegesVol(null)}
+                        onSaved={() => { setEditCollegesVol(null); fetchTeam(); }}
                     />
                 )}
             </div>

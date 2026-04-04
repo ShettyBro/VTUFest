@@ -91,6 +91,10 @@ import IDCardLogin from "../pages/idcard/IDCardLogin";
 import PhotoEditorPortal from "../pages/idcard/PhotoEditorPortal";
 import IDCardTeamPortal from "../pages/idcard/IDCardTeamPortal";
 
+/* REGISTRATION DESK */
+import RegDeskLogin from "../pages/regdesk/RegDeskLogin";
+import RegDeskDashboard from "../pages/regdesk/RegDeskDashboard";
+
 /* ── Route Guards ──────────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
   const token = localStorage.getItem("vtufest_admin_token");
@@ -136,6 +140,12 @@ function IDCardEditorRoute({ children }) {
   const token = localStorage.getItem("vtufest_idcard_token");
   const role = localStorage.getItem("vtufest_idcard_role");
   if (!token || role !== "id_card_editor") return <Navigate to="/media-login" replace />;
+  return children;
+}
+
+function RegDeskRoute({ children }) {
+  const token = localStorage.getItem("vtufest_regdesk_token");
+  if (!token) return <Navigate to="/reg" replace />;
   return children;
 }
 
@@ -330,6 +340,10 @@ export default function AppRoutes() {
         <Route path="/media" element={<Navigate to="/media-login" replace />} />
         <Route path="/media/editor" element={<IDCardEditorRoute><PhotoEditorPortal /></IDCardEditorRoute>} />
         <Route path="/media/team" element={<IDCardTeamRouteGuard><IDCardTeamPortal /></IDCardTeamRouteGuard>} />
+
+        {/* ── REGISTRATION DESK HEAD ──────────────────────────────────────── */}
+        <Route path="/reg" element={<RegDeskLogin />} />
+        <Route path="/reg-dashboard" element={<RegDeskRoute><RegDeskDashboard /></RegDeskRoute>} />
       </Routes>
     </DAProvider>
   );

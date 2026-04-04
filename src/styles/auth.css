@@ -1030,3 +1030,202 @@ input[type="file"] {
         font-size: 1.2rem;
     }
 }
+
+/* ──────────────────────────────────────────
+   Help Modal Redesigned — Tabs & Contact Table
+   ────────────────────────────────────────── */
+
+/* Wider modal for the contact directory */
+.help-modal-redesigned {
+    max-width: 480px;
+    text-align: left;
+    padding: 28px 28px 24px;
+}
+
+.help-modal-redesigned.video-active {
+    max-width: 650px;
+}
+
+.help-modal-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* ── Tabs ── */
+.help-tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    padding: 4px;
+    margin-top: 16px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.help-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.3px;
+}
+
+.help-tab.active {
+    background: linear-gradient(135deg, rgba(168, 237, 234, 0.25), rgba(196, 181, 253, 0.25));
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.help-tab:hover:not(.active) {
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Contact Tab ── */
+.help-contact-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 56vh;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+.help-contact-tab::-webkit-scrollbar {
+    width: 4px;
+}
+
+.help-contact-tab::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.help-contact-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.help-contact-section-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid;
+    opacity: 0.9;
+}
+
+.help-contact-table {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.help-contact-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    text-decoration: none;
+    color: #fff;
+    transition: background 0.18s, transform 0.18s;
+}
+
+.help-contact-row:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateX(3px);
+}
+
+.help-contact-row-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+
+.help-contact-row-role {
+    font-size: 0.7rem;
+    color: rgba(168, 237, 234, 0.85);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.help-contact-row-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.help-contact-row-phone {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Tutorials Tab ── */
+.help-tutorials-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.help-tutorials-desc {
+    font-size: 0.84rem;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: center;
+}
+
+/* Mobile tweaks for redesigned modal */
+@media (max-width: 768px) {
+    .help-modal-redesigned {
+        padding: 22px 16px 18px;
+        max-width: calc(100vw - 32px);
+    }
+
+    .help-contact-row-phone {
+        font-size: 0.78rem;
+    }
+
+    .help-contact-row-name {
+        font-size: 0.82rem;
+    }
+
+    .help-contact-tab {
+        max-height: 52vh;
+    }
+}

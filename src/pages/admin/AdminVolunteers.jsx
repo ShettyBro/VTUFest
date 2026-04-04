@@ -69,7 +69,7 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
         phone: volunteer?.phone || "",
         auid: volunteer?.auid || "",
         volunteer_type: volunteer?.volunteer_type || "",
-        college_id: volunteer?.college_id || "",
+        college_ids: volunteer?.allocated_colleges?.map(c => c.college_id) || (volunteer?.college_id ? [volunteer.college_id] : []),
         event_tables: [],
     }));
     const [colleges, setColleges] = useState([]);
@@ -94,6 +94,13 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
     }, []);
 
     const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+    const toggleCollegeId = (id) =>
+        setForm((f) => ({
+            ...f,
+            college_ids: f.college_ids.includes(id)
+                ? f.college_ids.filter((x) => x !== id)
+                : [...f.college_ids, id],
+        }));
 
     const toggleEvent = (table) =>
         setForm((f) => ({
@@ -124,10 +131,10 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
             };
             if (mode === "add") {
                 body.volunteer_type = form.volunteer_type;
-                if (form.volunteer_type === "college_buddy") body.college_id = form.college_id;
+                if (form.volunteer_type === "college_buddy") body.college_ids = form.college_ids;
                 if (form.volunteer_type === "in_event") body.event_tables = form.event_tables;
             } else {
-                if (volunteer.volunteer_type === "college_buddy") body.college_id = form.college_id;
+                if (volunteer.volunteer_type === "college_buddy") body.college_ids = form.college_ids;
             }
 
             const url = mode === "add"
@@ -221,7 +228,7 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
                     </Field>
 
                     {vType === "college_buddy" && (
-                        <Field label="Allocated College" required>
+                        <Field label="Allocated Colleges" required>
                             {/* Search bar — same style as AdminColleges page */}
                             <div style={{ position: "relative", marginBottom: "8px" }}>
                                 <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none", fontSize: "0.95rem" }}>🔍</span>
@@ -245,7 +252,7 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
                                 )}
                             </div>
 
-                            {/* Scrollable clickable list */}
+                            {/* Scrollable checkbox list */}
                             <div style={{
                                 border: "1px solid rgba(255,255,255,0.15)",
                                 borderRadius: "8px",
@@ -260,11 +267,10 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
                                         {collegeSearch ? `No colleges matching "${collegeSearch}"` : "Loading colleges…"}
                                     </div>
                                 ) : filteredColleges.map((c, idx) => {
-                                    const isSelected = String(form.college_id) === String(c.id);
+                                    const isSelected = form.college_ids.includes(c.id);
                                     return (
-                                        <div
+                                        <label
                                             key={c.id}
-                                            onClick={() => set("college_id", c.id)}
                                             style={{
                                                 display: "flex", alignItems: "center", gap: "10px",
                                                 padding: "9px 14px",
@@ -273,46 +279,41 @@ function VolunteerFormModal({ mode, volunteer, token, allEvents, onClose, onSave
                                                 background: isSelected ? "rgba(129,140,248,0.12)" : "transparent",
                                                 transition: "background 0.12s",
                                             }}
-                                            onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
-                                            onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
                                         >
-                                            <span style={{
-                                                width: "16px", height: "16px", borderRadius: "50%", flexShrink: 0,
-                                                border: isSelected ? "none" : "2px solid rgba(255,255,255,0.2)",
-                                                background: isSelected ? "#818cf8" : "transparent",
-                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                                fontSize: "0.6rem", color: "#0f172a", fontWeight: 900,
-                                            }}>
-                                                {isSelected ? "✓" : ""}
-                                            </span>
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleCollegeId(c.id)}
+                                                style={{ accentColor: "#818cf8", width: "15px", height: "15px", flexShrink: 0 }}
+                                            />
                                             <code style={{ color: "var(--text-muted)", fontSize: "0.75rem", background: "rgba(255,255,255,0.06)", padding: "1px 6px", borderRadius: "4px", flexShrink: 0 }}>
                                                 {c.college_code}
                                             </code>
                                             <span style={{ color: isSelected ? "#f1f5f9" : "var(--text-secondary)", fontSize: "0.85rem", fontWeight: isSelected ? 600 : 400 }}>
                                                 {c.college_name}
                                             </span>
-                                        </div>
+                                        </label>
                                     );
                                 })}
                             </div>
 
-                            {/* Selected confirmation chip */}
-                            {form.college_id && (() => {
-                                const sel = colleges.find((c) => String(c.id) === String(form.college_id));
-                                return sel ? (
-                                    <div style={{ marginTop: "7px", display: "flex", alignItems: "center", gap: "7px" }}>
-                                        <span style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8", padding: "3px 10px", borderRadius: "20px", fontSize: "0.76rem", fontWeight: 700 }}>
-                                            ✓ {sel.college_name}
-                                        </span>
-                                        <button type="button" onClick={() => set("college_id", "")} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.75rem" }}>
-                                            clear
-                                        </button>
-                                    </div>
-                                ) : null;
-                            })()}
+                            {/* Selected confirmation chips */}
+                            {form.college_ids.length > 0 && (
+                                <div style={{ marginTop: "7px", display: "flex", flexWrap: "wrap", gap: "5px", alignItems: "center" }}>
+                                    {form.college_ids.map(cid => {
+                                        const sel = colleges.find((c) => c.id === cid);
+                                        return sel ? (
+                                            <span key={cid} style={{ background: "rgba(129,140,248,0.15)", color: "#818cf8", padding: "3px 10px", borderRadius: "20px", fontSize: "0.76rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                                ✓ {sel.college_name}
+                                                <button type="button" onClick={() => toggleCollegeId(cid)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.75rem", padding: 0 }}>✕</button>
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            )}
 
                             {/* Hidden required-guard */}
-                            <input type="text" required readOnly value={form.college_id || ""} style={{ position: "absolute", opacity: 0, height: 0, width: 0, pointerEvents: "none" }} tabIndex={-1} />
+                            <input type="text" required readOnly value={form.college_ids.length > 0 ? "ok" : ""} style={{ position: "absolute", opacity: 0, height: 0, width: 0, pointerEvents: "none" }} tabIndex={-1} />
                         </Field>
                     )}
 
@@ -511,6 +512,192 @@ function ManageEventsModal({ volunteer, token, onClose, onSaved }) {
     );
 }
 
+// ─── Manage Colleges Modal (college_buddy only) ───────────────────────────────
+function ManageCollegesModal({ volunteer, token, onClose, onSaved }) {
+    const [allColleges, setAllColleges] = useState([]);
+    const [selected, setSelected] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [err, setErr] = useState("");
+    const [search, setSearch] = useState("");
+
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+
+    useEffect(() => {
+        setLoading(true);
+        adminFetch(`${API_BASE}/api/admin/volunteers/${volunteer.id}/colleges`, { headers })
+            .then((r) => r.json())
+            .then((d) => {
+                if (d.success) {
+                    setAllColleges(d.data.all_colleges || []);
+                    setSelected((d.data.assigned_colleges || []).map((c) => c.college_id));
+                } else {
+                    setErr(d.message || "Failed to load colleges");
+                }
+            })
+            .catch(() => setErr("Network error — could not load colleges"))
+            .finally(() => setLoading(false));
+    }, [volunteer.id]);
+
+    const toggle = (id) =>
+        setSelected((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+
+    const filtered = allColleges.filter((c) => {
+        const q = search.toLowerCase();
+        return (c.college_name || "").toLowerCase().includes(q) || (c.college_code || "").toLowerCase().includes(q);
+    }).sort((a, b) => {
+        // Selected colleges first
+        const aSel = selected.includes(a.id) ? 0 : 1;
+        const bSel = selected.includes(b.id) ? 0 : 1;
+        if (aSel !== bSel) return aSel - bSel;
+        return (a.college_name || "").localeCompare(b.college_name || "");
+    });
+
+    const handleSave = async () => {
+        setSaving(true);
+        setErr("");
+        try {
+            const res = await adminFetch(`${API_BASE}/api/admin/volunteers/${volunteer.id}/colleges`, {
+                method: "POST", headers,
+                body: JSON.stringify({ college_ids: selected }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
+            onSaved();
+        } catch (ex) {
+            setErr(ex.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleBackdrop = (e) => { if (e.target === e.currentTarget) onClose(); };
+
+    return (
+        <div
+            onClick={handleBackdrop}
+            style={{
+                position: "fixed", inset: 0, zIndex: 1000,
+                background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
+                display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
+            }}
+        >
+            <div style={{
+                background: "#0f172a",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "16px", width: "100%", maxWidth: "520px",
+                maxHeight: "90vh", overflowY: "auto", padding: "28px",
+                scrollbarWidth: "thin", scrollbarColor: "rgba(248,113,113,0.4) transparent",
+            }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+                    <div>
+                        <h2 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.05rem" }}>🏫 Manage Colleges</h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px" }}>{volunteer.full_name}</div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", fontSize: "0.85rem" }}
+                    >
+                        ✕ Close
+                    </button>
+                </div>
+
+                {loading && (
+                    <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+                        <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>⏳</div>Loading colleges…
+                    </div>
+                )}
+
+                {!loading && (
+                    <>
+                        <div style={{ marginBottom: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Select colleges to assign</span>
+                            <span style={{ color: "#f87171", fontSize: "0.78rem", fontWeight: 700 }}>
+                                {selected.length} selected
+                            </span>
+                        </div>
+
+                        {/* Selected college chips for easy visibility */}
+                        {selected.length > 0 && (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "10px" }}>
+                                {selected.map(cid => {
+                                    const c = allColleges.find(x => x.id === cid);
+                                    return c ? (
+                                        <span key={cid} style={{ background: "rgba(248,113,113,0.15)", color: "#f87171", padding: "3px 10px", borderRadius: "20px", fontSize: "0.73rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                            ✓ {c.college_name}
+                                            <button type="button" onClick={() => toggle(cid)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "0.72rem", padding: 0, lineHeight: 1 }}>✕</button>
+                                        </span>
+                                    ) : null;
+                                })}
+                            </div>
+                        )}
+
+                        <div style={{ position: "relative", marginBottom: "8px" }}>
+                            <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }}>🔍</span>
+                            <input
+                                placeholder="Search colleges…"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                style={{
+                                    width: "100%", boxSizing: "border-box",
+                                    padding: "8px 12px 8px 32px",
+                                    background: "rgba(255,255,255,0.07)",
+                                    border: "1px solid rgba(255,255,255,0.15)",
+                                    borderRadius: "8px", color: "#f1f5f9",
+                                    fontSize: "0.85rem", outline: "none",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{
+                            background: "rgba(255,255,255,0.03)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: "10px", padding: "0",
+                            maxHeight: "340px", overflowY: "auto",
+                            scrollbarWidth: "thin", scrollbarColor: "rgba(248,113,113,0.4) transparent",
+                        }}>
+                            {filtered.map((c) => (
+                                <label key={c.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer", color: selected.includes(c.id) ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "0.87rem", borderBottom: "1px solid rgba(255,255,255,0.04)", background: selected.includes(c.id) ? "rgba(248,113,113,0.08)" : "transparent" }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selected.includes(c.id)}
+                                        onChange={() => toggle(c.id)}
+                                        style={{ accentColor: "#f87171", width: "15px", height: "15px", flexShrink: 0 }}
+                                    />
+                                    <code style={{ color: "var(--text-muted)", fontSize: "0.73rem", background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: "4px", flexShrink: 0 }}>{c.college_code}</code>
+                                    <span>{c.college_name}</span>
+                                    {c.place && <span style={{ marginLeft: "auto", color: "var(--text-muted)", fontSize: "0.72rem" }}>{c.place}</span>}
+                                </label>
+                            ))}
+                        </div>
+
+                        {err && (
+                            <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 14px", borderRadius: "8px", margin: "14px 0", fontSize: "0.85rem" }}>
+                                {err}
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            style={{
+                                marginTop: "16px", width: "100%", padding: "11px", borderRadius: "10px",
+                                background: saving ? "rgba(248,113,113,0.3)" : "rgba(248,113,113,0.15)",
+                                border: "1px solid #f87171", color: "#f87171",
+                                fontWeight: 700, fontSize: "0.9rem", cursor: saving ? "not-allowed" : "pointer",
+                            }}
+                        >
+                            {saving ? "Saving…" : "✅ Save College Assignments"}
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminVolunteers() {
     const [volunteers, setVolunteers] = useState([]);
@@ -533,6 +720,7 @@ export default function AdminVolunteers() {
     const [addModal, setAddModal] = useState(false);
     const [editVolunteer, setEditVolunteer] = useState(null);
     const [manageEventsVolunteer, setManageEventsVolunteer] = useState(null);
+    const [manageCollegesVolunteer, setManageCollegesVolunteer] = useState(null);
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
 
@@ -903,8 +1091,12 @@ export default function AdminVolunteers() {
                                         {/* Name */}
                                         <td style={tdStyle("left")}>
                                             <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text-primary)" }}>{v.full_name}</div>
-                                            {v.volunteer_type === "college_buddy" && v.allocated_college_name && (
-                                                <div style={{ fontSize: "0.72rem", color: "#f87171", marginTop: "2px" }}>🏫 {v.allocated_college_name}</div>
+                                            {v.volunteer_type === "college_buddy" && v.allocated_colleges && v.allocated_colleges.length > 0 && (
+                                                <div style={{ marginTop: "3px", display: "flex", flexWrap: "wrap", gap: "3px" }}>
+                                                    {v.allocated_colleges.map((c) => (
+                                                        <span key={c.college_id} style={{ fontSize: "0.72rem", color: "#f87171", background: "rgba(248,113,113,0.1)", padding: "1px 7px", borderRadius: "8px" }}>🏫 {c.college_name}</span>
+                                                    ))}
+                                                </div>
                                             )}
                                             {v.volunteer_type === "in_event" && v.assigned_events?.length > 0 && (
                                                 <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
@@ -1006,6 +1198,15 @@ export default function AdminVolunteers() {
                                                         🎭 Events
                                                     </button>
                                                 )}
+
+                                                {v.volunteer_type === "college_buddy" && (
+                                                    <button
+                                                        onClick={() => setManageCollegesVolunteer(v)}
+                                                        style={actionBtnStyle("#f87171", "rgba(248,113,113,0.1)")}
+                                                    >
+                                                        🏫 Colleges
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -1052,6 +1253,15 @@ export default function AdminVolunteers() {
                     token={token}
                     onClose={() => setManageEventsVolunteer(null)}
                     onSaved={() => { setManageEventsVolunteer(null); fetchVolunteers(); setSuccessMsg("Event assignments updated."); setTimeout(() => setSuccessMsg(""), 5000); }}
+                />
+            )}
+
+            {manageCollegesVolunteer && (
+                <ManageCollegesModal
+                    volunteer={manageCollegesVolunteer}
+                    token={token}
+                    onClose={() => setManageCollegesVolunteer(null)}
+                    onSaved={() => { setManageCollegesVolunteer(null); fetchVolunteers(); setSuccessMsg("College assignments updated."); setTimeout(() => setSuccessMsg(""), 5000); }}
                 />
             )}
         </AdminLayout>

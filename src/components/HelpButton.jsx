@@ -1,22 +1,57 @@
 import { useState } from "react";
-import { LifeBuoy, Copy, Check, FileDown } from "lucide-react";
+import { LifeBuoy, Copy, Check, FileDown, Phone, BookOpen } from "lucide-react";
 import "../styles/auth.css";
 import { useOnboarding } from "../context/OnboardingContext";
 
 /* ─────────────────────────────────────────────────────────────────
    HelpButton  –  reusable "Need Help?" floating button + modal
-   
-   Contact details are centralised here.
-   Update CONTACT_EMAIL / CONTACT_PHONE / CONTACT_HOURS to
-   reflect on every page that imports this component.
+   Tabs: Contact (default) | Tutorials
    ───────────────────────────────────────────────────────────────── */
 
-const CONTACT_EMAIL = "support@acharyahabba.com";
-const CONTACTS = [
-    { name: "Prof. Tejas K", role: "Organising Secretary", phone: "+91 94498 90035", href: "tel:+919449890035" },
-    { name: "Mohithesh H U", role: "Support", phone: "+91 94484 61034", href: "tel:+919448461034" },
+const CONTACT_SECTIONS = [
+    {
+        label: "Operations",
+        color: "#60a5fa",
+        icon: "⚙️",
+        contacts: [
+            { name: "Prof. Arun", role: "Accommodation", phone: "9742787700" },
+            { name: "Prof. Rajeev", role: "Registration", phone: "9900919132" },
+            { name: "Prof. Dhananjay", role: "Clock Room", phone: "9844407767" },
+            { name: "Prof. Prashanth K P", role: "Transportation", phone: "9538166113" },
+            { name: "Prof. Yogeesh", role: "Food", phone: "9036684274" },
+        ],
+    },
+    {
+        label: "Events",
+        color: "#f472b6",
+        icon: "🎭",
+        contacts: [
+            { name: "Prof. Devrajaiah", role: "Theater", phone: "9449680516" },
+            { name: "Prof. Swetha", role: "Music", phone: "9901849153" },
+            { name: "Prof. Lakshmikanth", role: "Fine Arts", phone: "9986431667" },
+            { name: "Prof. Shilpa", role: "Dance", phone: "7348922237" },
+            { name: "Prof. Rohith", role: "Literature", phone: "9731352543" },
+        ],
+    },
+    {
+        label: "Heads",
+        color: "#a78bfa",
+        icon: "👑",
+        contacts: [
+            { name: "Prof. Rajanna", role: "Events Head", phone: "9845475725" },
+            { name: "Prof. Satish", role: "Operations Head", phone: "9591976939" },
+        ],
+    },
+    {
+        label: "Org. Secretaries",
+        color: "#34d399",
+        icon: "📋",
+        contacts: [
+            { name: "Prof Tejas K", role: "Organising Secretary", phone: "9449890035" },
+            { name: "Mr Gangadhar", role: "Organising Secretary", phone: "7975218064" },
+        ],
+    },
 ];
-const CONTACT_HOURS = "Mon–Sat, 9 AM – 6 PM";
 
 const VIDEO_URLS = {
     "Student": "https://youtu.be/C7z6AwYm0sI",
@@ -24,7 +59,6 @@ const VIDEO_URLS = {
     "Principal": "https://youtu.be/RwYz3bLncOo",
 };
 
-// Helper: convert any youtube link (watch?v=, youtu.be) into an embed format
 const getEmbedUrl = (rawUrl) => {
     if (!rawUrl) return "";
     let videoId = "";
@@ -35,23 +69,23 @@ const getEmbedUrl = (rawUrl) => {
     } else if (rawUrl.includes("embed/")) {
         videoId = rawUrl.split("embed/")[1]?.split("?")[0];
     } else {
-        videoId = rawUrl; // fallback if just id
+        videoId = rawUrl;
     }
     return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
 };
 
 export default function HelpButton({ className = "", style = {}, open = false, onClose }) {
     const [showHelp, setShowHelp] = useState(false);
+    const [activeTab, setActiveTab] = useState("contact"); // "contact" | "tutorials"
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [copiedKey, setCopiedKey] = useState(null);
     const { startGuide } = useOnboarding();
-    const role = localStorage.getItem('vtufest_role') || localStorage.getItem('role');
 
-    // Support both controlled (open/onClose) and uncontrolled mode
     const isOpen = open || showHelp;
     const handleClose = () => {
         setShowHelp(false);
         setSelectedVideo(null);
+        setActiveTab("contact");
         if (onClose) onClose();
     };
 
@@ -64,7 +98,6 @@ export default function HelpButton({ className = "", style = {}, open = false, o
         });
     };
 
-    // Supports both top and bottom positioning. Pass bottom for bottom-right placement.
     const wrapperStyle = {
         position: 'fixed',
         ...(style?.bottom !== undefined
@@ -80,13 +113,12 @@ export default function HelpButton({ className = "", style = {}, open = false, o
         zIndex: 20,
     };
 
-    // If no top or bottom is set, this is modal-only mode (no floating buttons shown)
     const hasPosition = style?.top !== undefined || style?.bottom !== undefined;
 
     return (
         <>
             {hasPosition && <div style={wrapperStyle}>
-                {/* BROCHURE BUTTON — shown first (left) */}
+                {/* BROCHURE BUTTON */}
                 <a
                     href="/VTU Fest 2026.pdf"
                     download="VTU Fest 2026.pdf"
@@ -98,7 +130,7 @@ export default function HelpButton({ className = "", style = {}, open = false, o
                     <span className="help-btn-text">Broucher</span>
                 </a>
 
-                {/* NEED HELP BUTTON — shown second (right) */}
+                {/* NEED HELP BUTTON */}
                 <button
                     className={`help-btn ${className}`}
                     style={{ position: 'static' }}
@@ -113,96 +145,112 @@ export default function HelpButton({ className = "", style = {}, open = false, o
             {/* MODAL */}
             {isOpen && (
                 <div className="help-modal-overlay" onClick={handleClose}>
-                    <div className={`help-modal ${selectedVideo ? 'video-active' : ''}`} onClick={e => e.stopPropagation()}>
-                        <button
-                            className="help-modal-close"
-                            onClick={handleClose}
-                            aria-label="Close"
-                        >
+                    <div
+                        className={`help-modal help-modal-redesigned ${selectedVideo ? 'video-active' : ''}`}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Close */}
+                        <button className="help-modal-close" onClick={handleClose} aria-label="Close">
                             &times;
                         </button>
 
-                        {!selectedVideo ? (
-                            <>
+                        {/* Header */}
+                        {!selectedVideo && (
+                            <div className="help-modal-header">
                                 <div className="help-modal-icon">🎯</div>
-                                <h3 className="help-modal-title">Need Help?</h3>
-                                <p className="help-modal-subtitle">Watch a tutorial or contact our support team</p>
+                                <h3 className="help-modal-title">Contact & Help</h3>
+                                <p className="help-modal-subtitle">VTU Fest 2026 — Support Directory</p>
 
-                                {/* Tutorial Section */}
-                                <div className="help-tutorials-section">
-                                    <div className="help-section-label">Video Tutorials</div>
-                                    <div className="help-tutorial-buttons">
-                                        {Object.keys(VIDEO_URLS).map(role => (
-                                            <button
-                                                key={role}
-                                                className="help-tutorial-btn"
-                                                onClick={() => setSelectedVideo(role)}
-                                            >
-                                                <span className="help-tutorial-btn-icon">▶</span>
-                                                {role} Guide
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Divider */}
-                                <div className="help-divider">
-                                    <span>OR</span>
-                                </div>
-
-                                {/* Contact Section */}
-                                <div className="help-contact-list">
-                                    <a
-                                        href={`mailto:${CONTACT_EMAIL}`}
-                                        className="help-contact-item"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                {/* Tabs */}
+                                <div className="help-tabs">
+                                    <button
+                                        className={`help-tab ${activeTab === "contact" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("contact")}
                                     >
-                                        <span className="help-contact-icon">✉️</span>
-                                        <div style={{ flex: 1 }}>
-                                            <div className="help-contact-label">Email Support</div>
-                                            <div className="help-contact-value" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                {CONTACT_EMAIL}
-                                                <button
-                                                    className="help-copy-btn"
-                                                    onClick={(e) => handleCopy(CONTACT_EMAIL, 'email', e)}
-                                                    aria-label="Copy email"
-                                                    title={copiedKey === 'email' ? 'Copied!' : 'Copy'}
-                                                >
-                                                    {copiedKey === 'email' ? <Check size={12} /> : <Copy size={12} />}
-                                                </button>
-                                            </div>
+                                        <Phone size={14} />
+                                        Contact
+                                    </button>
+                                    <button
+                                        className={`help-tab ${activeTab === "tutorials" ? "active" : ""}`}
+                                        onClick={() => setActiveTab("tutorials")}
+                                    >
+                                        <BookOpen size={14} />
+                                        Tutorials
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: CONTACT */}
+                        {!selectedVideo && activeTab === "contact" && (
+                            <div className="help-contact-tab">
+                                {CONTACT_SECTIONS.map((section) => (
+                                    <div key={section.label} className="help-contact-section">
+                                        <div
+                                            className="help-contact-section-header"
+                                            style={{ borderColor: section.color + "55", color: section.color }}
+                                        >
+                                            <span>{section.icon}</span>
+                                            <span>{section.label}</span>
                                         </div>
-                                    </a>
-                                    {CONTACTS.map(c => (
-                                        <a key={c.name} href={c.href} className="help-contact-item">
-                                            <span className="help-contact-icon">📞</span>
-                                            <div style={{ flex: 1 }}>
-                                                <div className="help-contact-label">{c.name} — {c.role}</div>
-                                                <div className="help-contact-value" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    {c.phone}
-                                                    <button
-                                                        className="help-copy-btn"
-                                                        onClick={(e) => handleCopy(c.phone, c.name, e)}
-                                                        aria-label={`Copy ${c.name} phone`}
-                                                        title={copiedKey === c.name ? 'Copied!' : 'Copy'}
-                                                    >
-                                                        {copiedKey === c.name ? <Check size={12} /> : <Copy size={12} />}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </a>
+                                        <div className="help-contact-table">
+                                            {section.contacts.map((c) => (
+                                                <a
+                                                    key={c.phone}
+                                                    href={`tel:+91${c.phone}`}
+                                                    className="help-contact-row"
+                                                >
+                                                    <div className="help-contact-row-info">
+                                                        <span className="help-contact-row-role">{c.role}</span>
+                                                        <span className="help-contact-row-name">{c.name}</span>
+                                                    </div>
+                                                    <div className="help-contact-row-phone">
+                                                        <span>{c.phone}</span>
+                                                        <button
+                                                            className="help-copy-btn"
+                                                            onClick={(e) => handleCopy(c.phone, c.phone, e)}
+                                                            aria-label={`Copy ${c.name} phone`}
+                                                            title={copiedKey === c.phone ? 'Copied!' : 'Copy'}
+                                                        >
+                                                            {copiedKey === c.phone ? <Check size={11} /> : <Copy size={11} />}
+                                                        </button>
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                                <p className="help-modal-note" style={{ textAlign: 'center', marginTop: '12px' }}>Available Mon–Sat, 9 AM – 6 PM</p>
+                            </div>
+                        )}
+
+                        {/* TAB: TUTORIALS */}
+                        {!selectedVideo && activeTab === "tutorials" && (
+                            <div className="help-tutorials-tab">
+                                <p className="help-tutorials-desc">Select a tutorial based on your role to get started.</p>
+                                <div className="help-tutorial-buttons">
+                                    {Object.keys(VIDEO_URLS).map(role => (
+                                        <button
+                                            key={role}
+                                            className="help-tutorial-btn"
+                                            onClick={() => setSelectedVideo(role)}
+                                        >
+                                            <span className="help-tutorial-btn-icon">▶</span>
+                                            {role} Guide
+                                        </button>
                                     ))}
                                 </div>
-                                <p className="help-modal-note">Available {CONTACT_HOURS}</p>
-                            </>
-                        ) : (
+                            </div>
+                        )}
+
+                        {/* VIDEO PLAYER */}
+                        {selectedVideo && (
                             <div className="help-video-container">
                                 <button
                                     className="help-video-back"
                                     onClick={() => setSelectedVideo(null)}
                                 >
-                                    ← Back
+                                    ← Back to Tutorials
                                 </button>
                                 <h3 className="help-video-title">{selectedVideo} Tutorial</h3>
                                 <div className="help-video-wrapper">
