@@ -167,3 +167,90 @@ export async function getSASUrl(blobUrl, token) {
     headers: authHeader(token),
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COLLEGE BUDDY
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** GET /api/volunteer/college-buddy/lookup?qr=XXXX — full participant scan */
+export async function collegeBuddyLookup(qr, token) {
+  return apiFetch('cb-lookup', `${API_BASE}/api/volunteer/college-buddy/lookup?qr=${encodeURIComponent(qr)}`, {
+    headers: authHeader(token),
+  });
+}
+
+/** GET /api/volunteer/college-buddy/my-college — returns { total_colleges, colleges: [...] } */
+export async function collegeBuddyMyColleges(token) {
+  return apiFetch('cb-colleges', `${API_BASE}/api/volunteer/college-buddy/my-college`, {
+    headers: authHeader(token),
+  });
+}
+
+/** GET /api/volunteer/college-buddy/my-college/students
+ * Note: college_id filter omitted — backend has bigint/number type mismatch.
+ * Returns students across all assigned colleges (correct for multi-college buddies).
+ */
+export async function collegeBuddyStudents(token, _collegeId) {
+  return apiFetch('cb-students', `${API_BASE}/api/volunteer/college-buddy/my-college/students`, {
+    headers: authHeader(token),
+  });
+}
+
+/** GET /api/volunteer/college-buddy/my-college/accompanists
+ * Note: college_id filter omitted — same type mismatch fix as students.
+ */
+export async function collegeBuddyAccompanists(token, _collegeId) {
+  return apiFetch('cb-accompanists', `${API_BASE}/api/volunteer/college-buddy/my-college/accompanists`, {
+    headers: authHeader(token),
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ALIASES — used by new unified dashboard components
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** RegDesk: scan QR to look up + activate */
+export async function regDeskScan(qr, token) {
+  return apiFetch('reg-scan', `${API_BASE}/api/volunteer/registration-desk/lookup?qr=${encodeURIComponent(qr)}`, {
+    headers: authHeader(token),
+  });
+}
+
+/** RegDesk: activate ID card by QR */
+export async function activateId(qr, token) {
+  return apiFetch('reg-activate-id', `${API_BASE}/api/volunteer/registration-desk/activate`, {
+    method: 'POST',
+    body: JSON.stringify({ qr_code: qr }),
+    headers: authHeader(token),
+  });
+}
+
+/** HelpDesk: lookup participant by QR */
+export const helpDeskScan = helpDeskLookup;
+
+/** InEvent: scan to mark attendance */
+export async function inEventScan(qr, token) {
+  return apiFetch('ie-scan', `${API_BASE}/api/volunteer/in-event/scan?qr=${encodeURIComponent(qr)}`, {
+    headers: authHeader(token),
+  });
+}
+
+/** InEvent: fetch my assigned events */
+export const getMyEvents = inEventMyEvents;
+
+/** Security: lookup participant by QR */
+export const securityScan = securityLookup;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Fetch the logged-in volunteer's own profile including their QR code.
+ * GET /api/volunteer/auth/me
+ */
+export async function fetchMyQr(token) {
+  return apiFetch('vol-me', `${API_BASE}/api/volunteer/auth/me`, {
+    headers: authHeader(token),
+  });
+}

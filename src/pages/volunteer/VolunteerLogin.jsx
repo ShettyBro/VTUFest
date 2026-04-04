@@ -34,12 +34,6 @@ const DEPT_CONFIG = {
       { id: 'food_volunteer', label: 'Food Dept.' },
     ],
   },
-  admin: {
-    label: 'Administration',
-    roles: [
-      { id: 'general', label: 'Security' },
-    ],
-  },
 };
 
 // Role → dashboard route (post-login redirect)
@@ -49,7 +43,6 @@ const ROLE_ROUTES = {
   in_event: '/volunteer/in-event',
   food_volunteer: '/volunteer/food',
   college_buddy: '/volunteer/college-buddy',
-  general: '/volunteer/security',
 };
 
 export default function VolunteerLogin() {
@@ -130,6 +123,8 @@ export default function VolunteerLogin() {
       localStorage.setItem('vtufest_vol_role', d.role || selectedRole);
       localStorage.setItem('vtufest_vol_name', d.full_name || d.name || '');
       localStorage.setItem('vtufest_vol_email', d.email || email);
+      // Store QR code for ALL roles — used by Profile tab
+      localStorage.setItem('vtufest_vol_qr', d.qr_code || '');
 
       // Food-specific: also store as food token for food API calls
       if (selectedRole === 'food_volunteer') {
@@ -143,10 +138,12 @@ export default function VolunteerLogin() {
       }
 
       // College buddy: store allocated colleges
-      if (selectedRole === 'college_buddy' && d.allocated_colleges) {
+      if (selectedRole === 'college_buddy') {
         localStorage.setItem('vtufest_vol_extra', JSON.stringify({
-          allocated_colleges: d.allocated_colleges,
-          allocated_college: d.allocated_college,
+          allocated_colleges: d.allocated_colleges || [],
+          allocated_college: d.allocated_college || null,
+          qr_code: d.qr_code || '',
+          auid: d.auid || '',
         }));
       }
 

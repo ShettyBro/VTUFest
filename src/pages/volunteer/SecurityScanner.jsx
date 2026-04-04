@@ -1,265 +1,251 @@
 /**
- * SecurityScanner.jsx — Security / General Lookup
+ * SecurityScanner.jsx — General / Security Volunteer
  *
- * Full participant details including sensitive fields.
- * Read-only — no mutations.
+ * Android tabs: Enter QR · Scan QR · Colleges · My Profile
+ * Tab 0: Manual QR entry
+ * Tab 1: Camera scanner
+ * Tab 2: Colleges list (all colleges with their details — read-only view)
+ * Tab 3: Profile (shell handles)
  */
 
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogOut, CameraOff } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Keyboard, QrCode, GraduationCap, User, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import VolunteerShell, { getToken, doLogout } from './VolunteerShell';
 import useScanner from '../../hooks/useScanner';
 import ScannerOverlay from '../../components/scanner/ScannerOverlay';
 import ManualInput from '../../components/scanner/ManualInput';
-import { securityLookup } from '../../utils/volunteerApi';
+import { securityScan } from '../../utils/volunteerApi';
 import { playBeep } from '../../utils/scannerUtils';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/volunteer.css';
 
-const token = () => localStorage.getItem('vtufest_vol_token') || '';
-const volName = () => localStorage.getItem('vtufest_vol_name') || 'Volunteer';
+const TABS = [
+  { icon: Keyboard, label: 'Enter QR' },
+  { icon: QrCode, label: 'Scan QR' },
+  { icon: GraduationCap, label: 'Colleges' },
+  { icon: User, label: 'My Profile' },
+];
 
-function logout(navigate) {
-  ['vtufest_vol_token', 'vtufest_vol_role', 'vtufest_vol_name', 'vtufest_vol_email']
-    .forEach((k) => localStorage.removeItem(k));
-  navigate('/volunteer', { replace: true });
-}
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
-export default function SecurityScanner() {
-  const navigate = useNavigate();
-
-  const [flash, setFlash] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [cameraStarted, setCameraStarted] = useState(false);
-  const [manualVisible, setManualVisible] = useState(false);
-
-  const doLookup = useCallback(async (qr) => {
-    if (loading) return;
-    setLoading(true);
-    setFlash('');
-    setError('');
-    setResult(null);
-
-    const res = await securityLookup(qr, token());
-    setLoading(false);
-
-    if (res.aborted) return;
-    if (res.status === 401) { logout(navigate); return; }
-
-    if (res.ok) {
-      playBeep('success');
-      setFlash('success');
-      setResult(res.data);
-    } else {
-      playBeep('error');
-      setFlash('error');
-      setError(res.data?.message || 'QR code not found.');
-    }
-  }, [loading, navigate]);
-
-  const { videoRef, cameraStatus, startCamera, stopCamera, isSafariBrowser } = useScanner({
-    onScan: doLookup,
-    enabled: cameraStarted,
-  });
-
+function ParticipantCard({ result, onClear }) {
   const p = result?.participant;
-
+  if (!p) return null;
   return (
-    <div className="vol-page">
-      {/* Header */}
-      <div className="vol-header" style={{ paddingBottom: '8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+    <div style={{ marginTop: 12 }}>
+      {result.id_card_warning && (
+        <div className="vol-id-warning" style={{ marginBottom: 8 }}>🪪 {result.id_card_warning}</div>
+      )}
+      <div className="vol-result-card success">
+        <div className="vol-result-header">
+          {p.photo_url && <img src={p.photo_url} alt={p.full_name} className="vol-result-photo" onError={e => e.target.style.display = 'none'} />}
           <div>
-            <p className="vol-subtitle">Security Scanner</p>
-            <p style={{ fontSize: '0.78rem', color: 'var(--vol-text-dim)' }}>{volName()}</p>
+            <p className="vol-result-name">{p.full_name}</p>
+            <p className="vol-result-sub">{p.college_name}</p>
+            <p className="vol-result-sub">{p.person_type}{p.gender && ` · ${p.gender}`}</p>
           </div>
-          <button className="vol-logout-btn" onClick={() => logout(navigate)}>
-            <LogOut size={14} style={{ marginRight: 4 }} />
-            Logout
-          </button>
         </div>
+        {[
+          ['QR', p.qr_code, { fontFamily: 'monospace' }],
+          ['ID Card', p.id_card_activated ? '✅ Activated' : '⚠️ Not Activated'],
+          ['Phone', p.phone ? <a href={`tel:${p.phone}`} style={{ color: 'var(--vol-accent)' }}>{p.phone}</a> : null],
+          ['Blood Group', p.blood_group],
+          ['USN', p.usn],
+          ['Dept', p.department],
+        ].filter(([, v]) => v).map(([label, val, style]) => (
+          <div className="vol-result-row" key={label}>
+            <span className="vol-result-label">{label}</span>
+            <span className="vol-result-value" style={style}>{val}</span>
+          </div>
+        ))}
+        {/* Document links */}
+        {(p.id_proof_url || p.college_id_card_url) && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            {p.id_proof_url && <a href={p.id_proof_url} target="_blank" rel="noopener noreferrer" className="vol-manual-input-btn" style={{ flex: 1, textAlign: 'center', padding: 8 }}>ID Proof</a>}
+            {p.college_id_card_url && <a href={p.college_id_card_url} target="_blank" rel="noopener noreferrer" className="vol-manual-input-btn" style={{ flex: 1, textAlign: 'center', padding: 8 }}>College ID</a>}
+          </div>
+        )}
       </div>
 
-      <div className="vol-scanner-container">
-        {/* Camera */}
-        <div className="vol-scanner-header">
-          <span className="vol-scanner-title">Scan Participant QR</span>
-          <span className={`vol-scanner-badge ${cameraStatus === 'active' ? 'online' : 'offline'}`}>
-            {cameraStatus === 'active' ? 'Live' : 'Standby'}
-          </span>
-        </div>
-
-        <div className="vol-video-wrap">
-          <video
-            ref={videoRef}
-            autoPlay muted playsInline
-            style={{ display: cameraStarted && cameraStatus === 'active' ? 'block' : 'none' }}
-          />
-          <ScannerOverlay flash={flash} cameraStatus={cameraStarted ? cameraStatus : 'idle'} />
-        </div>
-
-        {!cameraStarted ? (
-          <button className="vol-start-btn" onClick={() => { setCameraStarted(true); if (!isSafariBrowser) startCamera(); }}>
-            📷 Start Scanner
-          </button>
-        ) : (
-          <button
-            className="vol-logout-btn"
-            onClick={() => { setCameraStarted(false); stopCamera(); }}
-            style={{ width: '100%', padding: 10, marginTop: 8, textAlign: 'center' }}
-          >
-            <CameraOff size={14} style={{ marginRight: 6 }} />
-            Stop Scanner
-          </button>
-        )}
-
-        {isSafariBrowser && cameraStarted && cameraStatus === 'idle' && (
-          <button className="vol-start-btn" onClick={startCamera} style={{ marginTop: 8 }}>
-            📷 Tap to Activate Camera
-          </button>
-        )}
-
-        <button
-          className="vol-manual-input-btn"
-          onClick={() => setManualVisible((v) => !v)}
-          style={{ width: '100%', padding: 10, marginTop: 10 }}
-        >
-          ⌨️ {manualVisible ? 'Hide Manual Input' : 'Enter QR Manually'}
-        </button>
-
-        <ManualInput
-          onScan={doLookup}
-          visible={manualVisible || cameraStatus === 'denied' || cameraStatus === 'error'}
-          placeholder="Type participant QR code"
-        />
-
-        {loading && (
-          <div className="vol-loading"><div className="vol-spinner" /> Looking up…</div>
-        )}
-
-        {error && (
-          <div className="vol-result-card error" style={{ marginTop: 12 }}>
-            <p style={{ margin: 0, fontSize: '0.88rem' }}>{error}</p>
-          </div>
-        )}
-
-        {/* Full result */}
-        {p && (
-          <div className="vol-results-scroll" style={{ marginTop: 14 }}>
-            {/* ID Card Warning */}
-            {result?.id_card_warning && (
-              <div className="vol-id-warning">
-                🪪 ID card NOT activated. Direct participant to Registration Desk.
-              </div>
-            )}
-
-            {/* Main details */}
-            <div className="vol-result-card success">
-              <div className="vol-result-header">
-                {p.photo_url && (
-                  <img
-                    src={p.photo_url}
-                    alt={p.full_name}
-                    className="vol-result-photo"
-                    onError={(e) => (e.target.style.display = 'none')}
-                  />
-                )}
-                <div>
-                  <p className="vol-result-name">{p.full_name}</p>
-                  <p className="vol-result-sub">{p.college_name}</p>
-                  <p className="vol-result-sub">{p.person_type} · {p.gender}</p>
-                </div>
-              </div>
-
-              {[
-                ['QR Code', p.qr_code, { fontFamily: 'monospace', letterSpacing: '0.1em' }],
-                ['Phone', p.phone ? <a href={`tel:${p.phone}`} style={{ color: 'var(--vol-accent)' }}>{p.phone}</a> : '—'],
-                ['Blood Group', p.blood_group],
-                ['College Code', p.college_code],
-                ['USN', p.usn],
-                ['ID Card', p.id_card_activated ? '✅ Activated' : '⚠️ Not Activated'],
-              ].map(([label, val, style]) => val ? (
-                <div className="vol-result-row" key={label}>
-                  <span className="vol-result-label">{label}</span>
-                  <span className="vol-result-value" style={style}>{val}</span>
-                </div>
-              ) : null)}
+      {/* Events */}
+      {result.events?.length > 0 && (
+        <div className="vol-result-card" style={{ marginTop: 8 }}>
+          <p style={{ fontSize: '0.72rem', color: 'var(--vol-text-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Events ({result.events.length})
+          </p>
+          {result.events.map((ev, i) => (
+            <div key={i} className="vol-event-item" style={{ marginBottom: 6 }}>
+              <div className="vol-event-name">{ev.event_name?.replace(/_/g, ' ')}</div>
+              <div className="vol-event-meta">{ev.event_venue && `📍 ${ev.event_venue}`}{ev.event_time && ` · ⏰ ${ev.event_time}`}</div>
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* Events */}
-            {result?.events?.length > 0 && (
-              <div className="vol-result-card" style={{ marginTop: 10 }}>
-                <p style={{ fontSize: '0.82rem', color: 'var(--vol-text-muted)', marginBottom: 8, fontWeight: 600 }}>
-                  📅 Registered Events ({result.events.length})
-                </p>
-                <div className="vol-event-list">
-                  {result.events.map((ev, i) => (
-                    <div key={i} className={`vol-event-item ${ev.present ? 'marked' : ''}`}>
-                      <div className="vol-event-name">{ev.event_name}</div>
-                      <div className="vol-event-meta">
-                        {ev.event_venue && `📍 ${ev.event_venue}`}
-                        {ev.present && ' · ✅ Present'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+      {/* Accommodation */}
+      {result.accommodation && (
+        <div className="vol-result-card" style={{ marginTop: 8 }}>
+          <p style={{ fontSize: '0.72rem', color: 'var(--vol-text-muted)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Accommodation</p>
+          <p style={{ margin: '0 0 2px', fontWeight: 600, color: '#fff' }}>{result.accommodation.accommodation_name}</p>
+          {result.accommodation.address && <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--vol-text-muted)' }}>📍 {result.accommodation.address}</p>}
+        </div>
+      )}
+
+      <button className="vol-logout-btn" onClick={onClear} style={{ width: '100%', padding: 10, marginTop: 8, textAlign: 'center' }}>
+        Clear — Scan Next
+      </button>
+    </div>
+  );
+}
+
+function CollegesTab() {
+  const [colleges, setColleges] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [expanded, setExpanded] = useState(null);
+  const navigate = useNavigate();
+
+  const load = useCallback(async (force = false) => {
+    if (colleges !== null && !force) return;
+    setLoading(true); setError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/security/colleges`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (res.status === 401) { doLogout(navigate); return; }
+      if (data.success) setColleges(data.colleges || data.data || []);
+      else setError(data.message || 'Failed to load colleges.');
+    } catch {
+      setError('Network error. Check connection.');
+    }
+    setLoading(false);
+  }, [colleges, navigate]);
+
+  useEffect(() => { load(); }, [load]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <p style={{ margin: 0, fontWeight: 600, color: '#fff', fontSize: '0.9rem' }}>
+          {colleges ? `${colleges.length} Colleges` : 'All Colleges'}
+        </p>
+        <button onClick={() => { setColleges(null); load(true); }}
+          style={{ background: 'none', border: 'none', color: 'var(--vol-accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.82rem' }}>
+          <RefreshCw size={14} /> Refresh
+        </button>
+      </div>
+      {loading && <div className="vol-loading"><div className="vol-spinner" />Loading…</div>}
+      {error && <div className="vol-result-card error"><p style={{ margin: 0 }}>{error}</p></div>}
+      {colleges?.map((c, idx) => {
+        const isOpen = expanded === idx;
+        return (
+          <div key={c.id || idx} style={{
+            background: 'var(--vol-card-bg)', border: `1px solid ${isOpen ? 'rgba(167,139,250,0.4)' : 'var(--vol-card-border)'}`,
+            borderRadius: 14, marginBottom: 10, overflow: 'hidden', transition: 'border-color 0.2s',
+          }}>
+            <button onClick={() => setExpanded(isOpen ? null : idx)} style={{
+              width: '100%', background: 'none', border: 'none', padding: '14px 16px',
+              display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left',
+            }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'var(--vol-accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GraduationCap size={18} color="var(--vol-accent)" />
               </div>
-            )}
-
-            {/* Accommodation */}
-            {result?.accommodation?.length > 0 && (
-              <div className="vol-result-card" style={{ marginTop: 10 }}>
-                <p style={{ fontSize: '0.82rem', color: 'var(--vol-text-muted)', marginBottom: 8, fontWeight: 600 }}>
-                  🏨 Accommodation
-                </p>
-                {result.accommodation.map((ac, i) => (
-                  <div key={i}>
-                    <div className="vol-result-row">
-                      <span className="vol-result-label">Venue</span>
-                      <span className="vol-result-value">{ac.accommodation_name}</span>
-                    </div>
-                    {ac.address && (
-                      <div className="vol-result-row">
-                        <span className="vol-result-label">Address</span>
-                        <span className="vol-result-value" style={{ fontSize: '0.78rem' }}>{ac.address}</span>
-                      </div>
-                    )}
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontWeight: 600, color: '#fff', fontSize: '0.9rem' }}>{c.college_name}</p>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--vol-text-muted)' }}>{c.place || c.college_code}</p>
+              </div>
+              {isOpen ? <ChevronUp size={18} color="var(--vol-accent)" /> : <ChevronDown size={18} color="var(--vol-text-dim)" />}
+            </button>
+            {isOpen && (
+              <div style={{ padding: '0 16px 14px' }}>
+                {[['Code', c.college_code], ['Place', c.place], ['Students', c.total_students], ['Accompanists', c.total_accompanists]].filter(([, v]) => v).map(([k, v]) => (
+                  <div className="vol-result-row" key={k}>
+                    <span className="vol-result-label">{k}</span>
+                    <span className="vol-result-value">{v}</span>
                   </div>
                 ))}
               </div>
             )}
-
-            {/* ID proof */}
-            {p.id_proof_url && (
-              <div className="vol-result-card" style={{ marginTop: 10 }}>
-                <p style={{ fontSize: '0.82rem', color: 'var(--vol-text-muted)', marginBottom: 8, fontWeight: 600 }}>
-                  🪪 ID Proof
-                </p>
-                <a
-                  href={p.id_proof_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="vol-manual-input-btn"
-                  style={{ display: 'block', textAlign: 'center', padding: 10 }}
-                >
-                  View ID Proof
-                </a>
-              </div>
-            )}
-
-            <button
-              className="vol-logout-btn"
-              onClick={() => { setResult(null); setError(''); }}
-              style={{ width: '100%', marginTop: 10, padding: 10, textAlign: 'center' }}
-            >
-              Clear — Scan Next
-            </button>
           </div>
-        )}
-      </div>
-
-      <div className="vol-bottom-spacer" />
+        );
+      })}
     </div>
+  );
+}
+
+export default function SecurityScanner() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(0);
+
+  const [flash, setFlash] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [cameraStarted, setCameraStarted] = useState(false);
+
+  const doScan = useCallback(async (qr) => {
+    if (scanning) return;
+    setScanning(true); setFlash(''); setError(''); setResult(null);
+    const res = await securityScan(qr, getToken());
+    setScanning(false);
+    if (res.aborted) return;
+    if (res.status === 401) { doLogout(navigate); return; }
+    if (res.ok) { playBeep('success'); setFlash('success'); setResult(res.data); }
+    else { playBeep('error'); setFlash('error'); setError(res.data?.message || 'QR not found.'); }
+  }, [scanning, navigate]);
+
+  const { videoRef, cameraStatus, startCamera, stopCamera, isSafariBrowser } = useScanner({
+    onScan: doScan, enabled: cameraStarted,
+  });
+
+  const clear = () => { setResult(null); setError(''); };
+
+  return (
+    <VolunteerShell roleTitle="Security" tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab}>
+      {/* TAB 0: Enter QR manual */}
+      {activeTab === 0 && (
+        <div>
+          <div style={{ marginBottom: 12, padding: '12px 16px', background: 'var(--vol-card-bg)', border: '1px solid var(--vol-card-border)', borderRadius: 12 }}>
+            <p style={{ margin: 0, fontWeight: 600, color: '#fff', fontSize: '0.9rem' }}>Manual QR Lookup</p>
+            <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--vol-text-muted)' }}>Type the 8-character participant QR code.</p>
+          </div>
+          <ManualInput onScan={doScan} visible={true} placeholder="Enter QR code" />
+          {scanning && <div className="vol-loading"><div className="vol-spinner" />Looking up…</div>}
+          {error && <div className="vol-result-card error" style={{ marginTop: 12 }}><p style={{ margin: 0 }}>{error}</p></div>}
+          <ParticipantCard result={result} onClear={clear} />
+        </div>
+      )}
+
+      {/* TAB 1: Camera scan */}
+      {activeTab === 1 && (
+        <div>
+          <div className="vol-scanner-header">
+            <span className="vol-scanner-title">Camera QR Scan</span>
+            <span className={`vol-scanner-badge ${cameraStatus === 'active' ? 'online' : 'offline'}`}>
+              {cameraStatus === 'active' ? 'Live' : 'Standby'}
+            </span>
+          </div>
+          <div className="vol-video-wrap">
+            <video ref={videoRef} autoPlay muted playsInline style={{ display: cameraStarted && cameraStatus === 'active' ? 'block' : 'none' }} />
+            <ScannerOverlay flash={flash} cameraStatus={cameraStarted ? cameraStatus : 'idle'} />
+          </div>
+          {!cameraStarted ? (
+            <button className="vol-start-btn" onClick={() => { setCameraStarted(true); if (!isSafariBrowser) startCamera(); }}>📷 Start Camera</button>
+          ) : (
+            <button className="vol-logout-btn" onClick={() => { setCameraStarted(false); stopCamera(); }} style={{ width: '100%', padding: 10, marginTop: 8, textAlign: 'center' }}>Stop Camera</button>
+          )}
+          {isSafariBrowser && cameraStarted && cameraStatus === 'idle' && (
+            <button className="vol-start-btn" onClick={startCamera} style={{ marginTop: 8 }}>📷 Tap to Activate Camera</button>
+          )}
+          {scanning && <div className="vol-loading"><div className="vol-spinner" />Looking up…</div>}
+          {error && <div className="vol-result-card error" style={{ marginTop: 12 }}><p style={{ margin: 0 }}>{error}</p></div>}
+          <ParticipantCard result={result} onClear={clear} />
+        </div>
+      )}
+
+      {/* TAB 2: Colleges */}
+      {activeTab === 2 && <CollegesTab />}
+    </VolunteerShell>
   );
 }

@@ -5,7 +5,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Truck, Shield, ChevronRight } from 'lucide-react';
+import { ClipboardList, Truck, ChevronRight } from 'lucide-react';
 import '../../styles/volunteer.css';
 
 const DEPARTMENTS = [
@@ -18,14 +18,8 @@ const DEPARTMENTS = [
   {
     id: 'logistics',
     title: 'Logistics & Services',
-    subtitle: 'Food · Transport · (Coming Soon)',
+    subtitle: 'College Buddy · Food Dept.',
     icon: Truck,
-  },
-  {
-    id: 'admin',
-    title: 'Administration',
-    subtitle: 'Security & Admin Access',
-    icon: Shield,
   },
 ];
 

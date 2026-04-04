@@ -1,330 +1,194 @@
 /**
- * InEventScanner.jsx — Event Attendance Marking
+ * InEventScanner.jsx — In-Event Volunteer
  *
- * Flow:
- *  1. On mount → fetch my assigned events
- *  2. Volunteer selects which event they're managing
- *  3. Scan participant QR → lookup → show events with is_your_event flag
- *  4. If participant belongs to event and not yet marked → "Mark Present" button
+ * Android tabs: My Events · Scan QR · My Profile
+ * Tab 0: My Events (list of assigned events)
+ * Tab 1: Camera QR scanner (marks attendance for assigned events)
+ * Tab 2: Profile (shell handles)
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogOut, CameraOff } from 'lucide-react';
+import { CalendarDays, QrCode, User, RefreshCw } from 'lucide-react';
+import VolunteerShell, { getToken, doLogout } from './VolunteerShell';
 import useScanner from '../../hooks/useScanner';
 import ScannerOverlay from '../../components/scanner/ScannerOverlay';
 import ManualInput from '../../components/scanner/ManualInput';
-import { inEventMyEvents, inEventLookup, inEventMarkPresent } from '../../utils/volunteerApi';
+import { inEventScan, getMyEvents } from '../../utils/volunteerApi';
 import { playBeep } from '../../utils/scannerUtils';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/volunteer.css';
 
-const token = () => localStorage.getItem('vtufest_vol_token') || '';
-const volName = () => localStorage.getItem('vtufest_vol_name') || 'Volunteer';
-
-function logout(navigate) {
-  ['vtufest_vol_token', 'vtufest_vol_role', 'vtufest_vol_name', 'vtufest_vol_email']
-    .forEach((k) => localStorage.removeItem(k));
-  navigate('/volunteer', { replace: true });
-}
+const TABS = [
+  { icon: CalendarDays, label: 'My Events' },
+  { icon: QrCode, label: 'Scan QR' },
+  { icon: User, label: 'My Profile' },
+];
 
 export default function InEventScanner() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(0);
 
-  const [myEvents, setMyEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState('');
-  const [eventsLoading, setEventsLoading] = useState(true);
+  // Tab 0: events
+  const [events, setEvents] = useState(null);
+  const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState('');
 
+  // Tab 1: scanner
   const [flash, setFlash] = useState('');
-  const [lookupLoading, setLookupLoading] = useState(false);
-  const [markingId, setMarkingId] = useState(null);
+  const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState(null);
   const [scanError, setScanError] = useState('');
-  const [scanCount, setScanCount] = useState(0);
-
   const [cameraStarted, setCameraStarted] = useState(false);
   const [manualVisible, setManualVisible] = useState(false);
 
-  // ── Fetch assigned events on mount ──────────────────────────────────────
-  useEffect(() => {
-    (async () => {
-      const res = await inEventMyEvents(token());
-      setEventsLoading(false);
-      if (res.status === 401) { logout(navigate); return; }
-      if (res.ok && res.data?.events?.length > 0) {
-        setMyEvents(res.data.events);
-        setSelectedEvent(res.data.events[0]?.event_name || '');
-      } else {
-        setEventsError(res.data?.message || 'No events assigned to you.');
-      }
-    })();
-  }, [navigate]);
+  const loadEvents = useCallback(async (force = false) => {
+    if (events !== null && !force) return;
+    setEventsLoading(true); setEventsError('');
+    const res = await getMyEvents(getToken());
+    setEventsLoading(false);
+    if (res.status === 401) { doLogout(navigate); return; }
+    if (res.ok) setEvents(res.data.events || res.data.assigned_events || []);
+    else setEventsError(res.data?.message || 'Failed to load events.');
+  }, [events, navigate]);
 
-  // ── QR scan → lookup ─────────────────────────────────────────────────
-  const doLookup = useCallback(async (qr) => {
-    if (lookupLoading || !selectedEvent) return;
-    setLookupLoading(true);
-    setFlash('');
-    setScanError('');
-    setResult(null);
+  useEffect(() => { loadEvents(); }, [loadEvents]);
 
-    const res = await inEventLookup(qr, token());
-    setLookupLoading(false);
-
+  const doScan = useCallback(async (qr) => {
+    if (scanning) return;
+    setScanning(true); setFlash(''); setScanError(''); setResult(null);
+    const res = await inEventScan(qr, getToken());
+    setScanning(false);
     if (res.aborted) return;
-    if (res.status === 401) { logout(navigate); return; }
-
-    if (res.ok) {
-      const data = res.data;
-      // Check if participant is in our selected event
-      const myEventData = data.events?.find(
-        (e) => e.event_name === selectedEvent
-      );
-      if (!myEventData) {
-        playBeep('error');
-        setFlash('error');
-        setScanError(`❌ ${data.participant?.full_name || 'Participant'} is NOT registered for "${selectedEvent}".`);
-      } else {
-        playBeep('success');
-        setFlash('success');
-        setResult({ participant: data.participant, eventData: myEventData, allEvents: data.events });
-      }
-    } else {
-      playBeep('error');
-      setFlash('error');
-      setScanError(res.data?.message || 'QR code not found.');
-    }
-  }, [lookupLoading, selectedEvent, navigate]);
+    if (res.status === 401) { doLogout(navigate); return; }
+    if (res.ok) { playBeep('success'); setFlash('success'); setResult(res.data); }
+    else { playBeep('error'); setFlash('error'); setScanError(res.data?.message || 'Scan failed.'); }
+  }, [scanning, navigate]);
 
   const { videoRef, cameraStatus, startCamera, stopCamera, isSafariBrowser } = useScanner({
-    onScan: doLookup,
-    enabled: cameraStarted,
+    onScan: doScan, enabled: cameraStarted,
   });
 
-  // ── Mark present ────────────────────────────────────────────────────────
-  const handleMarkPresent = async () => {
-    if (!result || markingId) return;
-    setMarkingId(result.participant?.qr_code);
-
-    const res = await inEventMarkPresent(result.participant?.qr_code, selectedEvent, token());
-
-    if (res.aborted) { setMarkingId(null); return; }
-    if (res.status === 401) { logout(navigate); return; }
-
-    setMarkingId(null);
-
-    if (res.ok) {
-      playBeep('success');
-      setFlash('success');
-      setScanCount((c) => c + 1);
-      setResult((r) => ({
-        ...r,
-        eventData: { ...r.eventData, present: true },
-      }));
-    } else if (res.status === 409) {
-      playBeep('error');
-      setFlash('warning');
-      setResult((r) => ({
-        ...r,
-        eventData: { ...r.eventData, present: true, alreadyMarked: true },
-      }));
-    } else {
-      playBeep('error');
-      setFlash('error');
-      setScanError(res.data?.message || 'Failed to mark present. Try again.');
-    }
-  };
-
   return (
-    <div className="vol-page">
-      {/* Header */}
-      <div className="vol-header" style={{ paddingBottom: '8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <div>
-            <p className="vol-subtitle">In-Event Scanner</p>
-            <p style={{ fontSize: '0.78rem', color: 'var(--vol-text-dim)' }}>{volName()}</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {scanCount > 0 && (
-              <span style={{
-                background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)',
-                color: 'var(--vol-success)', padding: '4px 10px', borderRadius: 20,
-                fontSize: '0.75rem', fontWeight: 600,
-              }}>
-                Marked: {scanCount}
-              </span>
-            )}
-            <button className="vol-logout-btn" onClick={() => logout(navigate)}>
-              <LogOut size={14} />
+    <VolunteerShell roleTitle="In-Event" tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab}>
+      {/* TAB 0: My Events */}
+      {activeTab === 0 && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <p style={{ margin: 0, fontWeight: 600, color: '#fff', fontSize: '0.9rem' }}>
+              {events ? `${events.length} Assigned Event${events.length !== 1 ? 's' : ''}` : 'My Events'}
+            </p>
+            <button onClick={() => { setEvents(null); loadEvents(true); }}
+              style={{ background: 'none', border: 'none', color: 'var(--vol-accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.82rem' }}>
+              <RefreshCw size={14} /> Refresh
             </button>
+          </div>
+
+          {eventsLoading && <div className="vol-loading"><div className="vol-spinner" />Loading events…</div>}
+          {eventsError && <div className="vol-result-card error"><p style={{ margin: 0 }}>{eventsError}</p></div>}
+          {events?.length === 0 && (
+            <div className="vol-result-card warning">
+              <p style={{ margin: 0, fontSize: '0.88rem' }}>⚠️ No events assigned. Contact coordinator.</p>
+            </div>
+          )}
+
+          <div className="vol-event-list">
+            {events?.map((ev, i) => (
+              <div key={i} className="vol-event-item" style={{
+                background: 'var(--vol-card-bg)',
+                border: '1px solid var(--vol-card-border)',
+                borderRadius: 12, padding: '14px 16px', marginBottom: 10,
+              }}>
+                <div className="vol-event-name" style={{ fontSize: '0.95rem', marginBottom: 6 }}>
+                  🎭 {(ev.event_title || ev.event_name || '').replace(/_/g, ' ')}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {ev.event_venue && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--vol-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      📍 {ev.event_venue}
+                    </span>
+                  )}
+                  {ev.event_time && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--vol-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      ⏰ {ev.event_time}
+                    </span>
+                  )}
+                  {ev.event_date && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--vol-text-muted)' }}>
+                      📅 {ev.event_date}
+                    </span>
+                  )}
+                </div>
+                {ev.scanned_count !== undefined && (
+                  <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: 'var(--vol-accent)', fontWeight: 600 }}>
+                    ✅ {ev.scanned_count} scanned
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            marginTop: 8, padding: '12px 16px',
+            background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)',
+            borderRadius: 12, borderLeft: '3px solid var(--vol-accent)',
+          }}>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--vol-text-muted)', lineHeight: 1.6 }}>
+              💡 Go to <strong style={{ color: 'var(--vol-accent)' }}>Scan QR</strong> tab to mark attendance for your assigned events.
+            </p>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="vol-scanner-container">
-        {/* Events loading */}
-        {eventsLoading && (
-          <div className="vol-loading"><div className="vol-spinner" /> Loading your events…</div>
-        )}
-
-        {eventsError && (
-          <div className="vol-result-card error">
-            <p style={{ margin: 0, fontSize: '0.88rem' }}>{eventsError}</p>
+      {/* TAB 1: Scan QR */}
+      {activeTab === 1 && (
+        <div>
+          <div className="vol-scanner-header">
+            <span className="vol-scanner-title">Mark Attendance</span>
+            <span className={`vol-scanner-badge ${cameraStatus === 'active' ? 'online' : 'offline'}`}>
+              {cameraStatus === 'active' ? 'Live' : 'Standby'}
+            </span>
           </div>
-        )}
-
-        {/* Event selector */}
-        {!eventsLoading && myEvents.length > 0 && (
-          <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--vol-text-muted)', margin: '0 0 6px' }}>
-              You are managing:
-            </p>
-            <select
-              className="vol-select"
-              value={selectedEvent}
-              onChange={(e) => { setSelectedEvent(e.target.value); setResult(null); setScanError(''); }}
-            >
-              {myEvents.map((ev) => (
-                <option key={ev.event_name} value={ev.event_name}>
-                  {ev.event_name}
-                </option>
-              ))}
-            </select>
+          <div className="vol-video-wrap">
+            <video ref={videoRef} autoPlay muted playsInline style={{ display: cameraStarted && cameraStatus === 'active' ? 'block' : 'none' }} />
+            <ScannerOverlay flash={flash} cameraStatus={cameraStarted ? cameraStatus : 'idle'} />
           </div>
-        )}
+          {!cameraStarted ? (
+            <button className="vol-start-btn" onClick={() => { setCameraStarted(true); if (!isSafariBrowser) startCamera(); }}>📷 Start Scanner</button>
+          ) : (
+            <button className="vol-logout-btn" onClick={() => { setCameraStarted(false); stopCamera(); }} style={{ width: '100%', padding: 10, marginTop: 8, textAlign: 'center' }}>Stop Scanner</button>
+          )}
+          {isSafariBrowser && cameraStarted && cameraStatus === 'idle' && (
+            <button className="vol-start-btn" onClick={startCamera} style={{ marginTop: 8 }}>📷 Tap to Activate Camera</button>
+          )}
+          <button className="vol-manual-input-btn" onClick={() => setManualVisible(v => !v)} style={{ width: '100%', padding: 10, marginTop: 10 }}>
+            ⌨️ {manualVisible ? 'Hide Manual Input' : 'Type QR Code'}
+          </button>
+          <ManualInput onScan={doScan} visible={manualVisible || cameraStatus === 'denied' || cameraStatus === 'error'} placeholder="Enter QR code" />
 
-        {/* Camera viewport */}
-        {!eventsLoading && myEvents.length > 0 && (
-          <>
-            <div className="vol-scanner-header">
-              <span className="vol-scanner-title">Scan QR Code</span>
-              <span className={`vol-scanner-badge ${cameraStatus === 'active' ? 'online' : 'offline'}`}>
-                {cameraStatus === 'active' ? 'Live' : 'Standby'}
-              </span>
-            </div>
+          {scanning && <div className="vol-loading"><div className="vol-spinner" />Marking attendance…</div>}
+          {scanError && <div className="vol-result-card error" style={{ marginTop: 12 }}><p style={{ margin: 0 }}>{scanError}</p></div>}
 
-            <div className="vol-video-wrap">
-              <video
-                ref={videoRef}
-                autoPlay muted playsInline
-                style={{ display: cameraStarted && cameraStatus === 'active' ? 'block' : 'none' }}
-              />
-              <ScannerOverlay flash={flash} cameraStatus={cameraStarted ? cameraStatus : 'idle'} scanCount={scanCount} />
-            </div>
-
-            {!cameraStarted ? (
-              <button className="vol-start-btn" onClick={() => { setCameraStarted(true); if (!isSafariBrowser) startCamera(); }}>
-                📷 Start Scanner
-              </button>
-            ) : (
-              <button
-                className="vol-logout-btn"
-                onClick={() => { setCameraStarted(false); stopCamera(); }}
-                style={{ width: '100%', padding: 10, marginTop: 8, textAlign: 'center' }}
-              >
-                <CameraOff size={14} style={{ marginRight: 6 }} />
-                Stop Scanner
-              </button>
-            )}
-
-            {isSafariBrowser && cameraStarted && cameraStatus === 'idle' && (
-              <button className="vol-start-btn" onClick={startCamera} style={{ marginTop: 8 }}>
-                📷 Tap to Activate Camera
-              </button>
-            )}
-
-            <button
-              className="vol-manual-input-btn"
-              onClick={() => setManualVisible((v) => !v)}
-              style={{ width: '100%', padding: 10, marginTop: 10 }}
-            >
-              ⌨️ {manualVisible ? 'Hide Manual Input' : 'Enter QR Manually'}
-            </button>
-
-            <ManualInput
-              onScan={doLookup}
-              visible={manualVisible || cameraStatus === 'denied' || cameraStatus === 'error'}
-              placeholder="Type participant QR code"
-            />
-          </>
-        )}
-
-        {/* Lookup loading */}
-        {lookupLoading && (
-          <div className="vol-loading"><div className="vol-spinner" /> Looking up…</div>
-        )}
-
-        {/* Scan error */}
-        {scanError && (
-          <div className="vol-result-card error" style={{ marginTop: 12 }}>
-            <p style={{ margin: 0, fontSize: '0.88rem' }}>{scanError}</p>
-            <button
-              className="vol-logout-btn"
-              onClick={() => setScanError('')}
-              style={{ marginTop: 8, padding: '6px 12px' }}
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        {/* Result */}
-        {result && (
-          <div className="vol-result-card success" style={{ marginTop: 12 }}>
-            <div className="vol-result-header">
-              {result.participant?.photo_url && (
-                <img
-                  src={result.participant.photo_url}
-                  alt={result.participant.full_name}
-                  className="vol-result-photo"
-                  onError={(e) => (e.target.style.display = 'none')}
-                />
-              )}
-              <div>
-                <p className="vol-result-name">{result.participant?.full_name}</p>
-                <p className="vol-result-sub">{result.participant?.college_name}</p>
-              </div>
-            </div>
-
-            {/* Event status for selected event */}
-            <div style={{
-              padding: '12px',
-              background: result.eventData?.present
-                ? 'rgba(74,222,128,0.08)' : 'rgba(167,139,250,0.08)',
-              borderRadius: 10,
-              border: `1px solid ${result.eventData?.present ? 'rgba(74,222,128,0.3)' : 'rgba(167,139,250,0.3)'}`,
-              marginTop: 8,
-            }}>
-              <p style={{ margin: '0 0 4px', fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>
-                {selectedEvent}
-              </p>
-              {result.eventData?.present ? (
-                <p style={{ margin: 0, color: 'var(--vol-success)', fontSize: '0.82rem' }}>
-                  ✅ {result.eventData?.alreadyMarked ? 'Already marked present' : 'Marked present!'}
+          {result && (
+            <div style={{ marginTop: 12 }}>
+              <div className="vol-result-card success">
+                <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '1rem', color: 'var(--vol-success)' }}>✅ Attendance Marked</p>
+                <p style={{ margin: 0, fontWeight: 600, color: '#fff' }}>{result.participant?.full_name || result.full_name}</p>
+                <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--vol-text-muted)' }}>
+                  {result.participant?.college_name || result.college_name}
                 </p>
-              ) : (
-                <button
-                  className="vol-event-action-btn"
-                  onClick={handleMarkPresent}
-                  disabled={!!markingId}
-                >
-                  {markingId ? 'Marking…' : '✅ Mark Present'}
-                </button>
-              )}
+                {result.event_name && (
+                  <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: 'var(--vol-accent)' }}>
+                    🎭 {result.event_name.replace(/_/g, ' ')}
+                  </p>
+                )}
+              </div>
+              <button className="vol-logout-btn" onClick={() => { setResult(null); setScanError(''); }} style={{ width: '100%', padding: 10, marginTop: 8, textAlign: 'center' }}>
+                Clear — Scan Next
+              </button>
             </div>
-
-            <button
-              className="vol-logout-btn"
-              onClick={() => { setResult(null); setScanError(''); }}
-              style={{ width: '100%', marginTop: 10, padding: 10, textAlign: 'center' }}
-            >
-              Clear — Scan Next
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="vol-bottom-spacer" />
-    </div>
+          )}
+        </div>
+      )}
+    </VolunteerShell>
   );
 }
