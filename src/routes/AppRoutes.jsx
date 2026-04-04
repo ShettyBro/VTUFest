@@ -95,6 +95,16 @@ import IDCardTeamPortal from "../pages/idcard/IDCardTeamPortal";
 import RegDeskLogin from "../pages/regdesk/RegDeskLogin";
 import RegDeskDashboard from "../pages/regdesk/RegDeskDashboard";
 
+/* VOLUNTEER PORTAL */
+import VolunteerPortal from "../pages/volunteer/VolunteerPortal";
+import VolunteerLogin from "../pages/volunteer/VolunteerLogin";
+import RegDeskScanner from "../pages/volunteer/RegDeskScanner";
+import HelpDeskScanner from "../pages/volunteer/HelpDeskScanner";
+import InEventScanner from "../pages/volunteer/InEventScanner";
+import FoodScanner from "../pages/volunteer/FoodScanner";
+import SecurityScanner from "../pages/volunteer/SecurityScanner";
+import CollegeBuddyDashboard from "../pages/volunteer/CollegeBuddyDashboard";
+
 /* ── Route Guards ──────────────────────────────────────────────────────────── */
 function AdminRoute({ children }) {
   const token = localStorage.getItem("vtufest_admin_token");
@@ -146,6 +156,15 @@ function IDCardEditorRoute({ children }) {
 function RegDeskRoute({ children }) {
   const token = localStorage.getItem("vtufest_regdesk_token");
   if (!token) return <Navigate to="/reg" replace />;
+  return children;
+}
+
+function VolunteerRoute({ children, allowedRoles }) {
+  const token = localStorage.getItem("vtufest_vol_token");
+  const role = localStorage.getItem("vtufest_vol_role");
+  if (!token) return <Navigate to="/volunteer" replace />;
+  if (allowedRoles && !allowedRoles.includes(role))
+    return <Navigate to="/volunteer" replace />;
   return children;
 }
 
@@ -344,6 +363,28 @@ export default function AppRoutes() {
         {/* ── REGISTRATION DESK HEAD ──────────────────────────────────────── */}
         <Route path="/reg" element={<RegDeskLogin />} />
         <Route path="/reg-dashboard" element={<RegDeskRoute><RegDeskDashboard /></RegDeskRoute>} />
+
+        {/* ── VOLUNTEER PORTAL ────────────────────────────────────────────── */}
+        <Route path="/volunteer" element={<VolunteerPortal />} />
+        <Route path="/volunteer/login" element={<VolunteerLogin />} />
+        <Route path="/volunteer/reg-desk" element={
+          <VolunteerRoute allowedRoles={["registration_desk"]}><RegDeskScanner /></VolunteerRoute>
+        } />
+        <Route path="/volunteer/help-desk" element={
+          <VolunteerRoute allowedRoles={["help_desk"]}><HelpDeskScanner /></VolunteerRoute>
+        } />
+        <Route path="/volunteer/in-event" element={
+          <VolunteerRoute allowedRoles={["in_event"]}><InEventScanner /></VolunteerRoute>
+        } />
+        <Route path="/volunteer/food" element={
+          <VolunteerRoute allowedRoles={["food_volunteer"]}><FoodScanner /></VolunteerRoute>
+        } />
+        <Route path="/volunteer/security" element={
+          <VolunteerRoute allowedRoles={["general"]}><SecurityScanner /></VolunteerRoute>
+        } />
+        <Route path="/volunteer/college-buddy" element={
+          <VolunteerRoute allowedRoles={["college_buddy"]}><CollegeBuddyDashboard /></VolunteerRoute>
+        } />
       </Routes>
     </DAProvider>
   );
