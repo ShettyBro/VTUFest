@@ -4,6 +4,7 @@ import Layout from "../components/layout/layout";
 import CampusMap from "../components/CampusMap";
 import AllocatedEventsModal from "../components/Allocatedeventsmodal";
 import SparkleEffect from "../components/SparkleEffect";
+import EventsCalendar from "../components/EventsCalendar";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 import { ChevronDown } from "lucide-react";
@@ -452,46 +453,10 @@ export default function Dashboard() {
           <div className="dashboard-grid">
 
             {/* --- LEFT COL: CALENDAR --- */}
-            <div className="glass-card calendar-card">
-              <h3>Events Calendar</h3>
-              <div className="calendar-mobile-scroll calendar-list">
-                {eventsCalendarData.calendarEvents
-                  .slice()
-                  .sort((a, b) => {
-                    const now = new Date();
-                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-                    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
-                    const da = new Date(a.date);
-                    const db = new Date(b.date);
-                    const aIsToday = da >= todayStart && da <= todayEnd;
-                    const bIsToday = db >= todayStart && db <= todayEnd;
-                    const aIsFuture = da > todayEnd;
-                    const bIsFuture = db > todayEnd;
-                    // Tier: today (0) → upcoming/future (1) → past (2)
-                    const tier = (isToday, isFuture) => isToday ? 0 : isFuture ? 1 : 2;
-                    const ta = tier(aIsToday, aIsFuture);
-                    const tb = tier(bIsToday, bIsFuture);
-                    if (ta !== tb) return ta - tb;
-                    if (ta === 0 || ta === 1) return da - db; // earliest first within today/future
-                    return db - da; // most recent past first
-                  })
-                  .map((event, idx) => {
-                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-                    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
-                    const d = new Date(event.date);
-                    const isToday = d >= todayStart && d <= todayEnd;
-                    const isFuture = d > todayEnd;
-                    const tierClass = isToday ? "cal-today" : isFuture ? "cal-upcoming" : "cal-past";
-                    return (
-                      <div key={idx} className={`calendar-item ${tierClass}`}>
-                        {isToday && <span className="cal-badge">Today</span>}
-                        <span className="cal-date">{new Date(event.date).toLocaleDateString("en-IN", { month: 'short', day: 'numeric' })} • {event.time}</span>
-                        <span className="cal-title">{event.title}</span>
-                        <span className="cal-loc">📍 {event.place}</span>
-                      </div>
-                    );
-                  })}
-              </div>
+            <div className="glass-card calendar-card" style={{ gridColumn: 'span 3' }}>
+              <h3 style={{ marginBottom: '4px' }}>Events Calendar</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: 0, marginBottom: '16px' }}>Full schedule — all 4 days</p>
+              <EventsCalendar events={eventsCalendarData.calendarEvents} />
             </div>
 
             {/* --- CENTER COL: HERO STATUS (desktop only — mobile uses My App tab) --- */}

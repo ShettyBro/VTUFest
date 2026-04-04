@@ -4,6 +4,7 @@ import Layout from "../components/layout/layout";
 import FinalApprovalOverlay from "./ApprovalOverlay";
 import CampusMap from "../components/CampusMap";
 import SparkleEffect from "../components/SparkleEffect";
+import EventsCalendar from "../components/EventsCalendar";
 import "../styles/dashboard-glass.css";
 import { usePopup } from "../context/PopupContext";
 import { isValidIndianPhone, sanitizePhone } from "../utils/phoneValidation";
@@ -583,58 +584,9 @@ export default function PrincipalDashboard() {
 
         {/* --- CALENDAR SECTION --- */}
         <div className="glass-card" style={{ marginBottom: '20px' }}>
-          <h3 style={{ marginBottom: '5px' }}>Events Calendar</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.88rem' }}>Upcoming & past event schedule</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto', scrollbarWidth: 'none' }}>
-            {eventsCalendarData.calendarEvents.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>No events scheduled.</p>
-            ) : eventsCalendarData.calendarEvents
-              .slice()
-              .sort((a, b) => {
-                const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-                const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
-                const da = new Date(a.date), db = new Date(b.date);
-                const tier = (d) => d >= todayStart && d <= todayEnd ? 0 : d > todayEnd ? 1 : 2;
-                const ta = tier(da), tb = tier(db);
-                if (ta !== tb) return ta - tb;
-                return ta <= 1 ? da - db : db - da;
-              })
-              .map((event, idx) => {
-                const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-                const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
-                const d = new Date(event.date);
-                const isToday = d >= todayStart && d <= todayEnd;
-                const isFuture = d > todayEnd;
-                const accentColor = isToday ? 'var(--accent-success)' : isFuture ? 'var(--gold-solid)' : 'rgba(255,255,255,0.2)';
-                return (
-                  <div key={idx} style={{
-                    display: 'flex', alignItems: 'center', gap: '14px',
-                    padding: '10px 14px', borderRadius: '10px',
-                    background: isToday ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.03)',
-                    borderLeft: `3px solid ${accentColor}`,
-                    opacity: (!isToday && !isFuture) ? 0.55 : 1,
-                  }}>
-                    <div style={{ minWidth: '54px', textAlign: 'center', flexShrink: 0 }}>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {new Date(event.date).toLocaleDateString('en-IN', { month: 'short' })}
-                      </div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: '700', color: accentColor, lineHeight: 1.1 }}>
-                        {new Date(event.date).getDate()}
-                      </div>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {isToday && <span style={{ background: 'var(--accent-success)', color: '#0f172a', fontSize: '0.6rem', fontWeight: 700, padding: '1px 6px', borderRadius: '10px', marginRight: '6px', verticalAlign: 'middle', textTransform: 'uppercase' }}>Today</span>}
-                        {event.title}
-                      </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                        {event.time} &nbsp;•&nbsp; 📍 {event.place}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+          <h3 style={{ marginBottom: '4px' }}>Events Calendar</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.88rem' }}>Full schedule — all 4 days</p>
+          <EventsCalendar events={eventsCalendarData.calendarEvents} />
         </div>
 
         {/* --- MAP SECTION --- */}
