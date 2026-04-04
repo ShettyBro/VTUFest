@@ -8,9 +8,9 @@ import "../styles/events-calendar.css";
  */
 export default function EventsCalendar({ events = [] }) {
   // --- Helpers ---
-  const parseTime = (timeStr) => {
-    if (!timeStr) return 0;
-    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  const parseTimeValue = (str) => {
+    if (!str) return 0;
+    const match = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
     if (!match) return 0;
     let [ , h, m, period] = match;
     let hours = parseInt(h, 10);
@@ -18,6 +18,15 @@ export default function EventsCalendar({ events = [] }) {
     if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
     if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
     return hours * 60 + mins;
+  };
+
+  const getEventTimes = (timeStr) => {
+    if (!timeStr) return { start: 0, end: 0 };
+    const parts = timeStr.split(/[-–—]/); 
+    return {
+      start: parseTimeValue(parts[0]),
+      end: parseTimeValue(parts[1])
+    };
   };
 
   const getLocalDateString = (dateObj) => {
@@ -36,7 +45,17 @@ export default function EventsCalendar({ events = [] }) {
     });
     // Sort events within each day chronologically
     for (let dayEvents of map.values()) {
-      dayEvents.sort((a, b) => parseTime(a.time) - parseTime(b.time));
+      dayEvents.sort((a, b) => {
+        const timesA = getEventTimes(a.time);
+        const timesB = getEventTimes(b.time);
+        
+        // If start times are different, sort by start time
+        if (timesA.start !== timesB.start) {
+          return timesA.start - timesB.start;
+        }
+        // If start times are exactly the same, sort by end time (shorter events first)
+        return timesA.end - timesB.end;
+      });
     }
     return map;
   }, [events]);
