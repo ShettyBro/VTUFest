@@ -1,0 +1,185 @@
+/* ==========================================================
+   ADMIN PANEL — Mobile Shell  (≤ 768px)
+   Accent: Gold  #d4af37
+   Pattern: Hamburger → sliding drawer  +  fixed top bar
+   ========================================================== */
+
+/* ── DESKTOP: hide mobile-only elements ─────────────────── */
+.adm-topbar       { display: none; }
+.adm-overlay      { display: none; }
+
+/* ── PERFORMANCE (≤ 1024px — tablets + phones) ──────────── */
+@media (max-width: 1024px) {
+    .adm-sidebar {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+    }
+    .adm-desktop-topbar {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}
+
+/* ── MOBILE SHELL (≤ 768px) ─────────────────────────────── */
+@media (max-width: 768px) {
+
+    /* Root shell — override flex row to block */
+    .adm-shell {
+        display: block !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+    }
+
+    /* ── Fixed top bar ───────────────────────────────────── */
+    .adm-topbar {
+        display: flex !important;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 56px;
+        background: rgba(10, 22, 40, 0.97);
+        border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        z-index: 1000;
+        gap: 10px;
+    }
+
+    .adm-topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .adm-topbar-logo {
+        height: 34px;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .adm-topbar-title {
+        flex: 1;
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
+        padding: 0 8px;
+    }
+
+    .adm-topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    /* ── Hamburger button ─────────────────────────────────── */
+    .adm-hamburger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        color: #d4af37;
+        cursor: pointer;
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s;
+    }
+
+    .adm-hamburger:active {
+        background: rgba(212, 175, 55, 0.22);
+    }
+
+    /* ── Backdrop overlay ────────────────────────────────── */
+    .adm-overlay {
+        display: block !important;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        z-index: 1100;
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+        animation: adm-fade-in 0.2s ease;
+    }
+
+    @keyframes adm-fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    /* ── Sidebar → off-canvas drawer ────────────────────── */
+    .adm-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 270px !important;
+        max-width: 85vw !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        z-index: 1200 !important;
+        overflow-y: auto !important;
+        background: #0a1628 !important;
+        border-right: 1px solid rgba(212, 175, 55, 0.25) !important;
+    }
+
+    .adm-sidebar.adm-drawer-open {
+        transform: translateX(0) !important;
+        box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    /* Drawer close button (top-right inside drawer) */
+    .adm-drawer-close {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        border: none;
+        color: #94a3b8;
+        font-size: 16px;
+        cursor: pointer;
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Desktop top bar — hidden on mobile ──────────────── */
+    .adm-desktop-topbar {
+        display: none !important;
+    }
+
+    /* ── Main content area ───────────────────────────────── */
+    .adm-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        height: 100dvh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    .adm-content {
+        margin-top: 56px !important;
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 16px !important;
+        height: calc(100dvh - 56px) !important;
+    }
+
+    /* ── Tap targets — make nav links touch-friendly ─────── */
+    .adm-sidebar a,
+    .adm-sidebar button {
+        min-height: 48px !important;
+    }
+}

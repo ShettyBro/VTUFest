@@ -1,26 +1,33 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { isAdminTokenExpired } from "../../utils/adminFetch";
 import { usePopup } from "../../context/PopupContext";
 import SessionTimerBadge from "../../components/SessionTimerBadge";
 import "../../styles/dashboard-glass.css";
+import "../../styles/vm-mobile.css";
 
 const NAV_ITEMS = [
-    { path: "/vm",                  label: "Dashboard",         icon: "📊" },
-    { path: "/vm/volunteers",       label: "Volunteer Regs",    icon: "🙋‍♂️" },
-    { path: "/vm/coordinator",      label: "Assign Volunteers", icon: "📋" },
-    { path: "/vm/faculty",          label: "Faculty Regs",      icon: "👨‍🏫" },
-    { path: "/vm/faculty/assign",   label: "Assign Faculty",    icon: "🎓" },
+    { path: "/vm",               label: "Dashboard",         icon: "📊" },
+    { path: "/vm/volunteers",    label: "Volunteer Regs",    icon: "🙋‍♂️" },
+    { path: "/vm/coordinator",   label: "Assign Volunteers", icon: "📋" },
+    { path: "/vm/faculty",       label: "Faculty Regs",      icon: "👨‍🏫" },
+    { path: "/vm/faculty/assign",label: "Assign Faculty",    icon: "🎓" },
 ];
 
 export default function VMLayout({ children }) {
     const navigate  = useNavigate();
     const location  = useLocation();
     const { showPopup } = usePopup();
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const token = localStorage.getItem("vtufest_admin_token");
     const role  = localStorage.getItem("vtufest_admin_role");
     const name  = localStorage.getItem("vtufest_admin_name") || "Admin";
+
+    const currentNav = NAV_ITEMS.find(n =>
+        location.pathname === n.path ||
+        (n.path !== "/vm" && location.pathname.startsWith(n.path))
+    );
 
     const doSessionExpiry = () => {
         localStorage.removeItem("vtufest_admin_token");
@@ -37,6 +44,9 @@ export default function VMLayout({ children }) {
         return () => window.removeEventListener("admin:session-expired", handler);
     }, []);
 
+    // Close drawer on route change
+    useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
+
     const handleLogout = () => {
         localStorage.removeItem("vtufest_admin_token");
         localStorage.removeItem("vtufest_admin_role");
@@ -44,37 +54,78 @@ export default function VMLayout({ children }) {
         navigate("/ad-login");
     };
 
-    const currentNav = NAV_ITEMS.find(n => location.pathname === n.path || (n.path !== "/vm" && location.pathname.startsWith(n.path)));
-
     return (
-        <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-            {/* ── SIDEBAR ── */}
-            <aside style={{ width: "240px", flexShrink: 0, background: "rgba(15,23,42,0.95)", backdropFilter: "blur(20px)", borderRight: "1px solid rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", zIndex: 100 }}>
-                {/* Logo */}
-                <div style={{ padding: "24px 20px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+        <div className="vm-shell" style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+
+            {/* ══ MOBILE TOP BAR ══════════════════════════════════ */}
+            <div className="vm-topbar">
+                <div className="vm-topbar-left">
+                    <button className="vm-hamburger" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <img src="/main.webp" alt="Logo" className="vm-topbar-logo" />
+                </div>
+                <div className="vm-topbar-title">
+                    {currentNav ? `${currentNav.icon} ${currentNav.label}` : "VM Event Portal"}
+                </div>
+                <div className="vm-topbar-right">
+                    <SessionTimerBadge tokenKey="vtufest_admin_token" accentColor="#a8edea" onExpired={doSessionExpiry} />
+                </div>
+            </div>
+
+            {/* ══ OVERLAY ═════════════════════════════════════════ */}
+            {drawerOpen && <div className="vm-overlay" onClick={() => setDrawerOpen(false)} />}
+
+            {/* ══ SIDEBAR / DRAWER ════════════════════════════════ */}
+            <aside
+                className={`vm-sidebar ${drawerOpen ? "vm-drawer-open" : ""}`}
+                style={{
+                    width: "240px", flexShrink: 0,
+                    background: "rgba(15,23,42,0.95)",
+                    backdropFilter: "blur(20px)",
+                    borderRight: "1px solid rgba(255,255,255,0.1)",
+                    display: "flex", flexDirection: "column", zIndex: 100,
+                }}
+            >
+                {/* Logo + close row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <img src="/main.webp" alt="Logo" style={{ height: "40px" }} />
+                        <img src="/main.webp" alt="Logo" style={{ height: "38px" }} />
                         <div>
-                            <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.9rem" }}>VTU HABBA</div>
-                            <div style={{ color: "#a8edea", fontSize: "0.72rem", fontWeight: 600 }}>VM Event Portal</div>
+                            <div style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.88rem" }}>VTU HABBA</div>
+                            <div style={{ color: "#a8edea", fontSize: "0.7rem", fontWeight: 600 }}>VM Event Portal</div>
                         </div>
                     </div>
+                    <button className="vm-drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Close menu">✕</button>
                 </div>
 
                 {/* User */}
                 <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                     <div style={{ color: "#cbd5e1", fontSize: "0.78rem", marginBottom: "3px" }}>Logged in as</div>
                     <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.88rem" }}>{name}</div>
-                    <div style={{ display: "inline-block", marginTop: "5px", padding: "2px 9px", borderRadius: "20px", fontSize: "0.68rem", fontWeight: 700, background: "rgba(168,237,234,0.12)", color: "#a8edea", border: "1px solid #a8edea" }}>
+                    <div style={{
+                        display: "inline-block", marginTop: "5px", padding: "2px 9px",
+                        borderRadius: "20px", fontSize: "0.68rem", fontWeight: 700,
+                        background: "rgba(168,237,234,0.12)", color: "#a8edea",
+                        border: "1px solid #a8edea",
+                    }}>
                         {role?.replace(/_/g, " ") || "SUPER ADMIN"}
                     </div>
                 </div>
 
                 {/* Back to Admin */}
                 <div style={{ padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <Link to="/ad-dashboard" style={{ display: "flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", textDecoration: "none", padding: "6px 0" }}
+                    <Link
+                        to="/ad-dashboard"
+                        onClick={() => setDrawerOpen(false)}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", textDecoration: "none", padding: "6px 0" }}
                         onMouseEnter={e => e.currentTarget.style.color = "rgba(255,255,255,0.7)"}
-                        onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}>
+                        onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
+                    >
                         ← Back to Admin Panel
                     </Link>
                 </div>
@@ -86,9 +137,23 @@ export default function VMLayout({ children }) {
                             ? location.pathname === "/vm"
                             : location.pathname === item.path || location.pathname.startsWith(item.path + "/");
                         return (
-                            <Link key={item.path} to={item.path} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 20px", color: isActive ? "#a8edea" : "#cbd5e1", textDecoration: "none", fontSize: "0.88rem", fontWeight: isActive ? 600 : 400, background: isActive ? "rgba(168,237,234,0.08)" : "transparent", borderRight: isActive ? "3px solid #a8edea" : "3px solid transparent", transition: "all 0.2s" }}
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                onClick={() => setDrawerOpen(false)}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: "12px",
+                                    padding: "12px 20px",
+                                    color: isActive ? "#a8edea" : "#cbd5e1",
+                                    textDecoration: "none", fontSize: "0.88rem",
+                                    fontWeight: isActive ? 600 : 400,
+                                    background: isActive ? "rgba(168,237,234,0.08)" : "transparent",
+                                    borderRight: isActive ? "3px solid #a8edea" : "3px solid transparent",
+                                    transition: "all 0.2s",
+                                }}
                                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
-                                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
+                                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                            >
                                 <span style={{ fontSize: "1.05rem" }}>{item.icon}</span>
                                 {item.label}
                             </Link>
@@ -98,25 +163,39 @@ export default function VMLayout({ children }) {
 
                 {/* Logout */}
                 <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                    <button onClick={handleLogout} style={{ width: "100%", padding: "10px", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            width: "100%", padding: "10px",
+                            background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)",
+                            color: "#f87171", borderRadius: "8px", cursor: "pointer",
+                            fontWeight: 600, fontSize: "0.85rem",
+                        }}
                         onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.25)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "rgba(239,68,68,0.15)"}>
+                        onMouseLeave={e => e.currentTarget.style.background = "rgba(239,68,68,0.15)"}
+                    >
                         🚪 Logout
                     </button>
                 </div>
             </aside>
 
-            {/* ── MAIN ── */}
-            <main style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                {/* Topbar */}
-                <div style={{ padding: "16px 28px", borderBottom: "1px solid rgba(255,255,255,0.1)", background: "rgba(15,23,42,0.8)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+            {/* ══ MAIN ════════════════════════════════════════════ */}
+            <main className="vm-main" style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+
+                {/* Desktop top bar */}
+                <div className="vm-desktop-topbar" style={{
+                    padding: "16px 28px",
+                    borderBottom: "1px solid rgba(255,255,255,0.1)",
+                    background: "rgba(15,23,42,0.8)", backdropFilter: "blur(10px)",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0,
+                }}>
                     <h2 style={{ margin: 0, color: "#f1f5f9", fontSize: "1.05rem", fontWeight: 600 }}>
                         {currentNav?.icon} {currentNav?.label || "VM Event Portal"}
                     </h2>
                     <SessionTimerBadge tokenKey="vtufest_admin_token" accentColor="#a8edea" onExpired={doSessionExpiry} />
                 </div>
 
-                <div className="dashboard-glass-wrapper" style={{ flex: 1 }}>
+                <div className="vm-content dashboard-glass-wrapper" style={{ flex: 1, overflowY: "auto" }}>
                     {children}
                 </div>
             </main>
