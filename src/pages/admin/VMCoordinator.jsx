@@ -6,15 +6,37 @@ import { usePopup } from "../../context/PopupContext";
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 const ASSIGN_DOMAINS = [
+    // ── Credential domains (full portal access) ──
     { value: "registration_desk", label: "Registration Desk" },
     { value: "help_desk", label: "Help Desk" },
     { value: "in_event", label: "In-Event (Event Required)" },
     { value: "college_buddy", label: "College Buddy" },
     { value: "food", label: "Food" },
+    // ── Operations / QR-only domains ──
+    { value: "logistics", label: "Logistics" },
+    { value: "guest_hospitality", label: "Guest Hospitality" },
+    { value: "technical", label: "Technical" },
+    { value: "accommodation", label: "Accommodation" },
+    { value: "disciplinary", label: "Disciplinary" },
+    { value: "stage_programme", label: "Stage & Programme" },
+    { value: "documentation_result", label: "Documentation & Result" },
+    { value: "literature", label: "Literature" },
+    { value: "fine_arts", label: "Fine Arts" },
+    { value: "music", label: "Music" },
+    { value: "theatre", label: "Theatre" },
+    { value: "dance", label: "Dance" },
+    { value: "gr_incharge", label: "Green Room / Cloakroom" },
+    { value: "transport", label: "Transport" },
+    { value: "queries_desk", label: "Queries Desk" },
     { value: "general", label: "General (No email)" },
 ];
 
-const TEAM_DOMAINS = ["registration_desk", "help_desk", "in_event", "college_buddy", "food", "general"];
+const TEAM_DOMAINS = [
+    "registration_desk", "help_desk", "in_event", "college_buddy", "food",
+    "logistics", "guest_hospitality", "technical", "accommodation", "disciplinary",
+    "stage_programme", "documentation_result", "literature", "fine_arts", "music",
+    "theatre", "dance", "gr_incharge", "transport", "queries_desk", "general",
+];
 
 const ALL_EVENTS = [
     { value: "event_cartooning", label: "Cartooning" },
@@ -44,8 +66,36 @@ const ALL_EVENTS = [
     { value: "event_western_vocal_solo", label: "Western Vocal Solo" },
 ];
 
+const EVENT_SLUG_TO_TABLE = {
+    classical_vocal_solo: 'event_classical_vocal_solo',
+    light_vocal_solo: 'event_light_vocal_solo',
+    western_vocal_solo: 'event_western_vocal_solo',
+    classical_instrumental_percussion: 'event_classical_instr_percussion',
+    classical_instrumental_non_percussion: 'event_classical_instr_non_percussion',
+    group_song_indian: 'event_group_song_indian',
+    group_song_western: 'event_group_song_western',
+    folk_orchestra: 'event_folk_orchestra',
+    classical_dance_solo: 'event_classical_dance_solo',
+    folk_tribal_dance: 'event_folk_dance',
+    mime: 'event_mime',
+    mimicry: 'event_mimicry',
+    one_act_play: 'event_one_act_play',
+    skits: 'event_skits',
+    debate: 'event_debate',
+    elocution: 'event_elocution',
+    quiz: 'event_quiz',
+    cartooning: 'event_cartooning',
+    clay_modelling: 'event_clay_modelling',
+    collage_making: 'event_collage_making',
+    installation: 'event_installation',
+    on_spot_painting: 'event_on_spot_painting',
+    rangoli: 'event_rangoli',
+    spot_photography: 'event_spot_photography',
+    poster_making: 'event_poster_making',
+};
+
 /* ─── Assign Modal ─── */
-function AssignModal({ selected, token, onClose, onDone }) {
+function AssignModal({ selected, token, onClose, onDone, requestedDomain }) {
     const [domain, setDomain] = useState("");
     const [selectedCollegeIds, setSelectedCollegeIds] = useState([]);
     const [colleges, setColleges] = useState([]);
@@ -88,6 +138,14 @@ function AssignModal({ selected, token, onClose, onDone }) {
         } catch (ex) { setErr(ex.message); }
         finally { setSaving(false); }
     };
+
+    // Pre-populate event picker from volunteer's requested_domain when switching to in_event
+    useEffect(() => {
+        if (domain === "in_event" && requestedDomain && eventNames.length === 0) {
+            const mapped = EVENT_SLUG_TO_TABLE[requestedDomain];
+            if (mapped) setEventNames([mapped]);
+        }
+    }, [domain]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const toggleEvent = (val) => setEventNames(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
     const toggleCollege = (id) => setSelectedCollegeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -341,6 +399,7 @@ export default function VMCoordinator() {
     const [poolPage, setPoolPage] = useState(1);
     const [selected, setSelected] = useState([]);
     const [assignModal, setAssignModal] = useState(false);
+    const [assignHint, setAssignHint] = useState(null);
 
     /* ── Team state ── */
     const [teamDomain, setTeamDomain] = useState("registration_desk");
@@ -439,7 +498,7 @@ export default function VMCoordinator() {
                             </div>
                             <button onClick={fetchPool} style={{ padding: "7px 14px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontSize: "0.82rem" }}>🔄</button>
                             {selected.length > 0 && (
-                                <button onClick={() => setAssignModal(true)} style={{ padding: "7px 16px", background: "rgba(99,102,241,0.2)", border: "1px solid #6366f1", color: "#818cf8", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.83rem" }}>
+                                <button onClick={() => { setAssignHint(null); setAssignModal(true); }} style={{ padding: "7px 16px", background: "rgba(99,102,241,0.2)", border: "1px solid #6366f1", color: "#818cf8", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.83rem" }}>
                                     📋 Assign {selected.length} Selected
                                 </button>
                             )}
@@ -486,7 +545,7 @@ export default function VMCoordinator() {
                                                     </span>
                                                 </td>
                                                 <td style={tdS}>
-                                                    <button onClick={() => { setSelected([v.id]); setAssignModal(true); }} style={{ padding: "4px 12px", background: "rgba(99,102,241,0.15)", border: "1px solid #6366f1", color: "#818cf8", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}>
+                                                    <button onClick={() => { setSelected([v.id]); setAssignHint(v.requested_domain || null); setAssignModal(true); }} style={{ padding: "4px 12px", background: "rgba(99,102,241,0.15)", border: "1px solid #6366f1", color: "#818cf8", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontWeight: 600 }}>
                                                         📋 Assign
                                                     </button>
                                                 </td>
@@ -587,8 +646,9 @@ export default function VMCoordinator() {
                     <AssignModal
                         selected={selected}
                         token={token}
+                        requestedDomain={assignHint}
                         onClose={() => setAssignModal(false)}
-                        onDone={() => { setAssignModal(false); setSelected([]); fetchPool(); }}
+                        onDone={() => { setAssignModal(false); setSelected([]); setAssignHint(null); fetchPool(); }}
                     />
                 )}
 

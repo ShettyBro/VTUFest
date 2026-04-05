@@ -8,9 +8,13 @@ const PANEL_OPTIONS = [
     // ── Portal domains (create admin account + send credentials) ──
     { value: "transport", label: "Transportation", role: "TRANSPORT_MANAGER", login: "/api/transport-manager/login", qrOnly: false },
     { value: "event_manager", label: "Accommodation", role: "EVENT_MANAGER", login: "/api/em/auth/login", qrOnly: false },
+    { value: "accommodation_portal", label: "Accommodation (Portal)", role: "EVENT_MANAGER", login: "/api/em/auth/login", qrOnly: false },
     { value: "accounts", label: "Accounts", role: "ACCOUNTS", login: "/api/em/auth/login", qrOnly: false },
+    { value: "accounts_qr", label: "Accounts (QR Only)", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
     { value: "gr_incharge", label: "Green Room / Cloakroom", role: "GR_INCHARGE", login: "/api/em/auth/login", qrOnly: false },
+    { value: "gr_incharge_qr", label: "Green Room (QR Only)", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
     { value: "food", label: "Food Department", role: "FOOD_MANAGER", login: "/api/em/auth/login", qrOnly: false },
+    { value: "food_qr", label: "Food (QR Only)", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
     // ── QR-only domains (no portal — QR email only) ──
     { value: "registration_desk", label: "Registration Desk", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
     { value: "logistics", label: "Logistics", role: "QR Pass Only", login: "No portal — QR code issued", qrOnly: true },
