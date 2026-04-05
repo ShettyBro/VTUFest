@@ -384,6 +384,97 @@ function EditCollegesModal({ volunteer, token, onClose, onSaved }) {
     );
 }
 
+/* ─── Edit Events Modal (for already-assigned in_event volunteers) ─── */
+function EditEventsModal({ volunteer, token, onClose, onSaved }) {
+    const [allEvents, setAllEvents] = useState([]);
+    const [selectedEvents, setSelectedEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [err, setErr] = useState("");
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+
+    useEffect(() => {
+        setLoading(true);
+        adminFetch(`${API}/api/vm/coordinator/${volunteer.id}/events`, { headers })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    setAllEvents(d.data.all_events || []);
+                    setSelectedEvents(d.data.assigned_events || []);
+                } else {
+                    setErr(d.message || "Failed to load events");
+                }
+            })
+            .catch(() => setErr("Network error — could not load events"))
+            .finally(() => setLoading(false));
+    }, [volunteer.id]);
+
+    const toggle = (evName) =>
+        setSelectedEvents(prev => prev.includes(evName) ? prev.filter(x => x !== evName) : [...prev, evName]);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setErr("");
+        try {
+            const res = await adminFetch(`${API}/api/vm/coordinator/${volunteer.id}/events`, {
+                method: "POST", headers,
+                body: JSON.stringify({ event_names: selectedEvents }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
+            onSaved();
+        } catch (ex) { setErr(ex.message); }
+        finally { setSaving(false); }
+    };
+
+    return (
+        <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+            <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "16px", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+                    <div>
+                        <h2 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.05rem" }}>🎭 Edit Event Assignments</h2>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px" }}>{volunteer.full_name}</div>
+                    </div>
+                    <button onClick={onClose} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", fontSize: "0.85rem" }}>✕ Close</button>
+                </div>
+
+                {loading ? (
+                    <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+                        <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>⏳</div>Loading events…
+                    </div>
+                ) : (
+                    <>
+                        <div style={{ marginBottom: "12px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                                <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Select events to assign</span>
+                                <span style={{ color: "#818cf8", fontSize: "0.78rem", fontWeight: 700 }}>{selectedEvents.length} selected</span>
+                            </div>
+                        </div>
+
+                        <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", maxHeight: "300px", overflowY: "auto", background: "rgba(255,255,255,0.03)" }}>
+                            {ALL_EVENTS.map(ev => {
+                                const isSel = selectedEvents.includes(ev.value);
+                                return (
+                                    <label key={ev.value} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", background: isSel ? "rgba(129,140,248,0.1)" : "transparent", color: isSel ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "0.85rem" }}>
+                                        <input type="checkbox" checked={isSel} onChange={() => toggle(ev.value)} style={{ accentColor: "#818cf8", width: "15px", height: "15px", flexShrink: 0 }} />
+                                        <span style={{ fontWeight: isSel ? 600 : 400 }}>{ev.label}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+
+                        {err && <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 14px", borderRadius: "8px", margin: "14px 0", fontSize: "0.85rem" }}>{err}</div>}
+
+                        <button onClick={handleSave} disabled={saving || selectedEvents.length === 0} style={{ marginTop: "16px", width: "100%", padding: "11px", borderRadius: "10px", background: (saving || selectedEvents.length === 0) ? "rgba(129,140,248,0.3)" : "rgba(99,102,241,0.2)", border: "1px solid #6366f1", color: "#818cf8", fontWeight: 700, fontSize: "0.9rem", cursor: (saving || selectedEvents.length === 0) ? "not-allowed" : "pointer" }}>
+                            {saving ? "Saving…" : "✅ Save Event Assignments"}
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
 /* ─── Main Component ─── */
 export default function VMCoordinator() {
     const [activeTab, setActiveTab] = useState("pool");
@@ -408,6 +499,7 @@ export default function VMCoordinator() {
     const [teamTotal, setTeamTotal] = useState(0);
     const [removingId, setRemovingId] = useState(null);
     const [editCollegesVol, setEditCollegesVol] = useState(null);
+    const [editEventsVol, setEditEventsVol] = useState(null);
 
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
@@ -610,7 +702,16 @@ export default function VMCoordinator() {
                                                                 {c.college_name}
                                                             </span>
                                                           ))
-                                                        : (v.college_name || "—")}
+                                                        : v.allocated_events && v.allocated_events.length > 0
+                                                            ? v.allocated_events.map((eStr, idx) => {
+                                                                const evDef = ALL_EVENTS.find(edef => edef.value === eStr);
+                                                                return (
+                                                                    <span key={idx} style={{ display: "inline-block", background: "rgba(129,140,248,0.1)", color: "#818cf8", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600, margin: "1px 3px 1px 0" }}>
+                                                                        {evDef ? evDef.label : eStr}
+                                                                    </span>
+                                                                );
+                                                              })
+                                                            : (v.college_name || "—")}
                                                 </td>
                                                 <td style={tdS}><span style={{ color: v.is_active ? "#4ade80" : "#f87171", fontWeight: 700 }}>{v.is_active ? "✅" : "❌"}</span></td>
                                                 <td style={{ ...tdS, fontSize: "0.75rem", color: "var(--text-muted)" }}>{v.last_login_at ? new Date(v.last_login_at).toLocaleDateString("en-IN") : "Never"}</td>
@@ -622,6 +723,14 @@ export default function VMCoordinator() {
                                                                 style={{ padding: "4px 10px", background: "rgba(129,140,248,0.1)", border: "1px solid #818cf8", color: "#818cf8", borderRadius: "6px", cursor: "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
                                                             >
                                                                 ✏️ Colleges
+                                                            </button>
+                                                        )}
+                                                        {v.volunteer_type === "in_event" && (
+                                                            <button
+                                                                onClick={() => setEditEventsVol(v)}
+                                                                style={{ padding: "4px 10px", background: "rgba(129,140,248,0.1)", border: "1px solid #818cf8", color: "#818cf8", borderRadius: "6px", cursor: "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
+                                                            >
+                                                                ✏️ Events
                                                             </button>
                                                         )}
                                                         <button
@@ -658,6 +767,15 @@ export default function VMCoordinator() {
                         token={token}
                         onClose={() => setEditCollegesVol(null)}
                         onSaved={() => { setEditCollegesVol(null); fetchTeam(); }}
+                    />
+                )}
+
+                {editEventsVol && (
+                    <EditEventsModal
+                        volunteer={editEventsVol}
+                        token={token}
+                        onClose={() => setEditEventsVol(null)}
+                        onSaved={() => { setEditEventsVol(null); fetchTeam(); }}
                     />
                 )}
             </div>
