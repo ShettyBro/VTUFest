@@ -31,7 +31,7 @@ export default function EventLogin() {
                 body: JSON.stringify({
                     email: email.trim().toLowerCase(),
                     password,
-                    role: "SUB_ADMIN",
+                    role: "IN_EVENT",
                 }),
             });
             const data = await res.json();
