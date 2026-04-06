@@ -384,41 +384,57 @@ function EditCollegesModal({ volunteer, token, onClose, onSaved }) {
     );
 }
 
-/* ─── Edit Events Modal (for already-assigned in_event volunteers) ─── */
-function EditEventsModal({ volunteer, token, onClose, onSaved }) {
-    const [allEvents, setAllEvents] = useState([]);
-    const [selectedEvents, setSelectedEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
+/* ─── Edit Roles Modal (universal — replaces separate EditEventsModal / EditCollegesModal for team tab) ─── */
+function EditRolesModal({ volunteer, token, onClose, onSaved }) {
+    const [allColleges, setAllColleges] = useState([]);
+    const [selectedDomains, setSelectedDomains] = useState(volunteer.volunteer_types || [volunteer.volunteer_type]);
+    const [selectedEventNames, setSelectedEventNames] = useState(volunteer.allocated_events || []);
+    const [selectedCollegeIds, setSelectedCollegeIds] = useState(
+        (volunteer.allocated_colleges || []).map(c => c.college_id)
+    );
+    const [collegeSearch, setCollegeSearch] = useState("");
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState("");
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
 
     useEffect(() => {
-        setLoading(true);
-        adminFetch(`${API}/api/vm/coordinator/${volunteer.id}/events`, { headers })
+        adminFetch(`${API}/api/shared/college-and-usn/colleges`, { headers })
             .then(r => r.json())
-            .then(d => {
-                if (d.success) {
-                    setAllEvents(d.data.all_events || []);
-                    setSelectedEvents(d.data.assigned_events || []);
-                } else {
-                    setErr(d.message || "Failed to load events");
-                }
-            })
-            .catch(() => setErr("Network error — could not load events"))
-            .finally(() => setLoading(false));
-    }, [volunteer.id]);
+            .then(d => setAllColleges(d.data?.colleges || d.colleges || []))
+            .catch(() => { });
+    }, []);
 
-    const toggle = (evName) =>
-        setSelectedEvents(prev => prev.includes(evName) ? prev.filter(x => x !== evName) : [...prev, evName]);
+    const filteredColleges = useMemo(() => {
+        const q = collegeSearch.toLowerCase();
+        return allColleges.filter(c =>
+            (c.college_name || "").toLowerCase().includes(q) ||
+            (c.college_code || "").toLowerCase().includes(q)
+        );
+    }, [allColleges, collegeSearch]);
+
+    const toggleDomain = (val) =>
+        setSelectedDomains(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
+    const toggleEvent = (val) =>
+        setSelectedEventNames(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
+    const toggleCollege = (id) =>
+        setSelectedCollegeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
     const handleSave = async () => {
-        setSaving(true);
         setErr("");
+        if (selectedDomains.length === 0) return setErr("At least one domain must be selected.");
+        if (selectedDomains.includes("in_event") && selectedEventNames.length === 0)
+            return setErr("Please select at least one event for In-Event role.");
+        if (selectedDomains.includes("college_buddy") && selectedCollegeIds.length === 0)
+            return setErr("Please select at least one college for College Buddy role.");
+        setSaving(true);
         try {
-            const res = await adminFetch(`${API}/api/vm/coordinator/${volunteer.id}/events`, {
+            const res = await adminFetch(`${API}/api/vm/coordinator/${volunteer.id}/roles`, {
                 method: "POST", headers,
-                body: JSON.stringify({ event_names: selectedEvents }),
+                body: JSON.stringify({
+                    domains: selectedDomains,
+                    event_tables: selectedEventNames,
+                    college_ids: selectedCollegeIds,
+                }),
             });
             const data = await res.json();
             if (!res.ok || !data.success) throw new Error(data.message || "Failed to save");
@@ -427,49 +443,89 @@ function EditEventsModal({ volunteer, token, onClose, onSaved }) {
         finally { setSaving(false); }
     };
 
+    const is = { padding: "9px 12px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.88rem", outline: "none", width: "100%", boxSizing: "border-box" };
+
     return (
         <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-            <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "16px", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+            <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "16px", width: "100%", maxWidth: "540px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
                     <div>
-                        <h2 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.05rem" }}>🎭 Edit Event Assignments</h2>
+                        <h2 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.05rem" }}>✏️ Edit Roles</h2>
                         <div style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "3px" }}>{volunteer.full_name}</div>
                     </div>
                     <button onClick={onClose} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", fontSize: "0.85rem" }}>✕ Close</button>
                 </div>
 
-                {loading ? (
-                    <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
-                        <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>⏳</div>Loading events…
+                {/* Domain multi-select */}
+                <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.78rem", fontWeight: 600, marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        Domains * <span style={{ color: "#818cf8", textTransform: "none", letterSpacing: 0 }}>({selectedDomains.length} selected)</span>
+                    </label>
+                    <div style={{ border: "1px solid rgba(129,140,248,0.3)", borderRadius: "8px", maxHeight: "220px", overflowY: "auto", background: "rgba(129,140,248,0.04)" }}>
+                        {ASSIGN_DOMAINS.map(d => {
+                            const isSel = selectedDomains.includes(d.value);
+                            return (
+                                <label key={d.value} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", background: isSel ? "rgba(129,140,248,0.12)" : "transparent" }}>
+                                    <input type="checkbox" checked={isSel} onChange={() => toggleDomain(d.value)} style={{ accentColor: "#818cf8", width: "14px", height: "14px" }} />
+                                    <span style={{ fontSize: "0.83rem", color: isSel ? "#f1f5f9" : "var(--text-secondary)" }}>{d.label}</span>
+                                </label>
+                            );
+                        })}
                     </div>
-                ) : (
-                    <>
-                        <div style={{ marginBottom: "12px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                                <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Select events to assign</span>
-                                <span style={{ color: "#818cf8", fontSize: "0.78rem", fontWeight: 700 }}>{selectedEvents.length} selected</span>
-                            </div>
-                        </div>
+                </div>
 
-                        <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", maxHeight: "300px", overflowY: "auto", background: "rgba(255,255,255,0.03)" }}>
+                {/* Conditional: Event picker */}
+                {selectedDomains.includes("in_event") && (
+                    <div style={{ marginBottom: "16px" }}>
+                        <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.78rem", fontWeight: 600, marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Events * <span style={{ color: "#818cf8", textTransform: "none", letterSpacing: 0 }}>({selectedEventNames.length} selected)</span>
+                        </label>
+                        <div style={{ border: "1px solid rgba(129,140,248,0.3)", borderRadius: "8px", maxHeight: "200px", overflowY: "auto", background: "rgba(129,140,248,0.04)" }}>
                             {ALL_EVENTS.map(ev => {
-                                const isSel = selectedEvents.includes(ev.value);
+                                const isSel = selectedEventNames.includes(ev.value);
                                 return (
-                                    <label key={ev.value} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 14px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", background: isSel ? "rgba(129,140,248,0.1)" : "transparent", color: isSel ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "0.85rem" }}>
-                                        <input type="checkbox" checked={isSel} onChange={() => toggle(ev.value)} style={{ accentColor: "#818cf8", width: "15px", height: "15px", flexShrink: 0 }} />
-                                        <span style={{ fontWeight: isSel ? 600 : 400 }}>{ev.label}</span>
+                                    <label key={ev.value} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "7px 12px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", background: isSel ? "rgba(129,140,248,0.1)" : "transparent" }}>
+                                        <input type="checkbox" checked={isSel} onChange={() => toggleEvent(ev.value)} style={{ accentColor: "#818cf8", width: "14px", height: "14px", flexShrink: 0 }} />
+                                        <span style={{ fontSize: "0.83rem", color: isSel ? "#f1f5f9" : "var(--text-secondary)", fontWeight: isSel ? 600 : 400 }}>{ev.label}</span>
                                     </label>
                                 );
                             })}
                         </div>
-
-                        {err && <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 14px", borderRadius: "8px", margin: "14px 0", fontSize: "0.85rem" }}>{err}</div>}
-
-                        <button onClick={handleSave} disabled={saving || selectedEvents.length === 0} style={{ marginTop: "16px", width: "100%", padding: "11px", borderRadius: "10px", background: (saving || selectedEvents.length === 0) ? "rgba(129,140,248,0.3)" : "rgba(99,102,241,0.2)", border: "1px solid #6366f1", color: "#818cf8", fontWeight: 700, fontSize: "0.9rem", cursor: (saving || selectedEvents.length === 0) ? "not-allowed" : "pointer" }}>
-                            {saving ? "Saving…" : "✅ Save Event Assignments"}
-                        </button>
-                    </>
+                    </div>
                 )}
+
+                {/* Conditional: College picker */}
+                {selectedDomains.includes("college_buddy") && (
+                    <div style={{ marginBottom: "16px" }}>
+                        <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.78rem", fontWeight: 600, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Colleges * <span style={{ color: "#f87171", textTransform: "none", letterSpacing: 0 }}>select one or more</span>
+                        </label>
+                        <input placeholder="Search college…" value={collegeSearch} onChange={e => setCollegeSearch(e.target.value)} style={{ ...is, marginBottom: "6px" }} />
+                        <div style={{ border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", maxHeight: "200px", overflowY: "auto", background: "rgba(255,255,255,0.04)" }}>
+                            {filteredColleges.slice(0, 60).map(c => {
+                                const isSel = selectedCollegeIds.includes(c.id);
+                                return (
+                                    <label key={c.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "7px 12px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)", background: isSel ? "rgba(129,140,248,0.12)" : "transparent" }}>
+                                        <input type="checkbox" checked={isSel} onChange={() => toggleCollege(c.id)} style={{ accentColor: "#818cf8", width: "14px", height: "14px" }} />
+                                        <span style={{ fontSize: "0.83rem", color: isSel ? "#f1f5f9" : "var(--text-secondary)" }}>
+                                            {c.college_name}
+                                            {c.college_code && <span style={{ marginLeft: "6px", color: "var(--text-muted)", fontSize: "0.73rem" }}>({c.college_code})</span>}
+                                        </span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                        {selectedCollegeIds.length > 0 && (
+                            <div style={{ marginTop: "5px", fontSize: "0.74rem", color: "#818cf8" }}>✓ {selectedCollegeIds.length} college(s) selected</div>
+                        )}
+                    </div>
+                )}
+
+                {err && <div style={{ background: "rgba(239,68,68,0.12)", border: "1px solid #ef4444", color: "#f87171", padding: "10px 14px", borderRadius: "8px", marginBottom: "12px", fontSize: "0.85rem" }}>{err}</div>}
+
+                <button onClick={handleSave} disabled={saving || selectedDomains.length === 0} style={{ width: "100%", padding: "11px", borderRadius: "10px", background: (saving || selectedDomains.length === 0) ? "rgba(129,140,248,0.15)" : "rgba(99,102,241,0.2)", border: "1px solid #6366f1", color: "#818cf8", fontWeight: 700, fontSize: "0.9rem", cursor: (saving || selectedDomains.length === 0) ? "not-allowed" : "pointer" }}>
+                    {saving ? "Saving…" : "✅ Save Role Changes"}
+                </button>
             </div>
         </div>
     );
@@ -493,13 +549,14 @@ export default function VMCoordinator() {
     const [assignHint, setAssignHint] = useState(null);
 
     /* ── Team state ── */
-    const [teamDomain, setTeamDomain] = useState("registration_desk");
+    const [teamDomain, setTeamDomain] = useState("");
     const [team, setTeam] = useState([]);
     const [teamLoading, setTeamLoading] = useState(false);
     const [teamTotal, setTeamTotal] = useState(0);
     const [removingId, setRemovingId] = useState(null);
-    const [editCollegesVol, setEditCollegesVol] = useState(null);
-    const [editEventsVol, setEditEventsVol] = useState(null);
+    const [editRolesVol, setEditRolesVol] = useState(null);
+    const [teamSearch, setTeamSearch] = useState("");
+    const [teamEventFilter, setTeamEventFilter] = useState("");
 
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
@@ -522,7 +579,11 @@ export default function VMCoordinator() {
     const fetchTeam = async () => {
         setTeamLoading(true);
         try {
-            const res = await adminFetch(`${API}/api/vm/coordinator/team?domain=${teamDomain}`, { headers });
+            const params = new URLSearchParams({
+                ...(teamDomain ? { domain: teamDomain } : {}),
+                ...(teamSearch ? { search: teamSearch } : {}),
+            });
+            const res = await adminFetch(`${API}/api/vm/coordinator/team?${params}`, { headers });
             const data = await res.json();
             setTeam(data.team || data.data || []);
             setTeamTotal(data.total || 0);
@@ -531,7 +592,13 @@ export default function VMCoordinator() {
     };
 
     useEffect(() => { if (activeTab === "pool") fetchPool(); }, [activeTab, poolDomain, poolPage]);
-    useEffect(() => { if (activeTab === "team") fetchTeam(); }, [activeTab, teamDomain]);
+    useEffect(() => { if (activeTab === "team") fetchTeam(); }, [activeTab, teamDomain]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Client-side event filter on top of server results
+    const filteredTeam = useMemo(() => {
+        if (!teamEventFilter) return team;
+        return team.filter(v => Array.isArray(v.allocated_events) && v.allocated_events.includes(teamEventFilter));
+    }, [team, teamEventFilter]);
 
     const handleUnassign = async (vol) => {
         if (!window.confirm(`Remove ${vol.full_name} from production?\n\nTheir QR code will be freed and they'll return to the approved pool.`)) return;
@@ -655,18 +722,39 @@ export default function VMCoordinator() {
                 {/* ── TEAM TAB ── */}
                 {activeTab === "team" && (
                     <>
-                        <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap", alignItems: "center" }}>
-                            <select value={teamDomain} onChange={e => setTeamDomain(e.target.value)} style={{ padding: "7px 12px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.85rem", outline: "none" }}>
+                        {/* Row 1: Domain filter + search bar + refresh */}
+                        <div style={{ display: "flex", gap: "10px", marginBottom: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                            <select value={teamDomain} onChange={e => { setTeamDomain(e.target.value); setTeamEventFilter(""); }} style={{ padding: "7px 12px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.85rem", outline: "none" }}>
+                                <option value="">All Domains</option>
                                 {TEAM_DOMAINS.map(d => <option key={d} value={d}>{d.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</option>)}
                             </select>
-                            <button onClick={fetchTeam} style={{ padding: "7px 14px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontSize: "0.82rem" }}>🔄 Refresh</button>
-                            <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginLeft: "auto" }}>{teamTotal} assigned</span>
+                            <div style={{ position: "relative", flex: "1 1 200px" }}>
+                                <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }}>🔍</span>
+                                <input
+                                    placeholder="Search name, email, AUID…"
+                                    value={teamSearch}
+                                    onChange={e => setTeamSearch(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && fetchTeam()}
+                                    style={{ width: "100%", boxSizing: "border-box", padding: "7px 12px 7px 32px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.85rem", outline: "none" }}
+                                />
+                            </div>
+                            <button onClick={fetchTeam} style={{ padding: "7px 14px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontSize: "0.82rem" }}>🔄</button>
+                        </div>
+                        {/* Row 2: Event filter + count */}
+                        <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap", alignItems: "center" }}>
+                            <select value={teamEventFilter} onChange={e => setTeamEventFilter(e.target.value)} style={{ padding: "7px 12px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", color: "#f1f5f9", fontSize: "0.85rem", outline: "none" }}>
+                                <option value="">All Events</option>
+                                {ALL_EVENTS.map(ev => <option key={ev.value} value={ev.value}>{ev.label}</option>)}
+                            </select>
+                            <span style={{ color: "var(--text-muted)", fontSize: "0.82rem", marginLeft: "auto" }}>
+                                {teamEventFilter ? `${filteredTeam.length} / ${teamTotal}` : teamTotal} assigned
+                            </span>
                         </div>
 
                         {teamLoading ? (
                             <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}><div style={{ fontSize: "2rem", marginBottom: "12px" }}>⏳</div>Loading team…</div>
-                        ) : team.length === 0 ? (
-                            <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}><div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>👥</div>No volunteers assigned to {teamDomain.replace(/_/g, " ")} yet.</div>
+                        ) : filteredTeam.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}><div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>👥</div>No volunteers found{teamDomain ? ` for "${teamDomain.replace(/_/g, " ")}"` : ""}.</div>
                         ) : (
                             <div style={{ flex: 1, overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }}>
                                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -674,76 +762,79 @@ export default function VMCoordinator() {
                                         <tr>
                                             <th style={thS}>Name / AUID</th>
                                             <th style={thS}>Email / Phone</th>
+                                            <th style={thS}>Domains</th>
                                             <th style={thS}>QR Code</th>
-                                            <th style={thS}>College</th>
+                                            <th style={thS}>College / Events</th>
                                             <th style={thS}>Active</th>
                                             <th style={thS}>Last Login</th>
                                             <th style={{ ...thS, textAlign: "right" }}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {team.map(v => (
-                                            <tr key={v.id}>
-                                                <td style={tdS}>
-                                                    <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.87rem" }}>{v.full_name}</div>
-                                                    <div style={{ color: "var(--text-muted)", fontSize: "0.73rem" }}>{v.auid}</div>
-                                                </td>
-                                                <td style={tdS}>
-                                                    <div>{v.email}</div>
-                                                    <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{v.phone}</div>
-                                                </td>
-                                                <td style={tdS}>
-                                                    <code style={{ background: "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem", color: "#a8edea" }}>{v.qr_code || "—"}</code>
-                                                </td>
-                                                <td style={tdS}>
-                                                    {v.allocated_colleges && v.allocated_colleges.length > 0
-                                                        ? v.allocated_colleges.map((c, idx) => (
-                                                            <span key={c.college_id || idx} style={{ display: "inline-block", background: "rgba(248,113,113,0.1)", color: "#f87171", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600, margin: "1px 3px 1px 0" }}>
-                                                                {c.college_name}
-                                                            </span>
-                                                          ))
-                                                        : v.allocated_events && v.allocated_events.length > 0
-                                                            ? v.allocated_events.map((eStr, idx) => {
-                                                                const evDef = ALL_EVENTS.find(edef => edef.value === eStr);
-                                                                return (
-                                                                    <span key={idx} style={{ display: "inline-block", background: "rgba(129,140,248,0.1)", color: "#818cf8", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600, margin: "1px 3px 1px 0" }}>
-                                                                        {evDef ? evDef.label : eStr}
-                                                                    </span>
-                                                                );
-                                                              })
-                                                            : (v.college_name || "—")}
-                                                </td>
-                                                <td style={tdS}><span style={{ color: v.is_active ? "#4ade80" : "#f87171", fontWeight: 700 }}>{v.is_active ? "✅" : "❌"}</span></td>
-                                                <td style={{ ...tdS, fontSize: "0.75rem", color: "var(--text-muted)" }}>{v.last_login_at ? new Date(v.last_login_at).toLocaleDateString("en-IN") : "Never"}</td>
-                                                <td style={{ ...tdS, textAlign: "right" }}>
-                                                    <div style={{ display: "flex", gap: "5px", justifyContent: "flex-end", flexWrap: "wrap" }}>
-                                                        {v.volunteer_type === "college_buddy" && (
+                                        {filteredTeam.map(v => {
+                                            const types = v.volunteer_types || [v.volunteer_type];
+                                            return (
+                                                <tr key={v.id}>
+                                                    <td style={tdS}>
+                                                        <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.87rem" }}>{v.full_name}</div>
+                                                        <div style={{ color: "var(--text-muted)", fontSize: "0.73rem" }}>{v.auid}</div>
+                                                    </td>
+                                                    <td style={tdS}>
+                                                        <div>{v.email}</div>
+                                                        <div style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{v.phone}</div>
+                                                    </td>
+                                                    <td style={tdS}>
+                                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "3px" }}>
+                                                            {types.map(t => (
+                                                                <span key={t} style={{ display: "inline-block", background: "rgba(129,140,248,0.12)", color: "#818cf8", padding: "2px 7px", borderRadius: "10px", fontSize: "0.68rem", fontWeight: 700 }}>
+                                                                    {t.replace(/_/g, " ")}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td style={tdS}>
+                                                        <code style={{ background: "rgba(255,255,255,0.06)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.8rem", color: "#a8edea" }}>{v.qr_code || "—"}</code>
+                                                    </td>
+                                                    <td style={tdS}>
+                                                        {v.allocated_colleges && v.allocated_colleges.length > 0
+                                                            ? v.allocated_colleges.map((c, idx) => (
+                                                                <span key={c.college_id || idx} style={{ display: "inline-block", background: "rgba(248,113,113,0.1)", color: "#f87171", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600, margin: "1px 3px 1px 0" }}>
+                                                                    {c.college_name}
+                                                                </span>
+                                                              ))
+                                                            : v.allocated_events && v.allocated_events.length > 0
+                                                                ? v.allocated_events.map((eStr, idx) => {
+                                                                    const evDef = ALL_EVENTS.find(edef => edef.value === eStr);
+                                                                    return (
+                                                                        <span key={idx} style={{ display: "inline-block", background: "rgba(74,222,128,0.1)", color: "#4ade80", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600, margin: "1px 3px 1px 0" }}>
+                                                                            {evDef ? evDef.label : eStr}
+                                                                        </span>
+                                                                    );
+                                                                  })
+                                                                : (v.college_name || "—")}
+                                                    </td>
+                                                    <td style={tdS}><span style={{ color: v.is_active ? "#4ade80" : "#f87171", fontWeight: 700 }}>{v.is_active ? "✅" : "❌"}</span></td>
+                                                    <td style={{ ...tdS, fontSize: "0.75rem", color: "var(--text-muted)" }}>{v.last_login_at ? new Date(v.last_login_at).toLocaleDateString("en-IN") : "Never"}</td>
+                                                    <td style={{ ...tdS, textAlign: "right" }}>
+                                                        <div style={{ display: "flex", gap: "5px", justifyContent: "flex-end", flexWrap: "wrap" }}>
                                                             <button
-                                                                onClick={() => setEditCollegesVol(v)}
+                                                                onClick={() => setEditRolesVol(v)}
                                                                 style={{ padding: "4px 10px", background: "rgba(129,140,248,0.1)", border: "1px solid #818cf8", color: "#818cf8", borderRadius: "6px", cursor: "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
                                                             >
-                                                                ✏️ Colleges
+                                                                ✏️ Edit Roles
                                                             </button>
-                                                        )}
-                                                        {v.volunteer_type === "in_event" && (
                                                             <button
-                                                                onClick={() => setEditEventsVol(v)}
-                                                                style={{ padding: "4px 10px", background: "rgba(129,140,248,0.1)", border: "1px solid #818cf8", color: "#818cf8", borderRadius: "6px", cursor: "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
+                                                                onClick={() => handleUnassign(v)}
+                                                                disabled={removingId === v.id}
+                                                                style={{ padding: "4px 10px", background: "rgba(239,68,68,0.1)", border: "1px solid #ef4444", color: "#f87171", borderRadius: "6px", cursor: removingId === v.id ? "not-allowed" : "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
                                                             >
-                                                                ✏️ Events
+                                                                {removingId === v.id ? "…" : "🗑 Remove"}
                                                             </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => handleUnassign(v)}
-                                                            disabled={removingId === v.id}
-                                                            style={{ padding: "4px 10px", background: "rgba(239,68,68,0.1)", border: "1px solid #ef4444", color: "#f87171", borderRadius: "6px", cursor: removingId === v.id ? "not-allowed" : "pointer", fontSize: "0.73rem", fontWeight: 700, whiteSpace: "nowrap" }}
-                                                        >
-                                                            {removingId === v.id ? "…" : "🗑 Remove"}
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -761,21 +852,12 @@ export default function VMCoordinator() {
                     />
                 )}
 
-                {editCollegesVol && (
-                    <EditCollegesModal
-                        volunteer={editCollegesVol}
+                {editRolesVol && (
+                    <EditRolesModal
+                        volunteer={editRolesVol}
                         token={token}
-                        onClose={() => setEditCollegesVol(null)}
-                        onSaved={() => { setEditCollegesVol(null); fetchTeam(); }}
-                    />
-                )}
-
-                {editEventsVol && (
-                    <EditEventsModal
-                        volunteer={editEventsVol}
-                        token={token}
-                        onClose={() => setEditEventsVol(null)}
-                        onSaved={() => { setEditEventsVol(null); fetchTeam(); }}
+                        onClose={() => setEditRolesVol(null)}
+                        onSaved={() => { setEditRolesVol(null); fetchTeam(); }}
                     />
                 )}
             </div>
