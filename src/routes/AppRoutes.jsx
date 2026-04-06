@@ -95,6 +95,10 @@ import IDCardTeamPortal from "../pages/idcard/IDCardTeamPortal";
 import RegDeskLogin from "../pages/regdesk/RegDeskLogin";
 import RegDeskDashboard from "../pages/regdesk/RegDeskDashboard";
 
+/* EVENT HEAD / ATTENDANCE */
+import EventLogin from "../pages/event/EventLogin";
+import AttendanceDashboard from "../pages/event/AttendanceDashboard";
+
 /* VOLUNTEER PORTAL */
 import VolunteerPortal from "../pages/volunteer/VolunteerPortal";
 import VolunteerLogin from "../pages/volunteer/VolunteerLogin";
@@ -156,6 +160,12 @@ function IDCardEditorRoute({ children }) {
 function RegDeskRoute({ children }) {
   const token = localStorage.getItem("vtufest_regdesk_token");
   if (!token) return <Navigate to="/reg" replace />;
+  return children;
+}
+
+function EventRoute({ children }) {
+  const token = localStorage.getItem("vtufest_event_token");
+  if (!token) return <Navigate to="/event" replace />;
   return children;
 }
 
@@ -363,6 +373,10 @@ export default function AppRoutes() {
         {/* ── REGISTRATION DESK HEAD ──────────────────────────────────────── */}
         <Route path="/reg" element={<RegDeskLogin />} />
         <Route path="/reg-dashboard" element={<RegDeskRoute><RegDeskDashboard /></RegDeskRoute>} />
+
+        {/* ── EVENT HEAD / ATTENDANCE ──────────────────────────────────────── */}
+        <Route path="/event" element={<EventLogin />} />
+        <Route path="/event/dashboard" element={<EventRoute><AttendanceDashboard /></EventRoute>} />
 
         {/* ── VOLUNTEER PORTAL ────────────────────────────────────────────── */}
         <Route path="/volunteer" element={<VolunteerPortal />} />

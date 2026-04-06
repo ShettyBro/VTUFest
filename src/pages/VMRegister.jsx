@@ -4,6 +4,7 @@ import "../styles/auth.css";
 
 /* ─────────────────── CONFIG ─────────────────── */
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
+const CLOSE_REGISTRATIONS = true; // Toggle to true to close form
 
 /* ─────────────────── VOLUNTEER CATEGORIES ─────────────────── */
 const VOLUNTEER_CATEGORIES = {
@@ -384,6 +385,37 @@ export default function VMRegister() {
     const isVol = tab === "volunteer";
 
     /* ─────────────────── RENDER ─────────────────── */
+    if (CLOSE_REGISTRATIONS) {
+        return (
+            <div className="auth-page">
+                <div className="shape shape-1" />
+                <div className="shape shape-2" />
+                <div className="auth-container">
+                    <div className="auth-info-panel">
+                        <div className="auth-brand">
+                            <img src="/main.webp" alt="VTU Habba Logo" style={{ height: "auto", maxWidth: "100%", maxHeight: "120px" }} />
+                        </div>
+                        <div className="brand-text">
+                            <h3>VTU HABBA 2026</h3>
+                            <span>Volunteer &amp; Faculty Registration</span>
+                        </div>
+                    </div>
+                    <div className="auth-form-panel">
+                        <div className="auth-form" style={{ textAlign: "center", padding: "60px 20px" }}>
+                            <div style={{ fontSize: "4rem", marginBottom: "16px" }}>🛑</div>
+                            <h2 className="form-title">Registrations Closed</h2>
+                            <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.95rem", lineHeight: 1.6, marginTop: "20px", marginBottom: "30px" }}>
+                                We are no longer accepting new volunteer or faculty registrations. If you have any urgent queries, please contact the administrator.
+                            </p>
+                            <Link to="/vs" className="auth-btn" style={{ display: "inline-block", textDecoration: "none" }}>Check Existing Status</Link>
+                            <Link to="/" className="text-btn" style={{ display: "block", marginTop: "16px" }}>Return to Home</Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="auth-page">
             <div className="shape shape-1" />
