@@ -2,6 +2,16 @@ import { useState, useEffect, useMemo } from "react";
 import VMLayout from "../vm/VMLayout";
 import { adminFetch } from "../../utils/adminFetch";
 
+const STATUS_COLORS = {
+    pending:  { color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
+    approved: { color: "#60a5fa", bg: "rgba(96,165,250,0.15)" },
+    assigned: { color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
+};
+function StatusBadge({ status }) {
+    const c = STATUS_COLORS[status] || STATUS_COLORS.pending;
+    return <span style={{ background: c.bg, color: c.color, padding: "3px 9px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase" }}>{status}</span>;
+}
+
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
 
 const PANEL_OPTIONS = [
@@ -173,11 +183,23 @@ export default function VMFacultyAssign() {
     const fetchApproved = async () => {
         setLoading(true); setError("");
         try {
-            const res = await adminFetch(`${API}/api/vm/admin/faculty?status=approved&limit=200`, { headers });
+            const res = await adminFetch(`${API}/api/vm/admin/faculty?limit=200`, { headers });
             const data = await res.json();
-            setFaculty(data.faculty || data.data || []);
-        } catch { setError("Network error"); }
+            if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+            setFaculty((data.faculty || data.data || []).filter(f => f.status !== "assigned"));
+        } catch (ex) { setError(ex.message || "Network error"); }
         finally { setLoading(false); }
+    };
+
+    const handleApprove = async (f) => {
+        try {
+            const res = await adminFetch(`${API}/api/vm/admin/faculty/${f.id}/approve`, { method: "PATCH", headers });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Approval failed.");
+            setSuccessMsg(`${f.full_name} approved — now ready to assign.`);
+            setTimeout(() => setSuccessMsg(""), 5000);
+            fetchApproved();
+        } catch (ex) { setError(ex.message); setTimeout(() => setError(""), 5000); }
     };
 
     useEffect(() => { fetchApproved(); }, []);
@@ -201,7 +223,7 @@ export default function VMFacultyAssign() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
                     <div>
                         <h3 style={{ margin: 0, color: "var(--text-primary)" }}>🎓 Assign Faculty Panel <span style={{ color: "var(--text-muted)", fontWeight: 400, fontSize: "0.95rem" }}>({filtered.length})</span></h3>
-                        <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.82rem" }}>Browse approved faculty — assign a panel to grant portal access + send email credentials</p>
+                        <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.82rem" }}>Approve pending faculty, then assign a panel to grant portal access + send credentials</p>
                     </div>
                     <button onClick={fetchApproved} style={{ padding: "9px 16px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)", color: "var(--text-secondary)", borderRadius: "8px", cursor: "pointer", fontSize: "0.83rem" }}>🔄 Refresh</button>
                 </div>
@@ -239,12 +261,11 @@ export default function VMFacultyAssign() {
                 </div>
 
                 {loading ? (
-                    <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}><div style={{ fontSize: "2rem", marginBottom: "12px" }}>⏳</div>Loading approved faculty…</div>
+                    <div style={{ textAlign: "center", padding: "60px", color: "var(--text-secondary)" }}><div style={{ fontSize: "2rem", marginBottom: "12px" }}>⏳</div>Loading faculty…</div>
                 ) : filtered.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "60px", color: "var(--text-muted)" }}>
                         <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>📭</div>
-                        {faculty.length === 0 ? "No approved faculty ready for assignment." : "No faculty matching current filters."}
-                        {faculty.length === 0 && <div style={{ marginTop: "10px", fontSize: "0.82rem" }}>Go to <strong>Faculty Registrations</strong> to approve pending applications first.</div>}
+                        {faculty.length === 0 ? "No faculty registrations found." : "No faculty matching current filters."}
                     </div>
                 ) : (
                     <div style={{ flex: 1, overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px" }}>
@@ -254,9 +275,10 @@ export default function VMFacultyAssign() {
                                     <th style={thS}>Photo</th>
                                     <th style={thS}>Name</th>
                                     <th style={thS}>Email</th>
+                                    <th style={thS}>Status</th>
                                     <th style={thS}>Requested Panel</th>
-                                    <th style={thS}>Approved At</th>
-                                    <th style={{ ...thS, textAlign: "right" }}>Assign</th>
+                                    <th style={thS}>Registered At</th>
+                                    <th style={{ ...thS, textAlign: "right" }}>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -269,16 +291,18 @@ export default function VMFacultyAssign() {
                                         </td>
                                         <td style={tdS}><span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "0.87rem" }}>{f.full_name}</span></td>
                                         <td style={tdS}><span style={{ color: "var(--text-secondary)", fontSize: "0.82rem" }}>{f.email}</span></td>
+                                        <td style={tdS}><StatusBadge status={f.status} /></td>
                                         <td style={tdS}>
                                             {f.requested_domain
                                                 ? <span style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 600 }}>{PANEL_OPTIONS.find(p => p.value === f.requested_domain)?.label || f.requested_domain}</span>
                                                 : <span style={{ color: "var(--text-muted)" }}>—</span>}
                                         </td>
-                                        <td style={{ ...tdS, fontSize: "0.75rem", color: "var(--text-muted)" }}>{fmt(f.approved_at)}</td>
+                                        <td style={{ ...tdS, fontSize: "0.75rem", color: "var(--text-muted)" }}>{fmt(f.created_at)}</td>
                                         <td style={{ ...tdS, textAlign: "right" }}>
-                                            <button onClick={() => setAssignModal(f)} style={{ padding: "5px 14px", background: "rgba(167,139,250,0.15)", border: "1px solid #a78bfa", color: "#a78bfa", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.8rem" }}>
-                                                🎓 Assign Panel
-                                            </button>
+                                            {f.status === "approved"
+                                                ? <button onClick={() => setAssignModal(f)} style={{ padding: "5px 14px", background: "rgba(167,139,250,0.15)", border: "1px solid #a78bfa", color: "#a78bfa", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.8rem" }}>🎓 Assign Panel</button>
+                                                : <button onClick={() => handleApprove(f)} style={{ padding: "5px 14px", background: "rgba(96,165,250,0.12)", border: "1px solid #60a5fa", color: "#60a5fa", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "0.8rem" }}>✅ Approve</button>
+                                            }
                                         </td>
                                     </tr>
                                 ))}

@@ -542,14 +542,19 @@ function AddPersonModal({ eventKey, college, onSuccess, onClose }) {
                     {(p.full_name || "?")[0]}
                   </div>
                 )}
-                <div>
-                  <div style={{ color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{p.full_name}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{p.full_name}</span>
+                    {p.in_master && (
+                      <span style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.4)", borderRadius: 6, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>HAS QR</span>
+                    )}
+                  </div>
                   <div style={{ color: "#64748b", fontSize: 12 }}>
                     {p.usn ? `USN: ${p.usn}` : p.accompanist_type} · {p.phone}
                   </div>
                 </div>
                 {selected?.id === p.id && (
-                  <span style={{ marginLeft: "auto", color: "#4ade80", fontSize: 18 }}>✓</span>
+                  <span style={{ color: "#4ade80", fontSize: 18 }}>✓</span>
                 )}
               </div>
             ))
