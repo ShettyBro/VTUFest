@@ -46,6 +46,7 @@ const VOLUNTEER_CATEGORIES = {
         { value: "food", label: "Food" },
         { value: "college_buddy", label: "College Buddy" },
         { value: "general", label: "General" },
+        { value: "social_media", label: "Social Media" },
         { value: "logistics", label: "Logistics", group: "📋 Event Operations" },
         { value: "guest_hospitality", label: "Guest Hospitality", group: "📋 Event Operations" },
         { value: "technical", label: "Technical", group: "📋 Event Operations" },
