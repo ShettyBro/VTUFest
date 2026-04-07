@@ -40,11 +40,155 @@ const ALL_EVENT_KEYS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// QR DOWNLOAD MODAL
+// CAMERA MODAL — live getUserMedia feed with in-browser capture
+// ═══════════════════════════════════════════════════════════════════════════════
+function CameraModal({ onCapture, onClose }) {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const [err, setErr] = useState("");
+  const [ready, setReady] = useState(false);
+  const [captured, setCaptured] = useState(null); // dataURL preview after snap
+
+  useEffect(() => {
+    let active = true;
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } })
+      .then((stream) => {
+        if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => { videoRef.current.play(); setReady(true); };
+        }
+      })
+      .catch((e) => {
+        if (!active) return;
+        const msg = e.name === "NotAllowedError"
+          ? "Camera permission denied. Please allow camera access in your browser settings."
+          : e.name === "NotFoundError"
+          ? "No camera found on this device."
+          : `Camera error: ${e.message}`;
+        setErr(msg);
+      });
+    return () => {
+      active = false;
+      streamRef.current?.getTracks().forEach(t => t.stop());
+    };
+  }, []);
+
+  const handleCapture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL("image/png");
+    setCaptured(dataUrl);
+    // Stop stream while previewing
+    streamRef.current?.getTracks().forEach(t => t.stop());
+  };
+
+  const handleRetake = () => {
+    setCaptured(null);
+    setReady(false);
+    // Re-open camera
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: "environment" } })
+      .then((stream) => {
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => { videoRef.current.play(); setReady(true); };
+        }
+      })
+      .catch(e => setErr(e.message));
+  };
+
+  const handleUse = () => {
+    if (!captured) return;
+    // Convert dataURL → File
+    fetch(captured)
+      .then(r => r.blob())
+      .then(blob => {
+        const file = new File([blob], `camera_${Date.now()}.png`, { type: "image/png" });
+        onCapture(file);
+      });
+  };
+
+  return (
+    <div style={styles.overlay}>
+      <div style={{ ...styles.modal, maxWidth: 520, padding: 0, overflow: "hidden" }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: "#1e293b", borderBottom: "1px solid #334155" }}>
+          <span style={{ fontWeight: 700, color: "#818cf8" }}>📷 Take Photo</span>
+          <button style={styles.closeBtn} onClick={onClose}>✕</button>
+        </div>
+
+        {/* Camera area */}
+        <div style={{ position: "relative", background: "#000", minHeight: 280 }}>
+          {!captured ? (
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              style={{ width: "100%", maxHeight: 360, objectFit: "cover", display: ready ? "block" : "none" }}
+            />
+          ) : (
+            <img src={captured} alt="Captured" style={{ width: "100%", maxHeight: 360, objectFit: "cover" }} />
+          )}
+
+          {/* Loading state */}
+          {!ready && !err && !captured && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, border: "3px solid #334155", borderTopColor: "#818cf8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+              <span style={{ color: "#64748b", fontSize: 13 }}>Requesting camera…</span>
+            </div>
+          )}
+
+          {/* Capture overlay indicator */}
+          {ready && !captured && (
+            <div style={{ position: "absolute", inset: 0, border: "3px solid rgba(129,140,248,0.4)", pointerEvents: "none", borderRadius: 4 }} />
+          )}
+        </div>
+
+        {/* Hidden canvas for snapshot */}
+        <canvas ref={canvasRef} style={{ display: "none" }} />
+
+        {/* Error */}
+        {err && <div style={{ ...styles.errBox, margin: "12px 18px", borderRadius: 8 }}>{err}</div>}
+
+        {/* Controls */}
+        <div style={{ padding: "14px 18px", display: "flex", gap: 10 }}>
+          {!captured ? (
+            <button
+              style={{ ...styles.btnPrimary, flex: 1, opacity: ready ? 1 : 0.5 }}
+              onClick={handleCapture}
+              disabled={!ready}
+            >
+              📸 Capture
+            </button>
+          ) : (
+            <>
+              <button style={{ ...styles.btnSecondary, flex: 1 }} onClick={handleRetake}>🔄 Retake</button>
+              <button style={{ ...styles.btnPrimary, flex: 1 }} onClick={handleUse}>✅ Use This Photo</button>
+            </>
+          )}
+          <button style={styles.btnSecondary} onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QR DOWNLOAD MODAL — ID Card design
 // ═══════════════════════════════════════════════════════════════════════════════
 function QRDownloadModal({ data, onClose }) {
   const { full_name, college_name, qr_code } = data;
-  const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qr_code)}`;
+  const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr_code)}&bgcolor=ffffff&color=0f172a&margin=6`;
 
   const handleDownload = async () => {
     try {
@@ -63,30 +207,147 @@ function QRDownloadModal({ data, onClose }) {
 
   return (
     <div style={styles.overlay}>
-      <div style={{ ...styles.modal, maxWidth: 420 }}>
-        <h3 style={{ color: "#4ade80", marginBottom: 4 }}>New QR Card Assigned</h3>
-        <p style={{ color: "#94a3b8", marginBottom: 16, fontSize: 13 }}>
-          A new master record was created and a QR code has been assigned.
-        </p>
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
-          <img src={qrImgUrl} alt="QR Code" style={{ borderRadius: 8, border: "2px solid #334155" }} />
+      {/* Outer wrapper — buttons OUTSIDE the card so screenshot stays clean */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, maxWidth: 420, width: "92vw" }}>
+
+        {/* ── ID CARD ── */}
+        <div style={{
+          width: "100%",
+          background: "linear-gradient(160deg, #0f172a 0%, #1a1f3a 100%)",
+          borderRadius: 18,
+          overflow: "hidden",
+          border: "2px solid #334155",
+          boxShadow: "0 0 0 4px rgba(129,140,248,0.15), 0 24px 60px rgba(0,0,0,0.6)",
+          fontFamily: "'Segoe UI', 'Inter', sans-serif",
+        }}>
+
+          {/* Header stripe */}
+          <div style={{
+            background: "linear-gradient(90deg, #1e3a5f, #312e81)",
+            padding: "14px 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid rgba(129,140,248,0.3)",
+          }}>
+            <img
+              src="/main.webp"
+              alt="VTU Habba"
+              style={{ height: 44, objectFit: "contain" }}
+            />
+            <div style={{ textAlign: "right" }}>
+              <div style={{ color: "#a5b4fc", fontWeight: 800, fontSize: 13, letterSpacing: "0.05em" }}>VTU HABBA 2026</div>
+              <div style={{ color: "rgba(165,180,252,0.6)", fontSize: 10, marginTop: 2 }}>Participant ID Card</div>
+            </div>
+          </div>
+
+          {/* Card body — QR left, details right */}
+          <div style={{ display: "flex", gap: 0, alignItems: "stretch" }}>
+
+            {/* QR code block */}
+            <div style={{
+              padding: "20px 16px",
+              background: "rgba(255,255,255,0.03)",
+              borderRight: "1px solid #1e293b",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              minWidth: 140,
+            }}>
+              <div style={{
+                background: "#fff",
+                borderRadius: 10,
+                padding: 6,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+              }}>
+                <img src={qrImgUrl} alt="QR" style={{ width: 120, height: 120, display: "block" }} />
+              </div>
+              <div style={{
+                fontFamily: "monospace",
+                fontSize: 11,
+                color: "#818cf8",
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                background: "rgba(129,140,248,0.1)",
+                padding: "3px 8px",
+                borderRadius: 6,
+                border: "1px solid rgba(129,140,248,0.25)",
+              }}>
+                {qr_code}
+              </div>
+            </div>
+
+            {/* Details block */}
+            <div style={{ flex: 1, padding: "20px 18px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 14 }}>
+              {/* Participant avatar placeholder + name */}
+              <div>
+                <div style={{ color: "rgba(148,163,184,0.6)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+                  Participant
+                </div>
+                <div style={{ color: "#f1f5f9", fontWeight: 800, fontSize: 16, lineHeight: 1.25 }}>
+                  {full_name}
+                </div>
+              </div>
+
+              <div style={{ width: "100%", height: 1, background: "rgba(255,255,255,0.07)" }} />
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div>
+                  <div style={{ color: "rgba(148,163,184,0.55)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
+                    College
+                  </div>
+                  <div style={{ color: "#94a3b8", fontSize: 12, lineHeight: 1.4 }}>
+                    {college_name}
+                  </div>
+                </div>
+              </div>
+
+              {/* Decorative chip */}
+              <div style={{
+                marginTop: 4,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                background: "rgba(74,222,128,0.08)",
+                border: "1px solid rgba(74,222,128,0.25)",
+                borderRadius: 20,
+                padding: "4px 10px",
+                alignSelf: "flex-start",
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
+                <span style={{ color: "#4ade80", fontSize: 10, fontWeight: 700 }}>Verified & Assigned</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer stripe */}
+          <div style={{
+            background: "rgba(0,0,0,0.3)",
+            borderTop: "1px solid #1e293b",
+            padding: "8px 20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}>
+            <span style={{ color: "rgba(148,163,184,0.4)", fontSize: 9 }}>Acharya Institute of Technology · Bengaluru</span>
+            <span style={{ color: "rgba(129,140,248,0.4)", fontSize: 9 }}>vtufest2026.acharyahabba.com</span>
+          </div>
         </div>
-        <div style={{ background: "#1e293b", borderRadius: 8, padding: "12px 16px", marginBottom: 16 }}>
-          <p><strong style={{ color: "#e2e8f0" }}>Name:</strong> <span style={{ color: "#94a3b8" }}>{full_name}</span></p>
-          <p><strong style={{ color: "#e2e8f0" }}>College:</strong> <span style={{ color: "#94a3b8" }}>{college_name}</span></p>
-          <p><strong style={{ color: "#e2e8f0" }}>QR Code:</strong> <span style={{ color: "#818cf8", fontFamily: "monospace" }}>{qr_code}</span></p>
-        </div>
-        <p style={{ color: "#fbbf24", fontSize: 12, marginBottom: 16, textAlign: "center" }}>
-          Print and hand this QR card to the participant before their event.
-        </p>
-        <div style={{ display: "flex", gap: 8 }}>
+
+        {/* ── Action buttons (outside card so screenshot is clean) ── */}
+        <div style={{ display: "flex", gap: 10, width: "100%" }}>
           <button style={{ ...styles.btnPrimary, flex: 1 }} onClick={handleDownload}>
-            Download QR
+            ⬇️ Download QR
           </button>
           <button style={{ ...styles.btnSecondary, flex: 1 }} onClick={onClose}>
             Close
           </button>
         </div>
+        <p style={{ color: "rgba(148,163,184,0.5)", fontSize: 11, textAlign: "center", margin: 0 }}>
+          Screenshot the card above to share · or download just the QR
+        </p>
       </div>
     </div>
   );
@@ -584,17 +845,385 @@ function EditPersonModal({ person, onClose, onSaved }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// REMOVE FROM MASTER MODAL
+// ═══════════════════════════════════════════════════════════════════════════════
+function RemoveFromMasterModal({ person, onClose, onRemoved }) {
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+
+  const handleRemove = async () => {
+    if (reason.trim().length < 10) { setErr("Reason must be at least 10 characters."); return; }
+    setLoading(true); setErr("");
+    try {
+      const res = await fetch(`${API_BASE}/api/dev/master/person/${person.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("vtufest_dev_token")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason: reason.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to remove person");
+      onRemoved(data.data || data);
+    } catch (e) { setErr(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div style={styles.overlay}>
+      <div style={{ ...styles.modal, maxWidth: 420 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h3 style={{ color: "#f87171" }}>🗑️ Remove from Master</h3>
+          <button style={styles.closeBtn} onClick={onClose}>✕</button>
+        </div>
+
+        {/* Person preview */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#0f172a", borderRadius: 8, marginBottom: 14 }}>
+          <div style={{ width: 42, height: 42, borderRadius: "50%", background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontWeight: 700, flexShrink: 0 }}>
+            {(person.full_name || "?")[0]}
+          </div>
+          <div>
+            <div style={{ color: "#e2e8f0", fontWeight: 700, fontSize: 14 }}>{person.full_name}</div>
+            <div style={{ color: "#64748b", fontSize: 12 }}>{person.person_type} · QR: <span style={{ color: "#818cf8", fontFamily: "monospace" }}>{person.qr_code}</span></div>
+          </div>
+        </div>
+
+        <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: 8, padding: "10px 14px", marginBottom: 14, fontSize: 12, color: "#fca5a5", lineHeight: 1.5 }}>
+          ⚠️ This will <strong>permanently delete</strong> this person from the master table and <strong>release their QR code</strong> back to the pool.<br />
+          <span style={{ color: "#94a3b8", marginTop: 4, display: "block" }}>Only allowed if they are <strong style={{ color: "#e2e8f0" }}>not registered in any event</strong>.</span>
+        </div>
+
+        {err && (
+          <div style={{ ...styles.errBox, marginBottom: 12, borderRadius: 8, whiteSpace: "pre-wrap" }}>
+            {err}
+          </div>
+        )}
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={styles.label}>Reason for removal <span style={{ color: "#f87171" }}>*</span></label>
+          <textarea
+            rows={3}
+            placeholder="Why is this person being removed? (min 10 characters)"
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            style={styles.textarea}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            style={{ ...styles.btnDanger, flex: 1, opacity: loading ? 0.7 : 1 }}
+            onClick={handleRemove}
+            disabled={loading}
+          >
+            {loading ? "Removing…" : "Confirm Remove"}
+          </button>
+          <button style={{ ...styles.btnSecondary, flex: 1 }} onClick={onClose} disabled={loading}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TAB 1: EDIT MASTER
 // ═══════════════════════════════════════════════════════════════════════════════
+// ── Add-to-Master Modal ──────────────────────────────────────────────────────
+function AddToMasterModal({ college, onClose, onSuccess }) {
+  const [tab, setTab]                   = useState("students"); // students | accompanists | new
+  const [students, setStudents]         = useState([]);
+  const [accompanists, setAccompanists] = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [selected, setSelected]         = useState(null);
+  const [search, setSearch]             = useState("");
+  const [reason, setReason]             = useState("");
+  const [submitting, setSubmitting]     = useState(false);
+  const [err, setErr]                   = useState("");
+
+  // New person form state
+  const [newForm, setNewForm] = useState({
+    full_name: "", phone: "", email: "", gender: "", blood_group: "",
+    address: "", department: "", year_of_study: "", semester: "", usn: "",
+    accompanist_type: "", is_team_manager: false, person_type: "STUDENT",
+  });
+  const [newPhoto, setNewPhoto]           = useState(null);
+  const [newPhotoPreview, setNewPhotoPreview] = useState(null);
+  const fileInputRef                      = useRef(null);
+  const [showCamera, setShowCamera]       = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      devFetch(`/api/dev/events/candidates/${college.college_id}/students`),
+      devFetch(`/api/dev/events/candidates/${college.college_id}/accompanists`),
+    ]).then(([s, a]) => {
+      setStudents(s.students || []);
+      setAccompanists(a.accompanists || []);
+    }).catch(e => setErr(e.message))
+      .finally(() => setLoading(false));
+  }, [college.college_id]);
+
+  const list = (tab === "students" ? students : tab === "accompanists" ? accompanists : []).filter(p => {
+    const q = search.toLowerCase();
+    return (p.full_name || "").toLowerCase().includes(q) ||
+           (p.phone || "").includes(q) ||
+           (p.usn || "").toLowerCase().includes(q);
+  });
+
+  const handlePhotoChange = (file) => {
+    if (!file) return;
+    if (!["image/jpeg","image/png"].includes(file.type)) { setErr("Only JPEG or PNG allowed."); return; }
+    if (file.size > 5 * 1024 * 1024) { setErr("Photo must be under 5 MB."); return; }
+    setNewPhoto(file);
+    setNewPhotoPreview(URL.createObjectURL(file));
+    setErr("");
+  };
+
+  // Add existing person (from students/accompanists list)
+  const handleAddExisting = async () => {
+    if (!selected) return setErr("Select a person first.");
+    if (reason.trim().length < 10) return setErr("Reason must be at least 10 characters.");
+    setSubmitting(true); setErr("");
+    try {
+      const result = await devFetch(`/api/dev/master/college/${college.college_id}/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          person_id:   selected.id,
+          person_type: tab === "students" ? "student" : "accompanist",
+          reason:      reason.trim(),
+        }),
+      });
+      onSuccess(result);
+    } catch (e) { setErr(e.message); }
+    finally { setSubmitting(false); }
+  };
+
+  // Add brand-new person (not in system)
+  const handleAddNew = async () => {
+    if (!newForm.full_name.trim()) return setErr("Full name is required.");
+    if (reason.trim().length < 10) return setErr("Reason must be at least 10 characters.");
+    setSubmitting(true); setErr("");
+    try {
+      const fd = new FormData();
+      Object.entries(newForm).forEach(([k, v]) => { if (v !== "" && v !== null && v !== undefined) fd.append(k, v); });
+      fd.append("reason", reason.trim());
+      if (newPhoto) fd.append("photo", newPhoto);
+
+      const res = await fetch(`${API_BASE}/api/dev/master/college/${college.college_id}/add-new`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("vtufest_dev_token")}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to add person");
+      onSuccess(data.data || data);
+    } catch (e) { setErr(e.message); }
+    finally { setSubmitting(false); }
+  };
+
+  const nf = (k, v) => setNewForm(f => ({ ...f, [k]: v }));
+
+  return (
+    <div style={styles.overlay}>
+      <div style={{ ...styles.modal, maxWidth: 600, maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <h3 style={{ color: "#818cf8", fontSize: 15 }}>Add to Master — {college.college_name}</h3>
+          <button style={styles.closeBtn} onClick={onClose}>✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          {[["students","Students"],["accompanists","Accompanists"],["new","+ New Person"]].map(([key,label]) => (
+            <button key={key} onClick={() => { setTab(key); setSelected(null); setSearch(""); setErr(""); }}
+              style={{ ...styles.tabBtn, ...(tab === key ? styles.tabBtnActive : {}),
+                ...(key === "new" ? { borderColor: "#f59e0b", color: tab==="new"?"#0f172a":"#f59e0b", background: tab==="new"?"#f59e0b":"transparent" } : {}) }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {err && <div style={{ ...styles.errBox, marginBottom: 8 }}>{err}</div>}
+
+        {/* ── Existing person list (students / accompanists) ── */}
+        {tab !== "new" && (
+          <>
+            <input placeholder="Search name / phone / USN…" value={search}
+              onChange={e => setSearch(e.target.value)} style={{ ...styles.input, marginBottom: 10 }} />
+            {loading ? <div style={styles.loading}>Loading…</div> : (
+              <div style={{ flex: 1, overflowY: "auto", marginBottom: 12, border: "1px solid #1e293b", borderRadius: 8, minHeight: 120 }}>
+                {list.map(p => (
+                  <div key={p.id} onClick={() => setSelected(p)}
+                    style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", cursor:"pointer",
+                      background: selected?.id === p.id ? "#1e3a5f" : "transparent",
+                      borderBottom:"1px solid #1e293b" }}>
+                    {p.photo_sas_url
+                      ? <img src={p.photo_sas_url} alt="" style={{ width:36, height:36, borderRadius:"50%", objectFit:"cover" }} />
+                      : <div style={{ width:36, height:36, borderRadius:"50%", background:"#334155", display:"flex", alignItems:"center", justifyContent:"center", color:"#94a3b8", fontWeight:700 }}>{(p.full_name||"?")[0]}</div>}
+                    <div style={{ flex:1 }}>
+                      <div style={{ color:"#e2e8f0", fontWeight:600, fontSize:13 }}>{p.full_name}</div>
+                      <div style={{ color:"#64748b", fontSize:11 }}>
+                        {tab==="students" ? `USN: ${p.usn||"—"} · ${p.phone}` : `${p.accompanist_type||"—"} · ${p.phone}`}
+                      </div>
+                    </div>
+                    {selected?.id === p.id && <span style={{ color:"#4ade80", fontSize:16 }}>✓</span>}
+                  </div>
+                ))}
+                {list.length === 0 && (
+                  <p style={{ color:"#64748b", padding:16, textAlign:"center" }}>
+                    {loading ? "Loading…" : "All existing persons are already in master."}
+                  </p>
+                )}
+              </div>
+            )}
+            <div style={{ marginBottom:10 }}>
+              <label style={styles.label}>Reason <span style={{ color:"#f87171" }}>*</span></label>
+              <textarea rows={2} placeholder="Min 10 characters…" value={reason}
+                onChange={e => setReason(e.target.value)} style={styles.textarea} />
+            </div>
+            <button style={{ ...styles.btnPrimary, opacity: submitting||!selected ? 0.6:1 }}
+              onClick={handleAddExisting} disabled={submitting||!selected}>
+              {submitting ? "Adding…" : "Add to Master"}
+            </button>
+          </>
+        )}
+
+        {/* ── New Person form ── */}
+        {tab === "new" && (
+          <div style={{ flex:1, overflowY:"auto" }}>
+            {/* Photo upload */}
+            <div style={{ display:"flex", gap:12, marginBottom:14, alignItems:"center" }}>
+              <div style={{ width:72, height:72, borderRadius:8, background:"#1e293b", border:"2px dashed #334155",
+                overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                {newPhotoPreview
+                  ? <img src={newPhotoPreview} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                  : <span style={{ color:"#475569", fontSize:11, textAlign:"center" }}>No photo</span>}
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png" style={{ display:"none" }}
+                  onChange={e => handlePhotoChange(e.target.files[0])} />
+                <button style={{ ...styles.btnSecondary, fontSize:12, padding:"5px 12px" }}
+                  onClick={() => fileInputRef.current?.click()}>📁 Upload Photo</button>
+                <button style={{ ...styles.btnSecondary, fontSize:12, padding:"5px 12px", borderColor:"#818cf8", color:"#818cf8" }}
+                  onClick={() => setShowCamera(true)}>📷 Take Photo</button>
+                {newPhoto && <span style={{ color:"#4ade80", fontSize:11 }}>✓ {newPhoto.name}</span>}
+                <span style={{ color:"#475569", fontSize:10 }}>Optional · JPEG/PNG · max 5 MB</span>
+              </div>
+            </div>
+
+            {/* In-browser camera modal */}
+            {showCamera && (
+              <CameraModal
+                onCapture={(file) => { handlePhotoChange(file); setShowCamera(false); }}
+                onClose={() => setShowCamera(false)}
+              />
+            )}
+
+            {/* Person type */}
+            <div style={{ marginBottom:10 }}>
+              <label style={styles.label}>Person Type <span style={{ color:"#f87171" }}>*</span></label>
+              <div style={{ display:"flex", gap:8 }}>
+                {["STUDENT","ACCOMPANIST"].map(pt => (
+                  <button key={pt} onClick={() => nf("person_type", pt)}
+                    style={{ ...styles.tabBtn, ...(newForm.person_type===pt ? styles.tabBtnActive : {}) }}>
+                    {pt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Core fields */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+              {[
+                { k:"full_name", l:"Full Name *", ph:"Enter full name" },
+                { k:"phone",     l:"Phone",       ph:"10-digit number" },
+                { k:"email",     l:"Email",       ph:"email@example.com" },
+                { k:"gender",    l:"Gender",      ph:"Male / Female / Other" },
+                { k:"blood_group",l:"Blood Group",ph:"A+ / O- etc." },
+              ].map(({ k, l, ph }) => (
+                <div key={k}>
+                  <label style={styles.label}>{l}</label>
+                  <input style={styles.input} placeholder={ph} value={newForm[k]}
+                    onChange={e => nf(k, e.target.value)} />
+                </div>
+              ))}
+            </div>
+
+            {/* Student-specific */}
+            {newForm.person_type === "STUDENT" && (
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+                {[
+                  { k:"usn",          l:"USN",          ph:"1XX23XX000" },
+                  { k:"department",   l:"Department",   ph:"CSE / ECE…" },
+                  { k:"year_of_study",l:"Year of Study",ph:"1–4" },
+                  { k:"semester",     l:"Semester",     ph:"1–8" },
+                ].map(({ k, l, ph }) => (
+                  <div key={k}>
+                    <label style={styles.label}>{l}</label>
+                    <input style={styles.input} placeholder={ph} value={newForm[k]}
+                      onChange={e => nf(k, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Accompanist-specific */}
+            {newForm.person_type === "ACCOMPANIST" && (
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:8 }}>
+                <div>
+                  <label style={styles.label}>Accompanist Type</label>
+                  <input style={styles.input} placeholder="faculty / professional…" value={newForm.accompanist_type}
+                    onChange={e => nf("accompanist_type", e.target.value)} />
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8, paddingTop:20 }}>
+                  <input type="checkbox" id="nm_team_mgr" checked={newForm.is_team_manager}
+                    onChange={e => nf("is_team_manager", e.target.checked)} />
+                  <label htmlFor="nm_team_mgr" style={{ color:"#94a3b8", fontSize:13 }}>Team Manager</label>
+                </div>
+              </div>
+            )}
+
+            {/* Address — full width */}
+            <div style={{ marginBottom:10 }}>
+              <label style={styles.label}>Address</label>
+              <input style={styles.input} placeholder="City / full address" value={newForm.address}
+                onChange={e => nf("address", e.target.value)} />
+            </div>
+
+            <div style={{ marginBottom:10 }}>
+              <label style={styles.label}>Reason <span style={{ color:"#f87171" }}>*</span></label>
+              <textarea rows={2} placeholder="Min 10 characters…" value={reason}
+                onChange={e => setReason(e.target.value)} style={styles.textarea} />
+            </div>
+
+            <button style={{ ...styles.btnPrimary, background:"#d97706", opacity: submitting ? 0.7:1 }}
+              onClick={handleAddNew} disabled={submitting}>
+              {submitting ? "Creating…" : "Create & Assign QR"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EditMasterTab() {
   const [colleges, setColleges] = useState([]);
   const [selectedCollege, setSelectedCollege] = useState(null);
   const [persons, setPersons] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [editingPerson, setEditingPerson] = useState(null);
   const [loadingColleges, setLoadingColleges] = useState(true);
-  const [loadingPersons, setLoadingPersons] = useState(false);
-  const [err, setErr] = useState("");
+  const [loadingPersons, setLoadingPersons]   = useState(false);
+  const [err, setErr]                         = useState("");
+  const [searchQuery, setSearchQuery]         = useState("");
+  const [showAddModal, setShowAddModal]       = useState(false);
+  const [editingPerson, setEditingPerson]     = useState(null);
+  const [removingPerson, setRemovingPerson]   = useState(null);
+  const [qrData, setQrData]                  = useState(null);
+  const [hoveredCardId, setHoveredCardId]     = useState(null);
 
   useEffect(() => {
     setLoadingColleges(true);
@@ -657,8 +1286,8 @@ function EditMasterTab() {
 
   return (
     <div>
-      {/* Back + search */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+      {/* Back + search + add */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <button style={styles.btnSecondary} onClick={() => { setSelectedCollege(null); setPersons([]); }}>
           ← Back
         </button>
@@ -668,8 +1297,11 @@ function EditMasterTab() {
           placeholder="Search by name / phone / USN"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          style={{ ...styles.input, width: 240 }}
+          style={{ ...styles.input, width: 220 }}
         />
+        <button style={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
+          + Add Person
+        </button>
       </div>
 
       {err && <div style={styles.errBox}>{err}</div>}
@@ -682,8 +1314,27 @@ function EditMasterTab() {
             <div
               key={p.id}
               onClick={() => setEditingPerson(p)}
-              style={{ ...styles.card, cursor: "pointer" }}
+              onMouseEnter={() => setHoveredCardId(p.id)}
+              onMouseLeave={() => setHoveredCardId(null)}
+              style={{ ...styles.card, cursor: "pointer", position: "relative" }}
             >
+              {/* 🗑️ Remove button — only shown on hover */}
+              {hoveredCardId === p.id && (
+                <button
+                  title="Remove from master"
+                  onClick={e => { e.stopPropagation(); setRemovingPerson(p); }}
+                  style={{
+                    position: "absolute", top: 8, right: 8,
+                    background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.4)",
+                    color: "#f87171", borderRadius: 6, width: 26, height: 26,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 13, cursor: "pointer", lineHeight: 1,
+                  }}
+                >
+                  🗑️
+                </button>
+              )}
+
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                 {p.photo_sas_url ? (
                   <img src={p.photo_sas_url} alt="" style={{ width: 46, height: 46, borderRadius: "50%", objectFit: "cover", border: "2px solid #334155", flexShrink: 0 }} />
@@ -692,18 +1343,31 @@ function EditMasterTab() {
                     {(p.full_name || "?")[0]}
                   </div>
                 )}
-                <div>
-                  <div style={{ fontWeight: 700, color: "#e2e8f0", fontSize: 13 }}>{p.full_name}</div>
-                  <span style={{
-                    fontSize: 10, padding: "1px 6px", borderRadius: 4,
-                    background: p.person_type === "STUDENT" ? "#164e63" : "#3b0764",
-                    color: p.person_type === "STUDENT" ? "#67e8f9" : "#d8b4fe",
-                  }}>
-                    {p.person_type}
-                  </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, color: "#e2e8f0", fontSize: 13, marginBottom: 3 }}>{p.full_name}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    <span style={{
+                      fontSize: 10, padding: "1px 6px", borderRadius: 4,
+                      background: p.person_type?.toUpperCase() === "STUDENT" ? "#164e63" : "#3b0764",
+                      color: p.person_type?.toUpperCase() === "STUDENT" ? "#67e8f9" : "#d8b4fe",
+                    }}>
+                      {p.person_type?.toUpperCase()}
+                    </span>
+                    {p.is_team_manager && (
+                      <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 4, background: "#78350f", color: "#fcd34d", fontWeight: 700 }}>
+                        TEAM MGR
+                      </span>
+                    )}
+                    {p.accompanist_type && (
+                      <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 4, background: "#1e293b", color: "#94a3b8" }}>
+                        {p.accompanist_type}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div style={{ color: "#64748b", fontSize: 12 }}>{p.phone}</div>
+              {p.usn && <div style={{ color: "#475569", fontSize: 11 }}>{p.usn}</div>}
             </div>
           ))}
           {filteredPersons.length === 0 && (
@@ -717,12 +1381,50 @@ function EditMasterTab() {
           person={editingPerson}
           onClose={() => setEditingPerson(null)}
           onSaved={() => {
+            devFetch(`/api/dev/master/college/${selectedCollege.college_id}/persons`)
+              .then(d => setPersons(d.persons || []))
+              .catch(() => {});
+          }}
+        />
+      )}
+
+      {showAddModal && (
+        <AddToMasterModal
+          college={selectedCollege}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={(result) => {
+            setShowAddModal(false);
+            if (result.qr_code) {
+              setQrData({
+                full_name:    result.master_row.full_name,
+                college_name: result.master_row.college_name,
+                qr_code:      result.qr_code,
+              });
+            }
             // Refresh person list
             devFetch(`/api/dev/master/college/${selectedCollege.college_id}/persons`)
               .then(d => setPersons(d.persons || []))
-              .catch(() => { });
+              .catch(() => {});
           }}
         />
+      )}
+
+      {removingPerson && (
+        <RemoveFromMasterModal
+          person={removingPerson}
+          onClose={() => setRemovingPerson(null)}
+          onRemoved={() => {
+            setRemovingPerson(null);
+            // Refresh list
+            devFetch(`/api/dev/master/college/${selectedCollege.college_id}/persons`)
+              .then(d => setPersons(d.persons || []))
+              .catch(() => {});
+          }}
+        />
+      )}
+
+      {qrData && (
+        <QRDownloadModal data={qrData} onClose={() => setQrData(null)} />
       )}
     </div>
   );
