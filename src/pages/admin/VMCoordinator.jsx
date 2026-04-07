@@ -28,6 +28,7 @@ const ASSIGN_DOMAINS = [
     { value: "gr_incharge", label: "Green Room / Cloakroom" },
     { value: "transport", label: "Transport" },
     { value: "queries_desk", label: "Queries Desk" },
+    { value: "social_media", label: "Social Media" },
     { value: "general", label: "General (No email)" },
 ];
 
@@ -35,7 +36,7 @@ const TEAM_DOMAINS = [
     "registration_desk", "help_desk", "in_event", "college_buddy", "food",
     "logistics", "guest_hospitality", "technical", "accommodation", "disciplinary",
     "stage_programme", "documentation_result", "literature", "fine_arts", "music",
-    "theatre", "dance", "gr_incharge", "transport", "queries_desk", "general",
+    "theatre", "dance", "gr_incharge", "transport", "queries_desk", "social_media", "general",
 ];
 
 const ALL_EVENTS = [
