@@ -14,7 +14,7 @@ import { QrCode, School, User, CameraOff, ChevronDown, ChevronUp, RefreshCw, Pho
 import useScanner from '../../hooks/useScanner';
 import ScannerOverlay from '../../components/scanner/ScannerOverlay';
 import ManualInput from '../../components/scanner/ManualInput';
-import VolunteerShell, { doLogout, getToken, getVolName, getVolEmail, getVolQr, QRCodeImg, ProfileTab } from './VolunteerShell';
+import VolunteerShell, { doLogout, getToken, getVolName, getVolEmail, getVolQr, QRCodeImg, ProfileTab, CameraGate } from './VolunteerShell';
 import {
   collegeBuddyLookup,
   collegeBuddyMyColleges,
@@ -357,6 +357,7 @@ export default function CollegeBuddyDashboard() {
   const volQr = localStorage.getItem('vtufest_vol_qr') || volExtra.qr_code || '';
 
   return (
+    <CameraGate>
     <div className="vol-page" style={{ paddingBottom: 0 }}>
       {/* ── Top bar ──────────────────────────────────────────────────────── */}
       <div style={{
@@ -625,5 +626,6 @@ export default function CollegeBuddyDashboard() {
         })}
       </div>
     </div>
+    </CameraGate>
   );
 }

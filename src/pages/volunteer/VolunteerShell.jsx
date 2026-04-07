@@ -161,7 +161,7 @@ export function ProfileTab() {
  * the "Try Again" button does on iOS. On Android / Chrome we can re-call
  * getUserMedia directly and the browser will re-prompt.
  */
-function CameraGate({ children }) {
+export function CameraGate({ children }) {
   // 'checking' → 'granted' | 'denied' | 'unavailable'
   const [perm, setPerm] = useState('checking');
   const ios = isIOS();
