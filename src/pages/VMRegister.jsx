@@ -4,7 +4,7 @@ import "../styles/auth.css";
 
 /* ─────────────────── CONFIG ─────────────────── */
 const API = import.meta.env.VITE_API_BASE_URL || "https://api.vtufest2026.acharyahabba.com";
-const CLOSE_REGISTRATIONS = true; // Toggle to true to close form
+const CLOSE_REGISTRATIONS = false; // Toggle to true to close form
 
 /* ─────────────────── VOLUNTEER CATEGORIES ─────────────────── */
 const VOLUNTEER_CATEGORIES = {
