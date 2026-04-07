@@ -209,18 +209,25 @@ export async function collegeBuddyAccompanists(token, _collegeId) {
 // ALIASES — used by new unified dashboard components
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** RegDesk: scan QR to look up + activate */
+/** RegDesk: scan QR to look up participant (camera or manual QR entry) */
 export async function regDeskScan(qr, token) {
-  return apiFetch('reg-scan', `${API_BASE}/api/volunteer/registration-desk/lookup?qr=${encodeURIComponent(qr)}`, {
+  return apiFetch('reg-scan', `${API_BASE}/api/volunteer/registration-desk/find-by-qr?qr=${encodeURIComponent(qr)}`, {
     headers: authHeader(token),
   });
 }
 
-/** RegDesk: activate ID card by QR */
-export async function activateId(qr, token) {
+/** RegDesk: search by phone number OR USN */
+export async function regDeskFindByQuery(query, token) {
+  return apiFetch('reg-find-q', `${API_BASE}/api/volunteer/registration-desk/find?q=${encodeURIComponent(query)}`, {
+    headers: authHeader(token),
+  });
+}
+
+/** RegDesk: activate ID card — body: { participant_id, scanned_qr } */
+export async function activateId(participantId, scannedQr, token) {
   return apiFetch('reg-activate-id', `${API_BASE}/api/volunteer/registration-desk/activate`, {
     method: 'POST',
-    body: JSON.stringify({ qr_code: qr }),
+    body: JSON.stringify({ participant_id: participantId, scanned_qr: scannedQr }),
     headers: authHeader(token),
   });
 }

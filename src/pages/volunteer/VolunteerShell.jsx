@@ -14,8 +14,10 @@
  *   </VolunteerShell>
  */
 
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { isIOS } from '../../utils/scannerUtils';
 import '../../styles/volunteer.css';
 
 // Universal logout
@@ -152,6 +154,204 @@ export function ProfileTab() {
 }
 
 
+// ─── Camera Permission Gate ───────────────────────────────────────────────────
+/**
+ * Shown instead of the app content when camera permission has not been granted.
+ * On iOS Safari the only way to re-prompt is a full page reload, so that's what
+ * the "Try Again" button does on iOS. On Android / Chrome we can re-call
+ * getUserMedia directly and the browser will re-prompt.
+ */
+function CameraGate({ children }) {
+  // 'checking' → 'granted' | 'denied' | 'unavailable'
+  const [perm, setPerm] = useState('checking');
+  const ios = isIOS();
+  const navigate = useNavigate();
+
+  const requestPermission = useCallback(async () => {
+    setPerm('checking');
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setPerm('unavailable');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      // Permission granted — immediately release the test stream
+      stream.getTracks().forEach(t => t.stop());
+      setPerm('granted');
+    } catch (err) {
+      const denied =
+        err.name === 'NotAllowedError' ||
+        err.name === 'PermissionDeniedError' ||
+        err.name === 'SecurityError';
+      setPerm(denied ? 'denied' : 'unavailable');
+    }
+  }, []);
+
+  // Wipe all cached app data (Cache API + sessionStorage) then hard-reload.
+  // Deliberately keeps localStorage so the volunteer stays logged in.
+  // On iOS Safari a fresh page load after cache clear will re-prompt for camera.
+  const handleClearAndReset = useCallback(async () => {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch { /* ignore — not all browsers expose Cache API */ }
+    try { sessionStorage.clear(); } catch { /* ignore */ }
+    window.location.reload();
+  }, []);
+
+  useEffect(() => { requestPermission(); }, [requestPermission]);
+
+  // ── Permission granted → render the actual app ───────────────────────────
+  if (perm === 'granted') return children;
+
+  // ── Blocking screen ──────────────────────────────────────────────────────
+  const isChecking = perm === 'checking';
+
+  return (
+    <div className="vol-page" style={{
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: '32px 24px', minHeight: '100dvh',
+    }}>
+      {/* Icon */}
+      <div style={{
+        width: 80, height: 80, borderRadius: 24,
+        background: isChecking
+          ? 'rgba(167,139,250,0.12)'
+          : 'rgba(239,68,68,0.12)',
+        border: `2px solid ${isChecking ? 'rgba(167,139,250,0.3)' : 'rgba(239,68,68,0.35)'}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 36, marginBottom: 24,
+      }}>
+        {isChecking ? '📷' : '🚫'}
+      </div>
+
+      {/* Heading */}
+      <p style={{
+        margin: '0 0 8px', fontSize: '1.25rem', fontWeight: 800,
+        color: '#fff', textAlign: 'center',
+      }}>
+        {isChecking ? 'Checking Camera…' : 'Camera Access Required'}
+      </p>
+
+      {/* Sub-text */}
+      {!isChecking && (
+        <p style={{
+          margin: '0 0 24px', fontSize: '0.88rem',
+          color: 'var(--vol-text-muted)', textAlign: 'center', lineHeight: 1.55,
+          maxWidth: 320,
+        }}>
+          {perm === 'unavailable'
+            ? 'No camera was found on this device. Please use a device with a working camera to scan QR codes.'
+            : 'This app needs camera access to scan QR codes. Without it you cannot proceed.'}
+        </p>
+      )}
+
+      {/* iOS-specific instructions */}
+      {perm === 'denied' && ios && (
+        <div style={{
+          width: '100%', maxWidth: 360,
+          background: 'rgba(251,191,36,0.08)',
+          border: '1px solid rgba(251,191,36,0.3)',
+          borderRadius: 14, padding: '16px 18px',
+          marginBottom: 20,
+        }}>
+          <p style={{ margin: '0 0 8px', fontWeight: 700, color: 'var(--vol-warning)', fontSize: '0.82rem' }}>
+            📱 On iPhone / iPad:
+          </p>
+          <ol style={{
+            margin: 0, paddingLeft: 18,
+            color: 'var(--vol-text-muted)', fontSize: '0.82rem', lineHeight: 1.7,
+          }}>
+            <li>Tap <strong style={{ color: '#fff' }}>Reload &amp; Try Again</strong> below — Safari will ask for permission again.</li>
+            <li>Tap <strong style={{ color: '#fff' }}>Allow</strong> when Safari asks for camera access.</li>
+            <li>If the prompt never appears, go to:<br />
+              <strong style={{ color: '#fff' }}>Settings → Safari → Camera → Allow</strong>
+            </li>
+          </ol>
+        </div>
+      )}
+
+      {/* Android / Chrome specific hint */}
+      {perm === 'denied' && !ios && (
+        <div style={{
+          width: '100%', maxWidth: 360,
+          background: 'rgba(251,191,36,0.08)',
+          border: '1px solid rgba(251,191,36,0.3)',
+          borderRadius: 14, padding: '14px 16px',
+          marginBottom: 20,
+        }}>
+          <p style={{ margin: '0 0 6px', fontWeight: 700, color: 'var(--vol-warning)', fontSize: '0.82rem' }}>
+            🔒 If "Allow" prompt doesn't appear:
+          </p>
+          <p style={{ margin: 0, color: 'var(--vol-text-muted)', fontSize: '0.82rem', lineHeight: 1.65 }}>
+            Tap the <strong style={{ color: '#fff' }}>🔒 lock icon</strong> in your browser's address bar →
+            tap <strong style={{ color: '#fff' }}>Camera</strong> → set to <strong style={{ color: '#fff' }}>Allow</strong> → reload the page.
+          </p>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      {perm === 'denied' && (
+        <>
+          {/* Primary: reload / re-prompt */}
+          <button
+            className="vol-start-btn"
+            onClick={() => {
+              if (ios) {
+                window.location.reload();
+              } else {
+                requestPermission();
+              }
+            }}
+            style={{ width: '100%', maxWidth: 360, padding: '14px 0', fontSize: '0.95rem', marginBottom: 10 }}
+          >
+            {ios ? '🔄 Reload & Try Again' : '📷 Allow Camera Access'}
+          </button>
+
+          {/* Secondary: clear all cached data then reload */}
+          <button
+            onClick={handleClearAndReset}
+            style={{
+              width: '100%', maxWidth: 360,
+              padding: '12px 0', fontSize: '0.88rem',
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 12, cursor: 'pointer',
+              color: '#f87171', fontWeight: 600,
+              marginBottom: 10,
+            }}
+          >
+            🗑️ Clear Cache &amp; Reset Page
+          </button>
+
+          {/* What this does — transparent note */}
+          <p style={{
+            margin: '0 0 18px', fontSize: '0.73rem',
+            color: 'var(--vol-text-dim)', textAlign: 'center', maxWidth: 300,
+          }}>
+            Clears app cache and reloads. Your login is kept. Camera permission will be asked again fresh.
+          </p>
+        </>
+      )}
+
+      {/* Logout link — so they aren't stuck forever */}
+      <button
+        onClick={() => doLogout(navigate)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--vol-text-muted)', fontSize: '0.82rem',
+          textDecoration: 'underline', marginTop: 4,
+        }}
+      >
+        Log out and use a different device
+      </button>
+    </div>
+  );
+}
+
 // ─── Main Shell ──────────────────────────────────────────────────────────────
 /**
  * @param {string}   roleTitle   - shown in top bar (e.g. "Help Desk")
@@ -174,6 +374,7 @@ export default function VolunteerShell({
   const profileIdx = profileTabIndex ?? (tabs.length - 1);
 
   return (
+    <CameraGate>
     <div className="vol-page" style={{ paddingBottom: 0 }}>
       {/* ── Top bar ──────────────────────────────────────────────────────── */}
       <div style={{
@@ -235,5 +436,6 @@ export default function VolunteerShell({
         })}
       </div>
     </div>
+    </CameraGate>
   );
 }

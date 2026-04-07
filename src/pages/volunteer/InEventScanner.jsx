@@ -163,7 +163,7 @@ export default function InEventScanner() {
           <button className="vol-manual-input-btn" onClick={() => setManualVisible(v => !v)} style={{ width: '100%', padding: 10, marginTop: 10 }}>
             ⌨️ {manualVisible ? 'Hide Manual Input' : 'Type QR Code'}
           </button>
-          <ManualInput onScan={doScan} visible={manualVisible || cameraStatus === 'denied' || cameraStatus === 'error'} placeholder="Enter QR code" />
+          <ManualInput onScan={doScan} visible={manualVisible || cameraStatus === 'denied' || cameraStatus === 'error'} placeholder="Enter 8-char QR code" maxLength={8} alphanumericOnly />
 
           {scanning && <div className="vol-loading"><div className="vol-spinner" />Marking attendance…</div>}
           {scanError && <div className="vol-result-card error" style={{ marginTop: 12 }}><p style={{ margin: 0 }}>{scanError}</p></div>}

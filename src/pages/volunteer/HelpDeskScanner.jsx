@@ -111,7 +111,7 @@ export default function HelpDeskScanner() {
             <p style={{ margin: 0, fontWeight: 600, color: '#fff', fontSize: '0.9rem' }}>Manual QR Lookup</p>
             <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--vol-text-muted)' }}>Type or paste the 8-character QR code.</p>
           </div>
-          <ManualInput onScan={doScan} visible={true} placeholder="Enter QR code (e.g. AB12CD34)" />
+          <ManualInput onScan={doScan} visible={true} placeholder="Enter QR code (e.g. AB12CD34)" maxLength={8} alphanumericOnly />
           {scanning && <div className="vol-loading"><div className="vol-spinner" />Looking up…</div>}
           {error && <div className="vol-result-card error" style={{ marginTop: 12 }}><p style={{ margin: 0 }}>{error}</p></div>}
           <ResultCard result={result} onClear={clear} />
