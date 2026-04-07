@@ -99,6 +99,10 @@ import RegDeskDashboard from "../pages/regdesk/RegDeskDashboard";
 import EventLogin from "../pages/event/EventLogin";
 import AttendanceDashboard from "../pages/event/AttendanceDashboard";
 
+/* DEVELOPER PANEL */
+import DevLogin from "../pages/dev/DevLogin";
+import DevDashboard from "../pages/dev/DevDashboard";
+
 /* VOLUNTEER PORTAL */
 import VolunteerPortal from "../pages/volunteer/VolunteerPortal";
 import VolunteerLogin from "../pages/volunteer/VolunteerLogin";
@@ -377,6 +381,11 @@ export default function AppRoutes() {
         {/* ── EVENT HEAD / ATTENDANCE ──────────────────────────────────────── */}
         <Route path="/event" element={<EventLogin />} />
         <Route path="/event/dashboard" element={<EventRoute><AttendanceDashboard /></EventRoute>} />
+
+        {/* ── DEVELOPER PANEL ─────────────────────────────────────────────── */}
+        <Route path="/dev" element={<DevLogin />} />
+        <Route path="/dev/dashboard" element={<DevDashboard />} />
+        <Route path="/dev" element={<Navigate to="/dev/login" replace />} />
 
         {/* ── VOLUNTEER PORTAL ────────────────────────────────────────────── */}
         <Route path="/volunteer" element={<VolunteerPortal />} />
