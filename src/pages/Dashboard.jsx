@@ -403,8 +403,8 @@ export default function Dashboard() {
                   title="Click to view QR Code"
                 >
                   {/* Blurred QR Code background */}
-                  <div style={{ position: 'absolute', filter: 'blur(2.5px)', opacity: 0.7 }}>
-                    <QRCode value={dashboardData.qr_code} size={50} level="L" />
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'blur(2.5px)', opacity: 0.7 }}>
+                    <QRCode value={dashboardData.qr_code} size={44} level="L" style={{ display: 'block' }} />
                   </div>
 
                   {/* Overlay Text */}
@@ -595,18 +595,17 @@ export default function Dashboard() {
           <div
             style={{
               position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.85)', backdropFilter: 'blur(8px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.88)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 10000, padding: 20
+              zIndex: 10000, padding: 16
             }}
             onClick={() => setShowQrModal(false)}
           >
             <div
               style={{
-                background: '#ffffff', padding: '30px', borderRadius: '24px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.5)', textAlign: 'center',
-                maxWidth: '300px', width: '100%', position: 'relative',
-                animation: 'fadeInMessage 0.3s ease-out'
+                background: '#ffffff', padding: isMobile ? '20px 16px' : '30px',
+                borderRadius: '20px', textAlign: 'center',
+                maxWidth: '320px', width: '100%', position: 'relative',
               }}
               onClick={e => e.stopPropagation()} // Prevent close when clicking card
             >
@@ -631,8 +630,8 @@ export default function Dashboard() {
                 Scan QR Code
               </h3>
 
-              <div style={{ background: '#fff', padding: 10, borderRadius: 12, display: 'inline-block' }}>
-                <QRCode value={dashboardData.qr_code} size={200} level="M" />
+              <div style={{ background: '#fff', padding: 10, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <QRCode value={dashboardData.qr_code} size={Math.min(200, window.innerWidth - 96)} level="M" style={{ display: 'block' }} />
               </div>
 
               <div style={{
