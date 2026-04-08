@@ -465,6 +465,12 @@ function AddPersonModal({ eventKey, college, onSuccess, onClose }) {
     setLoading(true);
     setErr("");
     try {
+      // For accompanists added directly to master (no accompanists-table entry),
+      // the backend needs 'master_accompanist' so it can skip the master insert step.
+      const resolvedPersonType = tab === "students"
+        ? "student"
+        : selected?.source === "master" ? "master_accompanist" : "accompanist";
+
       const result = await devFetch(
         `/api/dev/events/${eventKey}/college/${college.college_id}/add`,
         {
@@ -472,7 +478,7 @@ function AddPersonModal({ eventKey, college, onSuccess, onClose }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             person_id: selected.id,
-            person_type: tab === "students" ? "student" : "accompanist",
+            person_type: resolvedPersonType,
             event_type: eventType,
             reason: reason.trim(),
           }),
@@ -543,10 +549,13 @@ function AddPersonModal({ eventKey, college, onSuccess, onClose }) {
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                     <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{p.full_name}</span>
                     {p.in_master && (
                       <span style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.4)", borderRadius: 6, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>HAS QR</span>
+                    )}
+                    {p.source === "master" && (
+                      <span style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.4)", borderRadius: 6, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>MASTER ONLY</span>
                     )}
                   </div>
                   <div style={{ color: "#64748b", fontSize: 12 }}>
@@ -1528,7 +1537,7 @@ function EditEventsTab() {
               </div>
             </div>
           ))}
-          {colleges.length === 0 && <p style={{ color: "#64748b", textAlign: "center", padding: 24 }}>No colleges with event participants.</p>}
+          {colleges.length === 0 && <p style={{ color: "#64748b", textAlign: "center", padding: 24 }}>No colleges found (must have a master entry + payment receipt).</p>}
         </div>
       );
     }
@@ -1552,7 +1561,7 @@ function EditEventsTab() {
                   </span>
                 </div>
               ))}
-              {collegeEvents.length === 0 && <p style={{ color: "#64748b" }}>No events found for this college.</p>}
+              {collegeEvents.length === 0 && <p style={{ color: "#64748b" }}>No events loaded. Try again.</p>}
             </div>
           )}
         </div>
