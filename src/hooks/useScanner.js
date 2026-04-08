@@ -8,7 +8,8 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { BrowserQRCodeReader } from '@zxing/browser';
+import { HTMLCanvasElementLuminanceSource } from '@zxing/browser';
+import { MultiFormatReader, BinaryBitmap, HybridBinarizer } from '@zxing/library';
 import { getScanConfig, normalizeQR, isSafari, isIOS } from '../utils/scannerUtils';
 
 /**
@@ -46,7 +47,7 @@ export default function useScanner({ onScan, enabled = true, dedupeMs }) {
   // ── Create offscreen canvas once ────────────────────────────────────────
   useEffect(() => {
     canvasRef.current = document.createElement('canvas');
-    readerRef.current = new BrowserQRCodeReader();
+    readerRef.current = new MultiFormatReader();
     return () => {
       readerRef.current = null;
     };
@@ -82,9 +83,9 @@ export default function useScanner({ onScan, enabled = true, dedupeMs }) {
       ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
       try {
-        const luminanceSource = readerRef.current.createLuminanceSource(canvas);
-        const binaryBitmap = readerRef.current.createBinaryBitmap(luminanceSource);
-        const result = readerRef.current.decodeBitmap(binaryBitmap);
+        const luminanceSource = new HTMLCanvasElementLuminanceSource(canvas);
+        const binaryBitmap = new BinaryBitmap(new HybridBinarizer(luminanceSource));
+        const result = readerRef.current.decode(binaryBitmap);
 
         if (result) {
           const qr = normalizeQR(result.getText());
