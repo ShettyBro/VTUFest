@@ -100,6 +100,13 @@ import RegDeskDashboard from "../pages/regdesk/RegDeskDashboard";
 import EventLogin from "../pages/event/EventLogin";
 import AttendanceDashboard from "../pages/event/AttendanceDashboard";
 
+/* MANAGER COMPANION SYSTEM */
+import CompanionLogin from "../pages/companion/CompanionLogin";
+import CompanionHome from "../pages/companion/CompanionHome";
+import CompanionEvents from "../pages/companion/CompanionEvents";
+import CompanionFacilities from "../pages/companion/CompanionFacilities";
+import CompanionHelp from "../pages/companion/CompanionHelp";
+
 /* DEVELOPER PANEL */
 import DevLogin from "../pages/dev/DevLogin";
 import DevDashboard from "../pages/dev/DevDashboard";
@@ -369,6 +376,13 @@ export default function AppRoutes() {
         <Route path="/manager/transport" element={
           <ProtectedRoute allowedRoles={["manager"]}><TransportForm /></ProtectedRoute>
         } />
+
+        {/* ── MANAGER COMPANION SYSTEM ──────────────────────────────────── */}
+        <Route path="/manager" element={<CompanionLogin />} />
+        <Route path="/manager/home" element={<CompanionHome />} />
+        <Route path="/manager/events" element={<CompanionEvents />} />
+        <Route path="/manager/facilities" element={<CompanionFacilities />} />
+        <Route path="/manager/help" element={<CompanionHelp />} />
 
         {/* ── ID CARD PORTALS ────────────────────────────────────────────── */}
         <Route path="/media-login" element={<IDCardLogin />} />
