@@ -7,6 +7,7 @@ import AuthPage from "../pages/AuthPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ChangePassword";
 import AssignEvents from "../pages/AssignEvents";
+import QRLookup from "../pages/QRLookup";
 
 /* STUDENT */
 import Dashboard from "../pages/Dashboard";
@@ -240,6 +241,7 @@ export default function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/assign-events" element={<AssignEvents />} />
         <Route path="/force-reset-password" element={<ForceResetPassword />} />
+        <Route path="/qr" element={<QRLookup />} />
 
         {/* ── VM PUBLIC ────────────────────────────────────────────────── */}
         <Route path="/v" element={<VMRegister />} />
