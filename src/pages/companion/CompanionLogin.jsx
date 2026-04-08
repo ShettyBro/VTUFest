@@ -16,9 +16,55 @@ export default function CompanionLogin() {
   const [error, setError]       = useState('');
   const [showPw, setShowPw]     = useState(false);
 
+  // Forgot password state
+  const [view, setView]             = useState('login'); // 'login' | 'forgot'
+  const [fpEmail, setFpEmail]       = useState('');
+  const [fpLoading, setFpLoading]   = useState(false);
+  const [fpSuccess, setFpSuccess]   = useState('');
+  const [fpError, setFpError]       = useState('');
+
+  const switchToForgot = () => {
+    setFpEmail(email); // pre-fill if they already typed email
+    setFpSuccess('');
+    setFpError('');
+    setError('');
+    setView('forgot');
+  };
+
+  const switchToLogin = () => {
+    setFpSuccess('');
+    setFpError('');
+    setView('login');
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    if (!fpEmail.trim()) return;
+    setFpLoading(true);
+    setFpError('');
+    setFpSuccess('');
+    try {
+      const res = await fetch(`${API}/api/auth/forgot-password/manager`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: fpEmail.trim().toLowerCase() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFpError(data.error || data.message || 'Request failed. Please try again.');
+      } else {
+        setFpSuccess(data.message || 'Reset link sent! Check your email.');
+      }
+    } catch {
+      setFpError('Network error. Check your connection.');
+    } finally {
+      setFpLoading(false);
+    }
+  };
+
   // Already logged in
   const token = localStorage.getItem('vtufest_token');
-  const role  = localStorage.getItem('vtufest_role');
+  const role = localStorage.getItem('vtufest_role');
   if (token && role === 'manager') {
     navigate('/manager/home', { replace: true });
     return null;
@@ -31,7 +77,7 @@ export default function CompanionLogin() {
     setError('');
 
     try {
-      const res  = await fetch(`${API}/api/auth/login`, {
+      const res = await fetch(`${API}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim().toLowerCase(), password, role: 'manager' }),
@@ -119,14 +165,18 @@ export default function CompanionLogin() {
         }
 
         .mc-logo-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           text-align: center;
           margin-bottom: 28px;
+          gap: 0;
         }
 
         .mc-logo {
-          height: 56px;
+          height: 58px;
           object-fit: contain;
-          margin-bottom: 16px;
+          margin-bottom: 18px;
           filter: drop-shadow(0 4px 12px rgba(99,102,241,0.3));
         }
 
@@ -141,9 +191,9 @@ export default function CompanionLogin() {
           font-weight: 800;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          padding: 5px 14px;
+          padding: 5px 16px;
           border-radius: 20px;
-          margin-bottom: 14px;
+          margin-bottom: 16px;
         }
 
         .mc-chip::before {
@@ -153,6 +203,7 @@ export default function CompanionLogin() {
           border-radius: 50%;
           background: #fbbf24;
           box-shadow: 0 0 6px #fbbf24;
+          flex-shrink: 0;
         }
 
         .mc-title {
@@ -160,14 +211,16 @@ export default function CompanionLogin() {
           font-weight: 800;
           color: #f1f5f9;
           letter-spacing: -0.03em;
-          line-height: 1.1;
-          margin-bottom: 6px;
+          line-height: 1.15;
+          margin-bottom: 8px;
         }
 
         .mc-subtitle {
-          font-size: 13px;
-          color: rgba(241,245,249,0.4);
+          font-size: 12.5px;
+          color: rgba(241,245,249,0.38);
           font-weight: 500;
+          line-height: 1.5;
+          max-width: 280px;
         }
 
         .mc-divider {
@@ -294,6 +347,45 @@ export default function CompanionLogin() {
         .mc-footer span {
           color: rgba(212,175,55,0.4);
         }
+
+        .mc-link-btn {
+          background: none;
+          border: none;
+          padding: 0;
+          color: rgba(212,175,55,0.8);
+          font-size: 13px;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+          transition: color 0.15s;
+        }
+        .mc-link-btn:hover { color: #fbbf24; }
+
+        .mc-forgot-row {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 10px;
+        }
+
+        .mc-success {
+          margin-top: 18px;
+          background: rgba(52,211,153,0.1);
+          border: 1px solid rgba(52,211,153,0.3);
+          border-radius: 12px;
+          padding: 13px 16px;
+          color: #6ee7b7;
+          font-size: 13px;
+          text-align: center;
+          font-weight: 500;
+          line-height: 1.5;
+        }
+
+        .mc-back-row {
+          margin-top: 20px;
+          text-align: center;
+        }
       `}</style>
 
       <div className="mc-page">
@@ -302,61 +394,113 @@ export default function CompanionLogin() {
           {/* Logo + badge + title */}
           <div className="mc-logo-wrap">
             <img src="/main.webp" alt="VTU Habba" className="mc-logo" />
-            <div className="mc-chip">Manager Companion</div>
-            <h1 className="mc-title">Welcome Back</h1>
-            <p className="mc-subtitle">VTU HABBA 2026 · Event Day Portal</p>
+            <div className="mc-chip">Team Manager Portal</div>
+            <h1 className="mc-title">{view === 'login' ? 'Welcome Back' : 'Reset Password'}</h1>
+            <p className="mc-subtitle">
+              {view === 'login'
+                ? 'VTU HABBA 2026 · Sign in with your Team Manager credentials'
+                : 'Enter your registered email and we\'ll send you a reset link'}
+            </p>
           </div>
 
           <div className="mc-divider" />
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} autoComplete="off" noValidate>
-            <div className="mc-field">
-              <label className="mc-label">Email Address</label>
-              <input
-                type="email"
-                className="mc-input"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@college.edu"
-                autoComplete="email"
-                inputMode="email"
-                disabled={loading}
-              />
-            </div>
+          {/* ── LOGIN VIEW ── */}
+          {view === 'login' && (
+            <>
+              <form onSubmit={handleSubmit} autoComplete="off" noValidate>
+                <div className="mc-field">
+                  <label className="mc-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="mc-input"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="you@college.edu"
+                    autoComplete="email"
+                    inputMode="email"
+                    disabled={loading}
+                  />
+                </div>
 
-            <div className="mc-field">
-              <label className="mc-label">Password</label>
-              <div className="mc-input-wrap">
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  className="mc-input"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  style={{ paddingRight: 60 }}
-                  disabled={loading}
-                />
+                <div className="mc-field">
+                  <label className="mc-label">Password</label>
+                  <div className="mc-input-wrap">
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      className="mc-input"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      style={{ paddingRight: 60 }}
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      className="mc-pw-toggle"
+                      onClick={() => setShowPw(v => !v)}
+                      tabIndex={-1}
+                    >
+                      {showPw ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Forgot password link */}
+                <div className="mc-forgot-row">
+                  <button type="button" className="mc-link-btn" onClick={switchToForgot}>
+                    Forgot password?
+                  </button>
+                </div>
+
+                <button type="submit" className="mc-btn" disabled={disabled} style={{ marginTop: 16 }}>
+                  {loading ? <span style={{ opacity: 0.8 }}>Signing in…</span> : 'Sign In →'}
+                </button>
+              </form>
+
+              {error && <div className="mc-error">{error}</div>}
+            </>
+          )}
+
+          {/* ── FORGOT PASSWORD VIEW ── */}
+          {view === 'forgot' && (
+            <>
+              <form onSubmit={handleForgotSubmit} autoComplete="off" noValidate>
+                <div className="mc-field">
+                  <label className="mc-label">Registered Email</label>
+                  <input
+                    type="email"
+                    className="mc-input"
+                    value={fpEmail}
+                    onChange={e => setFpEmail(e.target.value)}
+                    placeholder="you@college.edu"
+                    autoComplete="email"
+                    inputMode="email"
+                    disabled={fpLoading || !!fpSuccess}
+                  />
+                </div>
+
                 <button
-                  type="button"
-                  className="mc-pw-toggle"
-                  onClick={() => setShowPw(v => !v)}
-                  tabIndex={-1}
+                  type="submit"
+                  className="mc-btn"
+                  disabled={!fpEmail.trim() || fpLoading || !!fpSuccess}
+                  style={{ marginTop: 8 }}
                 >
-                  {showPw ? 'Hide' : 'Show'}
+                  {fpLoading ? 'Sending…' : fpSuccess ? '✓ Email Sent' : 'Send Reset Link →'}
+                </button>
+              </form>
+
+              {fpError   && <div className="mc-error">{fpError}</div>}
+              {fpSuccess  && <div className="mc-success">{fpSuccess}</div>}
+
+              <div className="mc-back-row">
+                <button type="button" className="mc-link-btn" onClick={switchToLogin}>
+                  ← Back to Sign In
                 </button>
               </div>
-            </div>
-
-            <button type="submit" className="mc-btn" disabled={disabled}>
-              {loading
-                ? <span style={{ opacity: 0.8 }}>Signing in…</span>
-                : 'Sign In →'}
-            </button>
-          </form>
-
-          {error && <div className="mc-error">{error}</div>}
+            </>
+          )}
         </div>
 
         <p className="mc-footer">
