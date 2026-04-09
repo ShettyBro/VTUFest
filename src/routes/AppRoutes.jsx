@@ -52,6 +52,7 @@ import FoodMeals from "../pages/food/FoodMeals";
 import FoodStalls from "../pages/food/FoodStalls";
 import FoodRedemptions from "../pages/food/FoodRedemptions";
 import FoodLogs from "../pages/food/FoodLogs";
+import FoodAnalytics from "../pages/food/FoodAnalytics";
 
 /* VM SYSTEM */
 import VMRegister from "../pages/VMRegister";
@@ -343,6 +344,7 @@ export default function AppRoutes() {
         <Route path="/food/stalls" element={<FoodRoute><FoodStalls /></FoodRoute>} />
         <Route path="/food/redemptions" element={<FoodRoute><FoodRedemptions /></FoodRoute>} />
         <Route path="/food/logs" element={<FoodRoute><FoodLogs /></FoodRoute>} />
+        <Route path="/food/analytics" element={<FoodRoute><FoodAnalytics /></FoodRoute>} />
 
         {/* ── DATA_ADMIN ───────────────────────────────────────────── */}
         <Route path="/da-login" element={<DALogin />} />

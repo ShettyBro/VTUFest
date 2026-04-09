@@ -32,6 +32,7 @@ const NAV_ITEMS = [
     { path: "/food/stalls",      label: "Stalls",      icon: "🏪" },
     { path: "/food/redemptions", label: "Redemptions", icon: "🎟️" },
     { path: "/food/logs",        label: "Scan Logs",   icon: "📋" },
+    { path: "/food/analytics",   label: "Analytics",   icon: "📈" },
 ];
 
 export default function FoodLayout({ children }) {
