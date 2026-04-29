@@ -35,7 +35,7 @@ export default function ApprovedStudents() {
       setLoading(true);
 
       // Check lock status
-      const lockResponse = await fetch(`https://vtu-festserver-production.up.railway.app/api/principal/check-lock-status`, {
+      const lockResponse = await fetch(`https://api.vtufest2026.acharyahabba.com/api/principal/check-lock-status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,7 +57,7 @@ export default function ApprovedStudents() {
       }
 
       // Fetch approved students
-      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/manager/approved-students`, {
+      const response = await fetch(`https://api.vtufest2026.acharyahabba.com/api/manager/approved-students`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -135,7 +135,7 @@ export default function ApprovedStudents() {
 
   const saveEditedEvents = async () => {
     try {
-      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/manager/approved-students`, {
+      const response = await fetch(`https://api.vtufest2026.acharyahabba.com/api/manager/approved-students`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -178,7 +178,7 @@ export default function ApprovedStudents() {
     }
 
     try {
-      const response = await fetch(`https://vtu-festserver-production.up.railway.app/api/manager/approved-students`, {
+      const response = await fetch(`https://api.vtufest2026.acharyahabba.com/api/manager/approved-students`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

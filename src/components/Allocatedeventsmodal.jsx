@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "../styles/Allocatedeventsmodal.css";
 
-const API_URL = "https://vtu-festserver-production.up.railway.app/api/student/assigned-events";
+const API_URL = "https://api.vtufest2026.acharyahabba.com/api/student/assigned-events";
 
 export default function AllocatedEventsModal({ onClose }) {
   const [loading, setLoading] = useState(true);
