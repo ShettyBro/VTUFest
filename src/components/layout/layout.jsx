@@ -107,11 +107,12 @@ export default function Layout({ children, hasApplication: hasApplicationProp, c
             collegeLocked={collegeLocked}
           />
         )}
+
       </div>
     );
   }
 
-  // ── DESKTOP LAYOUT (unchanged) ────────────────────────────────────────────
+  // ── DESKTOP LAYOUT ────────────────────────────────────────────────────────
   return (
     <div className="layout">
       <Navbar role={role} />
