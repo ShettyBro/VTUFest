@@ -28,6 +28,7 @@ export default function Footer() {
           &nbsp;&amp;&nbsp;
           <a
             href="https://www.linkedin.com/in/rohith-reddy-b-5b3639317/"
+
             target="_blank"
             rel="noopener noreferrer"
             className="vtufest-footer-link"
