@@ -2,9 +2,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import { DAProvider, useDA } from "../context/DAContext";
 
-/* SITE DOWN */
-import SiteDown from "../pages/SiteDown";
-
 /* PUBLIC */
 import AuthPage from "../pages/AuthPage";
 import ForgotPassword from "../pages/ForgotPassword";
@@ -246,11 +243,8 @@ export default function AppRoutes() {
   return (
     <DAProvider>
       <Routes>
-        {/* ── SITE DOWN ────────────────────────────────────────────────── */}
-        <Route path="/" element={<SiteDown />} />
-
         {/* ── PUBLIC ──────────────────────────────────────────────────── */}
-        <Route path="/login" element={<AuthPage initialView="login" />} />
+        <Route path="/" element={<AuthPage initialView="login" />} />
         <Route path="/register-student" element={<AuthPage initialView="register" />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/assign-events" element={<AssignEvents />} />
